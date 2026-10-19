@@ -24,6 +24,11 @@ export default function Welcome() {
               I’m a therapist
             </Text>
           </Pressable>
+          <Pressable testID="staff-link" accessibilityRole="link" accessibilityLabel="Echo staff sign-in" onPress={() => go('/admin/sign-in')} style={{ minHeight: 36, justifyContent: 'center' }}>
+            <Text variant="caption" align="center" muted>
+              Echo staff
+            </Text>
+          </Pressable>
         </>
       }
     >

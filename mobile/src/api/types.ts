@@ -388,3 +388,146 @@ export interface PortalState {
   licenceValidTo: number
   reauthUntil: number
 }
+
+// ---------- admin dashboard ----------
+
+export type StaffRole = 'moderator' | 'clinical' | 'billing' | 'admin'
+export type Severity = 'S1' | 'S2' | 'S3'
+export type CaseStatus = 'new' | 'in-review' | 'waiting' | 'closed'
+export type CaseSource = 'user-report' | 'ai-flag' | 'crisis-flag' | 'appeal'
+export type CaseAction = 'dismiss' | 'strike' | 'restrict' | 'suspend' | 'escalate'
+
+export interface EvidenceLine {
+  id: string
+  who: 'reporter' | 'reported'
+  text: string
+  reported?: boolean
+}
+
+export interface AdminCase {
+  id: string
+  severity: Severity
+  source: CaseSource
+  type: string
+  /** Minutes left on the SLA clock when the case was seeded or created, measured from `openedAt`. */
+  slaMinutes: number
+  openedAt: number
+  owner: string | null
+  status: CaseStatus
+  reporter: string | null
+  reported: string
+  evidence: EvidenceLine[]
+  snapshotAt: number
+  ai: { category: string; confidence: number; model: string } | null
+  strikes: number
+  priorReports: number
+  decision: { action: CaseAction; reason: string; by: string; at: number } | null
+  escalated: boolean
+}
+
+export interface AdminUser {
+  id: string
+  penName: string
+  joined: string
+  languages: string
+  ageBand: string
+  standing: StandingState
+  strikes: { id: string; at: number; rule: string; kind: string }[]
+  reportsAgainst: number
+  reportsMade: number
+  blocksReceived: number
+  plan: string
+  matches: number
+  skips: number
+  /** True for the member signed in on this device. Staff actions on them change the real member app. */
+  isMember: boolean
+}
+
+export interface AdminAppeal {
+  id: string
+  noticeId: string | null
+  caseId: string
+  penName: string
+  decision: string
+  decidedBy: string
+  statement: string
+  openedAt: number
+  slaHours: number
+  status: 'open' | 'upheld' | 'reduced' | 'overturned'
+  reviewer: string | null
+}
+
+export interface BreakGlassRequest {
+  id: string
+  caseId: string
+  target: string
+  reasonCode: 'imminent-risk' | 'legal' | 'fraud'
+  justification: string
+  requestedBy: string
+  requestedAt: number
+  status: 'pending' | 'approved' | 'declined' | 'expired'
+  approvedBy: string | null
+  expiresAt: number | null
+}
+
+export interface AdminRefund {
+  id: string
+  penName: string
+  plan: string
+  reason: string
+  status: 'pending' | 'approved' | 'declined'
+  decidedBy: string | null
+}
+
+export interface AdminFlag {
+  id: string
+  category: string
+  confidence: number
+  model: string
+  outcome: 'upheld' | 'overturned' | 'open'
+  reviewMinutes: number | null
+}
+
+export interface Applicant {
+  id: string
+  name: string
+  licenceNo: string
+  licenceExpiry: number
+  checklist: { name: boolean; licence: boolean; expiry: boolean; qualification: boolean }
+  status: 'pending' | 'approved' | 'info' | 'rejected'
+  message: string
+}
+
+export interface StrikePolicy {
+  expiryDays: number
+  restrictionHours: number
+}
+
+export interface AuditEntry {
+  id: string
+  at: number
+  actor: string
+  role: StaffRole | 'system'
+  action: string
+  target: string
+  reason: string
+}
+
+export interface AdminState {
+  signedIn: boolean
+  role: StaffRole
+  staffName: string
+  revealsToday: number
+  revealed: string[]
+  cases: AdminCase[]
+  users: AdminUser[]
+  appeals: AdminAppeal[]
+  breakGlass: BreakGlassRequest[]
+  refunds: AdminRefund[]
+  unmatchedPayments: number
+  flags: AdminFlag[]
+  applicants: Applicant[]
+  policy: StrikePolicy
+  policyChange: { policy: StrikePolicy; requestedBy: string; approvals: string[] } | null
+  audit: AuditEntry[]
+}

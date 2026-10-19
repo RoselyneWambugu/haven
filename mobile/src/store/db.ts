@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, ForumPost, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState } from '@/api/types'
+import type { Account, Conversation, Device, ForumPost, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState } from '@/api/types'
 import { seedPosts } from '@/data/seed'
 import { now } from '@/lib/clock'
 import { secure } from './secure'
@@ -52,6 +52,8 @@ export interface DbState {
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
   /** The therapist portal's own data. Null until someone first signs in to it. */
   portal: PortalState | null
+  /** The admin dashboard's own data. Null until a staff member first signs in. */
+  admin: AdminState | null
 }
 
 export function emptyRegistration(): RegistrationDraft {
@@ -79,6 +81,7 @@ export function freshState(): DbState {
     openConversationId: null,
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },
     portal: null,
+    admin: null,
   }
 }
 

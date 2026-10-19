@@ -20,7 +20,7 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -45,6 +45,19 @@ tests/           Unit tests. e2e/ holds the browser flows.
 
 A desktop-style web app inside the same project, at `/portal`. From the welcome screen choose **I'm a therapist**, then continue as the demo therapist, or try **Apply to join Echo**. It has Today, Inbox, Calendar (weekly availability, time off, caps), Sessions, a live session with private notes, wrap-up, raising a concern, Forum, Earnings with payouts, and the public profile editor. Publishing the profile or availability changes what members see in the directory. Open it in a browser window wider than about 900 px to see the two-column layout.
 
+## The admin dashboard
+
+An internal desktop-style web app at `/admin`, reached from **Echo staff** on the welcome screen. Pick a staff member, then enter the demo second-factor code shown on the page. There are four roles, and each sees only its own modules:
+
+| Role | Modules |
+| --- | --- |
+| Moderator | Overview, Cases, Users, Moderation, Appeals |
+| Clinical reviewer | Overview, Cases, Appeals, Therapists, Audit log |
+| Support / Billing | Overview, Users, Billing |
+| Admin | Everything, plus audit export and strike-policy changes |
+
+It is connected to the rest of the demo. A report made in the member app becomes a case. Suspending or restoring the member in Users, and deciding their appeal, change what they see in the member app. A portal application can be approved, sent back or rejected in Therapists, and the portal follows. Every content view, reveal, decision, export and approval is written to the audit log.
+
 ## Rules the app enforces
 
 - Messages, posts and comments with a link, phone number, email, social handle or address are blocked before they are sent, with a plain reason. The mock backend checks again, so the rule holds even if the app is changed.
@@ -53,6 +66,7 @@ A desktop-style web app inside the same project, at `/portal`. From the welcome 
 - Peer chat needs an active plan. When a plan ends, chats become read-only. Therapist chats, urgent help, the help centre and reading the community stay free.
 - Signs of distress offer urgent help. They never block or punish.
 - In the portal, clients are only a pen name and avatar. Inbox messages follow the same sharing limits, therapist forum replies can't invite people to book or make contact, and changing a payout needs a fresh code.
+- In the dashboard, evidence stays blurred until revealed and reveals are limited each day. Identity needs a break-glass request approved by a second person, the clinical lead, and lasts 30 minutes. An appeal can't be decided by whoever made the original decision, and strike-policy changes need two different admins.
 - Urgent help is on every screen and works signed out.
 
 ## Not finished, on purpose
@@ -61,7 +75,7 @@ A desktop-style web app inside the same project, at `/portal`. From the welcome 
 - **Calls are simulated.** Voice and video need a provider that has not been chosen. Nothing is recorded or sent.
 - **Payments are simulated.** M-Pesa takes about three seconds and can be made to fail from Demo tools.
 - **Kiswahili is a draft.**
-- **Admin dashboard** is designed in `docs/` but not built here.
+- **Admin analytics, resources and configuration** modules are not designed yet, so they are not built.
 
 ## Web build note
 

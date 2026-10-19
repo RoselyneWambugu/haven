@@ -36,8 +36,8 @@ function Gate() {
 
   useEffect(() => {
     if (!nav?.key) return
-    // The therapist portal is a separate sign-in with its own guard.
-    if (first === 'portal') return
+    // The therapist portal and the admin dashboard each have their own sign-in and guard.
+    if (first === 'portal' || first === 'admin') return
     if (!signedIn) {
       if (!SIGNED_OUT_OK.has(first)) router.replace('/welcome')
       return
@@ -75,9 +75,10 @@ function useAppLock() {
   }, [])
 }
 
-/** The member app is a phone-width column. The therapist portal is a desktop web app, so it gets the full width. */
+/** The member app is a phone-width column. The therapist portal and the admin dashboard are desktop web apps, so they get the full width. */
 function Shell({ children }: { children: React.ReactNode }) {
-  const wide = (useSegments()[0] as string | undefined) === 'portal'
+  const first = useSegments()[0] as string | undefined
+  const wide = first === 'portal' || first === 'admin'
   return (
     <View style={styles.backdrop}>
       <View style={[styles.column, wide ? { maxWidth: PORTAL_WIDTH } : null, Platform.OS === 'web' ? styles.columnWeb : null]}>{children}</View>
