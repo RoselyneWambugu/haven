@@ -256,6 +256,16 @@ describe('admin api', () => {
     expect(api.admin.proposePolicy({ expiryDays: 5, restrictionHours: 24 })).toMatchObject({ ok: false, code: 'range' })
   })
 
+  it('lets only an Admin export analytics, logs it, and limits each role to its sections', () => {
+    expect(api.admin.exportAnalytics('safety', [['a', 1]])).toMatchObject({ ok: false, code: 'role' })
+    as('S. Kamau')
+    const r = api.admin.exportAnalytics('product', [['Date', 'installs'], ['2026-10-19', 52]])
+    expect(r).toMatchObject({ ok: true, value: { csv: 'Date,installs\n2026-10-19,52' } })
+    expect(a().audit[0]).toMatchObject({ action: 'Exported analytics', target: 'product' })
+    expect(canAccess('billing', 'analytics')).toBe(true)
+    expect(canAccess('moderator', 'analytics')).toBe(true)
+  })
+
   it('lets only an Admin export data and the audit log, and logs it', () => {
     expect(api.admin.exportAudit()).toMatchObject({ ok: false, code: 'role' })
     expect(api.admin.exportUser('u-QuietPine')).toMatchObject({ ok: false, code: 'role' })

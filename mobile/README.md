@@ -20,7 +20,7 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -51,12 +51,14 @@ An internal desktop-style web app at `/admin`, reached from **Echo staff** on th
 
 | Role | Modules |
 | --- | --- |
-| Moderator | Overview, Cases, Users, Moderation, Appeals |
-| Clinical reviewer | Overview, Cases, Appeals, Therapists, Audit log |
-| Support / Billing | Overview, Users, Billing |
-| Admin | Everything, plus audit export and strike-policy changes |
+| Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety) |
+| Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Audit log |
+| Support / Billing | Overview, Users, Billing, Analytics (Commercial) |
+| Admin | Everything, plus audit and analytics export and strike-policy changes |
 
 It is connected to the rest of the demo. A report made in the member app becomes a case. Suspending or restoring the member in Users, and deciding their appeal, change what they see in the member app. A portal application can be approved, sent back or rejected in Therapists, and the portal follows. Every content view, reveal, decision, export and approval is written to the audit log.
+
+**Analytics** has four sections: Product (funnel, retention cohorts, who is using Echo), Care, Commercial and Safety, each shown only to the roles that need it. Everything is a count or a rate, never message text or identities, and groups under 10 people are hidden. Each chart has a table view. The figures are generated sample data and the page says so, except the AI-flag and appeal figures in Safety, which come from the live demo data.
 
 ## Rules the app enforces
 
@@ -75,7 +77,7 @@ It is connected to the rest of the demo. A report made in the member app becomes
 - **Calls are simulated.** Voice and video need a provider that has not been chosen. Nothing is recorded or sent.
 - **Payments are simulated.** M-Pesa takes about three seconds and can be made to fail from Demo tools.
 - **Kiswahili is a draft.**
-- **Admin analytics, resources and configuration** modules are not designed yet, so they are not built.
+- **Admin resources and configuration** modules are not designed yet, so they are not built. Analytics runs on generated sample data, and has no wireframes.
 
 ## Web build note
 

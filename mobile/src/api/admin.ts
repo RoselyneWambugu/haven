@@ -1,3 +1,4 @@
+import { canExportAnalytics, toCsv } from '@/lib/analytics'
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
 import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, canReveal, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess } from '@/lib/admin'
@@ -379,6 +380,14 @@ export const admin = {
     log('Exported audit log', 'Audit log', `${rows.length} entries`)
     const csv = ['Time,Actor,Action,Target,Reason', ...getDb().admin!.audit.map((r) => `${new Date(r.at).toISOString()},${r.actor},${r.action},${r.target},"${r.reason.replace(/"/g, '""')}"`)].join('\n')
     return { ok: true, value: { csv } }
+  },
+
+  /** Aggregate figures are not personal data, but exporting them is still logged and limited to Admins. */
+  exportAnalytics(section: string, rows: (string | number | null)[][]): Res<{ csv: string }> {
+    const { role } = me()
+    if (!canExportAnalytics(role)) return { ok: false, error: 'Only an Admin can export analytics.', code: 'role' }
+    log('Exported analytics', section, `${rows.length} rows`)
+    return { ok: true, value: { csv: toCsv(rows) } }
   },
 
   can(module: Module): boolean {
