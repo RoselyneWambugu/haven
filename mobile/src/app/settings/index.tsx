@@ -13,6 +13,7 @@ export default function Settings() {
         <Row testID="set-privacy" icon="eye" title="Privacy and data" onPress={() => go('/settings/privacy')} />
         <Row testID="set-security" icon="lock" title="Security" onPress={() => go('/settings/security')} />
         <Row icon="help" title="Help" onPress={() => go('/help')} />
+        <Row testID="set-feedback" icon="pencil" title="Send feedback" sub="An idea, or something that is broken" onPress={() => go('/settings/feedback')} />
         <Row testID="set-delete" icon="trash" title="Delete my account" danger last onPress={() => go('/settings/delete')} />
       </View>
     </Screen>

@@ -135,6 +135,20 @@ export interface Conversation {
   unread: number
   createdAt: number
   lastAt: number
+  /** The member's private "Did you feel heard?" answer, or 'skipped'. Never shown to the other person (FDB-1). */
+  heard?: { score: number; comment: string } | 'skipped'
+}
+
+export type FeedbackKind = 'idea' | 'bug' | 'other'
+
+/** In-app feedback or a bug report from Settings (FDB-3). */
+export interface FeedbackItem {
+  id: string
+  kind: FeedbackKind
+  text: string
+  at: number
+  /** Whether the member agreed to send the app version and platform with it. */
+  withDevice: boolean
 }
 
 export type MatchState =

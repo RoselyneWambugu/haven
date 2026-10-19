@@ -5,7 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api } from '@/api'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
-import { Check } from '@/components/Controls'
+import { Check, Chip } from '@/components/Controls'
+import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
 import { TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
@@ -13,6 +14,7 @@ import { Banner, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
+import { FACES, shouldAskHeard } from '@/lib/feedback'
 import { go, goBack } from '@/lib/nav'
 import { canChat, planState } from '@/lib/plan'
 import { detectDistress } from '@/lib/safety'
@@ -48,6 +50,8 @@ export default function Chat() {
   const [alsoBlock, setAlsoBlock] = useState(true)
   const [confirmBlock, setConfirmBlock] = useState(false)
   const [confirmEnd, setConfirmEnd] = useState(false)
+  const [score, setScore] = useState(0)
+  const [note, setNote] = useState('')
   const list = useRef<FlatList<Message>>(null)
 
   useEffect(() => {
@@ -139,6 +143,24 @@ export default function Chat() {
 
       {closed ? (
         <View style={{ paddingHorizontal: 18, paddingBottom: Math.max(insets.bottom, 14), gap: 10 }}>
+          {shouldAskHeard(conv) ? (
+            <View testID="heard" style={{ gap: 10, padding: 14, borderRadius: 16, backgroundColor: colors.milk, borderWidth: 1, borderColor: colors.line }}>
+              <Text variant="h3">Did you feel heard?</Text>
+              <Text variant="small" muted>
+                Only you and the Echo team can see your answer. {name} won’t.
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {FACES.map((f) => (
+                  <Chip key={f.score} testID={`heard-${f.score}`} label={f.label} selected={score === f.score} onPress={() => setScore(f.score)} />
+                ))}
+              </View>
+              {score ? <Field testID="heard-note" label="Anything to add? (optional)" value={note} onChangeText={setNote} maxLength={500} multiline minHeight={70} /> : null}
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Button testID="heard-send" label="Send answer" size="sm" disabled={!score} onPress={() => api.feedback.rateHeard(conv.id, score, note)} />
+                <Button testID="heard-skip" variant="ghost" label="Skip" size="sm" onPress={() => api.feedback.skipHeard(conv.id)} />
+              </View>
+            </View>
+          ) : null}
           <Banner tone="sun" icon="lock" title={conv.ended ? 'This conversation has ended' : 'Chat is read-only'}>
             {conv.ended ? 'You can still read it. Find someone new from Chats.' : 'Your plan has ended, so you can read this chat but not reply.'}
           </Banner>

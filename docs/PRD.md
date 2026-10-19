@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.14 — adds the Roles and Wellbeing admin modules; the app is English only (D52); records the member-app technology decision (React Native with Expo) and the working builds of the member app, therapist portal and admin dashboard in `mobile/`. See Appendix C for what changed |
+| **Status** | Draft v0.15 — adds member feedback (the felt-heard rating and Settings feedback); v0.14 added the Roles and Wellbeing admin modules; the app is English only (D52); records the member-app technology decision (React Native with Expo) and the working builds of the member app, therapist portal and admin dashboard in `mobile/`. See Appendix C for what changed |
 | **Date** | 2026-10-19 |
 | **Source** | Echo product overview (concept, platform, safety, business model, roadmap) |
 | **Market** | Kenya (pilot); regional expansion later |
@@ -831,6 +831,7 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 | v0.12 | Builds the admin Resources and Configuration modules (§6.10, §6.11) and makes the member app read the content and settings they edit. See the build status at the end |
 | v0.13 | The app is English only: adds D52, and updates HLP-5, the Localisation row, assumption 3, Appendix B and the build notes |
 | v0.14 | Builds the admin Roles and Wellbeing modules (§3.2, RBAC-1, RBAC-2, ADM-5), enforces the permission table in the admin API, and records the decisions taken. See the build status at the end |
+| v0.15 | Builds member feedback: the private "Did you feel heard?" rating after a peer chat ends (FDB-1, SET-7) and feedback and bug reports from Settings (FDB-3) |
 
 **Build status at v0.8.** `mobile/` holds a working member-app front-end that runs against a mock backend saved on the device: onboarding and sign-in, Home, matching, chat with blocked-content handling, the community forum, the therapist directory, booking and simulated calls, plans and simulated M-Pesa checkout, the help centre and urgent help, and Me, settings, security, account standing and demo tools. It has 139 unit tests and six browser flows. Not built: the admin dashboard (built later, see v0.10). Still placeholders: prices (D2, D3), crisis numbers and organisations (D29), and real SMS, payment and call providers (D51).
 
@@ -858,3 +859,4 @@ Decisions made while building, each open to change: Safety and reporting can't b
 
 *Wellbeing (ADM-5):* each reviewer has their own daily reveal count and limit (20 a day is the D27 placeholder, now Admin-adjustable); a break is suggested after a run of reveals (8 by default) and a break pauses revealing for its length (10 minutes by default), suggested and never forced; Severity-1 and crisis cases can only be taken by moderators on that week's heavy-queue rota, with clinical reviewers and Admins always able to, and the rota moves on each week so the same people don't carry it two weeks running; anyone can hand a case they own on to a colleague, and ask for support, with no reason recorded. Every action is in the audit log. Not built: a staff wellbeing line (shown as a placeholder), shift scheduling beyond the weekly rota, single sign-on, and a real second-factor enrolment (the code is a demo value). The mock now has 275 unit tests and eleven browser flows.
 
+**Build status at v0.15.** Member feedback is built. When a peer conversation ends after each person has written at least once, the chat offers *Did you feel heard?* with five labelled answers and an optional comment (FDB-1, SET-7). It is asked once, can be skipped without penalty, and the answer stays on the member's own side and is never shown to the other person. **Settings, then Send feedback** takes an idea, a bug report or another note, with an option to include the app version and platform (FDB-3). *Not built:* therapist session ratings already existed; the aggregate shown on a therapist's profile after a minimum review count (FDB-2) is not new; there is no admin screen to read feedback yet, and the notification categories (NTF) are unchanged.

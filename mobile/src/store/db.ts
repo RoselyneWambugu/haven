@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, ForumPost, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
+import type { Account, Conversation, Device, FeedbackItem, ForumPost, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
 import { LIVE } from '@/data/config'
 import { defaultContent } from '@/data/content'
 import { seedPosts } from '@/data/seed'
@@ -49,6 +49,7 @@ export interface DbState {
   subscription: Subscription | null
   checkout: { id: string; item: CheckoutItem; amountKes: number | null; createdAt: number } | null
   tickets: Ticket[]
+  feedback: FeedbackItem[]
   reports: { id: string; target: string; targetId: string; reason: string; note: string; at: number }[]
   openConversationId: string | null
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
@@ -86,6 +87,7 @@ export function freshState(): DbState {
     subscription: null,
     checkout: null,
     tickets: [],
+    feedback: [],
     reports: [],
     openConversationId: null,
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },
