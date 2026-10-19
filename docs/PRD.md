@@ -223,14 +223,26 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 
 ### 6.2 Profiles and privacy (PRF)
 
+Every account has two separate profiles, stored and permissioned separately.
+
+| | **Public profile** | **Private profile** |
+|---|---|---|
+| **Contents (members)** | Pen name, avatar | Real name, national ID (if collected), date of birth/age, phone number, email, address/location if collected, consent records, verification status |
+| **Who can see it** | Other members, therapists (as the member's identity in chat/forum/sessions), moderators | The account owner; staff only under the access rules in §6.9 (billing/support minimum, or logged break-glass) |
+| **Shown to other members?** | Yes | **Never** |
+| **Editable by user?** | Yes (pen name with rate limits; avatar from curated set) | Limited: corrections via verified request; ID and DOB changes need re-verification |
+| **Therapists** | Public by design: real name, photo, credentials, badge, specialisations, languages, ratings | Licence documents, ID, payout and tax details, internal verification notes (staff only) |
+
 | ID | Requirement | Phase |
 |---|---|---|
-| PRF-1 | Each member has a **pen name** (unique, moderated for impersonation/offensive content and for names that look like real names or contact details) and an avatar chosen from a curated set. Photo upload is not supported. | P2 |
-| PRF-2 | A member's profile visible to others MAY show only: **pen name, avatar**, and (to matches) age band and shared language. No bio free-text in the MVP, to reduce leakage of identifying details **[OPEN D18]**. | P2 |
-| PRF-3 | The bio and handle MUST be screened for contact details (phone, email, social handles, links) and rejected. | P2 |
-| PRF-4 | Members MUST be able to change handle subject to rate limits, without losing conversations. | P2 |
-| PRF-6 | **Therapist profiles are public** (real name, photo, qualifications, verification badge, specialisations, languages, ratings) and visible to non-logged-in visitors only to the extent counsel approves **[OPEN]**. | P3 |
-| PRF-5 | Real name, phone, email, exact date of birth and location MUST never appear in any member-facing API response. | P2 |
+| PRF-1 | Each member has a **pen name** (unique, moderated for impersonation, offensive content, and names that resemble real names or contact details) and an avatar chosen from a curated set. Photo upload is not supported. | P2 |
+| PRF-2 | The **public profile** contains only pen name and avatar. To matched members, age band and shared language may also be shown. No free-text bio in the MVP **[OPEN D18]**. | P2 |
+| PRF-3 | The **private profile** holds all identifiable data (name, ID, age/DOB, phone, etc.). It is a separate data store/schema with its own access controls and encryption keys, so a bug in a member-facing API cannot leak it. | P2 |
+| PRF-4 | Members can change their pen name subject to rate limits without losing conversations; name history is retained for moderation. | P2 |
+| PRF-5 | Identifiable data MUST never appear in any member-facing API response, notification, log, analytics event or forum/chat payload. This is verified by automated tests on every response schema. | P2 |
+| PRF-6 | **Therapist profiles are public** (real name, photo, qualifications, verified badge, specialisations, languages, ratings) and visible to non-logged-in visitors only to the extent counsel approves **[OPEN]**. Their private profile holds licence documents, ID, payout and tax details. | P3 |
+| PRF-7 | Users can view what their private profile holds and what is public, in a "what others see" preview. | P2 |
+| PRF-8 | Age is collected in the private profile; the public side only ever exposes an age band to matches. | P2 |
 
 ### 6.3 Automatic matching (MAT)
 
@@ -384,9 +396,11 @@ Violations are classed by severity. Severity governs the response; strikes gover
 
 | ID | Requirement | Phase |
 |---|---|---|
-| HLP-1 | Help centre covers: how Echo works, peer vs. therapist, safety, privacy, billing/refunds, community guidelines, account appeals, FAQs. Editable by Admin without a release. | P2 |
+| HLP-1 | The Help section is organised **by department**, each with its own articles, FAQs and contact route: **Getting Started, Account & Profile (public vs. private), Privacy & Anonymity, Safety & Reporting (block, report, appeals, community guidelines), Billing & Subscriptions, Therapists & Sessions, Forum, Crisis & Urgent Help, Technical Support, and Feedback**. The department list is Admin-managed **[ASSUMPTION: "help departments" means support areas of the app; confirm]**. Editable without a release. | P2 |
+| HLP-1a | Each department has a clear owner on the operations side (Support, Billing, Moderation/Safety, Clinical Reviewer, Tech) and a response-time target. | P2 |
+| HLP-1b | A member can open a ticket from a department; tickets are tied to the member's account but staff see only the public profile unless the department needs the private profile (e.g. Billing). | P2 |
 | HLP-2 | The help centre includes a directory of **volunteer psychologists and support resources**, curated and maintained by the Clinical Reviewer, with disclaimers about availability. | P3 |
-| HLP-3 | Contact Support is available in-app; Support requests that mention risk are routed to the crisis queue. | P2 |
+| HLP-3 | Contact Support is available in-app from every department; any request that mentions risk is routed to the crisis queue regardless of department. The **Crisis & Urgent Help** department is always visible and never paywalled. | P2 |
 | FDB-1 | After a conversation reaches a threshold, or a therapist session ends, prompt for a rating ("Did you feel heard?") with optional comment. Ratings are private, never shown to the other peer. | P2 |
 | FDB-2 | Therapist ratings are shown in aggregate on their profile after a minimum review count. | P3 |
 | FDB-3 | In-app feedback and bug report are available from Settings. | P2 |
@@ -418,7 +432,7 @@ The dashboard is an internal web application with MFA, RBAC and a complete audit
 | **Moderation** | AI flags log, precision metrics, rule/keyword management, strike config, appeals queue | P3 |
 | **Therapists** | Application queue, credential verification workflow, expiry tracking, availability overview, complaints, payouts | P3 |
 | **Analytics** | Acquisition, activation (sign-up→first chat), retention cohorts, match quality, conversion, churn, safety metrics | P2 basic / P3 full |
-| **Resources** | Directory of volunteer psychologists, crisis lines, help articles | P3 |
+| **Resources & Help** | Help departments, articles and tickets; directory of volunteer psychologists; crisis lines | P2 / P3 |
 | **Configuration** | Issue taxonomy, plans & entitlements, matching weights, feature flags | P2 |
 | **Audit log** | Immutable record of every privileged action and content access; searchable and exportable for oversight | P2 |
 
@@ -435,7 +449,7 @@ The dashboard is an internal web application with MFA, RBAC and a complete audit
 ## 7. Screen inventory
 
 **Member app (mobile-first)**
-Welcome · Register · OTP verification · Identity verification (conditional) · Consents · Pen name & avatar · Age & language · Home (active chats + forum feed) · Match found / matching status · Chat list · Conversation · Conversation settings (mute, disappearing, skip, block, report) · Report flow · Forum feed · Topic page · Post detail & comments · Create post · Therapist directory · Therapist profile (public) · Booking / availability · Therapist chat · Voice call · Video call · Pre-call check · Plans & pricing · Checkout · Subscription management & billing history · Help centre · Crisis resources (global) · Account standing & strikes · Appeal · Feedback / rating · Settings (profile, privacy, notifications, language, data export, delete account)
+Welcome · Register · OTP verification · Identity verification (conditional) · Consents · Pen name & avatar · Age & language · Home (active chats + forum feed) · Match found / matching status · Chat list · Conversation · Conversation settings (mute, disappearing, skip, block, report) · Report flow · Forum feed · Topic page · Post detail & comments · Create post · Therapist directory · Therapist profile (public) · Booking / availability · Therapist chat · Voice call · Video call · Pre-call check · Plans & pricing · Checkout · Subscription management & billing history · Help centre (departments, articles, tickets) · My profiles (public / private, "what others see") · Crisis resources (global) · Account standing & strikes · Appeal · Feedback / rating · Settings (profile, privacy, notifications, language, data export, delete account)
 
 **Therapist app / portal**
 Application & credential upload · Verification status · Profile · Availability calendar · Client inbox · Client conversation · Session notes · Earnings & payouts · Settings
@@ -450,7 +464,9 @@ Login + MFA · Overview · Users list / detail · Cases queue / detail · AI fla
 | Entity | Notes |
 |---|---|
 | `User` | Real details, role(s), status, consent records, age band |
-| `Profile` | Handle, avatar, bio, language(s), mode (talk/listen/both), availability |
+| `PublicProfile` | Pen name, avatar, language(s), age band, availability |
+| `PrivateProfile` | Real name, ID, DOB/age, phone, email, location, verification status; separately stored and encrypted |
+| `HelpDepartment`, `HelpArticle`, `SupportTicket` | Department owner, SLA, articles, tickets and status |
 | `Topic` | Forum topic categories (admin-managed) |
 | `Match` | Pair, shared language, age bands, status (active/ended/skipped), reason |
 | `ForumPost`, `ForumComment` | Author, topic, text, status (published/hidden/removed), reports |
