@@ -70,6 +70,10 @@ It is connected to the rest of the demo. A report made in the member app becomes
 
 **Wellbeing** protects reviewers. Each reviewer has their own daily reveal count and limit, a break is suggested after a run of reveals and pauses revealing while it lasts, the heaviest cases (Severity-1 and crisis) can only be taken by moderators on that week's rota, which moves on each week, and anyone can hand a case on or ask for support without giving a reason.
 
+## Notifications
+
+A bell at the top of each tab opens the notification centre, a stand-in for push. It lists new messages, session reminders (an hour and ten minutes before), plan reminders, account notices and receipts for reports. Safety and account notices can't be switched off. Quiet hours (10pm to 7am) hold other notes until morning, and more than five an hour are kept in the list but not counted as new. Settings has a lock-screen preview for the privacy options. Nothing is really pushed, texted or emailed yet.
+
 ## Feedback
 
 When a peer chat ends after both people have written, the chat asks *Did you feel heard?* with five faces and an optional comment. It is asked once, can be skipped, and is private to the member. **Settings, then Send feedback** sends an idea or a bug report, with the app details optional. Support / Billing and Admin read the notes in the **Feedback** module, which shows no name or account and lets staff mark a note as read (logged). The felt-heard results appear only as shares once at least 10 people have answered, and members' comments are never shown.

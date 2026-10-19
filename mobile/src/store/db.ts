@@ -5,6 +5,7 @@ import { LIVE } from '@/data/config'
 import { defaultContent } from '@/data/content'
 import { seedPosts } from '@/data/seed'
 import { now } from '@/lib/clock'
+import type { AppNote } from '@/lib/notifications'
 import { secure } from './secure'
 
 const KEY = 'echo.demo.v1'
@@ -50,6 +51,7 @@ export interface DbState {
   checkout: { id: string; item: CheckoutItem; amountKes: number | null; createdAt: number } | null
   tickets: Ticket[]
   feedback: FeedbackItem[]
+  notifications: AppNote[]
   reports: ReportRecord[]
   openConversationId: string | null
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
@@ -88,6 +90,7 @@ export function freshState(): DbState {
     checkout: null,
     tickets: [],
     feedback: [],
+    notifications: [],
     reports: [],
     openConversationId: null,
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },

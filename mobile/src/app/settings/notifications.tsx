@@ -3,6 +3,9 @@ import { ToggleRow } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
+import { View } from 'react-native'
+import { lockScreen } from '@/lib/notifications'
+import { colors } from '@/theme'
 import { useDb } from '@/store/db'
 
 export default function Notifications() {
@@ -20,6 +23,15 @@ export default function Notifications() {
       <Text variant="h3">Privacy on your lock screen</Text>
       <ToggleRow label="Hide message text" on={s.hideTextOnLockScreen} onChange={(v) => set({ hideTextOnLockScreen: v })} />
       <ToggleRow label="Neutral notifications" sub="Shows “You have a new update” instead of mentioning Echo" on={s.neutralNotifications} onChange={(v) => set({ neutralNotifications: v })} />
+      <Text variant="small" muted>
+        How a message looks on your lock screen
+      </Text>
+      <View testID="lock-preview" style={{ padding: 14, borderRadius: 16, backgroundColor: colors.milk, borderWidth: 1, borderColor: colors.line }}>
+        <Text variant="label">{lockScreen({ category: 'message', title: 'New message from QuietHeron', body: 'Hi, how was your day?' }, s).title}</Text>
+        <Text variant="small" muted>
+          {lockScreen({ category: 'message', title: 'New message from QuietHeron', body: 'Hi, how was your day?' }, s).body}
+        </Text>
+      </View>
       <Banner tone="green" icon="bell">
         Urgent safety messages from us are always sent.
       </Banner>

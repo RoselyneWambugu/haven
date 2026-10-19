@@ -1,4 +1,4 @@
-import { PEERS } from '@/data/seed'
+import { PEERS, THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
 import { neighbouringBands } from '@/lib/identity'
 import { uid } from '@/lib/id'
@@ -6,6 +6,7 @@ import { canChat, planState } from '@/lib/plan'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { notify } from './notify'
 import { peerReply, therapistThreadReply } from './bot'
 import { chatSnapshot, commentSnapshot, postSnapshot, priorReports } from '@/lib/snapshot'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
@@ -155,6 +156,10 @@ export const chat = {
       const reply = msg('them', conv.kind === 'peer' ? peerReply(trimmed) : therapistThreadReply())
       const open = getDb().openConversationId === id
       setConv(id, (c) => ({ ...c, messages: [...c.messages, reply], lastAt: reply.at, unread: open ? 0 : c.unread + 1 }))
+      if (!open && !cur.muted) {
+        const from = cur.peer?.penName ?? THERAPISTS.find((t) => t.id === cur.therapistId)?.name ?? 'Your therapist'
+        notify.push('message', `m:${reply.id}`, `New message from ${from}`, reply.text, `/chat/${id}`)
+      }
     })
     return { ok: true, value: { message: m } }
   },
@@ -237,6 +242,7 @@ export const report = {
       reportedName, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
     }
     update((s) => ({ reports: [...s.reports, record] }))
+    notify.push('safety', `report:${record.id}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')
   },
 }
 
@@ -255,6 +261,7 @@ function publishPending(id: string) {
   if (!p || p.status !== 'pending') return
   setPost(id, (x) => ({ ...x, status: 'published' }))
   showToast('Your post is now live.')
+  notify.push('forum', `post:${id}`, 'Your post is now live', p.title, `/forum/${id}`)
 }
 
 export const forum = {

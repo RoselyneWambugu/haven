@@ -16,6 +16,7 @@ import { SecurityAlert } from '@/components/SecurityAlert'
 import { ToastHost } from '@/components/ToastHost'
 import { getDb, loadDb, useDb } from '@/store/db'
 import { useFront } from '@/store/useFront'
+import { useNow } from '@/store/useNow'
 import { colors, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
@@ -88,6 +89,16 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** Creates time-based notifications (session and plan reminders, account notices) while the app is open. */
+function Notifier() {
+  const signedIn = useDb((s) => s.signedIn)
+  const t = useNow()
+  useEffect(() => {
+    if (signedIn) api.notify.sync()
+  }, [signedIn, t])
+  return null
+}
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Fraunces_400Regular,
@@ -121,6 +132,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <Shell>
         <Gate />
+        <Notifier />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper }, animation: 'fade' }} />
         <ToastHost />
         <SecurityAlert />

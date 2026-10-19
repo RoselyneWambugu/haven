@@ -3,10 +3,12 @@ import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useT } from '@/i18n'
 import { go, goBack } from '@/lib/nav'
+import { unreadCount } from '@/lib/notifications'
 import { useDb } from '@/store/db'
+import { useNow } from '@/store/useNow'
 import { colors, DOCK_SPACE, MAX_WIDTH } from '@/theme'
 import { Avatar, LogoMark } from './Art'
-import { Pill } from './Controls'
+import { Count, Pill } from './Controls'
 import { Icon } from './Icon'
 import { Text } from './Text'
 
@@ -14,6 +16,22 @@ import { Text } from './Text'
 // TopBar: back or avatar on the left, urgent help on the right. Urgent help is on
 // every screen, signed in or not, and never needs a login (PRD ACC-22, CRS-1).
 // ---------------------------------------------------------------------------
+
+/** The notification bell, with a count of new notes. */
+function Bell() {
+  const notes = useDb((s) => s.notifications)
+  const n = unreadCount(notes, useNow())
+  return (
+    <Pressable testID="open-notifications" accessibilityRole="button" accessibilityLabel={n ? `Notifications, ${n} new` : 'Notifications'} onPress={() => go('/notifications')} hitSlop={8} style={styles.iconBtn}>
+      <Icon name="bell" size={22} color={colors.ink} />
+      {n ? (
+        <View style={{ position: 'absolute', top: 4, right: 2 }}>
+          <Count n={n} />
+        </View>
+      ) : null}
+    </Pressable>
+  )
+}
 
 export function TopBar({
   title, back, avatar, logo, urgent = true, dark, right, onBack,
@@ -59,6 +77,7 @@ export function TopBar({
       </View>
       <View style={styles.topRight}>
         {right}
+        {avatar ? <Bell /> : null}
         {urgent ? <Pill label={t('Urgent help')} onPress={() => go('/urgent')} /> : null}
       </View>
     </View>

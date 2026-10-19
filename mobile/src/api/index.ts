@@ -6,6 +6,7 @@
 import { auth } from './auth'
 import { billing, sessions } from './care'
 import { demo } from './demo'
+import { notify } from './notify'
 import { feedback } from './feedback'
 import { admin } from './admin'
 import { config, resources, suggestService } from './content'
@@ -14,7 +15,7 @@ import { chat, forum, match, report } from './social'
 import { account, tickets } from './support'
 import { team } from './team'
 
-export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback }
+export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify }
 
 /** Restarts timers for anything that was in progress when the app last closed. */
 export function resumeBackground(): void {
