@@ -6,15 +6,17 @@
 import { auth } from './auth'
 import { billing, sessions } from './care'
 import { demo } from './demo'
+import { applyPortalToDirectory, portal } from './portal'
 import { chat, forum, match, report } from './social'
 import { account, tickets } from './support'
 
-export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo }
+export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal }
 
 /** Restarts timers for anything that was in progress when the app last closed. */
 export function resumeBackground(): void {
   match.resume()
   forum.resume()
+  applyPortalToDirectory()
 }
 
 export * from './types'

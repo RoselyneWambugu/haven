@@ -8,8 +8,11 @@ import { now } from '@/lib/clock'
 import { relative } from '@/lib/time'
 import { useDb } from '@/store/db'
 
+/** A stable empty list, so a selector that falls back to it doesn't look like a change on every render. */
+const NONE: never[] = []
+
 export default function Devices() {
-  const devices = useDb((s) => s.account?.devices ?? [])
+  const devices = useDb((s) => s.account?.devices ?? NONE)
   return (
     <Screen testID="devices" header={<TopBar back title="Devices" />}>
       <Text variant="title">Where you’re signed in</Text>

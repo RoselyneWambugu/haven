@@ -35,4 +35,6 @@ export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const
 
 /** The tab bar floats above content, so scrolling screens need this much room at the bottom. */
 export const DOCK_SPACE = 96
+/** The therapist portal is a desktop web app, so it gets a wide column. */
+export const PORTAL_WIDTH = 1180
 export const MAX_WIDTH = 480

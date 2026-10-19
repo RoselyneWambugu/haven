@@ -15,7 +15,7 @@ import { api, resumeBackground } from '@/api'
 import { SecurityAlert } from '@/components/SecurityAlert'
 import { ToastHost } from '@/components/ToastHost'
 import { getDb, loadDb, useDb } from '@/store/db'
-import { colors, MAX_WIDTH } from '@/theme'
+import { colors, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
 
@@ -36,6 +36,8 @@ function Gate() {
 
   useEffect(() => {
     if (!nav?.key) return
+    // The therapist portal is a separate sign-in with its own guard.
+    if (first === 'portal') return
     if (!signedIn) {
       if (!SIGNED_OUT_OK.has(first)) router.replace('/welcome')
       return
@@ -73,6 +75,16 @@ function useAppLock() {
   }, [])
 }
 
+/** The member app is a phone-width column. The therapist portal is a desktop web app, so it gets the full width. */
+function Shell({ children }: { children: React.ReactNode }) {
+  const wide = (useSegments()[0] as string | undefined) === 'portal'
+  return (
+    <View style={styles.backdrop}>
+      <View style={[styles.column, wide ? { maxWidth: PORTAL_WIDTH } : null, Platform.OS === 'web' ? styles.columnWeb : null]}>{children}</View>
+    </View>
+  )
+}
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Fraunces_400Regular,
@@ -104,14 +116,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <View style={styles.backdrop}>
-        <View style={[styles.column, Platform.OS === 'web' ? styles.columnWeb : null]}>
-          <Gate />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper }, animation: 'fade' }} />
-          <ToastHost />
-          <SecurityAlert />
-        </View>
-      </View>
+      <Shell>
+        <Gate />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper }, animation: 'fade' }} />
+        <ToastHost />
+        <SecurityAlert />
+      </Shell>
     </SafeAreaProvider>
   )
 }

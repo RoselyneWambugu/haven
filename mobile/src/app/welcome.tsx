@@ -1,4 +1,4 @@
-import { View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { Button } from '@/components/Button'
 import { Scene } from '@/components/Art'
 import { Screen, TopBar } from '@/components/Layout'
@@ -19,6 +19,11 @@ export default function Welcome() {
           <Text variant="caption" muted align="center">
             Echo is peer support, not emergency care.
           </Text>
+          <Pressable testID="therapist-link" accessibilityRole="link" accessibilityLabel="I’m a therapist" onPress={() => go('/portal/sign-in')} style={{ minHeight: 44, justifyContent: 'center' }}>
+            <Text variant="small" align="center" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
+              I’m a therapist
+            </Text>
+          </Pressable>
         </>
       }
     >

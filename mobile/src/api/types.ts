@@ -323,3 +323,68 @@ export interface DemoControls {
   advanceClock(minutes: number): void
   reset(): void
 }
+
+// ---------- therapist portal ----------
+
+export type Attendance = 'attended' | 'late' | 'no-show'
+export type ConcernType = 'self-harm' | 'harm-to-others' | 'abuse' | 'behaviour'
+
+export interface PortalSession {
+  id: string
+  clientKey: string
+  clientName: string
+  clientAvatar: AvatarKind
+  mode: Mode
+  start: number
+  end: number
+  number: number
+  status: 'booked' | 'in-progress' | 'completed'
+  attendance: Attendance | null
+  note: string
+  followUp: number | null
+  grossKes: number | null
+}
+
+export interface PortalThread {
+  id: string
+  clientName: string
+  clientAvatar: AvatarKind
+  messages: Message[]
+  unread: number
+  closed: boolean
+  nextSession: number | null
+}
+
+export interface PortalConcern {
+  id: string
+  sessionId: string | null
+  danger: boolean
+  type: ConcernType
+  detail: string
+  at: number
+}
+
+export interface PortalProfile {
+  bio: string
+  specialisations: string[]
+  languages: string[]
+  modes: Mode[]
+  priceKes: number | null
+}
+
+export interface PortalState {
+  signedIn: boolean
+  therapistId: string
+  application: 'none' | 'submitted' | 'more-info' | 'approved'
+  paused: boolean
+  caps: { perDay: number; bufferMin: number; newPerWeek: number }
+  availability: AvailabilityBlock[]
+  timeOff: { id: string; start: number; end: number }[]
+  profile: PortalProfile
+  sessions: PortalSession[]
+  threads: PortalThread[]
+  concerns: PortalConcern[]
+  payout: { method: string; schedule: 'weekly' | 'monthly' }
+  licenceValidTo: number
+  reauthUntil: number
+}

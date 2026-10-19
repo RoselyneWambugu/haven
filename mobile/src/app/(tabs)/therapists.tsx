@@ -18,6 +18,9 @@ import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
 import { colors } from '@/theme'
 
+/** A stable empty list, so a selector that falls back to it doesn't look like a change on every render. */
+const NONE: never[] = []
+
 const SPECIALISATIONS = ['Anxiety', 'Grief', 'Relationships', 'Work stress', 'Family', 'Loneliness']
 const SORTS: { value: DirectorySort; label: string }[] = [
   { value: 'next', label: 'Soonest' },
@@ -28,7 +31,7 @@ const SORTS: { value: DirectorySort; label: string }[] = [
 
 export default function Therapists() {
   const sessions = useDb((s) => s.sessions)
-  const langs = useDb((s) => s.account?.public.languages ?? [])
+  const langs = useDb((s) => s.account?.public.languages ?? NONE)
   const money = useMoney()
   const [filters, setFilters] = useState<DirectoryFilters>(NO_FILTERS)
   const [sort, setSort] = useState<DirectorySort>('next')

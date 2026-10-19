@@ -20,7 +20,7 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -41,6 +41,10 @@ src/i18n/        English text is the key. Kiswahili is a draft that needs a nati
 tests/           Unit tests. e2e/ holds the browser flows.
 ```
 
+## The therapist portal
+
+A desktop-style web app inside the same project, at `/portal`. From the welcome screen choose **I'm a therapist**, then continue as the demo therapist, or try **Apply to join Echo**. It has Today, Inbox, Calendar (weekly availability, time off, caps), Sessions, a live session with private notes, wrap-up, raising a concern, Forum, Earnings with payouts, and the public profile editor. Publishing the profile or availability changes what members see in the directory. Open it in a browser window wider than about 900 px to see the two-column layout.
+
 ## Rules the app enforces
 
 - Messages, posts and comments with a link, phone number, email, social handle or address are blocked before they are sent, with a plain reason. The mock backend checks again, so the rule holds even if the app is changed.
@@ -48,6 +52,7 @@ tests/           Unit tests. e2e/ holds the browser flows.
 - Under-18s are turned away at registration.
 - Peer chat needs an active plan. When a plan ends, chats become read-only. Therapist chats, urgent help, the help centre and reading the community stay free.
 - Signs of distress offer urgent help. They never block or punish.
+- In the portal, clients are only a pen name and avatar. Inbox messages follow the same sharing limits, therapist forum replies can't invite people to book or make contact, and changing a payout needs a fresh code.
 - Urgent help is on every screen and works signed out.
 
 ## Not finished, on purpose
@@ -56,7 +61,7 @@ tests/           Unit tests. e2e/ holds the browser flows.
 - **Calls are simulated.** Voice and video need a provider that has not been chosen. Nothing is recorded or sent.
 - **Payments are simulated.** M-Pesa takes about three seconds and can be made to fail from Demo tools.
 - **Kiswahili is a draft.**
-- **Therapist portal and admin dashboard** are designed in `docs/` but not built here.
+- **Admin dashboard** is designed in `docs/` but not built here.
 
 ## Web build note
 
