@@ -79,7 +79,6 @@ export interface Notice {
 }
 
 export interface Settings {
-  language: 'en' | 'sw'
   notifyMessages: boolean
   notifySessions: boolean
   notifyForum: boolean

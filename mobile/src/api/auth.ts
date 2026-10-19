@@ -12,7 +12,6 @@ const HOUR = 3600_000
 const MIN = 60_000
 
 export const DEFAULT_SETTINGS: Settings = {
-  language: 'en',
   notifyMessages: true,
   notifySessions: true,
   notifyForum: true,

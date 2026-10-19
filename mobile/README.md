@@ -37,7 +37,7 @@ src/lib/         Pure rules with no UI: safety checks, age, booking, plan state,
 src/store/       A small reactive store, saved on the device. Secure storage holds the signed-in flag.
 src/components/  The design system: text, buttons, controls, cards, sheets, art.
 src/data/        Seed content, help articles, plans, and the config flags for open decisions.
-src/i18n/        English text is the key. Kiswahili is a draft that needs a native reviewer.
+src/i18n/        A small helper for filling {placeholders} in text. The app is in English only.
 tests/           Unit tests. e2e/ holds the browser flows.
 ```
 
@@ -80,8 +80,8 @@ It is connected to the rest of the demo. A report made in the member app becomes
 - **Placeholders for open decisions.** Crisis numbers and support organisations are marked as unverified (D29). Prices are blank (D2, D3). See `src/data/config.ts` and PRD section on decisions.
 - **Calls are simulated.** Voice and video need a provider that has not been chosen. Nothing is recorded or sent.
 - **Payments are simulated.** M-Pesa takes about three seconds and can be made to fail from Demo tools.
-- **Kiswahili is a draft.**
-- **Analytics, Resources and Config have no wireframes.** They were built from the PRD, and Analytics runs on generated sample data. Help articles are English only (Kiswahili text needs a reviewer), and there is no staff screen for roles and permissions.
+- **The app is in English only.** Kiswahili is still a language members can say they speak, for matching.
+- **Analytics, Resources and Config have no wireframes.** They were built from the PRD, and Analytics runs on generated sample data. There is no staff screen for roles and permissions.
 
 ## Web build note
 
