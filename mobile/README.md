@@ -20,7 +20,9 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`. Build the web export first, then pass its folder.
+In a browser window 900 px or wider, `/` opens a landing page. Its buttons go to registration, sign-in, urgent help and the therapist and staff sign-ins. Narrower windows and phones open the Welcome screen.
+
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`. Build the web export first, then pass its folder.
 
 ## Trying the app
 

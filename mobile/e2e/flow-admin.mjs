@@ -30,7 +30,7 @@ let noticeId = null
 const flush = () => page.waitForTimeout(900)
 const body = async () => page.locator('body').innerText()
 
-await page.goto('http://localhost:8092/')
+await page.goto('http://localhost:8092/welcome')
 await page.waitForTimeout(1800)
 await step('member-setup', async () => {
   await tid('get-started').click()

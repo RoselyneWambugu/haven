@@ -15,18 +15,20 @@ import { api, resumeBackground } from '@/api'
 import { SecurityAlert } from '@/components/SecurityAlert'
 import { ToastHost } from '@/components/ToastHost'
 import { getDb, loadDb, useDb } from '@/store/db'
+import { useFront } from '@/store/useFront'
 import { colors, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
 
 /** Screens a person can reach without being signed in. Urgent help is always one of them. */
-const SIGNED_OUT_OK = new Set(['welcome', 'consent', 'register', 'otp', 'pen-name', 'languages', 'login', 'under-18', 'recovery', 'unlock', 'urgent', 'about'])
+const SIGNED_OUT_OK = new Set(['welcome', 'landing', 'consent', 'register', 'otp', 'pen-name', 'languages', 'login', 'under-18', 'recovery', 'unlock', 'urgent', 'about'])
 /** Signed-in people have no reason to be here (they would only land here with the back button). */
-const SIGNED_IN_AWAY = new Set(['welcome', 'consent', 'register', 'login', 'under-18'])
+const SIGNED_IN_AWAY = new Set(['welcome', 'landing', 'consent', 'register', 'login', 'under-18'])
 /** A paused account can still reach these (PRD SAF-15, ACC-18). */
 const PAUSED_OK = new Set(['paused', 'urgent', 'help', 'plan', 'plans', 'checkout', 'pay', 'settings', 'standing', 'appeal', 'about'])
 
 function Gate() {
+  const front = useFront()
   const segments = useSegments()
   const nav = useRootNavigationState()
   const signedIn = useDb((s) => s.signedIn)
@@ -39,7 +41,7 @@ function Gate() {
     // The therapist portal and the admin dashboard each have their own sign-in and guard.
     if (first === 'portal' || first === 'admin') return
     if (!signedIn) {
-      if (!SIGNED_OUT_OK.has(first)) router.replace('/welcome')
+      if (!SIGNED_OUT_OK.has(first)) router.replace(front)
       return
     }
     if (locked) {
@@ -51,7 +53,7 @@ function Gate() {
       return
     }
     if (paused && !PAUSED_OK.has(first)) router.replace('/paused')
-  }, [nav?.key, signedIn, locked, paused, first])
+  }, [nav?.key, signedIn, locked, paused, first, front])
   return null
 }
 
@@ -78,7 +80,7 @@ function useAppLock() {
 /** The member app is a phone-width column. The therapist portal and the admin dashboard are desktop web apps, so they get the full width. */
 function Shell({ children }: { children: React.ReactNode }) {
   const first = useSegments()[0] as string | undefined
-  const wide = first === 'portal' || first === 'admin'
+  const wide = first === 'portal' || first === 'admin' || first === 'landing'
   return (
     <View style={styles.backdrop}>
       <View style={[styles.column, wide ? { maxWidth: PORTAL_WIDTH } : null, Platform.OS === 'web' ? styles.columnWeb : null]}>{children}</View>

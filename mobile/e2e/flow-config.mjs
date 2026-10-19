@@ -36,7 +36,7 @@ const member = async (path) => {
 const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('echo.demo.v1')))
 let ticketId = null
 
-await page.goto(`${BASE}/`)
+await page.goto(`${BASE}/welcome`)
 await page.waitForTimeout(1500)
 await step('member-setup', async () => {
   await tid('get-started').click()
