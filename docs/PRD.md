@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.1 — for product, design, engineering and clinical review |
+| **Status** | Draft v0.2 — revised after the founder's explanation of the idea (auto-matching, public forum, therapist voice/video, anonymity model) |
 | **Date** | 2026-10-19 |
 | **Source** | Echo product overview (concept, platform, safety, business model, roadmap) |
 | **Market** | Kenya (pilot); regional expansion later |
@@ -26,9 +26,11 @@
 
 ### 1.1 Summary
 
-Echo is a text-only mental health and emotional-support platform. It connects members with supportive peers and with qualified therapists through private, identity-protected conversations, backed by subscription billing, AI-assisted moderation and human oversight.
+Echo is an anonymous mental health and emotional-support platform with three surfaces: (1) **peer chat** with automatically matched members, (2) a **public forum** where members post and both members and therapists comment, and (3) **therapist sessions** by chat, voice call or video call. Members appear only as a pen name and avatar; therapists are publicly identified professionals. It is backed by subscription billing, AI-assisted moderation and human oversight.
 
-**Core proposition:** private peer connection + access to professional support + a safer digital environment.
+**Core proposition:** anonymous peer connection + a supportive public community + access to identified, qualified professionals + a safer digital environment.
+
+> **v0.2 change note:** earlier text said peer chat/forum/voice/video were out of scope and that matching used issue tags with connection requests. Per the founder: matching is automatic by age and language; there is a public forum; members can chat, call and video call therapists. Sections below are updated; items needing a decision are in §14.
 
 ### 1.2 Problem
 
@@ -39,9 +41,9 @@ People experience loneliness, distress, anxiety, grief and relationship or work 
 These are product-level constraints that every feature must respect:
 
 1. **Peer support is not treatment.** The product must never present peer conversations as therapy, diagnosis or a substitute for emergency services. Peer and clinical offerings are visibly distinct in the UI, pricing and legal terms.
-2. **Text only.** No voice calls, video calls, photo/file sharing or location sharing between users.
-3. **Not a dating product.** No browsing-by-attractiveness, no photos, no "swipe" mechanics, no features that reward romantic or sexual interaction.
-4. **Identity privacy between users.** Real names and identifying details are never shown to other members.
+2. **Members never share contact or location details with each other.** Between members, the system blocks videos, addresses, phone numbers and links (and, as a MUST-decide, other media — see D14). Voice/video exist only between a member and a verified therapist.
+3. **Not a dating product.** Members are matched automatically (not browsed), have no photos, can't exchange contact details or links, and romantic/sexual solicitation is a moderated violation. This is the reason for the restrictions above.
+4. **Members are anonymous; therapists are public.** Other users see only a pen name and avatar for a member. Real names and identifying details are never shown to other members. Therapist profiles are public by design.
 5. **Safety content is never paywalled.** Crisis resources, the help centre, block and report are available to every account regardless of subscription status.
 
 ---
@@ -53,7 +55,8 @@ These are product-level constraints that every feature must respect:
 | # | Goal |
 |---|------|
 | G1 | Let a new member go from sign-up to a first meaningful peer conversation quickly and without disclosing identity to anyone. |
-| G2 | Give members a credible route to a verified, qualified therapist over text. |
+| G2 | Give members a credible route to a verified, qualified therapist by chat, voice or video. |
+| G7 | Provide a public forum where members can share and receive support from peers and therapists, anonymously. |
 | G3 | Keep members safe: detect and act on abuse, harassment and crisis signals fast, with humans accountable for serious decisions. |
 | G4 | Protect member privacy to the standard appropriate for sensitive health data. |
 | G5 | Establish a subscription model clear enough that members know exactly what they are paying for (peer access vs. clinical services). |
@@ -61,7 +64,7 @@ These are product-level constraints that every feature must respect:
 
 ### 2.2 Non-goals (for the roadmap through Phase 4)
 
-- Voice, video, photo/file sharing, group chat or public forums.
+- Voice/video **between members**, member-to-member file sharing, or group chat (the public forum is in scope; group chat is not).
 - Dating, romantic matching or social-network features (feeds, follows, public posts).
 - Automated diagnosis, AI-generated therapy, or AI chatbots acting as a counsellor.
 - Emergency dispatch. Echo signposts and escalates per protocol; it is not an emergency service.
@@ -89,7 +92,7 @@ Success is not downloads or subscriptions alone. Targets are to be set during pi
 | Persona | Needs | Notes |
 |---|---|---|
 | **Seeker** | Someone to talk to without being known; low-friction start; to feel safe | May be lonely, grieving, stressed, anxious. Possibly vulnerable — design for that. |
-| **Listener** | To support others within clear guidelines | Same account type as Seeker; a member can be either or both. |
+| **Listener** | To support others within clear guidelines | Same account type as Seeker; every member can give and receive support. Also a forum commenter. |
 | **Client** | Professional support via text | A member who books/chats with a therapist. |
 | **Therapist** | Verified credential, manageable caseload, safe tools, fair pay | Needs to reach clients without taking on unmanaged risk. |
 | **Moderator / Clinical reviewer** | Triage queue, evidence, clear policy, audit trail | Handles reports, AI flags, appeals, crisis escalations. |
@@ -123,27 +126,26 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 2. Register with real details; verify phone (OTP) and, where required, identity **[OPEN]**.
 3. Accept Terms, Privacy Notice and Community Guidelines — including explicit consent for AI-assisted moderation of messages.
 4. Choose a pseudonymous handle and avatar (no photo upload).
-5. Select issue tags (1–3 primary), age band, language(s), and whether they want to **talk, listen, or both**.
-6. Land on Home with recommended connections and a visible "Need urgent help?" entry.
+5. Provide age (from date of birth) and spoken language(s); optionally select topics of interest for the forum.
+6. Land on Home (active chats, forum feed) with a visible "Need urgent help?" entry. The system begins matching automatically.
 
 *Safety branch:* if onboarding free-text or tag choices indicate crisis (e.g. self-harm), show the crisis resource card immediately and non-intrusively (§6.8).
 
-### J2 — Find and start a peer conversation
-1. Home shows a short ranked list of compatible members (pseudonymous cards: handle, avatar, shared issue tags, age band, listener/seeker mode).
-2. Member sends a **connection request** with an optional short intro.
-3. Recipient sees the request and can **accept, decline or ignore** without revealing why; declines are not shown as rejections.
-4. On acceptance a private text conversation opens.
+### J2 — Automatic peer match and conversation
+1. The system automatically pairs the member with another member of a compatible **age band** and shared **language** (§6.3).
+2. Both see each other's pen name and avatar only, and a conversation opens. Either can **skip/end** the match without explanation shown to the other.
+3. Messages are checked in real time against the sharing restrictions (§6.4).
 
 *Safety branch:* either party can block/report at any point; blocked users never see each other again in matching.
 
 ### J3 — Ongoing conversation
-- Asynchronous text chat with push notifications that never reveal message content on the lock screen by default.
+- Chat with push notifications that never reveal message content on the lock screen by default.
 - Optional **24-hour disappearing chat** (mutual opt-in, §6.4).
 - Member can mute, block, report, end the conversation, or leave feedback.
 
 ### J4 — Report / block
 1. From any message or profile: *Block* (immediate, silent) or *Report* (choose reason, optional note).
-2. Reported messages are **snapshotted into a case** so they remain reviewable even if the chat expires or is deleted.
+2. Reported messages, posts or comments are **snapshotted into a case** so they remain reviewable even if the chat expires or is deleted.
 3. Reporter sees acknowledgement and, later, a non-detailed outcome notice.
 
 ### J5 — Crisis signal
@@ -156,10 +158,15 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 2. Entitlements and renewal terms are shown before payment; explicit consent for auto-renewal.
 3. On success, access updates immediately; failure leaves the member's safety features intact.
 
-### J7 — Book and attend therapist chat
-1. Member browses the therapist directory (verified badge, specialisations, languages, availability, price).
-2. Books an available slot (or opens an async thread, depending on service model **[OPEN]**).
-3. Text session takes place; the therapist can add a private note; the member can rate afterwards.
+### J7 — Find a therapist and chat, call or video call
+1. Member browses the public therapist directory (real name, photo, qualifications, verified badge, specialisations, languages, availability, price).
+2. Chooses a mode — chat, voice call or video call — and books an available slot (or starts a chat if the therapist is available **[OPEN D4]**).
+3. Session takes place in-app; the member may keep camera off and remain a pen name **[OPEN D15]**; the therapist can add a private note; the member can rate afterwards.
+
+### J10 — Public forum
+1. Member opens the forum, browses/filters by topic, and posts under their pen name.
+2. Members and therapists comment. Therapist comments carry a verified-professional badge.
+3. Posts and comments are screened before/after publishing; members can report any post or comment; a post with risk signals gets the crisis resource prompt shown to the author.
 
 ### J8 — Therapist onboarding
 1. Therapist applies, uploads credentials and identity documents.
@@ -178,7 +185,8 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | Capability | P2 MVP | P3 | P4 Pilot | P5 |
 |---|:--:|:--:|:--:|:--:|
 | Registration, verification, private profiles | ✔ | | | |
-| Issue-tag matching & connection requests | ✔ | refine | | improve |
+| Automatic matching by age + language | ✔ | refine | | improve |
+| Public forum (posts, comments, reports) | ✔ | therapist comments & badges | | |
 | Peer text chat | ✔ | | | |
 | Subscriptions (daily/monthly/yearly) | ✔ | | tune | |
 | Block & report | ✔ | | | |
@@ -186,7 +194,8 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | Basic admin dashboard (users, reports, billing) | ✔ | extend | | |
 | **Baseline safety: keyword flags + human review queue** | ✔ *(recommended — see §14)* | | | |
 | AI-assisted moderation + strike engine | | ✔ | tune | |
-| Therapist verification, availability, directory, chat | | ✔ | | |
+| Therapist verification, availability, public directory, chat | | ✔ | | |
+| Therapist voice & video calls | | ✔ | | |
 | Escalation procedures / crisis protocol | | ✔ | validate | |
 | 24-hour disappearing chats | | ✔ | | |
 | Feedback & ratings | ✔ basic | ✔ | | |
@@ -216,32 +225,32 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 
 | ID | Requirement | Phase |
 |---|---|---|
-| PRF-1 | Each member has a **pseudonymous handle** (unique, moderated for impersonation/offensive content) and an avatar chosen from a curated set. Photo upload is not supported. | P2 |
-| PRF-2 | The public profile MAY show: handle, avatar, issue tags, age band (not exact age), language(s), listener/seeker mode, optional short bio. | P2 |
+| PRF-1 | Each member has a **pen name** (unique, moderated for impersonation/offensive content and for names that look like real names or contact details) and an avatar chosen from a curated set. Photo upload is not supported. | P2 |
+| PRF-2 | A member's profile visible to others MAY show only: **pen name, avatar**, and (to matches) age band and shared language. No bio free-text in the MVP, to reduce leakage of identifying details **[OPEN D18]**. | P2 |
 | PRF-3 | The bio and handle MUST be screened for contact details (phone, email, social handles, links) and rejected. | P2 |
 | PRF-4 | Members MUST be able to change handle subject to rate limits, without losing conversations. | P2 |
+| PRF-6 | **Therapist profiles are public** (real name, photo, qualifications, verification badge, specialisations, languages, ratings) and visible to non-logged-in visitors only to the extent counsel approves **[OPEN]**. | P3 |
 | PRF-5 | Real name, phone, email, exact date of birth and location MUST never appear in any member-facing API response. | P2 |
 
-### 6.3 Issue tags and matching (MAT)
+### 6.3 Automatic matching (MAT)
 
 | ID | Requirement | Phase |
 |---|---|---|
-| MAT-1 | The platform ships with a curated, versioned issue-tag taxonomy (e.g. loneliness, grief, stress, relationships, family, work, anxiety, life change, personal development). Taxonomy is editable by Admin. | P2 |
-| MAT-2 | A member selects 1–3 primary tags and MAY add secondary tags. | P2 |
-| MAT-3 | Recommendations MUST be ranked using: shared tags, compatible age band, language, listener/seeker complement, recent activity. Weights are configurable. | P2 |
-| MAT-4 | Matching MUST exclude: blocked users (both directions), suspended users, users with open Severity-1 cases, and any age-band mismatch with minors. | P2 |
-| MAT-5 | Conversations MUST begin with a **connection request that the recipient accepts** — no unsolicited direct messages. Intro text is length-limited and moderated. | P2 |
-| MAT-6 | Daily limits MUST apply to outbound connection requests and to recommendations, to prevent spam and to reduce "shopping" behaviour. | P2 |
-| MAT-7 | Matching MUST NOT use or display attributes that encourage dating dynamics (appearance, relationship-seeking status, proximity). | P2 |
-| MAT-8 | Members MUST be able to pause availability ("not taking new conversations") without leaving the platform. | P2 |
-| MAT-9 | Match quality MUST be measurable: request→accept rate, conversation depth, post-chat rating, block rate per match. | P3 |
+| MAT-1 | Members are matched **automatically** using **age band** and **spoken language(s)** as the required criteria. | P2 |
+| MAT-2 | Age bands MUST be defined (e.g. 18–24, 25–34, …) **[OPEN D11]** and adults MUST NEVER be matched with minors. If minors are allowed, they match only with minors, in a separately governed experience. | P2 |
+| MAT-3 | Language is a hard filter: both members must share at least one language; the shared language is shown. | P2 |
+| MAT-4 | Matching MUST exclude blocked users (both directions), suspended users, and users with open Severity-1 cases, and MUST avoid re-matching a pair who previously ended a match unless both opt in. | P2 |
+| MAT-5 | Members can skip, end a match, or pause matching ("not taking new conversations"); limits apply to rapid skipping/"shopping". | P2 |
+| MAT-6 | Matching MUST NOT use or display appearance, relationship status, gender-seeking preferences or proximity. **[OPEN D16: whether gender is collected at all; collecting it raises dating risk]** | P2 |
+| MAT-7 | Optional soft signals (forum topics, stated interests, issue tags) MAY be added later to improve match quality, as tie-breakers only. **[OPEN D17]** | P3 |
+| MAT-8 | Match quality MUST be measurable: conversation depth, post-chat rating, skip rate, block rate per match. | P2 |
 
 ### 6.4 Messaging (MSG)
 
 | ID | Requirement | Phase |
 |---|---|---|
-| MSG-1 | Conversations are **text only**. The system MUST reject attachments, images, audio, video, and location. Links SHOULD be blocked or neutralised by default. | P2 |
-| MSG-2 | Messaging is asynchronous with delivery and read state; typing indicator is optional per member. | P2 |
+| MSG-1 | Member-to-member chat MUST block: **videos, addresses, phone numbers and links** (URLs, domains, social handles, emails). Detection MUST handle obfuscation (spaced digits, number words, "dot com", Sheng/Kiswahili digits). Blocked content is not delivered; the sender sees a friendly explanation. Whether **images/audio notes** are permitted is **[OPEN D14]**; default: not permitted. | P2 |
+| MSG-2 | Chat supports real-time and asynchronous use, with delivery and read state; typing indicator is optional per member. | P2 |
 | MSG-3 | Messages MUST be encrypted in transit and at rest. Whether end-to-end encryption is used is an architectural decision that **conflicts with server-side AI moderation** and MUST be decided explicitly **[OPEN D6]**. | P2 |
 | MSG-4 | Members can mute, block, report, archive or end a conversation at any time. Ending a conversation does not notify with blame language. | P2 |
 | MSG-5 | Push notifications MUST be content-free by default ("You have a new message") and configurable. | P2 |
@@ -250,6 +259,19 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | MSG-8 | Members MUST see an always-visible reminder, in the conversation header or an info sheet, that peer support is not professional treatment and how to reach urgent help. | P2 |
 | MSG-9 | Local/offline behaviour: composing offline queues messages and sends on reconnect; the app MUST be usable on low-end Android devices and poor networks. | P2 |
 
+### 6.4a Public forum (FRM)
+
+| ID | Requirement | Phase |
+|---|---|---|
+| FRM-1 | Logged-in members can create posts (title, text, topic) and comment, always under their pen name and avatar. Read access for non-members **[OPEN D20]**. | P2 |
+| FRM-2 | Therapists can comment on any post; their comments carry a verified-professional badge, real name and are visually distinct. Therapist comments in the forum are general information, not individual treatment, and the UI must say so. | P3 |
+| FRM-3 | Posts and comments are **text only** and are subject to the same blocking as chat: no videos, addresses, phone numbers or links. Because the forum is public, they are also screened for identifying details (names, workplaces, schools, neighbourhoods) and the author is warned before publishing. | P2 |
+| FRM-4 | Every post/comment has Report; reports create cases (§6.7). Authors can delete their own content; deletion does not erase snapshots held in an open case. | P2 |
+| FRM-5 | Moderation approach (pre-moderation for new/low-trust accounts, post-moderation otherwise, or full pre-moderation) **[OPEN D21]**; self-harm or abuse disclosure posts trigger the crisis card for the author (CRS-3) and a priority review. | P2 |
+| FRM-6 | Topic categories are admin-managed; pinned community guidelines; therapist-hosted topics or Q&A MAY be added. | P3 |
+| FRM-7 | Anti-abuse: rate limits, new-account restrictions, brigading detection, ability to mute/block authors, hide specific threads. | P2 |
+| FRM-8 | Comments from therapists MUST NOT solicit private clients through contact details; offering a session happens via the in-app profile link. | P3 |
+
 ### 6.5 Therapist directory and sessions (THR)
 
 | ID | Requirement | Phase |
@@ -257,12 +279,16 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | THR-1 | Therapists MUST apply with credentials; only approved therapists appear in the directory. | P3 |
 | THR-2 | Verification MUST check licence/registration status with the competent Kenyan regulator and record: document, reviewer, date, result, expiry/renewal date **[verify regulator list with counsel]**. | P3 |
 | THR-3 | Re-verification MUST occur at credential expiry; expired therapists are automatically hidden from booking. | P3 |
-| THR-4 | Directory entries show: pseudonymous display name or professional name **[OPEN]**, photo (therapists only, optional), qualification, specialisations, languages, session format, availability, price, rating. | P3 |
+| THR-4 | Directory entries are **public** and show: real professional name, photo, qualification, verified badge, specialisations, languages, supported modes (chat/voice/video), availability, price, rating. | P3 |
 | THR-5 | Therapists manage availability (recurring and one-off), set capacity limits and can pause intake. | P3 |
-| THR-6 | Service model MUST support at least one of: (a) scheduled live text sessions, (b) asynchronous threads with response-time commitments. Final model is **[OPEN D4]**. | P3 |
+| THR-6 | A member can **chat, voice call and video call** a therapist. The platform MUST support in-app real-time voice and video (no phone numbers exchanged; calls are proxied through the app), scheduled and, if offered, on-demand. Scheduling model is **[OPEN D4]**. | P3 |
+| THR-6a | Members MAY join calls with camera off and pen name/avatar shown; whether therapists may require camera-on or real identity for clinical reasons is **[OPEN D15]**. | P3 |
+| THR-6b | Calls MUST NOT be recorded by default. Any recording requires explicit, per-session consent from both parties and a defined retention rule **[OPEN D19]**. | P3 |
+| THR-6c | Therapists MUST NOT share personal phone numbers, addresses or off-platform contacts with members, and the same blocking applies to their chat. | P3 |
+| THR-6d | Calls need a quality fallback (video → voice → chat) for poor networks, with minutes/data cost shown to the member. | P3 |
 | THR-7 | Booking, rescheduling, cancellation, no-show and refund rules MUST be explicit in-app and enforced by the system. | P3 |
 | THR-8 | Therapists have private session notes. Ownership, retention, access and export rules for clinical notes MUST be defined **[OPEN D7]**. | P3 |
-| THR-9 | Therapist chat uses the same text-only constraints plus professional-conduct rules; moderation applies to both directions. | P3 |
+| THR-9 | Professional-conduct rules apply to all modes; text moderation applies to therapist chat in both directions; call/video safety relies on reporting, session metadata and consented review since live media is not scanned **[OPEN D19]**. | P3 |
 | THR-10 | Therapists MUST have a documented process for imminent-risk situations, including how and when a client's real identity/contact can be accessed (§6.9). | P3 |
 | THR-11 | Therapist payouts, commission and invoicing are handled in Billing (§6.6). Rates and revenue-share are **[OPEN D3]**. | P3 |
 | THR-12 | Ratings and reviews of therapists are moderated; clinical complaints route to Clinical Reviewer, not only Support. | P3 |
@@ -290,7 +316,7 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | ID | Requirement | Phase |
 |---|---|---|
 | SAF-1 | **Block** is immediate, silent, mutual-invisible (neither party sees the other in matching, requests or search), and reversible only by the blocker. | P2 |
-| SAF-2 | **Report** offers reason categories (harassment, threats, sexual content, scam/solicitation, self-harm concern, impersonation, hate, other) and optional free text. | P2 |
+| SAF-2 | **Report** (on messages, posts, comments, profiles) offers reason categories (harassment, threats, sexual content, scam/solicitation, self-harm concern, impersonation, hate, other) and optional free text. | P2 |
 | SAF-3 | A report MUST create a **Case** that snapshots the reported message(s) with surrounding context, parties, timestamps and prior history. | P2 |
 | SAF-4 | Reporters receive an acknowledgement and a generic outcome notice ("Action was taken" / "No violation found") without disclosing sanctions. | P2 |
 | SAF-5 | Retaliation protection: repeated reports or blocks against the same reporter by a user escalate that user's case. | P3 |
@@ -303,7 +329,7 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | SAF-7 | **AI (P3):** model-based detection for harassment, threats, manipulation/grooming, sexual content, scams and self-harm risk. | P3 |
 | SAF-8 | AI output is a **signal, not a verdict.** A flag creates or enriches a case; it MUST NOT permanently ban, delete an account or disclose message contents externally. Severe automated actions are limited to *temporary* protective measures (e.g. hold message for review) defined in policy. | P3 |
 | SAF-9 | All flags record: model/version, category, score/confidence, message reference, outcome after review. Moderator decisions feed precision/false-positive metrics. | P3 |
-| SAF-10 | Moderation covers peer and therapist chats, handles, bios and intro messages, and is tuned for English, Kiswahili and Sheng/code-switching **[ASSUMPTION]**. | P3 |
+| SAF-10 | Moderation covers peer and therapist chats, forum posts and comments, pen names, and is tuned for English, Kiswahili and Sheng/code-switching **[ASSUMPTION]**. | P3 |
 | SAF-11 | Members MUST be told, in plain language, that messages are screened by automated systems and may be reviewed by trained staff when reported or flagged. | P2 |
 
 #### Strike policy (draft — to be ratified)
@@ -409,7 +435,7 @@ The dashboard is an internal web application with MFA, RBAC and a complete audit
 ## 7. Screen inventory
 
 **Member app (mobile-first)**
-Welcome · Register · OTP verification · Identity verification (conditional) · Consents · Handle & avatar · Issue tags & preferences · Home (recommendations + active chats) · Member card detail · Send connection request · Incoming requests · Chat list · Conversation · Conversation settings (mute, disappearing, block, report) · Report flow · Therapist directory · Therapist profile · Booking / availability · Therapist chat · Plans & pricing · Checkout · Subscription management & billing history · Help centre · Crisis resources (global) · Account standing & strikes · Appeal · Feedback / rating · Settings (profile, privacy, notifications, language, data export, delete account)
+Welcome · Register · OTP verification · Identity verification (conditional) · Consents · Pen name & avatar · Age & language · Home (active chats + forum feed) · Match found / matching status · Chat list · Conversation · Conversation settings (mute, disappearing, skip, block, report) · Report flow · Forum feed · Topic page · Post detail & comments · Create post · Therapist directory · Therapist profile (public) · Booking / availability · Therapist chat · Voice call · Video call · Pre-call check · Plans & pricing · Checkout · Subscription management & billing history · Help centre · Crisis resources (global) · Account standing & strikes · Appeal · Feedback / rating · Settings (profile, privacy, notifications, language, data export, delete account)
 
 **Therapist app / portal**
 Application & credential upload · Verification status · Profile · Availability calendar · Client inbox · Client conversation · Session notes · Earnings & payouts · Settings
@@ -425,8 +451,10 @@ Login + MFA · Overview · Users list / detail · Cases queue / detail · AI fla
 |---|---|
 | `User` | Real details, role(s), status, consent records, age band |
 | `Profile` | Handle, avatar, bio, language(s), mode (talk/listen/both), availability |
-| `IssueTag`, `UserIssueTag` | Versioned taxonomy; primary vs. secondary |
-| `ConnectionRequest` | Sender, recipient, intro, status, expiry |
+| `Topic` | Forum topic categories (admin-managed) |
+| `Match` | Pair, shared language, age bands, status (active/ended/skipped), reason |
+| `ForumPost`, `ForumComment` | Author, topic, text, status (published/hidden/removed), reports |
+| `CallSession` | Therapist, member, mode (voice/video), times, quality, consent flags |
 | `Conversation`, `Message` | Participants, type (peer/therapist), disappearing flag, expiry, state |
 | `Block` | Blocker, blocked, timestamp |
 | `Report`, `Case`, `CaseEvidence` | Reason, severity, snapshot of messages, owner, SLA, decisions |
@@ -450,10 +478,11 @@ Login + MFA · Overview · Users list / detail · Cases queue / detail · AI fla
 | **Privacy & security** | Encryption in transit and at rest; least privilege; secret management; dependency and vulnerability scanning; penetration test before Phase 4; documented incident-response and breach-notification process; no production data in non-prod. |
 | **Reliability** | Target availability and RPO/RTO **[OPEN]**; graceful degradation: if billing, matching or AI moderation is down, chat and **safety features keep working**. |
 | **Performance** | Fast on low-end Android devices and unreliable networks; message send p95 < 2 s on 3G-class connection **[ASSUMPTION]**; lightweight payloads and small app size. |
+| **Real-time media** | Voice/video needs low-latency infrastructure that works on mobile data; budget per-minute cost; encrypted media; graceful degradation to audio/chat. |
 | **Platforms** | Mobile-first; Android is the priority in Kenya **[ASSUMPTION]**; iOS/web member clients **[OPEN D9]**; Admin is a web app. |
 | **Localisation** | English at launch; Kiswahili strongly recommended for pilot **[ASSUMPTION]**; all copy externalised for translation; KES currency; EAT time zone. |
 | **Accessibility** | WCAG 2.1 AA target for UI; scalable text, sufficient contrast (green/white/orange palette must pass); screen-reader support; avoid colour-only signalling. |
-| **Design/brand** | Primary green (calm), white (open, readable), subtle orange accents for key actions and positive moments. Messaging is the centrepiece. Familiar, understated chat patterns; must not feel like a clinical system or a dating app. |
+| **Design/brand** | Primary green (calm), white (open, readable), subtle orange accents for key actions and positive moments. Chat is the centrepiece, with the forum as the community layer. Familiar, understated chat patterns; must not feel like a clinical system or a dating app. |
 | **Auditability** | Immutable logs for staff access, sanctions, payments and consent changes. |
 | **Observability** | Metrics, alerts and tracing that never record message content. |
 | **Scalability** | Architecture must support pilot cohort sizes now and growth without redesign of the data model; multi-country support (currency, regulators, crisis resources) must not require a rewrite. |
@@ -477,7 +506,7 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 
 ## 11. Analytics and instrumentation
 
-- Event taxonomy covering the funnel: install → register → verify → tags → first recommendation viewed → request sent → accepted → first message → conversation depth → rating → subscribe → renew/churn; therapist: directory view → booking → session → rating.
+- Event taxonomy covering the funnel: install → register → verify → age/language → matched → first message → conversation depth → rating → subscribe → renew/churn; therapist: directory view → booking → session → rating.
 - Safety instrumentation: report rate, block rate, flag volume, time-to-review, appeal outcomes, strikes issued, repeat offences.
 - No message content or sensitive free-text in analytics events. Pseudonymous IDs only. Member consent respected for non-essential analytics.
 - Dashboards for Product, Safety and Finance; weekly pilot review pack.
@@ -535,7 +564,15 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 | **D10** | Identity verification level (OTP only vs. national ID) | P2 | OTP at sign-up; stronger verification on escalation |
 | **D11** | Minimum age and handling of minors | P2 | 18+ only for pilot |
 | **D12** | Do all members listen, or is there a separate listener programme with training? | P2 | Everyone can listen; mandatory short guidelines; revisit with data |
-| **D13** | Therapist display identity (pseudonym vs. professional name) | P3 | Professional name and verified badge |
+| **D14** | Are images or voice notes allowed between members? (Brief restricts videos, addresses, phone numbers and links) | P2 | No media of any kind at launch; revisit with data |
+| **D15** | Can a member stay camera-off / pen-name only in therapist calls? Can therapists require identity? | P3 | Camera-off allowed; real identity held by platform and released only under crisis protocol |
+| **D16** | Is gender collected or used in matching? | P2 | Do not collect or use; reduces dating risk |
+| **D17** | Add topic/issue signals to matching later? | P3 | Soft tie-breaker only, after pilot data |
+| **D18** | Allow member bios? | P2 | No free-text bio at launch |
+| **D19** | Recording and review of calls; moderation of live voice/video | P3 | No recording by default; consent-based review for reported sessions |
+| **D20** | Is the forum readable by non-members/search engines? | P2 | Members only, not indexed |
+| **D21** | Forum moderation mode (pre vs post) | P2 | Pre-moderate new accounts, post-moderate trusted |
+| **D13** | Therapist display identity | P3 | Public: real professional name, photo and verified badge (founder decision) |
 
 ### 14.2 Assumptions made
 
@@ -543,9 +580,9 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 2. Phone OTP is the baseline verification.
 3. Mobile-first; Android-first; English plus Kiswahili for the pilot.
 4. Currency is KES; mobile money is the primary payment method.
-5. All members can be seekers, listeners or both.
-6. Chats begin with an accepted connection request.
-7. Handles and avatars are pseudonymous; no photo upload.
+5. Any member can both give and receive support in peer chat; there is no separate listener role.
+6. Matches open directly and automatically; either party can skip or end.
+7. Pen names and avatars only; no photos and no bio.
 8. Peer chat requires an active paid plan; safety features and crisis resources are always free.
 
 ---
@@ -555,7 +592,8 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 | Term | Meaning |
 |---|---|
 | **Member** | Registered user who uses peer support |
-| **Seeker / Listener** | Roles a member can take in a conversation |
+| **Seeker / Listener** | Informal roles a member can take in a conversation; not separate account types |
+| **Pen name** | The only name other members see for a member |
 | **Peer support** | Non-clinical, mutual emotional support between members |
 | **Clinical / therapist service** | Professional support from a verified, qualified therapist |
 | **Case** | A record opened by a report, flag, appeal or crisis signal, containing evidence, decisions and audit trail |
