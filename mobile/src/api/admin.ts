@@ -94,11 +94,11 @@ function seed(): AdminState {
 function patch(fn: (a: AdminState) => Partial<AdminState>) {
   update((s) => (s.admin ? { admin: { ...s.admin, ...fn(s.admin) } } : {}))
 }
-const me = () => {
+export const me = () => {
   const a = getDb().admin!
   return { name: a.staffName, role: a.role }
 }
-function log(action: string, target: string, reason = '') {
+export function log(action: string, target: string, reason = '') {
   const { name, role } = me()
   patch((a) => ({ audit: [audit(name, role, action, target, reason), ...a.audit] }))
 }

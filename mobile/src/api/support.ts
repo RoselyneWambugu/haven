@@ -1,4 +1,4 @@
-import { CONFIG } from '@/data/config'
+import { LIVE } from '@/data/config'
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
 import { detectDistress } from '@/lib/safety'
@@ -125,7 +125,7 @@ export const account = {
   deletionDaysLeft(): number | null {
     const at = getDb().account?.deletionRequestedAt
     if (!at) return null
-    return Math.max(0, Math.ceil((at + CONFIG.deletionHoldDays * 24 * HOUR - now()) / (24 * HOUR)))
+    return Math.max(0, Math.ceil((at + LIVE.deletionHoldDays * 24 * HOUR - now()) / (24 * HOUR)))
   },
 }
 

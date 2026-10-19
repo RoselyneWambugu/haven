@@ -4,7 +4,7 @@ import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { ToggleRow } from '@/components/Controls'
 import { Field } from '@/components/Field'
-import { Panel, PortalPage, useWide } from '@/components/Portal'
+import { Panel, PortalPage, Stepper, useWide } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { blocksToCells, cellKey, type Cell } from '@/lib/portal'
@@ -124,20 +124,5 @@ export default function Calendar() {
         </View>
       </View>
     </PortalPage>
-  )
-}
-
-function Stepper({ label, value, min, max, step = 1, onChange }: { label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 }}>
-      <Text variant="small" style={{ flex: 1 }}>
-        {label}
-      </Text>
-      <Button size="sm" variant="quiet" label="−" accessibilityHint={`Lower ${label}`} onPress={() => onChange(Math.max(min, value - step))} />
-      <Text variant="label" style={{ minWidth: 28, textAlign: 'center' }} accessibilityLabel={`${label}: ${value}`}>
-        {value}
-      </Text>
-      <Button size="sm" variant="quiet" label="+" accessibilityHint={`Raise ${label}`} onPress={() => onChange(Math.min(max, value + step))} />
-    </View>
   )
 }

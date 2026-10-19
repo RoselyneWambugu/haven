@@ -7,7 +7,9 @@ import { Icon } from '@/components/Icon'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { ALWAYS_FREE, PLANS, PLAN_INCLUDES } from '@/data/help'
+import { ALWAYS_FREE } from '@/data/help'
+import { includesList } from '@/lib/content'
+import { useDb } from '@/store/db'
 import { go } from '@/lib/nav'
 import { useMoney } from '@/store/useMoney'
 import { colors } from '@/theme'
@@ -15,10 +17,11 @@ import { colors } from '@/theme'
 /** Plans. Urgent help, the help centre and the community to read are always free, and the screen says so. */
 export default function Plans() {
   const money = useMoney()
-  const [plan, setPlan] = useState<PlanId>('monthly')
+  const PLANS = useDb((s) => s.content.plans).filter((p) => p.enabled)
+  const [plan, setPlan] = useState<PlanId>(PLANS.find((p) => p.id === 'monthly')?.id ?? PLANS[0].id)
   const [auto, setAuto] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const chosen = PLANS.find((p) => p.id === plan)!
+  const chosen = PLANS.find((p) => p.id === plan) ?? PLANS[0]
 
   return (
     <Screen
@@ -53,7 +56,7 @@ export default function Plans() {
       {plan !== 'daily' ? <ToggleRow testID="plan-auto" on={auto} onChange={setAuto} label="Renew automatically. Cancel any time." /> : null}
       <Card tone="lichen">
         <Text variant="label">Your plan includes</Text>
-        {PLAN_INCLUDES.map((x) => (
+        {includesList(chosen).map((x) => (
           <View key={x} style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
             <Icon name="check" size={18} color={colors.mossDeep} />
             <Text variant="small" style={{ flex: 1 }}>

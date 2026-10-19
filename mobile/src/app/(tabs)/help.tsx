@@ -6,7 +6,7 @@ import { Icon } from '@/components/Icon'
 import { Screen, TopBar } from '@/components/Layout'
 import { Card, EmptyState, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { ARTICLES, DEPARTMENTS, POPULAR, searchArticles } from '@/data/help'
+import { visibleArticles } from '@/lib/content'
 import { go } from '@/lib/nav'
 import { useDb } from '@/store/db'
 import { colors } from '@/theme'
@@ -14,7 +14,12 @@ import { colors } from '@/theme'
 export default function Help() {
   const [q, setQ] = useState('')
   const unread = useDb((s) => s.tickets.filter((t) => t.unread).length)
-  const results = searchArticles(q)
+  const c = useDb((s) => s.content)
+  const departments = c.departments.filter((d) => d.enabled)
+  const articles = visibleArticles(c.articles, c.departments)
+  const terms = q.toLowerCase().split(/\s+/).filter(Boolean)
+  const results = terms.length ? articles.filter((x) => terms.every((t) => `${x.title} ${x.intro} ${x.steps.join(' ')}`.toLowerCase().includes(t))) : []
+  const popular = c.popular.map((id) => articles.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x)
   const searching = q.trim().length > 0
   return (
     <Screen tab testID="help" header={<TopBar avatar />}>
@@ -49,7 +54,7 @@ export default function Help() {
             </View>
           </Card>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {DEPARTMENTS.map((d) => (
+            {departments.map((d) => (
               <Pressable
                 key={d.id}
                 testID={`dept-${d.id}`}
@@ -70,10 +75,9 @@ export default function Help() {
           </View>
           <Text variant="h3">Popular</Text>
           <View>
-            {POPULAR.map((id, i) => {
-              const a = ARTICLES.find((x) => x.id === id)!
-              return <Row key={id} title={a.title} onPress={() => go(`/help/article/${id}`)} last={i === POPULAR.length - 1} />
-            })}
+            {popular.map((a, i) => (
+              <Row key={a.id} title={a.title} onPress={() => go(`/help/article/${a.id}`)} last={i === popular.length - 1} />
+            ))}
           </View>
           <Button testID="help-contact" variant="quiet" label="Contact support" icon="ticket" onPress={() => go('/help/contact')} />
           <Button testID="help-tickets" variant="ghost" label={unread ? `My tickets (${unread} new)` : 'My tickets'} onPress={() => go('/help/tickets')} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
-import { api, FORUM_TOPICS, SPOKEN_LANGUAGES } from '@/api'
+import { api, SPOKEN_LANGUAGES } from '@/api'
 import { AVATAR_KINDS, Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Chip, Segmented } from '@/components/Controls'
@@ -22,6 +22,7 @@ import { colors } from '@/theme'
  */
 export default function Profiles() {
   const account = useDb((s) => s.account)
+  const TOPICS = useDb((s) => s.content.topics)
   const reauthUntil = useDb((s) => s.reauthUntil)
   const [tab, setTab] = useState<'public' | 'private'>('public')
   const [editing, setEditing] = useState(false)
@@ -79,7 +80,7 @@ export default function Profiles() {
             Topics (never used for matching)
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {FORUM_TOPICS.map((t) => (
+            {TOPICS.map((t) => (
               <Chip key={t} label={t} selected={p.topics.includes(t)} onPress={() => api.auth.setTopics(toggle(p.topics, t))} />
             ))}
           </View>

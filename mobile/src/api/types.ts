@@ -40,6 +40,8 @@ export interface Peer {
   avatar: AvatarKind
   languages: string[]
   ageBand: AgeBand
+  /** Community topics they follow. Only used to break ties, and only if staff turn it on (MAT-7, D17). */
+  topics?: string[]
 }
 
 // ---------- account ----------
@@ -530,4 +532,80 @@ export interface AdminState {
   policy: StrikePolicy
   policyChange: { policy: StrikePolicy; requestedBy: string; approvals: string[] } | null
   audit: AuditEntry[]
+}
+
+// ---------- editable content and configuration (admin: Resources, Configuration) ----------
+
+export type DepartmentOwner = 'Support' | 'Billing' | 'Moderation' | 'Clinical' | 'Tech'
+
+export interface DepartmentCfg extends HelpDepartment {
+  owner: DepartmentOwner
+  /** Response-time target for tickets, in hours (HLP-1a). */
+  slaHours: number
+  enabled: boolean
+}
+
+export interface ArticleCfg extends HelpArticle {
+  published: boolean
+}
+
+export interface CrisisLineCfg extends CrisisLine {
+  id: string
+}
+
+export interface SupportOrgCfg extends SupportOrg {
+  archived: boolean
+}
+
+export interface ServiceSuggestion {
+  id: string
+  name: string
+  note: string
+  at: number
+  status: 'new' | 'accepted' | 'declined'
+}
+
+export interface PlanCfg extends PlanDef {
+  enabled: boolean
+  entitlements: { disappearing: boolean; therapistDiscountPct: number }
+}
+
+export interface MatchingCfg {
+  /** If nobody in the same age range is free, look in the neighbouring ranges (MAT-1). */
+  neighbourFallback: boolean
+  /** 0 means topics are never used. Above 0 they break ties between people who already share an age range and a language (MAT-7, D17). */
+  softTopicWeight: number
+  /** Days before two people who ended a match can be matched again (MAT-4). */
+  rematchCooldownDays: number
+}
+
+export interface FlagsCfg {
+  forum: boolean
+  moodCheckin: boolean
+  disappearing: boolean
+  therapistVideo: boolean
+}
+
+export interface LimitsCfg {
+  graceDays: number
+  penNameChangeDays: number
+  deletionHoldDays: number
+}
+
+export interface ContentState {
+  departments: DepartmentCfg[]
+  articles: ArticleCfg[]
+  popular: string[]
+  emergency: CrisisLine
+  crisisLines: CrisisLineCfg[]
+  /** When a Clinical Reviewer last checked the numbers (CRS-2, HLP-8). Null means never. */
+  crisisVerifiedAt: number | null
+  supportOrgs: SupportOrgCfg[]
+  suggestions: ServiceSuggestion[]
+  topics: string[]
+  plans: PlanCfg[]
+  pendingPlans: { plans: PlanCfg[]; requestedBy: string; approvals: string[] } | null
+  matching: MatchingCfg
+  flags: FlagsCfg
+  limits: LimitsCfg
 }

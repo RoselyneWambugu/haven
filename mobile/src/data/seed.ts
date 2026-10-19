@@ -3,14 +3,14 @@ import type { AvailabilityBlock, ForumComment, ForumPost, Peer, Therapist } from
 const H = 3600_000
 
 export const PEERS: Peer[] = [
-  { id: 'p-silver', penName: 'SilverRiver', avatar: 'leaf', languages: ['English', 'Kiswahili'], ageBand: '25-34' },
-  { id: 'p-rainy', penName: 'RainyDay', avatar: 'wave', languages: ['English'], ageBand: '25-34' },
-  { id: 'p-kind', penName: 'KindLeaf', avatar: 'fern', languages: ['English', 'Kiswahili'], ageBand: '35-44' },
-  { id: 'p-morning', penName: 'MorningSun', avatar: 'sun', languages: ['English', 'Sheng'], ageBand: '18-24' },
-  { id: 'p-heron', penName: 'BlueHeron', avatar: 'drop', languages: ['English', 'Kiswahili'], ageBand: '25-34' },
-  { id: 'p-fern', penName: 'GentleFern', avatar: 'fern', languages: ['English', 'Kikuyu'], ageBand: '45-54' },
-  { id: 'p-star', penName: 'WanderingStar', avatar: 'star', languages: ['English', 'Kiswahili'], ageBand: '18-24' },
-  { id: 'p-pine', penName: 'SteadyPine', avatar: 'pine', languages: ['English', 'Dholuo'], ageBand: '35-44' },
+  { id: 'p-silver', penName: 'SilverRiver', avatar: 'leaf', languages: ['English', 'Kiswahili'], ageBand: '25-34', topics: ['Grief', 'Loneliness'] },
+  { id: 'p-rainy', penName: 'RainyDay', avatar: 'wave', languages: ['English'], ageBand: '25-34', topics: ['Anxiety', 'Wellbeing'] },
+  { id: 'p-kind', penName: 'KindLeaf', avatar: 'fern', languages: ['English', 'Kiswahili'], ageBand: '35-44', topics: ['Work stress', 'Anxiety'] },
+  { id: 'p-morning', penName: 'MorningSun', avatar: 'sun', languages: ['English', 'Sheng'], ageBand: '18-24', topics: ['Wellbeing'] },
+  { id: 'p-heron', penName: 'BlueHeron', avatar: 'drop', languages: ['English', 'Kiswahili'], ageBand: '25-34', topics: ['Relationships', 'Family'] },
+  { id: 'p-fern', penName: 'GentleFern', avatar: 'fern', languages: ['English', 'Kikuyu'], ageBand: '45-54', topics: ['Grief', 'Family'] },
+  { id: 'p-star', penName: 'WanderingStar', avatar: 'star', languages: ['English', 'Kiswahili'], ageBand: '18-24', topics: ['Loneliness', 'Life changes'] },
+  { id: 'p-pine', penName: 'SteadyPine', avatar: 'pine', languages: ['English', 'Dholuo'], ageBand: '35-44', topics: ['Family', 'Grief'] },
   { id: 'p-quiet', penName: 'QuietPine', avatar: 'pine', languages: ['English'], ageBand: '25-34' },
 ]
 

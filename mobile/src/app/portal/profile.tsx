@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { api, FORUM_TOPICS, SPOKEN_LANGUAGES, type Mode } from '@/api'
+import { api, SPOKEN_LANGUAGES, type Mode } from '@/api'
 import { Portrait } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge, Chip } from '@/components/Controls'
@@ -21,6 +21,7 @@ const MODES: { value: Mode; label: string }[] = [{ value: 'chat', label: 'Chat' 
 /** The public profile (THR-4): what members see, with a live preview. Contact details and links are refused. */
 export default function Profile() {
   const p = useDb((s) => s.portal)
+  const TOPICS = useDb((s) => s.content.topics)
   const wide = useWide()
   const th = THERAPISTS.find((t) => t.id === p?.therapistId)
   const [bio, setBio] = useState(p?.profile.bio ?? '')
@@ -51,7 +52,7 @@ export default function Profile() {
             Specialisations
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {FORUM_TOPICS.map((t) => (
+            {TOPICS.map((t) => (
               <Chip key={t} label={t} selected={specs.includes(t)} onPress={() => { setSpecs(toggle(specs, t)); setSaved(false) }} />
             ))}
           </View>

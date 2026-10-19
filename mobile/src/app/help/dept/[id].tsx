@@ -3,13 +3,15 @@ import { Button } from '@/components/Button'
 import { Screen, TopBar } from '@/components/Layout'
 import { Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { ARTICLES, DEPARTMENTS } from '@/data/help'
+import { visibleArticles } from '@/lib/content'
+import { useDb } from '@/store/db'
 import { go } from '@/lib/nav'
 
 export default function Department() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const d = DEPARTMENTS.find((x) => x.id === id)
-  const list = ARTICLES.filter((a) => a.deptId === id)
+  const c = useDb((st) => st.content)
+  const d = c.departments.find((x) => x.id === id && x.enabled)
+  const list = visibleArticles(c.articles, c.departments).filter((a) => a.deptId === id)
   if (!d) return null
   return (
     <Screen testID="help-dept" header={<TopBar back />} footer={<Button label={`Ask the ${d.title.toLowerCase()} team`} variant="quiet" onPress={() => go(`/help/contact?dept=${d.id}`)} />}>

@@ -3,13 +3,12 @@ import { uid } from '@/lib/id'
 import { now } from '@/lib/clock'
 import { getDb, resetDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
-import { PLANS } from '@/data/help'
 import type { DemoControls, Notice, PlanId, StandingState } from './types'
 
 /** Switches for reviewers. They let you see states that normally take days or need real staff. */
 export const demo: DemoControls & { showPrices(on: boolean): void; addNotice(): void } = {
   grantPlan(planId: PlanId) {
-    const plan = PLANS.find((p) => p.id === planId)!
+    const plan = getDb().content.plans.find((p) => p.id === planId)!
     const t = now()
     update({ subscription: { planId, startedAt: t, endsAt: t + plan.days * 24 * 3600_000, autoRenew: true, cancelledAt: null, method: 'mpesa', receiptNo: 'EC-DEMO' } })
     showToast(`Demo: ${plan.label} plan granted.`)

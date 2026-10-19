@@ -10,7 +10,7 @@ import { canAccess, MODULES, ROLE_LABEL } from '@/lib/admin'
 import { useDb } from '@/store/db'
 import { colors } from '@/theme'
 
-const KEY_OF: Record<string, string> = { case: 'cases', user: 'users', appeal: 'appeals', therapist: 'therapists' }
+const KEY_OF: Record<string, string> = { case: 'cases', user: 'users', appeal: 'appeals', therapist: 'therapists', ticket: 'resources' }
 
 /**
  * The admin dashboard frame (PRD §6.11): an internal desktop web app with MFA, role-based modules and a role badge

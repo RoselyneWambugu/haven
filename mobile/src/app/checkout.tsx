@@ -7,7 +7,6 @@ import { Radio } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { PLANS } from '@/data/help'
 import { THERAPISTS } from '@/data/seed'
 import { maskPhone } from '@/lib/identity'
 import { goBack, replace, resetTo } from '@/lib/nav'
@@ -24,6 +23,7 @@ type Phase = 'review' | 'waiting' | 'success' | 'failed'
  */
 export default function Checkout() {
   const co = useDb((s) => s.checkout)
+  const plans = useDb((s) => s.content.plans)
   const phone = useDb((s) => s.account?.private.phone ?? '')
   const money = useMoney()
   const [method, setMethod] = useState<PaymentMethod>('mpesa')
@@ -53,7 +53,7 @@ export default function Checkout() {
 
   const title =
     item.kind === 'plan'
-      ? `${PLANS.find((p) => p.id === item.planId)?.label} peer plan`
+      ? `${plans.find((p) => p.id === item.planId)?.label} peer plan`
       : `Session with ${THERAPISTS.find((t) => t.id === item.therapistId)?.name}`
   const sub = item.kind === 'plan' ? (item.autoRenew ? 'Renews automatically' : 'Does not renew') : `${dayAndClock(item.start)} · ${item.mode}`
 

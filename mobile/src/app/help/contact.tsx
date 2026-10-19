@@ -8,12 +8,13 @@ import { Field } from '@/components/Field'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { DEPARTMENTS } from '@/data/help'
+import { useDb } from '@/store/db'
 import { go, replace } from '@/lib/nav'
 import { detectDistress } from '@/lib/safety'
 
 /** Contact a help department. If the words suggest someone is in danger, urgent help is offered first (PRD CRS-3). */
 export default function Contact() {
+  const departments = useDb((st) => st.content.departments).filter((d) => d.enabled)
   const { dept } = useLocalSearchParams<{ dept?: string }>()
   const [deptId, setDeptId] = useState(dept ?? 'tech')
   const [subject, setSubject] = useState('')
@@ -34,7 +35,7 @@ export default function Contact() {
         Which team?
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {DEPARTMENTS.map((d) => (
+        {departments.map((d) => (
           <Chip key={d.id} label={d.title} selected={deptId === d.id} onPress={() => setDeptId(d.id)} />
         ))}
       </View>

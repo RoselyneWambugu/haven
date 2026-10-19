@@ -1,5 +1,6 @@
 import { ScrollView, useWindowDimensions, View, type ViewStyle } from 'react-native'
 import { colors } from '@/theme'
+import { Button } from './Button'
 import { Text } from './Text'
 
 /** True on a desktop-sized window. The portal lays out in two columns there and stacks on narrow ones. */
@@ -46,6 +47,22 @@ export function Stat({ value, label, tone }: { value: string; label: string; ton
       <Text variant="small" muted>
         {label}
       </Text>
+    </View>
+  )
+}
+
+/** A number with minus and plus buttons. */
+export function Stepper({ label, value, min, max, step = 1, onChange }: { label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 }}>
+      <Text variant="small" style={{ flex: 1 }}>
+        {label}
+      </Text>
+      <Button size="sm" variant="quiet" label="−" accessibilityHint={`Lower ${label}`} onPress={() => onChange(Math.max(min, value - step))} />
+      <Text variant="label" style={{ minWidth: 28, textAlign: 'center' }} accessibilityLabel={`${label}: ${value}`}>
+        {value}
+      </Text>
+      <Button size="sm" variant="quiet" label="+" accessibilityHint={`Raise ${label}`} onPress={() => onChange(Math.min(max, value + step))} />
     </View>
   )
 }

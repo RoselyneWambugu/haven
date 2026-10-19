@@ -38,6 +38,7 @@ export default function Chat() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const conv = useDb((s) => s.conversations.find((c) => c.id === id))
   const sub = useDb((s) => s.subscription)
+  const disappearingOn = useDb((s) => s.content.flags.disappearing)
   const insets = useSafeAreaInsets()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -188,7 +189,7 @@ export default function Chat() {
 
       <Sheet visible={menu} onClose={() => setMenu(false)} title={name} testID="chat-menu-sheet">
         <View>
-          {conv.kind === 'peer' ? (
+          {conv.kind === 'peer' && (disappearingOn || conv.disappearing === 'on') ? (
             conv.disappearing === 'on' ? (
               <Row icon="clock" title="Turn off disappearing messages" onPress={() => { api.chat.turnOffDisappearing(conv.id); setMenu(false) }} />
             ) : (

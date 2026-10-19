@@ -5,7 +5,6 @@ import { Badge } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
 import { Card, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { PLANS } from '@/data/help'
 import { now } from '@/lib/clock'
 import { ageBandLabel } from '@/lib/identity'
 import { go, resetTo } from '@/lib/nav'
@@ -15,6 +14,7 @@ import { useDb } from '@/store/db'
 export default function Me() {
   const account = useDb((s) => s.account)
   const sub = useDb((s) => s.subscription)
+  const PLANS = useDb((s) => s.content.plans)
   if (!account) return null
   const state = planState(sub, now())
   const plan = sub ? PLANS.find((p) => p.id === sub.planId)?.label : null

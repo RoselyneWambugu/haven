@@ -5,17 +5,20 @@ import { Button } from '@/components/Button'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { ARTICLES, DEPARTMENTS } from '@/data/help'
+import { visibleArticles } from '@/lib/content'
+import { useDb } from '@/store/db'
 import { go } from '@/lib/nav'
 import { dayLong } from '@/lib/time'
 import { colors } from '@/theme'
 
 export default function Article() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const a = ARTICLES.find((x) => x.id === id)
+  const c = useDb((st) => st.content)
+  const articles = visibleArticles(c.articles, c.departments)
+  const a = articles.find((x) => x.id === id)
   const [vote, setVote] = useState<'yes' | 'no' | null>(null)
   if (!a) return null
-  const dept = DEPARTMENTS.find((d) => d.id === a.deptId)
+  const dept = c.departments.find((d) => d.id === a.deptId)
   return (
     <Screen testID="help-article" header={<TopBar back title={dept?.title} />}>
       <Text variant="title">{a.title}</Text>
@@ -63,7 +66,7 @@ export default function Article() {
         <View>
           <Text variant="h3">Related</Text>
           {a.related.map((rid, i) => {
-            const r = ARTICLES.find((x) => x.id === rid)
+            const r = articles.find((x) => x.id === rid)
             return r ? <Row key={rid} title={r.title} onPress={() => go(`/help/article/${rid}`)} last={i === a.related.length - 1} /> : null
           })}
         </View>

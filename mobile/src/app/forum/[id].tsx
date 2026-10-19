@@ -33,6 +33,7 @@ const EDIT_MS = 15 * 60_000
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const post = useDb((s) => s.posts.find((p) => p.id === id))
+  const forumOn = useDb((s) => s.content.flags.forum)
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [menu, setMenu] = useState(false)
@@ -77,7 +78,7 @@ export default function PostDetail() {
         />
       }
       footer={
-        post.status === 'published' ? (
+        post.status === 'published' && forumOn ? (
           <View style={{ gap: 8 }}>
             {draftBlock.blocked ? (
               <Banner tone="clay" icon="shield">

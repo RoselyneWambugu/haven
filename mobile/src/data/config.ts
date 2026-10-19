@@ -17,3 +17,13 @@ export const CONFIG = {
   otpMaxAttempts: 5,
   otpLockMinutes: 15,
 } as const
+
+/**
+ * The limits an Admin can change without a release (PRD §6.11 Configuration). Starts from the defaults above and is
+ * updated when the saved configuration loads or changes, so the rules in `lib/` and `api/` read one place.
+ */
+export const LIVE = {
+  graceDays: CONFIG.graceDays as number,
+  penNameChangeDays: CONFIG.penNameChangeDays as number,
+  deletionHoldDays: CONFIG.deletionHoldDays as number,
+}

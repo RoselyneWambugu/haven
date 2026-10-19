@@ -5,8 +5,10 @@ import { useBreath } from '@/components/Art'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { CRISIS_LINES, EMERGENCY } from '@/data/help'
-import { CONFIG } from '@/data/config'
+import { verification } from '@/lib/content'
+import { dayLong } from '@/lib/time'
+import { now } from '@/lib/clock'
+import { useDb } from '@/store/db'
 import { go } from '@/lib/nav'
 import { colors } from '@/theme'
 
@@ -15,6 +17,9 @@ import { colors } from '@/theme'
  * The numbers are placeholders until the clinical team verifies them (D29), and the screen says so.
  */
 export default function Urgent() {
+  const c = useDb((s) => s.content)
+  const EMERGENCY = c.emergency
+  const v = verification(c.crisisVerifiedAt, now())
   const [breathing, setBreathing] = useState(false)
   const breath = useBreath()
   const scale = breath.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.15] })
@@ -32,7 +37,7 @@ export default function Urgent() {
         </Text>
         <Button testID="call-emergency" variant="urgent" label={`Call ${EMERGENCY.phone}`} icon="phone" onPress={() => dial(EMERGENCY.phone)} />
       </Card>
-      {CRISIS_LINES.map((l) => (
+      {c.crisisLines.map((l) => (
         <Card key={l.name}>
           <Text variant="h3">{l.name}</Text>
           <Text variant="small" muted>
@@ -43,11 +48,15 @@ export default function Urgent() {
           </View>
         </Card>
       ))}
-      {!CONFIG.crisisLinesVerified ? (
+      {v.state === 'never' ? (
         <Banner tone="sun" icon="clock" title="Numbers not final">
           Helpline details are placeholders until our clinical team has checked them. Use 112 in an emergency.
         </Banner>
-      ) : null}
+      ) : (
+        <Text variant="caption" muted>
+          Numbers last checked by our clinical team on {dayLong(c.crisisVerifiedAt!)}.{v.state === 'stale' ? ' They are due another check.' : ''}
+        </Text>
+      )}
       <Card tone="lichen">
         <Text variant="h3">Take a moment</Text>
         {breathing ? (

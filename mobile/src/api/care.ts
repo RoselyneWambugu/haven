@@ -1,4 +1,3 @@
-import { PLANS } from '@/data/help'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, canJoin, SESSION_MINUTES, MIN } from '@/lib/booking'
 import { now } from '@/lib/clock'
@@ -11,6 +10,7 @@ import { showToast } from '@/store/toast'
 import type { CheckoutItem, Conversation, PaymentMethod, PaymentResult, Res, Session, Subscription } from './types'
 
 const DAY = 24 * 3600_000
+const plansNow = () => getDb().content.plans
 const therapistOf = (id: string) => THERAPISTS.find((t) => t.id === id)
 const receipt = () => `EC-${String(Math.floor(100000 + Math.random() * 900000))}`
 
@@ -23,14 +23,14 @@ export const billing = {
     const db = getDb()
     if (!db.account) return { ok: false, error: 'Sign in first.' }
     if (item.kind === 'plan') {
-      const plan = PLANS.find((p) => p.id === item.planId)
+      const plan = plansNow().find((p) => p.id === item.planId && p.enabled)
       if (!plan) return { ok: false, error: 'That plan is not available.' }
       update({ checkout: { id: uid('co'), item, amountKes: plan.priceKes, createdAt: now() } })
       return { ok: true, value: { title: `${plan.label} peer plan`, amountKes: plan.priceKes } }
     }
     const t = therapistOf(item.therapistId)
     if (!t) return { ok: false, error: 'That therapist is not available.' }
-    if (!t.modes.includes(item.mode)) return { ok: false, error: `${t.name} doesn’t offer that kind of session.` }
+    if (!t.modes.includes(item.mode) || (item.mode === 'video' && !db.content.flags.therapistVideo)) return { ok: false, error: `${t.name} doesn’t offer that kind of session.` }
     const slot = slotsFor(t, db.sessions, now()).find((s) => s.start === item.start)
     if (!slot || !slot.modes.includes(item.mode)) return { ok: false, error: 'That time was just taken. Please pick another.', code: 'taken' }
     update({ checkout: { id: uid('co'), item, amountKes: t.priceKes, createdAt: now() } })
@@ -51,7 +51,7 @@ export const billing = {
         const rcpt = receipt()
         if (co.item.kind === 'plan') {
           const item = co.item
-          const plan = PLANS.find((p) => p.id === item.planId)!
+          const plan = plansNow().find((p) => p.id === item.planId)!
           const t = now()
           const cur = db.subscription
           const start = cur && cur.endsAt > t ? cur.endsAt : t
@@ -147,4 +147,4 @@ export const sessions = {
   },
 }
 
-export { PLANS, planState }
+export { planState }

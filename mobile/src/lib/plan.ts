@@ -1,4 +1,4 @@
-import { CONFIG } from '@/data/config'
+import { LIVE } from '@/data/config'
 import type { Subscription } from '@/api/types'
 
 export type PlanState = 'none' | 'active' | 'ending' | 'lapsed'
@@ -14,5 +14,5 @@ export function planState(sub: Subscription | null, t: number): PlanState {
 export const canChat = (s: PlanState): boolean => s === 'active' || s === 'ending'
 
 export function graceEndsAt(sub: Subscription): number {
-  return sub.endsAt + CONFIG.graceDays * 24 * 3600_000
+  return sub.endsAt + LIVE.graceDays * 24 * 3600_000
 }

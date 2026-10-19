@@ -13,6 +13,7 @@ import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { activeFilterCount, filterTherapists, NO_FILTERS, type DirectoryFilters, type DirectorySort } from '@/lib/directory'
+import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -33,6 +34,7 @@ export default function Therapists() {
   const sessions = useDb((s) => s.sessions)
   const langs = useDb((s) => s.account?.public.languages ?? NONE)
   const money = useMoney()
+  const flags = useDb((s) => s.content.flags)
   const [filters, setFilters] = useState<DirectoryFilters>(NO_FILTERS)
   const [sort, setSort] = useState<DirectorySort>('next')
   const [open, setOpen] = useState(false)
@@ -73,7 +75,7 @@ export default function Therapists() {
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                  {t.modes.map((m) => (
+                  {modesFor(t.modes, flags).map((m) => (
                     <Badge key={m} label={m === 'chat' ? 'Chat' : m === 'voice' ? 'Voice' : 'Video'} tone="plain" />
                   ))}
                 </View>
@@ -114,7 +116,7 @@ export default function Therapists() {
           Session type
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {(['chat', 'voice', 'video'] as const).map((m) => (
+          {modesFor(['chat', 'voice', 'video'] as const, flags).map((m) => (
             <Chip key={m} label={m[0].toUpperCase() + m.slice(1)} selected={filters.modes.includes(m)} onPress={() => setFilters({ ...filters, modes: toggle(filters.modes, m) })} />
           ))}
         </View>

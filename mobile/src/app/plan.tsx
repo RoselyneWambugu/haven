@@ -6,8 +6,6 @@ import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { PLANS } from '@/data/help'
-import { CONFIG } from '@/data/config'
 import { now } from '@/lib/clock'
 import { go } from '@/lib/nav'
 import { graceEndsAt, planState } from '@/lib/plan'
@@ -17,6 +15,8 @@ import { useMoney } from '@/store/useMoney'
 
 export default function MyPlan() {
   const sub = useDb((s) => s.subscription)
+  const PLANS = useDb((s) => s.content.plans)
+  const grace = useDb((s) => s.content.limits.graceDays)
   const money = useMoney()
   const [confirm, setConfirm] = useState(false)
   const state = planState(sub, now())
@@ -47,7 +47,7 @@ export default function MyPlan() {
       </Card>
       {state === 'lapsed' ? (
         <Banner tone="sun" icon="lock" title="Chats are read-only">
-          You can read your chats until {dayLong(graceEndsAt(sub))}, with {CONFIG.graceDays} days to renew.
+          You can read your chats until {dayLong(graceEndsAt(sub))}, with {grace} days to renew.
         </Banner>
       ) : null}
       {state === 'ending' ? (

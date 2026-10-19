@@ -1,4 +1,4 @@
-import { CONFIG } from '@/data/config'
+import { CONFIG, LIVE } from '@/data/config'
 import { PEERS, THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
 import { MIN_AGE, ageBand, ageOn, normaliseKenyanPhone, parseDob } from '@/lib/identity'
@@ -223,8 +223,8 @@ export const auth = {
   changePenName(name: string): Res {
     const a = getDb().account
     if (!a) return { ok: false, error: 'Sign in first.' }
-    if (a.public.penNameChangedAt && now() - a.public.penNameChangedAt < CONFIG.penNameChangeDays * 24 * HOUR) {
-      const days = Math.ceil((CONFIG.penNameChangeDays * 24 * HOUR - (now() - a.public.penNameChangedAt)) / (24 * HOUR))
+    if (a.public.penNameChangedAt && now() - a.public.penNameChangedAt < LIVE.penNameChangeDays * 24 * HOUR) {
+      const days = Math.ceil((LIVE.penNameChangeDays * 24 * HOUR - (now() - a.public.penNameChangedAt)) / (24 * HOUR))
       return { ok: false, error: `You can change your pen name again in ${days} days.`, code: 'limit' }
     }
     if (name === a.public.penName) return { ok: true, value: undefined }

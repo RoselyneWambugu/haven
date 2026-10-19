@@ -11,6 +11,7 @@ import { THERAPISTS } from '@/data/seed'
 import { groupSlotsByDay, type Mode } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
+import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
 import { clock, dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
@@ -25,7 +26,9 @@ export default function Book() {
   const t = THERAPISTS.find((x) => x.id === id)
   const sessions = useDb((s) => s.sessions)
   const money = useMoney()
-  const [mode, setMode] = useState<Mode>(t?.modes[0] ?? 'chat')
+  const flags = useDb((s) => s.content.flags)
+  const offered = t ? modesFor(t.modes, flags) : []
+  const [mode, setMode] = useState<Mode>(offered[0] ?? 'chat')
   const [start, setStart] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   if (!t) return null
@@ -49,7 +52,7 @@ export default function Book() {
       <Text variant="small" muted>
         Session type
       </Text>
-      {t.modes.map((m) => (
+      {offered.map((m) => (
         <Radio key={m} testID={`mode-${m}`} selected={mode === m} label={LABEL[m]} onPress={() => { setMode(m); setStart(null) }} />
       ))}
       <Text variant="small" muted>

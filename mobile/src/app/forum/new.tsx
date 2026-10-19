@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { api, FORUM_TOPICS } from '@/api'
+import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -18,6 +18,8 @@ import { useDb } from '@/store/db'
  */
 export default function NewPost() {
   const first = useDb((s) => !s.account?.hasPostedBefore)
+  const TOPICS = useDb((s) => s.content.topics)
+  const forumOn = useDb((s) => s.content.flags.forum)
   const [topic, setTopic] = useState<string>('Wellbeing')
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -57,12 +59,17 @@ export default function NewPost() {
         Topic
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {FORUM_TOPICS.map((t) => (
+        {TOPICS.map((t) => (
           <Chip key={t} label={t} selected={topic === t} onPress={() => setTopic(t)} />
         ))}
       </View>
       <Field testID="post-title" label="Title" value={title} onChangeText={setTitle} maxLength={90} />
       <Field testID="post-body" label="What’s on your mind?" value={body} onChangeText={setBody} multiline minHeight={160} maxLength={2000} hint="Posted under your pen name. No links, phone numbers or addresses." />
+      {!forumOn ? (
+        <Banner tone="sun" icon="clock" title="Posting is paused">
+          You can write your post, but it can’t be shared until posting is turned back on.
+        </Banner>
+      ) : null}
       {first ? (
         <Banner tone="green" icon="shield">
           Your first post is checked before it goes live. That usually takes a few minutes.

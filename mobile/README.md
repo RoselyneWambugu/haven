@@ -20,7 +20,7 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -51,14 +51,18 @@ An internal desktop-style web app at `/admin`, reached from **Echo staff** on th
 
 | Role | Modules |
 | --- | --- |
-| Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety) |
-| Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Audit log |
-| Support / Billing | Overview, Users, Billing, Analytics (Commercial) |
-| Admin | Everything, plus audit and analytics export and strike-policy changes |
+| Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety), Resources (Safety tickets and articles) |
+| Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Resources (Therapist tickets and articles, crisis lines and the support directory), Audit log |
+| Support / Billing | Overview, Users, Billing, Analytics (Commercial), Resources (Support and Billing tickets and articles) |
+| Admin | Everything, plus Configuration, departments, audit and analytics export, and strike-policy changes |
 
 It is connected to the rest of the demo. A report made in the member app becomes a case. Suspending or restoring the member in Users, and deciding their appeal, change what they see in the member app. A portal application can be approved, sent back or rejected in Therapists, and the portal follows. Every content view, reveal, decision, export and approval is written to the audit log.
 
 **Analytics** has four sections: Product (funnel, retention cohorts, who is using Echo), Care, Commercial and Safety, each shown only to the roles that need it. Everything is a count or a rate, never message text or identities, and groups under 10 people are hidden. Each chart has a table view. The figures are generated sample data and the page says so, except the AI-flag and appeal figures in Safety, which come from the live demo data.
+
+**Resources** holds the member help content. Tickets are filtered to your team's departments, and replies go out as "Echo staff". Articles are edited by the team that owns the department. Admin manages the departments and their response targets. A Clinical Reviewer edits the crisis lines and support directory, and marks the numbers as checked, which members see as a date on Urgent help. A number can't be marked checked while one is blank, and editing a line clears the date. Members can suggest a service for review.
+
+**Config** (Admin only) holds the plans and entitlements, the community topics, matching settings, feature flags and limits. Plan changes involve money, so a second admin has to approve them. Matching's age-range and language rules, and the safety features, are shown as always on and are not settings. Everything staff change here is read by the member app straight away, with no release.
 
 ## Rules the app enforces
 
@@ -77,7 +81,7 @@ It is connected to the rest of the demo. A report made in the member app becomes
 - **Calls are simulated.** Voice and video need a provider that has not been chosen. Nothing is recorded or sent.
 - **Payments are simulated.** M-Pesa takes about three seconds and can be made to fail from Demo tools.
 - **Kiswahili is a draft.**
-- **Admin resources and configuration** modules are not designed yet, so they are not built. Analytics runs on generated sample data, and has no wireframes.
+- **Analytics, Resources and Config have no wireframes.** They were built from the PRD, and Analytics runs on generated sample data. Help articles are English only (Kiswahili text needs a reviewer), and there is no staff screen for roles and permissions.
 
 ## Web build note
 

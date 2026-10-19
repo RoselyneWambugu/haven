@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, ForumPost, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState } from '@/api/types'
+import type { Account, Conversation, Device, ForumPost, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
+import { LIVE } from '@/data/config'
+import { defaultContent } from '@/data/content'
 import { seedPosts } from '@/data/seed'
 import { now } from '@/lib/clock'
 import { secure } from './secure'
@@ -54,6 +56,13 @@ export interface DbState {
   portal: PortalState | null
   /** The admin dashboard's own data. Null until a staff member first signs in. */
   admin: AdminState | null
+  /** Help content, directory, plans, topics, matching rules, flags and limits. Staff edit it in the admin dashboard. */
+  content: ContentState
+}
+
+/** Copies the configured limits to where the rules read them. */
+export function applyLimits(): void {
+  Object.assign(LIVE, state.content.limits)
 }
 
 export function emptyRegistration(): RegistrationDraft {
@@ -82,6 +91,7 @@ export function freshState(): DbState {
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },
     portal: null,
     admin: null,
+    content: defaultContent(),
   }
 }
 
@@ -91,6 +101,7 @@ const listeners = new Set<() => void>()
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 export const getDb = (): DbState => state
+export const getContent = (): ContentState => state.content
 export const isReady = (): boolean => ready
 
 function emit() {
@@ -146,12 +157,14 @@ export async function loadDb(): Promise<void> {
   } catch {
     state = freshState()
   }
+  applyLimits()
   ready = true
   emit()
 }
 
 export async function resetDb(): Promise<void> {
   state = freshState()
+  applyLimits()
   await AsyncStorage.removeItem(KEY).catch(() => undefined)
   await secure.remove(SESSION_KEY)
   emit()

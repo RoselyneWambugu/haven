@@ -11,6 +11,7 @@ import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
+import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
 import { dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
@@ -23,6 +24,7 @@ export default function TherapistProfile() {
   const t = THERAPISTS.find((x) => x.id === id)
   const sessions = useDb((s) => s.sessions)
   const money = useMoney()
+  const flags = useDb((s) => s.content.flags)
   if (!t) {
     return (
       <Screen header={<TopBar back />} testID="therapist-gone">
@@ -73,7 +75,7 @@ export default function TherapistProfile() {
           Session types
         </Text>
         <Text variant="small" muted>
-          {t.modes.map((m) => m[0].toUpperCase() + m.slice(1)).join(', ')} · 45 minutes
+          {modesFor(t.modes, flags).map((m) => m[0].toUpperCase() + m.slice(1)).join(', ')} · 45 minutes
         </Text>
         <Text variant="label" style={{ marginTop: 14 }}>
           Price

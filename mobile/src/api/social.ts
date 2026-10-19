@@ -39,14 +39,26 @@ function pickPeer(): Peer | null {
   const db = getDb()
   const a = db.account
   if (!a) return null
+  const cfg = db.content.matching
   const blocked = new Set(a.blocked.map((p) => p.id))
   const busy = new Set(db.conversations.filter((c) => c.peer && !c.ended).map((c) => c.peer!.id))
+  // Two people who ended a match are not paired again until the wait is over (MAT-4).
+  const cooling = new Set(db.conversations.filter((c) => c.peer && c.ended && now() - c.lastAt < cfg.rematchCooldownDays * 24 * 3600_000).map((c) => c.peer!.id))
   const shared = (p: Peer) => p.languages.some((l) => a.public.languages.includes(l))
-  const ok = (p: Peer) => p.id !== 'p-quiet' && !blocked.has(p.id) && !busy.has(p.id) && shared(p)
+  const ok = (p: Peer) => p.id !== 'p-quiet' && !blocked.has(p.id) && !busy.has(p.id) && !cooling.has(p.id) && shared(p)
+  // Topics only ever break ties between people who already share an age range and a language (MAT-7).
+  const choose = (list: Peer[]): Peer => {
+    if (cfg.softTopicWeight <= 0) return list[Math.floor(Math.random() * list.length)]
+    const overlap = (p: Peer) => (p.topics ?? []).filter((t) => a.public.topics.includes(t)).length
+    const best = Math.max(...list.map(overlap))
+    const top = list.filter((p) => overlap(p) === best)
+    return top[Math.floor(Math.random() * top.length)]
+  }
   const exact = PEERS.filter((p) => ok(p) && p.ageBand === a.public.ageBand)
-  if (exact.length) return exact[Math.floor(Math.random() * exact.length)]
+  if (exact.length) return choose(exact)
+  if (!cfg.neighbourFallback) return null
   const near = PEERS.filter((p) => ok(p) && neighbouringBands(a.public.ageBand).includes(p.ageBand))
-  return near.length ? near[Math.floor(Math.random() * near.length)] : null
+  return near.length ? choose(near) : null
 }
 
 function resolveMatch() {
@@ -161,6 +173,7 @@ export const chat = {
 
   /** Disappearing chats need both people to agree (PRD MSG-7). */
   proposeDisappearing(id: string): void {
+    if (!getDb().content.flags.disappearing) return void showToast('Disappearing chats aren’t available right now.')
     setConv(id, (c) => ({ ...c, disappearing: 'proposed-by-me', messages: [...c.messages, msg('system', 'You asked for a disappearing chat. Waiting for them to agree.')] }))
     later(`dis-${id}`, 2500, () =>
       setConv(id, (c) =>
@@ -225,6 +238,7 @@ export const forum = {
     const a = db.account
     if (!a) return { ok: false, error: 'Sign in first.' }
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
+    if (!db.content.flags.forum) return { ok: false, error: 'Posting is paused for now. You can still read the community.', code: 'forum-off' }
     const title = input.title.trim()
     const body = input.body.trim()
     if (!title) return { ok: false, error: 'Add a title.', code: 'title' }
@@ -260,6 +274,7 @@ export const forum = {
     const a = getDb().account
     const post = getDb().posts.find((p) => p.id === postId)
     if (!a || !post) return { ok: false, error: 'That post is gone.' }
+    if (!getDb().content.flags.forum) return { ok: false, error: 'Comments are paused for now.', code: 'forum-off' }
     if (post.status !== 'published') return { ok: false, error: 'You can comment once the post is live.', code: 'pending' }
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     const t = text.trim()

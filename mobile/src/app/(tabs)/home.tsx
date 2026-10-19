@@ -42,6 +42,7 @@ export default function Home() {
   const live = conversations.filter((c) => !c.archived && !c.ended)
   const unread = live.reduce((n, c) => n + c.unread, 0)
   const highlight = posts.filter((p) => p.status === 'published' && !p.mine).sort((a, b) => b.supports - a.supports)[0]
+  const moodOn = useDb((s) => s.content.flags.moodCheckin)
   const mood = account?.mood && now() - account.mood.at < 24 * 3600_000 ? account.mood.value : null
 
   return (
@@ -55,6 +56,7 @@ export default function Home() {
         </Text>
       </View>
 
+      {moodOn ? (
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }} accessibilityRole="radiogroup">
         {MOODS.map((m) => (
           <Pressable
@@ -73,7 +75,8 @@ export default function Home() {
           </Pressable>
         ))}
       </View>
-      {mood !== null && mood <= 2 ? (
+      ) : null}
+      {moodOn && mood !== null && mood <= 2 ? (
         <Banner tone="green" icon="heart" title="That sounds hard">
           You don’t have to carry it alone. A therapist or a peer can listen, or you can get urgent help any time.
         </Banner>

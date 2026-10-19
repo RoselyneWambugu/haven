@@ -7,7 +7,6 @@ import { Field } from '@/components/Field'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { DEPARTMENTS } from '@/data/help'
 import { now } from '@/lib/clock'
 import { go } from '@/lib/nav'
 import { relative } from '@/lib/time'
@@ -17,6 +16,7 @@ import { colors } from '@/theme'
 export default function TicketThread() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const t = useDb((s) => s.tickets.find((x) => x.id === id))
+  const departments = useDb((s) => s.content.departments)
   const [text, setText] = useState('')
   useEffect(() => {
     if (t?.unread) api.tickets.markRead(t.id)
@@ -26,7 +26,7 @@ export default function TicketThread() {
     <Screen
       testID="ticket-thread"
       keyboard
-      header={<TopBar back title={DEPARTMENTS.find((d) => d.id === t.deptId)?.title} />}
+      header={<TopBar back title={departments.find((d) => d.id === t.deptId)?.title} />}
       footer={
         t.status === 'resolved' ? undefined : (
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>

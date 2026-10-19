@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Platform, View } from 'react-native'
-import { api, FORUM_TOPICS, SPOKEN_LANGUAGES } from '@/api'
+import { api, SPOKEN_LANGUAGES } from '@/api'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
@@ -10,12 +10,13 @@ import { Text } from '@/components/Text'
 import { ageBand, ageBandLabel, ageOn } from '@/lib/identity'
 import { now } from '@/lib/clock'
 import { resetTo } from '@/lib/nav'
-import { getDb } from '@/store/db'
+import { getDb, useDb } from '@/store/db'
 import { colors } from '@/theme'
 
 /** Languages decide matching, so they are required. Topics are optional and never used to match people (D17). */
 export default function Languages() {
   const reg = getDb().reg
+  const TOPICS = useDb((s) => s.content.topics)
   const [langs, setLangs] = useState<string[]>(reg?.languages ?? ['English'])
   const [topics, setTopics] = useState<string[]>(reg?.topics ?? [])
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +49,7 @@ export default function Languages() {
         Community topics you care about (optional).
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {FORUM_TOPICS.map((tp) => (
+        {TOPICS.map((tp) => (
           <Chip key={tp} label={tp} selected={topics.includes(tp)} onPress={() => setTopics((x) => toggle(x, tp))} />
         ))}
       </View>
