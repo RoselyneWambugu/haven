@@ -1,7 +1,9 @@
 import { canExportAnalytics, toCsv } from '@/lib/analytics'
+import { can } from '@/lib/roles'
+import { atLimit, canTakeCase, DEFAULT_WELLBEING, emptyExposure, mondayStart, nextRota, onBreak, WEEK, weekOf } from '@/lib/wellbeing'
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
-import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, canReveal, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess } from '@/lib/admin'
+import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess } from '@/lib/admin'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { account } from './support'
@@ -51,8 +53,15 @@ function seed(): AdminState {
     signedIn: false,
     role: 'moderator',
     staffName: 'T. Njeri',
-    revealsToday: 3,
+    exposure: { 'T. Njeri': { count: 3, sinceBreak: 3, breakUntil: null } },
     revealed: [],
+    staff: STAFF.map((s, i) => ({ id: `st${i + 1}`, name: s.name, role: s.role, active: true, lastSignInAt: null })),
+    pendingStaff: null,
+    wellbeing: { ...DEFAULT_WELLBEING },
+    rota: [
+      { weekStart: mondayStart(n), heavy: ['A. Mwangi'] },
+      { weekStart: mondayStart(n) + WEEK, heavy: nextRota(['A. Mwangi'], ['T. Njeri', 'A. Mwangi'], 1) },
+    ],
     cases,
     users: [
       person('QuietPine', { reportsAgainst: 3, blocksReceived: 5, matches: 14, skips: 6, strikes: [{ id: 's1', at: n - 7 * DAY, rule: 'Contact sharing', kind: 'Warning' }], standing: 'good' }),
@@ -121,11 +130,13 @@ function sanctionMember(kind: Notice['kind'], rule: string) {
 
 export const admin = {
   signIn(name: string, code: string): Res {
-    const who = STAFF.find((s) => s.name === name)
+    const roster = getDb().admin?.staff ?? STAFF.map((s, i) => ({ id: `st${i + 1}`, ...s, active: true, lastSignInAt: null }))
+    const who = roster.find((s) => s.name === name)
     if (!who) return { ok: false, error: 'Choose who you are.' }
+    if (!who.active) return { ok: false, error: 'This account has been deactivated. Ask an Admin.', code: 'inactive' }
     if (code !== DEMO_MFA) return { ok: false, error: 'That code doesn’t match.', code: 'mfa' }
     if (!getDb().admin) update({ admin: seed() })
-    patch(() => ({ signedIn: true, role: who.role, staffName: who.name }))
+    patch((a) => ({ signedIn: true, role: who.role, staffName: who.name, staff: a.staff.map((s) => (s.name === who.name ? { ...s, lastSignInAt: now() } : s)) }))
     log('Signed in', 'Dashboard', 'MFA')
     return { ok: true, value: undefined }
   },
@@ -154,10 +165,15 @@ export const admin = {
     patch((x) => ({ cases: [...add, ...x.cases] }))
   },
 
-  claim(id: string): void {
-    const { name } = me()
+  claim(id: string): Res {
+    const { name, role } = me()
+    const a = getDb().admin!
+    const c = a.cases.find((x) => x.id === id)
+    if (!c) return { ok: false, error: 'Case not found.' }
+    if (!canTakeCase(c, { name, role }, weekOf(a.rota, now())?.heavy ?? [])) return { ok: false, error: 'Severity-1 and crisis cases are worked by the moderators on this week’s heavy-queue rota. Ask someone on the rota, or a clinical reviewer.', code: 'rota' }
     patch((a) => ({ cases: a.cases.map((c) => (c.id === id ? { ...c, owner: name, status: c.status === 'new' ? 'in-review' : c.status } : c)) }))
     log('Took case', id)
+    return { ok: true, value: undefined }
   },
   /** Opening a case is itself logged, because it exposes content (PRV-1). */
   view(id: string): void {
@@ -165,11 +181,14 @@ export const admin = {
   },
   reveal(caseId: string, lineId: string): Res {
     const a = getDb().admin!
-    const key = `${caseId}:${lineId}`
+    const { name } = me()
+    const key = `${name}|${caseId}:${lineId}`
     if (a.revealed.includes(key)) return { ok: true, value: undefined }
-    if (!canReveal(a.revealsToday)) return { ok: false, error: 'You’ve reached today’s limit. Take a break, and ask a colleague to continue.', code: 'limit' }
-    patch((x) => ({ revealed: [...x.revealed, key], revealsToday: x.revealsToday + 1 }))
-    log('Revealed message', key)
+    const e = a.exposure[name] ?? emptyExposure()
+    if (onBreak(e, now())) return { ok: false, error: 'You’re on a break. Revealing opens again when it ends.', code: 'break' }
+    if (atLimit(e, a.wellbeing)) return { ok: false, error: 'You’ve reached today’s limit. Take a break, and ask a colleague to continue.', code: 'limit' }
+    patch((x) => ({ revealed: [...x.revealed, key], exposure: { ...x.exposure, [name]: { ...e, count: e.count + 1, sinceBreak: e.sinceBreak + 1 } } }))
+    log('Revealed message', `${caseId}:${lineId}`)
     return { ok: true, value: undefined }
   },
 
@@ -178,7 +197,8 @@ export const admin = {
     const c = a.cases.find((x) => x.id === caseId)
     if (!c) return { ok: false, error: 'Case not found.' }
     if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
-    const { name } = me()
+    const { name, role } = me()
+    if ((action === 'strike' || action === 'restrict' || action === 'suspend') && !can(role, 'suspendRestore')) return { ok: false, error: 'Your role recommends a sanction. Escalate the case so a moderator or Admin can apply it.', code: 'role' }
     const memberName = getDb().account?.public.penName
     const targetIsMember = !!memberName && c.reported === memberName
     const sanction = action === 'strike' ? nextSanction(c.strikes, c.severity) : action === 'restrict' ? 'restriction' : action === 'suspend' ? 'suspension' : null
@@ -252,6 +272,7 @@ export const admin = {
     return list
   },
   userAction(userId: string, action: 'restrict' | 'suspend' | 'restore', reason: string): Res {
+    if (!can(me().role, 'suspendRestore')) return { ok: false, error: 'Your role can’t suspend or restore accounts.', code: 'role' }
     if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
     const u = this.users().find((x) => x.id === userId)
     if (!u) return { ok: false, error: 'User not found.' }
@@ -323,6 +344,7 @@ export const admin = {
     return list
   },
   verify(id: string, decision: 'approved' | 'info' | 'rejected', message: string, checklist: Applicant['checklist']): Res {
+    if (!can(me().role, 'verifyTherapists')) return { ok: false, error: 'Only clinical reviewers and Admins verify therapists.', code: 'role' }
     const t = this.applicants().find((x) => x.id === id)
     if (!t) return { ok: false, error: 'Applicant not found.' }
     if (decision === 'approved' && !Object.values(checklist).every(Boolean)) return { ok: false, error: 'Tick every check before approving.', code: 'checklist' }
@@ -339,7 +361,7 @@ export const admin = {
   // --- billing (ADM-12) ---
   decideRefund(id: string, approve: boolean): Res {
     const { name, role } = me()
-    if (role !== 'billing' && role !== 'admin') return { ok: false, error: 'Only billing staff can decide refunds.', code: 'role' }
+    if (!can(role, 'issueRefunds')) return { ok: false, error: 'Only billing staff can decide refunds.', code: 'role' }
     const r = getDb().admin!.refunds.find((x) => x.id === id)
     if (!r || r.status !== 'pending') return { ok: false, error: 'This refund has been decided.' }
     patch((a) => ({ refunds: a.refunds.map((x) => (x.id === id ? { ...x, status: approve ? 'approved' : 'declined', decidedBy: name } : x)) }))

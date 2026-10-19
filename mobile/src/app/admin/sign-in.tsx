@@ -3,6 +3,7 @@ import { View } from 'react-native'
 import { router } from 'expo-router'
 import { api } from '@/api'
 import { DEMO_MFA, STAFF } from '@/api/admin'
+import { useDb } from '@/store/db'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -16,7 +17,8 @@ export default function AdminSignIn() {
   const [name, setName] = useState('T. Njeri')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const role = STAFF.find((s) => s.name === name)!.role
+  const roster = useDb((s) => s.admin?.staff) ?? STAFF.map((s, i) => ({ id: `st${i}`, ...s, active: true, lastSignInAt: null }))
+  const role = roster.find((s) => s.name === name)?.role ?? 'moderator'
 
   function submit() {
     const r = api.admin.signIn(name, code)
@@ -33,7 +35,7 @@ export default function AdminSignIn() {
         </Text>
         <Panel title="Who are you? (demo)">
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {STAFF.map((s) => (
+            {roster.map((s) => (
               <Chip key={s.name} testID={`staff-${s.name}`} label={s.name} selected={name === s.name} onPress={() => setName(s.name)} />
             ))}
           </View>

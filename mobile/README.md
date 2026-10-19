@@ -20,7 +20,7 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -51,10 +51,10 @@ An internal desktop-style web app at `/admin`, reached from **Echo staff** on th
 
 | Role | Modules |
 | --- | --- |
-| Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety), Resources (Safety tickets and articles) |
-| Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Resources (Therapist tickets and articles, crisis lines and the support directory), Audit log |
+| Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety), Resources (Safety tickets and articles), Wellbeing |
+| Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Resources (Therapist tickets and articles, crisis lines and the support directory), Wellbeing, Audit log |
 | Support / Billing | Overview, Users, Billing, Analytics (Commercial), Resources (Support and Billing tickets and articles) |
-| Admin | Everything, plus Configuration, departments, audit and analytics export, and strike-policy changes |
+| Admin | Everything, plus Config, Roles, departments, audit and analytics export, and strike-policy changes |
 
 It is connected to the rest of the demo. A report made in the member app becomes a case. Suspending or restoring the member in Users, and deciding their appeal, change what they see in the member app. A portal application can be approved, sent back or rejected in Therapists, and the portal follows. Every content view, reveal, decision, export and approval is written to the audit log.
 
@@ -63,6 +63,10 @@ It is connected to the rest of the demo. A report made in the member app becomes
 **Resources** holds the member help content. Tickets are filtered to your team's departments, and replies go out as "Echo staff". Articles are edited by the team that owns the department. Admin manages the departments and their response targets. A Clinical Reviewer edits the crisis lines and support directory, and marks the numbers as checked, which members see as a date on Urgent help. A number can't be marked checked while one is blank, and editing a line clears the date. Members can suggest a service for review.
 
 **Config** (Admin only) holds the plans and entitlements, the community topics, matching settings, feature flags and limits. Plan changes involve money, so a second admin has to approve them. Matching's age-range and language rules, and the safety features, are shown as always on and are not settings. Everything staff change here is read by the member app straight away, with no release.
+
+**Roles** (Admin only) shows the team, the permission table from the PRD and which modules each role sees. Adding someone, changing a role or deactivating an account is proposed by one Admin and approved by a second, you can't change your own account, and at least two Admins stay active. The permission table is the one the API enforces, and tests check the two agree. A deactivated person can't sign in, and role changes apply at the next sign-in.
+
+**Wellbeing** protects reviewers. Each reviewer has their own daily reveal count and limit, a break is suggested after a run of reveals and pauses revealing while it lasts, the heaviest cases (Severity-1 and crisis) can only be taken by moderators on that week's rota, which moves on each week, and anyone can hand a case on or ask for support without giving a reason.
 
 ## Rules the app enforces
 
@@ -81,7 +85,7 @@ It is connected to the rest of the demo. A report made in the member app becomes
 - **Calls are simulated.** Voice and video need a provider that has not been chosen. Nothing is recorded or sent.
 - **Payments are simulated.** M-Pesa takes about three seconds and can be made to fail from Demo tools.
 - **The app is in English only.** Kiswahili is still a language members can say they speak, for matching.
-- **Analytics, Resources and Config have no wireframes.** They were built from the PRD, and Analytics runs on generated sample data. There is no staff screen for roles and permissions.
+- **Analytics, Resources, Config, Roles and Wellbeing have no wireframes.** They were built from the PRD, and Analytics runs on generated sample data. There is no staff screen for roles and permissions.
 
 ## Web build note
 

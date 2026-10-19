@@ -4,7 +4,7 @@ import type { AdminCase, Severity, StaffRole } from '@/api/types'
 // Roles and modules (PRD §3.2, §6.11). Each role sees only its own modules.
 // ---------------------------------------------------------------------------
 
-export type Module = 'overview' | 'cases' | 'users' | 'appeals' | 'therapists' | 'billing' | 'moderation' | 'analytics' | 'resources' | 'configuration' | 'audit'
+export type Module = 'overview' | 'cases' | 'users' | 'appeals' | 'therapists' | 'billing' | 'moderation' | 'analytics' | 'resources' | 'configuration' | 'roles' | 'wellbeing' | 'audit'
 
 export const MODULES: { key: Module; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -17,14 +17,16 @@ export const MODULES: { key: Module; label: string }[] = [
   { key: 'analytics', label: 'Analytics' },
   { key: 'resources', label: 'Resources' },
   { key: 'configuration', label: 'Config' },
+  { key: 'roles', label: 'Roles' },
+  { key: 'wellbeing', label: 'Wellbeing' },
   { key: 'audit', label: 'Audit log' },
 ]
 
 const ACCESS: Record<StaffRole, Module[]> = {
-  moderator: ['overview', 'cases', 'users', 'moderation', 'appeals', 'analytics', 'resources'],
-  clinical: ['overview', 'cases', 'appeals', 'therapists', 'analytics', 'resources', 'audit'],
+  moderator: ['overview', 'cases', 'users', 'moderation', 'appeals', 'analytics', 'resources', 'wellbeing'],
+  clinical: ['overview', 'cases', 'appeals', 'therapists', 'analytics', 'resources', 'wellbeing', 'audit'],
   billing: ['overview', 'users', 'billing', 'analytics', 'resources'],
-  admin: ['overview', 'cases', 'users', 'moderation', 'appeals', 'therapists', 'billing', 'analytics', 'resources', 'configuration', 'audit'],
+  admin: ['overview', 'cases', 'users', 'moderation', 'appeals', 'therapists', 'billing', 'analytics', 'resources', 'configuration', 'roles', 'wellbeing', 'audit'],
 }
 
 export const canAccess = (role: StaffRole, module: Module): boolean => ACCESS[role].includes(module)

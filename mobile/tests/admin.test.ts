@@ -116,18 +116,18 @@ describe('admin api', () => {
     const actions = a().audit.map((x) => x.action)
     expect(actions).toContain('Viewed case content')
     expect(actions).toContain('Revealed message')
-    expect(a().revealsToday).toBe(4)
+    expect(a().exposure['T. Njeri'].count).toBe(4)
   })
 
   it('counts a message once however often it is revealed', () => {
     api.admin.reveal('C-1042', 'e2')
     api.admin.reveal('C-1042', 'e2')
-    expect(a().revealsToday).toBe(4)
+    expect(a().exposure['T. Njeri'].count).toBe(4)
   })
 
   it('stops reveals at the daily limit', () => {
     for (let i = 0; i < 17; i++) api.admin.reveal('C-1042', `x${i}`)
-    expect(a().revealsToday).toBe(20)
+    expect(a().exposure['T. Njeri'].count).toBe(20)
     expect(api.admin.reveal('C-1042', 'one-more')).toMatchObject({ ok: false, code: 'limit' })
   })
 

@@ -518,8 +518,15 @@ export interface AdminState {
   signedIn: boolean
   role: StaffRole
   staffName: string
-  revealsToday: number
+  /** Reveals each reviewer has made today, and when they last took a break (ADM-5). */
+  exposure: Record<string, Exposure>
+  /** Keys are `name|caseId:lineId`, so each reviewer reveals for themselves. */
   revealed: string[]
+  staff: StaffAccount[]
+  pendingStaff: { change: StaffChange; requestedBy: string } | null
+  wellbeing: WellbeingCfg
+  /** Who works the heavy queue (Severity-1 and crisis cases) each week. */
+  rota: RotaWeek[]
   cases: AdminCase[]
   users: AdminUser[]
   appeals: AdminAppeal[]
@@ -607,4 +614,38 @@ export interface ContentState {
   matching: MatchingCfg
   flags: FlagsCfg
   limits: LimitsCfg
+}
+
+export interface StaffAccount {
+  id: string
+  name: string
+  role: StaffRole
+  active: boolean
+  lastSignInAt: number | null
+}
+
+export type StaffChange =
+  | { kind: 'add'; name: string; role: StaffRole }
+  | { kind: 'role'; id: string; role: StaffRole }
+  | { kind: 'active'; id: string; active: boolean }
+
+export interface Exposure {
+  /** Reveals made today. */
+  count: number
+  /** Reveals since the last break. */
+  sinceBreak: number
+  /** While this is in the future, the reviewer is on a break and can't reveal. */
+  breakUntil: number | null
+}
+
+export interface WellbeingCfg {
+  dailyLimit: number
+  /** Suggest a break after this many reveals in a row. */
+  breakEvery: number
+  breakMinutes: number
+}
+
+export interface RotaWeek {
+  weekStart: number
+  heavy: string[]
 }

@@ -9,7 +9,8 @@ import { Panel, PortalPage, useWide } from '@/components/Portal'
 import { Sheet } from '@/components/Sheet'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { BREAK_GLASS_MINUTES, DAILY_REVEAL_LIMIT, minutesLeft, REVEALS, slaLabel } from '@/lib/admin'
+import { breakSuggested, onBreak } from '@/lib/wellbeing'
+import { BREAK_GLASS_MINUTES, minutesLeft, REVEALS, slaLabel } from '@/lib/admin'
 import { dayAndClock } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
@@ -52,6 +53,7 @@ export default function CaseDetail() {
   }, [id])
   if (!a || !c) return null
   const sla = slaLabel(minutesLeft(c, t))
+  const exp = a.exposure[a.staffName]
   const req = a.breakGlass.find((b) => b.caseId === c.id && (b.status === 'pending' || (b.status === 'approved' && (b.expiresAt ?? 0) > t)))
 
   function decide() {
@@ -71,20 +73,35 @@ export default function CaseDetail() {
           <Text variant="label" color={sla.breached ? colors.clay : colors.ink}>
             SLA {sla.breached ? `breached ${sla.text}` : `${sla.text} left`}
           </Text>
-          {!c.owner && c.status !== 'closed' ? <Button testID="take-case" size="sm" label="Take this case" onPress={() => api.admin.claim(c.id)} /> : <Text variant="caption" muted>{c.owner ? `Owner: ${c.owner}` : 'Closed'}</Text>}
+          {!c.owner && c.status !== 'closed' ? <Button testID="take-case" size="sm" label="Take this case" onPress={() => { const r = api.admin.claim(c.id); setError(r.ok ? null : r.error) }} /> : <Text variant="caption" muted>{c.owner ? `Owner: ${c.owner}` : 'Closed'}</Text>}
         </View>
       }
     >
       <Banner tone="green" icon="lock">
-        You are viewing content within this case. Access is logged. Reveals today: {a.revealsToday} / {DAILY_REVEAL_LIMIT}
+        You are viewing content within this case. Access is logged. Reveals today: {a.exposure[a.staffName]?.count ?? 0} / {a.wellbeing.dailyLimit}
       </Banner>
+      {onBreak(exp, t) ? (
+        <Banner tone="green" icon="clock" title="You’re on a break">
+          Revealing is paused until it ends.
+        </Banner>
+      ) : breakSuggested(exp, a.wellbeing, t) ? (
+        <Banner tone="sun" icon="heart" title="Time for a break?">
+          You’ve revealed {exp?.sinceBreak} messages since your last break.
+        </Banner>
+      ) : null}
+      {c.owner === a.staffName && c.status !== 'closed' ? (
+        <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+          <Button testID="hand-on" size="sm" variant="quiet" label="Hand this case on" onPress={() => { const r = api.team.handOn(c.id); setError(r.ok ? null : r.error) }} />
+          <Button size="sm" variant="ghost" label="Take a break" onPress={() => api.team.startBreak()} />
+        </View>
+      ) : null}
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: 18, alignItems: 'flex-start' }}>
         <Panel title="Evidence snapshot" style={{ flex: wide ? 3 : undefined, width: wide ? undefined : '100%' }}>
           <Text variant="caption" muted>
             Snapshot saved {dayAndClock(c.snapshotAt)} · content is blurred until you reveal it
           </Text>
           {c.evidence.map((e) => {
-            const shown = a.revealed.includes(`${c.id}:${e.id}`)
+            const shown = a.revealed.includes(`${a.staffName}|${c.id}:${e.id}`)
             return (
               <View key={e.id} style={{ alignSelf: e.who === 'reporter' ? 'flex-start' : 'flex-end', maxWidth: '80%', gap: 4 }}>
                 <View testID={`ev-${e.id}`} style={{ backgroundColor: e.reported ? colors.claySoft : colors.paper, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: e.reported ? colors.clay : colors.line }}>
