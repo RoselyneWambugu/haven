@@ -1,0 +1,291 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Echo Wireframes — Login and Account Security</title><style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+
+  .row2{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);position:relative}
+  .row2:last-child{border-bottom:0}
+  .row2 .t{flex:1;min-width:0}
+  .row2 .t b{display:block}
+  .row2 .t span{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--mute)}
+  .unread{background:var(--orange);color:#3a2000;border-radius:999px;min-width:18px;height:18px;padding:0 5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .banner{border-radius:10px;padding:8px 10px;font-size:12px}
+  .swipe{position:absolute;right:0;top:0;bottom:0;display:flex}
+  .swipe div{width:58px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dim{opacity:.55}
+  .row2 .t span.tag{display:inline-block;overflow:visible}
+
+  .post{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;position:relative}
+  .post .who{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .post .who b{color:var(--ink)}
+  .post .ttl{font-weight:700;font-size:14px;line-height:1.25}
+  .post .snip{font-size:12px;color:#44524b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--mute);align-items:center;flex-wrap:wrap}
+  .badge{background:var(--green-l);color:var(--green-d);border:1px solid #bcd9c8;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+  .fab{position:absolute;right:14px;bottom:62px;background:var(--orange);color:#3a2000;border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.2);z-index:4}
+  .cm{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);position:relative}
+  .cm:last-child{border-bottom:0}
+  .cm .c{flex:1;font-size:12px}
+  .cm.th{background:var(--green-l);border-radius:10px;padding:8px;border:1px solid #bcd9c8;margin-bottom:6px}
+  .react{display:flex;gap:8px}
+  .react>span:not(.n){border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:#fff}
+  .react>span.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700}
+
+  .plan{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;align-items:center;gap:10px;position:relative}
+  .plan.on{border-color:var(--green);background:var(--green-l)}
+  .plan .pr{margin-left:auto;text-align:right;font-weight:700}
+  .plan .pr small{display:block;font-weight:400;color:var(--mute);font-size:11px}
+  .tog{width:38px;height:22px;border-radius:999px;background:#cfd8d3;position:relative;flex:none}
+  .tog::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+  .tog.on{background:var(--green)} .tog.on::after{left:19px}
+  .li{display:flex;gap:8px;font-size:12px;align-items:flex-start}
+  .li i{font-style:normal;color:var(--green);font-weight:800}
+  .sum{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+  .sum.t{font-weight:700;font-size:14px;border-top:1px solid var(--line);padding-top:6px;margin-top:3px}
+  .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--green-l);border-top-color:var(--green)}
+  .pill{border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;background:var(--orange);color:#3a2000}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:8px;align-items:center;background:#fff;font-size:12px;font-weight:600;line-height:1.2;position:relative}
+  .tile .ic{width:26px;height:26px;border-radius:8px;background:var(--green-l);display:flex;align-items:center;justify-content:center;flex:none;font-size:14px}
+  .res{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;position:relative}
+  .res .t{font-weight:700;font-size:13px}
+  .dot2{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--orange)}
+  .li2{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:center;font-size:13px}
+  .li2:last-child{border-bottom:0}
+  .li2 .arr{margin-left:auto;color:var(--mute)}
+  .step{display:flex;gap:8px;align-items:flex-start}
+  .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+  .dot.d{background:var(--green);border-color:var(--green);color:#fff}
+  .sev{display:inline-block;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:800}
+  .sev.s3{background:#dfe5e1;color:#44524b}
+
+  .seg{display:flex;border:1.5px solid var(--green);border-radius:10px;overflow:hidden}
+  .seg span{flex:1;text-align:center;padding:7px;font-size:12px;font-weight:600;color:var(--green)}
+  .seg span.on{background:var(--green);color:#fff}
+  .otp{display:flex;gap:6px;justify-content:center}
+  .otp>span:not(.n){width:34px;height:42px;border:1.5px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+  .otp>span.on{border-color:var(--green);background:var(--green-l)}
+  .avg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .avg .av{width:46px;height:46px;font-size:18px;margin:auto}
+  .avg .sel{outline:3px solid var(--orange);outline-offset:2px}
+  .scale{display:flex;gap:6px;justify-content:center}
+  .scale>span:not(.n){width:44px;height:44px;border:1.5px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff}
+  .scale>span.on{border-color:var(--green);background:var(--green-l)}
+  .set{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;position:relative}
+  .set:last-child{border-bottom:0}
+  .set .t{flex:1} .set .t small{display:block;color:var(--mute);font-size:11px}
+  .set .arr{color:var(--mute)}
+  .ok{color:var(--green-d);font-weight:700}
+  .err{color:#b8570b;font-weight:600}
+  .lbl2{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+
+  .tc{border:1px solid var(--line);border-radius:12px;padding:9px;background:#fff;position:relative;display:flex;flex-direction:column;gap:5px}
+  .tc .top{display:flex;gap:9px;align-items:flex-start}
+  .tc .nm{font-weight:700;font-size:13px}
+  .tc .row3{display:flex;gap:6px;align-items:center;justify-content:space-between;font-size:11px}
+  .nextav{color:var(--green-d);font-weight:700}
+  .call{flex:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;position:relative;background:#26332d}
+  .ctrls{display:flex;gap:12px;justify-content:center;padding:6px 0}
+  .ctrls span.b{width:44px;height:44px;border-radius:50%;background:#e8eeea;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .ctrls span.b.end{background:var(--red);color:#fff}
+  .ctrls span.b.off{background:#cfd8d3}
+  .pip{position:absolute;right:10px;bottom:10px;width:78px;height:96px;border-radius:10px;background:#3d4d45;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:10px;gap:4px}
+  .stars{display:flex;gap:6px;justify-content:center;font-size:26px;color:#d9a21b}
+  .slotg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+
+  .biob{width:64px;height:64px;border-radius:50%;background:var(--green-l);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:28px;margin:auto}
+  .otp>span.bad{border-color:var(--red);background:var(--red-l);color:var(--red)}
+  .dev{display:flex;gap:10px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:12px;background:#fff;position:relative}
+  .dev .ic{width:34px;height:34px;border-radius:9px;background:var(--green-l);display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+  .dev .t{flex:1;font-size:12px} .dev .t b{display:block;font-size:13px}
+  .opt{border:1.5px solid var(--line);border-radius:12px;padding:9px;display:flex;gap:9px;align-items:flex-start;background:#fff;position:relative}
+  .opt.on{border-color:var(--green);background:var(--green-l)}
+  .opt .t{font-size:12px} .opt .t b{display:block;font-size:13px}
+</style></head><body>
+<header><h1>Echo — Wireframes: Returning-user login and account security</h1>
+<p>Draft v0.1 · low-fidelity · follows PRD §6.1 (ACC-11 and the new ACC-13 to ACC-21) and decision D35 (phone + one-time code, no passwords). Registration is screens 27–28; account standing and appeals are screen 31. Placeholders are marked ___ . Pink markers match the numbered notes beside each group. Not committed.</p></header>
+
+<section><h2>Principles</h2><ul style="max-width:1100px">
+<li><b>Urgent help never needs a login.</b> The orange “Need urgent help?” pill is on every sign-in screen.</li>
+<li><b>No passwords</b> to forget, reuse or be shoulder-surfed. A phone code, a device, and a lock on the app.</li>
+<li><b>Safe on a shared phone.</b> Pen name hidden on the lock screen by default; “shared device” mode; notifications that say nothing private; quick exit.</li>
+<li><b>No account enumeration.</b> Screens never confirm whether a phone number has an account.</li>
+<li><b>Recovery is humane and safe:</b> a locked account is never deleted; a person reviews ID checks; every access is logged.</li></ul></section>
+
+<section><h2>35 · Signing in</h2><p class="sub">Most returning members just unlock the app. New devices go through a phone code, then choose how much to trust the phone.</p>
+<div class="row"><div class="col"><div class="cap">35a · Unlock (known device)</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><b style="color:var(--green)">echo</b><span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:12px;align-items:center;text-align:center;justify-content:center">
+ <span class="av lg o" style="width:80px;height:80px;font-size:30px;position:relative">🌙<span class="n" style="top:-6px;right:-10px">1</span></span>
+ <div class="h">Welcome back</div><div class="small m">Unlock to continue</div>
+ <div class="biob" style="position:relative">☝️<span class="n" style="top:-8px;right:-10px">2</span></div>
+ <div class="small m">Touch the fingerprint sensor</div>
+ <div class="small"><u>Use device PIN</u></div>
+ <div style="flex:1"></div>
+ <div class="small" style="position:relative"><u>Sign in with my phone number instead</u><span class="n" style="top:-12px;right:-22px">3</span></div>
+</div></div></div><div class="col"><div class="cap">35b · Log in with phone</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Log in<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:9px;overflow:hidden">
+ <div class="h" style="font-size:16px">Log in to Echo</div>
+ <div class="small m">We’ll text you a 6-digit code. No password needed.</div>
+ <div class="m small">Phone number</div>
+ <div class="input" style="padding:10px;color:var(--ink);position:relative">🇰🇪 +254 712 345 678<span class="n" style="top:-8px;right:-6px">4</span></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">5</span>We’ll always say “If this number has an account, a code is on its way”, so no one can use this screen to check who is on Echo.</div>
+ <div class="btn">Send code</div>
+ <div class="small" style="text-align:center;position:relative"><u>I can’t get codes on this number</u><span class="n" style="top:-8px;right:-6px">6</span></div>
+ <div style="flex:1"></div>
+ <div class="small" style="text-align:center">New here? <u>Create an account</u></div>
+</div></div></div><div class="col"><div class="cap">35c · Trust this device?</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>New device<span class="sp"></span></div>
+<div class="body" style="gap:9px;overflow:hidden">
+ <div class="card small"><span style="font-size:18px">📱</span> <b>Samsung A14</b> · Android<div class="m">Signed in just now · approx. Nairobi</div></div>
+ <div class="h" style="font-size:16px">Is this your own phone?</div>
+ <div class="opt on" style="position:relative"><span class="n" style="top:-10px;right:-8px">7</span><span class="radio on"></span><div class="t"><b>Yes, it’s mine</b>Keep me signed in and lock the app with my fingerprint or PIN.</div></div>
+ <div class="opt" style="position:relative"><span class="n" style="top:-10px;right:-8px">8</span><span class="radio"></span><div class="t"><b>It’s shared or borrowed</b>Sign me out after 24 hours and clear my data from this phone when I leave.</div></div>
+ <div class="card g small">You can change this later in Settings → Security.</div>
+ <div style="flex:1"></div><div class="btn">Continue</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Unlock shows the member’s avatar but not their pen name, in case the phone is seen by others (default; can be changed).</span></li><li><b class="nn">2</b><span>Fingerprint or the device PIN; no Echo password exists (D35).</span></li><li><b class="nn">3</b><span>A way to sign in with a phone number instead if biometrics fail or the phone was reset.</span></li><li><b class="nn">4</b><span>Phone entry with a clear, short explanation: a code, not a password.</span></li><li><b class="nn">5</b><span>The wording is the same whether or not an account exists, so the screen can’t be used to find out who is on Echo.</span></li><li><b class="nn">6</b><span>Lost number? A visible route to recovery (36b). The code entry screen is the same as 27c.</span></li><li><b class="nn">7</b><span>After the code, the member chooses whether this phone is theirs, which sets how long they stay signed in.</span></li><li><b class="nn">8</b><span>Shared or borrowed phones get a short session and local data is cleared when they leave (D41).</span></li></ol>
+</div></section>
+
+<section><h2>36 · When something goes wrong</h2><p class="sub">Calm, specific help, with real ways out.</p>
+<div class="row"><div class="col"><div class="cap">36a · Code didn’t work</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Enter code<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:9px;overflow:hidden;align-items:center;text-align:center">
+ <div class="h" style="font-size:16px">Enter the 6-digit code</div>
+ <div class="otp"><span class="bad">4</span><span class="bad">8</span><span class="bad">2</span><span class="bad">9</span><span class="bad">1</span><span class="bad">0</span></div>
+ <div class="err small" style="position:relative">That code doesn’t match. 2 tries left.<span class="n" style="top:-8px;right:-24px">1</span></div>
+ <div class="card" style="width:100%;text-align:left;position:relative"><span class="n" style="top:-10px;right:-8px">2</span><b class="small">Didn’t get a code?</b>
+  <div class="set"><div class="t">Resend code<small>Available in 0:42</small></div></div>
+  <div class="set"><div class="t">Check your number<small>+254 712 ••• 678 · <u>Change</u></small></div></div>
+  <div class="set"><div class="t">Get a call with your code<small>For when SMS doesn’t arrive</small></div></div></div>
+ <div class="card o small" style="width:100%;text-align:left;position:relative"><span class="n" style="top:-10px;right:-8px">3</span><b>After 5 wrong tries:</b> “Too many tries. You can try again in 14:58.” <span class="m">(placeholder)</span></div>
+</div></div></div><div class="col"><div class="cap">36b · Lost phone or new number</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Get back into your account<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="small m">Choose what fits. Your chats and data stay untouched.</div>
+ <div class="opt on" style="position:relative"><span class="n" style="top:-10px;right:-8px">4</span><span class="radio on"></span><div class="t"><b>I’m signed in on another device</b>Approve this sign-in from there.</div></div>
+ <div class="opt" style="position:relative"><span class="n" style="top:-10px;right:-8px">5</span><span class="radio"></span><div class="t"><b>I have a new phone number</b>Confirm it’s you with your ID and a selfie. A person reviews it, usually within ___ days.</div></div>
+ <div class="opt"><span class="radio"></span><div class="t"><b>Something else</b>Contact support with details.</div></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">6</span>🔒 While we check, the account stays <b>locked</b>. Nobody can use it, and nothing is deleted.</div>
+ <div class="m" style="font-size:10px">Your ID is matched to the one you registered with. Staff only see what they need, and every view is logged.</div>
+ <div style="flex:1"></div><div class="btn">Continue</div>
+</div></div></div><div class="col"><div class="cap">36c · Account paused</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar">Account status<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card o" style="position:relative"><span class="n" style="top:-10px;right:-8px">7</span><b>Your account is paused</b><div class="small">Three notices were recorded. Our team is reviewing them. This usually takes ___ days.</div></div>
+ <div class="lbl2">You can still</div>
+ <div class="set" style="position:relative"><div class="t">Get urgent help</div><span class="arr">›</span><span class="n" style="top:-2px;right:-6px">8</span></div>
+ <div class="set"><div class="t">Read the help centre</div><span class="arr">›</span></div>
+ <div class="set"><div class="t">Manage billing</div><span class="arr">›</span></div>
+ <div class="set"><div class="t">Download my data</div><span class="arr">›</span></div>
+ <div class="set" style="position:relative"><div class="t"><b>Appeal this decision</b></div><span class="arr">›</span><span class="n" style="top:-2px;right:-6px">9</span></div>
+ <div style="flex:1"></div><div class="btn sec">Sign out</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Clear error with the number of tries left; no blame.</span></li><li><b class="nn">2</b><span>Three practical options for when the SMS doesn’t arrive, including a voice call with the code.</span></li><li><b class="nn">3</b><span>After too many tries the code locks for a short time (placeholder). This protects accounts without punishing honest mistakes.</span></li><li><b class="nn">4</b><span>Recovery lists the realistic cases: another signed-in device can approve, or the member proves who they are with ID and a selfie (D42).</span></li><li><b class="nn">5</b><span>The ID path is reviewed by a person, with a stated time (placeholder).</span></li><li><b class="nn">6</b><span>The account stays locked and nothing is deleted while the check happens.</span></li><li><b class="nn">7</b><span>If the account is paused, signing in shows a plain status screen instead of an error.</span></li><li><b class="nn">8</b><span>A paused member can always reach urgent help (PRD SAF-15).</span></li><li><b class="nn">9</b><span>They can also use the help centre, billing and data export, and appeal the decision.</span></li></ol>
+</div></section>
+
+<section><h2>37 · Devices, alerts and the app lock</h2><p class="sub">Controls for people who may share a phone, a home, or a worry.</p>
+<div class="row"><div class="col"><div class="cap">37a · Active devices</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Active devices<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="dev" style="position:relative"><span class="n" style="top:-8px;right:-6px">1</span><span class="ic">📱</span><div class="t"><b>This device · Samsung A14</b>Trusted · active now</div></div>
+ <div class="dev"><span class="ic">📱</span><div class="t"><b>Tecno Spark 10</b>Last active 2 days ago · near Kisumu</div><span class="chip">Sign out</span></div>
+ <div class="dev"><span class="ic">💻</span><div class="t"><b>Web browser</b>Last active 3 weeks ago · near Nairobi</div><span class="chip">Sign out</span></div>
+ <div class="m" style="font-size:10px;position:relative">Locations are approximate and only you can see them.<span class="n" style="top:-10px;right:-14px">2</span></div>
+ <div class="btn sec" style="padding:9px;position:relative">Sign out of all other devices<span class="n" style="top:-10px;right:-6px">3</span></div>
+ <div class="card o small"><b>Don’t recognise one?</b> <u>Secure my account</u></div>
+</div></div></div><div class="col"><div class="cap">37b · New sign-in alert</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar">Security alert<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:9px;overflow:hidden">
+ <div class="card r" style="position:relative"><span class="n" style="top:-10px;right:-8px">4</span><b>New sign-in to your account</b><div class="small">Samsung A14 · approx. Eldoret · just now</div></div>
+ <div class="h" style="font-size:16px">Was this you?</div>
+ <div class="btn">Yes, it was me</div>
+ <div class="btn" style="background:var(--red);position:relative">No, secure my account<span class="n" style="top:-10px;right:-6px">5</span></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">6</span>If you choose “No”, we sign out every device, lock the account and help you recover it. Nothing is deleted.</div>
+ <div class="m" style="font-size:10px">We also send this alert by SMS, in case this phone is not with you.</div>
+</div></div></div><div class="col"><div class="cap">37c · Security settings</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Security<span class="sp"></span></div>
+<div class="body" style="gap:4px;overflow:hidden">
+ <div style="position:relative"><div class="set"><div class="t">App lock<small>Ask for fingerprint or PIN</small></div><span class="tog on"></span></div><span class="n" style="top:-2px;right:-6px">7</span></div>
+ <div class="set"><div class="t">Lock after<small>1 minute away</small></div><span class="arr">▾</span></div>
+ <div class="set"><div class="t">Hide my pen name on the lock screen<small>Safer on a shared phone</small></div><span class="tog on"></span></div>
+ <div style="position:relative"><div class="set"><div class="t">Quick exit<small>Triple-tap the logo to leave at once</small></div><span class="tog on"></span></div><span class="n" style="top:-2px;right:-6px">8</span></div>
+ <div class="set"><div class="t">Neutral notifications<small>Say “New message”, never who or what</small></div><span class="tog on"></span></div>
+ <div style="position:relative"><div class="set"><div class="t">This device<small>Trusted · stays signed in</small></div><span class="arr">›</span></div><span class="n" style="top:-2px;right:-6px">9</span></div>
+ <div class="set"><div class="t">Active devices<small>3 devices</small></div><span class="arr">›</span></div>
+ <div class="set" style="color:var(--red)">Log out of this device</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Devices are listed by model and last activity, with the current phone marked.</span></li><li><b class="nn">2</b><span>Locations are approximate (nearest town) and visible only to the account owner.</span></li><li><b class="nn">3</b><span>“Sign out of all other devices” is one tap, and “Secure my account” is one tap away for anyone who doesn’t recognise a device.</span></li><li><b class="nn">4</b><span>New-device alerts appear on the member’s other devices and by SMS (D44).</span></li><li><b class="nn">5</b><span>“No, secure my account” signs out everywhere, locks the account and starts recovery. It never deletes anything.</span></li><li><b class="nn">6</b><span>Plain consequences are stated before the member chooses.</span></li><li><b class="nn">7</b><span>App lock with fingerprint or PIN, with a chosen delay before it asks again.</span></li><li><b class="nn">8</b><span>Quick exit: a fast, discreet way to close the app and show something neutral, for people who may be watched (D43).</span></li><li><b class="nn">9</b><span>Trusted device status can be changed at any time; “shared device” can be switched on later.</span></li></ol>
+</div></section>
+
+<section><h2>Decisions and gaps</h2><ul>
+<li><b>D41:</b> shared-device behaviour: session length (24 h drawn), what is cleared from the phone, and whether it can be the default for some members.</li>
+<li><b>D42:</b> recovery for a lost phone: which proofs are accepted, who reviews, how long it takes, and how to stop an attacker using the recovery route.</li>
+<li><b>D43:</b> discreet features: quick exit, neutral notification text, and whether Echo can offer a neutral app name or icon on Android.</li>
+<li><b>D44:</b> new-device alerts by SMS as well as in the app, and the cost of those SMS messages.</li>
+<li><b>Biometrics:</b> app lock uses the phone’s own fingerprint or PIN; Echo never stores biometric data.</li>
+<li><b>Not drawn:</b> the support-side screen where staff review a recovery request (admin), and web sign-in for therapists and staff (they use MFA, PRD RBAC-2).</li></ul></section>
+</body></html>

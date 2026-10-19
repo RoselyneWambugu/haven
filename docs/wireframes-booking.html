@@ -1,0 +1,291 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Echo Wireframes — Therapist Directory and Booking</title><style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+
+  .row2{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);position:relative}
+  .row2:last-child{border-bottom:0}
+  .row2 .t{flex:1;min-width:0}
+  .row2 .t b{display:block}
+  .row2 .t span{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--mute)}
+  .unread{background:var(--orange);color:#3a2000;border-radius:999px;min-width:18px;height:18px;padding:0 5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .banner{border-radius:10px;padding:8px 10px;font-size:12px}
+  .swipe{position:absolute;right:0;top:0;bottom:0;display:flex}
+  .swipe div{width:58px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dim{opacity:.55}
+  .row2 .t span.tag{display:inline-block;overflow:visible}
+
+  .post{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;position:relative}
+  .post .who{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .post .who b{color:var(--ink)}
+  .post .ttl{font-weight:700;font-size:14px;line-height:1.25}
+  .post .snip{font-size:12px;color:#44524b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--mute);align-items:center;flex-wrap:wrap}
+  .badge{background:var(--green-l);color:var(--green-d);border:1px solid #bcd9c8;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+  .fab{position:absolute;right:14px;bottom:62px;background:var(--orange);color:#3a2000;border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.2);z-index:4}
+  .cm{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);position:relative}
+  .cm:last-child{border-bottom:0}
+  .cm .c{flex:1;font-size:12px}
+  .cm.th{background:var(--green-l);border-radius:10px;padding:8px;border:1px solid #bcd9c8;margin-bottom:6px}
+  .react{display:flex;gap:8px}
+  .react>span:not(.n){border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:#fff}
+  .react>span.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700}
+
+  .plan{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;align-items:center;gap:10px;position:relative}
+  .plan.on{border-color:var(--green);background:var(--green-l)}
+  .plan .pr{margin-left:auto;text-align:right;font-weight:700}
+  .plan .pr small{display:block;font-weight:400;color:var(--mute);font-size:11px}
+  .tog{width:38px;height:22px;border-radius:999px;background:#cfd8d3;position:relative;flex:none}
+  .tog::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+  .tog.on{background:var(--green)} .tog.on::after{left:19px}
+  .li{display:flex;gap:8px;font-size:12px;align-items:flex-start}
+  .li i{font-style:normal;color:var(--green);font-weight:800}
+  .sum{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+  .sum.t{font-weight:700;font-size:14px;border-top:1px solid var(--line);padding-top:6px;margin-top:3px}
+  .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--green-l);border-top-color:var(--green)}
+  .pill{border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;background:var(--orange);color:#3a2000}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:8px;align-items:center;background:#fff;font-size:12px;font-weight:600;line-height:1.2;position:relative}
+  .tile .ic{width:26px;height:26px;border-radius:8px;background:var(--green-l);display:flex;align-items:center;justify-content:center;flex:none;font-size:14px}
+  .res{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;position:relative}
+  .res .t{font-weight:700;font-size:13px}
+  .dot2{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--orange)}
+  .li2{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:center;font-size:13px}
+  .li2:last-child{border-bottom:0}
+  .li2 .arr{margin-left:auto;color:var(--mute)}
+  .step{display:flex;gap:8px;align-items:flex-start}
+  .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+  .dot.d{background:var(--green);border-color:var(--green);color:#fff}
+  .sev{display:inline-block;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:800}
+  .sev.s3{background:#dfe5e1;color:#44524b}
+
+  .seg{display:flex;border:1.5px solid var(--green);border-radius:10px;overflow:hidden}
+  .seg span{flex:1;text-align:center;padding:7px;font-size:12px;font-weight:600;color:var(--green)}
+  .seg span.on{background:var(--green);color:#fff}
+  .otp{display:flex;gap:6px;justify-content:center}
+  .otp>span:not(.n){width:34px;height:42px;border:1.5px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+  .otp>span.on{border-color:var(--green);background:var(--green-l)}
+  .avg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .avg .av{width:46px;height:46px;font-size:18px;margin:auto}
+  .avg .sel{outline:3px solid var(--orange);outline-offset:2px}
+  .scale{display:flex;gap:6px;justify-content:center}
+  .scale>span:not(.n){width:44px;height:44px;border:1.5px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff}
+  .scale>span.on{border-color:var(--green);background:var(--green-l)}
+  .set{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;position:relative}
+  .set:last-child{border-bottom:0}
+  .set .t{flex:1} .set .t small{display:block;color:var(--mute);font-size:11px}
+  .set .arr{color:var(--mute)}
+  .ok{color:var(--green-d);font-weight:700}
+  .err{color:#b8570b;font-weight:600}
+  .lbl2{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+
+  .tc{border:1px solid var(--line);border-radius:12px;padding:9px;background:#fff;position:relative;display:flex;flex-direction:column;gap:5px}
+  .tc .top{display:flex;gap:9px;align-items:flex-start}
+  .tc .nm{font-weight:700;font-size:13px}
+  .tc .row3{display:flex;gap:6px;align-items:center;justify-content:space-between;font-size:11px}
+  .nextav{color:var(--green-d);font-weight:700}
+  .call{flex:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;position:relative;background:#26332d}
+  .ctrls{display:flex;gap:12px;justify-content:center;padding:6px 0}
+  .ctrls span.b{width:44px;height:44px;border-radius:50%;background:#e8eeea;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .ctrls span.b.end{background:var(--red);color:#fff}
+  .ctrls span.b.off{background:#cfd8d3}
+  .pip{position:absolute;right:10px;bottom:10px;width:78px;height:96px;border-radius:10px;background:#3d4d45;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:10px;gap:4px}
+  .stars{display:flex;gap:6px;justify-content:center;font-size:26px;color:#d9a21b}
+  .slotg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+</style></head><body>
+<header><h1>Echo — Wireframes: Therapist directory, booking and sessions (member side)</h1>
+<p>Draft v0.1 · low-fidelity · follows <code>screen-flows.md</code> §5 and PRD §6.5. These sit between the therapist profile and booking screens (4a, 4b), checkout (13a) and the pre-session check (4c) already drawn. Prices are placeholders (___). Pink markers match the numbered notes beside each group. Not committed.</p></header>
+
+<section><h2>Principles</h2><ul style="max-width:1100px">
+<li><b>Clinical and peer are visibly different.</b> Therapy has its own tab, its own price per session and its own notices.</li>
+<li><b>Fair discovery.</b> Default order is by next available time; nobody pays to rank higher (D38).</li>
+<li><b>Members stay anonymous; therapists are public.</b> Calls show the member as a pen name and avatar, with camera off by default.</li>
+<li><b>Honest policies, stated early:</b> cancellation windows and charges appear before payment and again when changing a booking.</li>
+<li><b>Works on poor networks:</b> voice is the low-data option, and calls fall back from video to voice to chat.</li></ul></section>
+
+<section><h2>32 · Therapist directory</h2><p class="sub">Finding the right person, without overwhelming someone who is already struggling.</p>
+<div class="row"><div class="col"><div class="cap">32a · Directory</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm o">🌙</span>Therapists<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:7px;overflow:hidden;padding-bottom:0">
+ <div class="seg"><span class="on">Find a therapist</span><span class="">My sessions</span></div>
+ <div class="input" style="padding:8px 10px;position:relative">🔍 Search by name or topic<span class="n" style="top:-8px;right:-6px">1</span></div>
+ <div class="flex" style="flex:none;overflow:hidden;position:relative"><span class="chip on">All</span><span class="chip">Anxiety</span><span class="chip">Grief</span><span class="chip">Relationships</span><span class="n" style="top:-12px;right:-12px">2</span></div>
+ <div class="flex small" style="flex:none"><span class="chip" style="position:relative">⚙ Filters · 2<span class="n" style="top:-8px;right:-6px">3</span></span><span class="m" style="margin-left:auto;position:relative">Sort: <b style="color:var(--green-d)">Next available ▾</b><span class="n" style="top:-10px;right:-8px">4</span></span></div>
+ <div class="tc"><span class="n" style="top:-8px;right:-6px">5</span><div class="top"><span class="av ">AO</span><div style="flex:1"><div class="nm">Dr. Amina Otieno</div><div class="m small">Clinical Psychologist</div><div class="flex small"><span class="badge">✓ Verified</span><span>★ 4.8 (126)</span></div></div></div>
+<div class="wrap"><span class="tag g" style="font-size:10px">Anxiety</span><span class="tag g" style="font-size:10px">Grief</span></div>
+<div class="row3"><span class="m">English · Kiswahili</span><span>💬 📞 🎥</span></div>
+<div class="row3"><span class="nextav">Next: today 14:00</span><b>KES ___ <span class="m" style="font-weight:400">/ 45 min</span></b></div></div>
+ <div class="tc"><div class="top"><span class="av o">JM</span><div style="flex:1"><div class="nm">James Mwangi</div><div class="m small">Counsellor</div><div class="flex small"><span class="badge">✓ Verified</span><span>★ 4.7 (64)</span></div></div></div>
+<div class="wrap"><span class="tag g" style="font-size:10px">Relationships</span><span class="tag g" style="font-size:10px">Work stress</span></div>
+<div class="row3"><span class="m">English</span><span>💬 📞</span></div>
+<div class="row3"><span class="nextav">Next: tomorrow 09:00</span><b>KES ___ <span class="m" style="font-weight:400">/ 45 min</span></b></div></div>
+ <div class="small m" style="text-align:center">Therapy is separate from peer support and priced per session.</div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class="on"><span class="ico"></span>Therapists</div><div class=""><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">32b · Filters</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm o">🌙</span>Therapists<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:6px;overflow:hidden">
+ <div class="tc dim"><div class="nm">Dr. Amina Otieno</div></div>
+ <div class="scrim"></div>
+ <div class="sheet" style="gap:7px"><div class="grab"></div>
+  <div class="flex"><b style="font-size:15px">Filters</b><span class="m small" style="margin-left:auto"><u>Clear</u></span></div>
+  <div class="lbl2">Specialisation</div><div class="wrap"><span class="chip on">Anxiety</span><span class="chip">Grief</span><span class="chip">Relationships</span><span class="chip">Trauma</span><span class="chip">＋</span></div>
+  <div class="lbl2">Language</div><div class="wrap"><span class="chip on">English</span><span class="chip">Kiswahili</span><span class="chip">Sheng</span></div>
+  <div class="lbl2" style="position:relative">Session type<span class="n" style="top:-4px;right:0">6</span></div><div class="flex small"><span class="chip">💬 Chat</span><span class="chip on">📞 Voice</span><span class="chip">🎥 Video</span></div>
+  <div class="lbl2" style="position:relative">Price per session<span class="n" style="top:-4px;right:0">7</span></div><div class="flex small"><span class="m">KES ___</span><div style="flex:1;height:6px;background:var(--green-l);border-radius:4px;position:relative"><div style="position:absolute;left:10%;right:30%;top:0;bottom:0;background:var(--green);border-radius:4px"></div></div><span class="m">___</span></div>
+  <div class="lbl2">Available</div><div class="flex small"><span class="chip">Today</span><span class="chip on">This week</span><span class="chip">Any time</span></div>
+  <div class="lbl2" style="position:relative">Therapist (optional)<span class="n" style="top:-4px;right:0">8</span></div><div class="flex small"><span class="chip">Woman</span><span class="chip">Man</span><span class="chip on">No preference</span></div>
+  <div class="btn">Show 12 therapists</div>
+ </div></div></div></div><div class="col"><div class="cap">32c · No results</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm o">🌙</span>Therapists<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="seg"><span class="on">Find a therapist</span><span class="">My sessions</span></div>
+ <div class="flex"><span class="chip">⚙ Filters · 5</span><span class="m small" style="margin-left:auto">0 results</span></div>
+ <div class="card" style="text-align:center;position:relative"><span class="n" style="top:-10px;right:-8px">9</span><div style="font-size:26px">🔎</div><b>No one matches all of these</b><div class="small m">Try fewer filters, or a different day.</div>
+  <div class="flex" style="justify-content:center;margin-top:6px"><span class="chip">Remove “Today”</span><span class="chip">Any language</span></div></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">10</span><b>Join a waitlist</b><div class="m">Dr. Otieno has no space this week. We’ll tell you when she does.</div><div class="btn sec" style="padding:6px;margin-top:6px">Notify me</div></div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">11</span><b>Not sure who to pick?</b><div class="m">Answer 3 questions and we’ll suggest a few people.</div><u>Help me choose</u></div>
+ <div class="card small"><b>Meanwhile</b><div class="m">Chat with a peer · Support directory · Urgent help</div></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class="on"><span class="ico"></span>Therapists</div><div class=""><span class="ico"></span>Help</div></div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Search covers therapist names and topics only.</span></li><li><b class="nn">2</b><span>Specialisation chips give one-tap shortcuts to the most common needs.</span></li><li><b class="nn">3</b><span>The filters button shows how many are active.</span></li><li><b class="nn">4</b><span>Default sort is next available. Other options: highest rated, lowest price, soonest in my language. No paid placement (D38).</span></li><li><b class="nn">5</b><span>Each card shows what decides a choice: verification, rating, specialisation, language, modes, next slot and price.</span></li><li><b class="nn">6</b><span>Session type filter helps members who want a low-data option, since voice and chat use far less data than video.</span></li><li><b class="nn">7</b><span>Price range is shown as a simple range; amounts are placeholders.</span></li><li><b class="nn">8</b><span>Therapist gender is an optional filter, since it matters to many people. “No preference” is the default (D37).</span></li><li><b class="nn">9</b><span>If filters leave nothing, the screen suggests removing a filter rather than showing a dead end.</span></li><li><b class="nn">10</b><span>A waitlist for fully booked therapists, with a notification when space opens.</span></li><li><b class="nn">11</b><span>“Help me choose” is an optional short questionnaire that suggests a few people (D37).</span></li></ol>
+</div></section>
+
+<section><h2>33 · Booking, my sessions and changes</h2><p class="sub">After paying (screen 13a) the member needs certainty: what is booked, when, and how to change it.</p>
+<div class="row"><div class="col"><div class="cap">33a · Booking confirmed</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar">Booked<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="flex" style="justify-content:center"><span class="av lg">✓</span></div>
+ <div class="h" style="text-align:center;font-size:16px">Your session is booked</div>
+ <div class="card g"><div class="flex"><span class="av">AO</span><div><b>Dr. Amina Otieno</b><div class="m small">📞 Voice · 45 min</div></div></div><div class="hr" style="margin:6px 0"></div><b>Tue 21 Oct · 10:30</b> <span class="m small">EAT</span><div class="m small" style="position:relative">Reminders: 1 hour and 10 minutes before<span class="n" style="top:-26px;right:-6px">1</span></div></div>
+ <div class="btn sec" style="padding:8px">📅 Add to calendar</div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">2</span><b>Before your session</b><br>• Find a quiet, private place<br>• Use headphones if you can<br>• Check your data or Wi-Fi</div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span>You stay anonymous. It is not recorded. You can join from 10 minutes before. Free to change until <b>Mon 10:30</b>.</div>
+ <div style="flex:1"></div><div class="btn">View my sessions</div>
+</div></div></div><div class="col"><div class="cap">33b · My sessions</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm o">🌙</span>Therapists<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:7px;overflow:hidden">
+ <div class="seg"><span class="">Find a therapist</span><span class="on">My sessions</span></div>
+ <div class="flex small" style="flex:none"><span class="chip on">Upcoming 2</span><span class="chip">Past</span></div>
+ <div class="tc" style="position:relative"><span class="n" style="top:-8px;right:-6px">4</span><div class="top"><span class="av">AO</span><div style="flex:1"><div class="nm">Dr. Amina Otieno</div><div class="m small">📞 Voice · Tue 21 · 10:30</div></div></div>
+  <div class="btn off" style="padding:7px">Opens at 10:20</div>
+  <div class="flex small"><span class="chip" style="position:relative">Reschedule<span class="n" style="top:-12px;right:-12px">5</span></span><span class="chip">Cancel</span></div></div>
+ <div class="tc"><div class="top"><span class="av o">JM</span><div style="flex:1"><div class="nm">James Mwangi</div><div class="m small">💬 Chat · Thu 23 · 16:00</div></div></div>
+  <div class="flex small"><span class="chip">Reschedule</span><span class="chip">Cancel</span></div></div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">6</span>Sessions are also on your Home screen and in <b>Chats</b> for chat sessions.</div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class="on"><span class="ico"></span>Therapists</div><div class=""><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">33c · Reschedule or cancel</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm o">🌙</span>Therapists<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:6px;overflow:hidden">
+ <div class="tc dim"><div class="nm">Dr. Amina Otieno · Tue 21 · 10:30</div></div>
+ <div class="scrim"></div>
+ <div class="sheet" style="gap:7px"><div class="grab"></div>
+  <b style="font-size:15px">Change this session</b>
+  <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">7</span><b>Free to change until Mon 20 Oct, 10:30.</b> After that, changes or no-shows may be charged <span class="m">(policy placeholder)</span>.</div>
+  <div class="flex small"><span class="radio on"></span>Move to another time</div>
+  <div class="slotg"><div class="slot">Tue 14:00</div><div class="slot on">Wed 10:30</div><div class="slot">Thu 09:00</div></div>
+  <div class="flex small" style="position:relative"><span class="radio"></span>Cancel this session<span class="n" style="top:-6px;right:0">9</span></div>
+  <div class="small m" style="position:relative">Reason (optional)<span class="n" style="top:-8px;right:0">8</span></div>
+  <div class="btn" style="padding:10px">Confirm move to Wed 10:30</div>
+ </div></div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Reminders are set automatically: one hour and ten minutes before.</span></li><li><b class="nn">2</b><span>A short preparation list, written for people who may be nervous.</span></li><li><b class="nn">3</b><span>The anonymity, no-recording and change-window rules are repeated at the moment they matter.</span></li><li><b class="nn">4</b><span>Upcoming sessions show when Join opens (10 minutes before) so nobody arrives early to a closed door (D40).</span></li><li><b class="nn">5</b><span>Reschedule and cancel are one tap from the card.</span></li><li><b class="nn">6</b><span>Chat sessions and next-session cards also appear in Chats and on Home.</span></li><li><b class="nn">7</b><span>The free-change deadline is stated with the exact date and time.</span></li><li><b class="nn">8</b><span>A reason is optional and never required.</span></li><li><b class="nn">9</b><span>(Placeholder) Late changes and no-shows may be charged; the policy is open (D39).</span></li></ol>
+</div></section>
+
+<section><h2>34 · In a session (member side)</h2><p class="sub">Calm screens with few controls. The therapist’s side is in the therapist portal (screen 17).</p>
+<div class="row"><div class="col"><div class="cap">34a · Voice call</div><div class="phone" style="background:#1d2a24"><div class="status"><span>9:41</span><span>●●●</span></div>
+<div class="body" style="gap:8px;color:#fff;background:#1d2a24;align-items:center;justify-content:center;text-align:center">
+ <div class="flex" style="position:absolute;top:8px;left:10px;right:10px;justify-content:space-between"><span class="small" style="color:#cfe6d9">📶 Good</span><span class="sos">Help</span></div>
+ <span class="av lg" style="width:88px;height:88px;font-size:30px">AO</span>
+ <div class="h">Dr. Amina Otieno</div><div class="small" style="color:#cfe6d9;position:relative">12:04<span class="n" style="top:-12px;right:-30px">1</span></div>
+ <div class="small" style="color:#9fb5a9">Not recorded · you appear as QuietPine</div>
+ <div style="flex:1"></div>
+ <div class="ctrls" style="position:relative"><span class="n" style="top:-10px;right:-6px">2</span><span class="b">🎤</span><span class="b">🔊</span><span class="b">💬</span><span class="b end">✕</span></div>
+ <div class="small" style="color:#cfe6d9;position:relative"><u>Something wrong? Report or get help</u><span class="n" style="top:-8px;right:-20px">3</span></div>
+</div></div></div><div class="col"><div class="cap">34b · Video call</div><div class="phone" style="background:#1d2a24"><div class="status"><span>9:41</span><span>●●●</span></div>
+<div class="body" style="gap:8px;color:#fff;background:#1d2a24;padding:8px">
+ <div class="call" style="position:relative;background:#26332d"><span class="av lg" style="width:80px;height:80px;font-size:26px">AO</span><div class="small">Dr. Amina Otieno</div>
+  <div class="pip"><span class="av sm o">🌙</span>You · camera off<span class="n" style="top:-8px;right:-6px">4</span></div>
+  <div style="position:absolute;top:8px;left:8px;right:8px" class="card o small"><div style="color:#3a2000;position:relative"><span class="n" style="top:-8px;right:-4px">5</span>📶 <b>Weak connection.</b> Switch to voice?<div class="flex" style="margin-top:4px"><span class="chip on" style="font-size:11px">Switch</span><span class="chip" style="font-size:11px">Keep video</span></div></div></div></div>
+ <div class="flex small" style="justify-content:space-between;color:#cfe6d9;flex:none"><span>12:04</span><span>Not recorded</span><span class="sos">Help</span></div>
+ <div class="ctrls" style="flex:none;position:relative"><span class="n" style="top:-6px;right:-6px">6</span><span class="b">🎤</span><span class="b off">🎥</span><span class="b">🔄</span><span class="b end">✕</span></div>
+</div></div></div><div class="col"><div class="cap">34c · After the session</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar">Session complete<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden;align-items:center;text-align:center">
+ <span class="av lg">AO</span><div class="h" style="font-size:16px">How was your session?</div><div class="m small">45 min with Dr. Otieno</div>
+ <div class="stars" style="position:relative">★★★★<span style="color:#cfd8d3">★</span><span class="n" style="top:-12px;right:-14px">7</span></div>
+ <div class="input" style="width:100%;height:60px;padding:9px 10px;text-align:left;position:relative">Anything to add? (optional)</div>
+ <div class="card g small" style="width:100%;text-align:left;position:relative"><span class="n" style="top:-10px;right:-8px">8</span><b>Suggested follow-up</b><br>Dr. Otieno suggested <b>Tue 28 · 10:30</b>.<div class="flex" style="margin-top:4px"><div class="btn" style="padding:6px 14px">Book</div><div class="btn sec" style="padding:6px 14px">Not now</div></div></div>
+ <div class="card small m" style="width:100%;text-align:left;position:relative"><span class="n" style="top:-10px;right:-8px">9</span>If things feel heavy after a session: <u>talk to someone</u> · <u>urgent help</u></div>
+ <div style="flex:1"></div><div class="btn" style="width:100%">Done</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>A running timer and a quiet connection indicator; nothing flashes or interrupts.</span></li><li><b class="nn">2</b><span>Mute, speaker, switch to chat and end, with large targets. “Not recorded” is shown, along with the pen name the therapist sees.</span></li><li><b class="nn">3</b><span>A discreet “Something wrong?” link lets members report or get urgent help during a call.</span></li><li><b class="nn">4</b><span>Camera is off by default; the member appears as an avatar in a small picture (D15).</span></li><li><b class="nn">5</b><span>When the connection is weak, the app offers to switch to voice before it degrades; the member decides (D40).</span></li><li><b class="nn">6</b><span>Controls: mute, camera, switch mode, end.</span></li><li><b class="nn">7</b><span>Rating is quick, and the comment is private. Therapists see aggregates, not who said what (FDB-2).</span></li><li><b class="nn">8</b><span>The therapist’s suggested follow-up can be booked in one tap.</span></li><li><b class="nn">9</b><span>Check-in after a session, with ways to talk to someone if things feel heavy.</span></li></ol>
+</div></section>
+
+<section><h2>Decisions and gaps</h2><ul>
+<li><b>D37:</b> therapist gender and other preference filters, and the “Help me choose” questionnaire. Drawn as optional.</li>
+<li><b>D38:</b> ranking and fairness. Default “next available”; no paid placement; how ties and new therapists are treated.</li>
+<li><b>D39:</b> cancellation window, late-change and no-show charges, and what happens if the therapist cancels or is late.</li>
+<li><b>D40:</b> call technology, join window (10 minutes drawn), fallback rules and data use. Needs a provider that works well on mobile data in Kenya.</li>
+<li><b>Waitlists:</b> who is notified first, and for how long a freed slot is held.</li>
+<li><b>Not yet drawn:</b> returning-user login, admin analytics and configuration.</li></ul></section>
+</body></html>

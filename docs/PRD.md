@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.2 — revised after the founder's explanation of the idea (auto-matching, public forum, therapist voice/video, anonymity model) |
+| **Status** | Draft v0.8 — records the member-app technology decision (React Native with Expo) and the first working build in `mobile/`. See Appendix C for what changed |
 | **Date** | 2026-10-19 |
 | **Source** | Echo product overview (concept, platform, safety, business model, roadmap) |
 | **Market** | Kenya (pilot); regional expansion later |
@@ -18,6 +18,7 @@
 - Requirements carry IDs (`ACC-1`, `MSG-4`, …) so they can be referenced in tickets, tests and reviews.
 - Each requirement is tagged with the roadmap phase it ships in: **P2** (MVP), **P3** (professional services & safety), **P4** (pilot hardening), **P5** (growth).
 - **[ASSUMPTION]** marks a decision I made to keep the document moving where the overview was silent. **[OPEN]** marks a decision that needs an owner before the phase it blocks. All of them are collected in [§14](#14-open-decisions-and-assumptions).
+- **Design artefacts:** screen flows (`docs/screen-flows.md`), wireframes (`docs/wireframes*.html`), the **visual design** (`docs/visual-design.html`: colour, type, components, nine hi-fi member screens, landing page, therapist portal) and a combined viewer (`docs/echo-design.html`). Screen numbers 1–37 in §7 refer to those wireframes.
 - Pricing, therapist pay, revenue share and the clinical escalation protocol are **deliberately not specified** — the overview says they still need to be established. This document defines the *mechanisms* that will carry those decisions.
 
 ---
@@ -192,6 +193,11 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | Block & report | ✔ | | | |
 | Crisis resource card, help centre | ✔ | | | |
 | Basic admin dashboard (users, reports, billing) | ✔ | extend | | |
+| Home landing page and chat list (sections, row states, swipe actions) | ✔ | therapist section | | |
+| Help centre: departments, search, articles, tickets | ✔ | | | |
+| Support directory (outside organisations, volunteer psychologists) | | ✔ | | |
+| Admin case queue, evidence view, break-glass, appeals, audit log | ✔ basic | full | | |
+| Therapist portal: today, availability, live session, wrap-up, earnings | | ✔ | | |
 | **Baseline safety: keyword flags + human review queue** | ✔ *(recommended — see §14)* | | | |
 | AI-assisted moderation + strike engine | | ✔ | tune | |
 | Therapist verification, availability, public directory, chat | | ✔ | | |
@@ -220,6 +226,35 @@ Each journey lists the intended happy path and the failure/safety branch that mo
 | ACC-6 | Members MUST be able to view, correct, export and request deletion of their data. Deletion honours legal retention duties (e.g. billing, open safety cases). | P2 |
 | ACC-7 | Sessions MUST be device-bound with ability to view and revoke active sessions. | P3 |
 | ACC-8 | Banned/suspended users MUST NOT be able to trivially re-register (phone number and device signals). | P3 |
+| ACC-9 | Date of birth under 18 ends sign-up with a kind, no-blame screen and youth support resources. Everything the person entered is deleted immediately and the screen says so **[D11]**. | P2 |
+| ACC-10 | Stronger **ID verification** is not part of normal sign-up. It appears only on escalation (for example after a closed account or repeated violations) **[OPEN D33]**. ID images are encrypted, staff access needs a logged reason, and images are deleted after checking (period to be set). A person who can't continue is offered a route to Support. | P3 |
+| ACC-11 | Sign-in is by **phone number and one-time code**, bound to the device, with no passwords; members see and can end active devices. Recovery after losing a phone is defined before launch **[OPEN D35]**. | P2 |
+| ACC-12 | One-time codes are 6 digits with a resend countdown and attempt limits (for example 5 tries, then a 15-minute lock; placeholders). Changing a wrongly entered number is one tap. | P2 |
+| ACC-13 | **App lock:** on opening, the app asks for the phone's own fingerprint or PIN (Echo never stores biometric data). The member chooses the delay before it asks again. The lock screen shows the avatar but **hides the pen name by default**. | P2 |
+| ACC-14 | **Signing in on a new device** uses phone number plus one-time code. The next screen identifies the device and asks "Is this your own phone?": *mine* keeps the member signed in with app lock; *shared or borrowed* signs them out after a short session and clears local data when they leave **[OPEN D41]**. | P2 |
+| ACC-15 | Sign-in screens MUST NOT reveal whether a phone number has an account (the wording is the same either way: "If this number has an account, a code is on its way"). | P2 |
+| ACC-16 | **Code problems:** a clear error with tries left; options to resend, check or change the number, or get a voice call with the code; a temporary lock after repeated failures. | P2 |
+| ACC-17 | **Lost phone or new number:** the member can approve the sign-in from another signed-in device, or prove identity with ID and a selfie reviewed by a person, or contact support. The account stays **locked and untouched** during review; every staff access is logged **[OPEN D42]**. | P2 |
+| ACC-18 | **Signing in while paused, restricted or suspended** shows a plain status screen, not an error. Urgent help, the help centre, billing, data export and appeal remain available (SAF-15). | P3 |
+| ACC-19 | **Active devices:** a list by device model, last activity and approximate town (visible only to the owner), with sign-out for one device or all other devices, and "Secure my account". | P2 |
+| ACC-20 | **New-device alerts** go to the member's other devices and by SMS **[OPEN D44]**. "No, secure my account" signs out every device, locks the account and starts recovery; it never deletes anything. | P2 |
+| ACC-21 | **Discreet features:** quick exit (for example triple-tap the logo to leave at once), neutral notification text, and, if feasible, a neutral app name or icon **[OPEN D43]**. | P3 |
+| ACC-22 | **Urgent help is reachable without signing in.** The "Need urgent help?" control appears on every pre-login screen (see CRS-1). | P2 |
+
+### 6.1a Navigation, home and chat list (NAV / CHL)
+
+| ID | Requirement | Phase |
+|---|---|---|
+| NAV-1 | The member app has five bottom tabs: **Home · Chats · Forum · Therapists · Help**. **Me** (profiles, plans, settings, account standing) opens from the member's avatar at the top-left of every screen **[OPEN D22]**. | P2 |
+| NAV-2 | A "Need urgent help?" control appears in the top bar of every screen and reaches urgent help in ≤ 2 taps (see CRS-1). | P2 |
+| NAV-3 | **Home** is a calm landing page: greeting by pen name, optional mood check-in, the two most recent chats with unread counts, the next booked therapist session, and one forum highlight. It MUST NOT use streaks, rankings or "someone is waiting for you" pressure. | P2 |
+| NAV-4 | While matching is in progress Home shows honest wait copy, lets the member pause matching or change languages, and links to the forum and therapists. | P2 |
+| NAV-5 | The mood check-in is optional and private. It MUST NOT be shown to other members and MUST NOT feed matching or analytics until reviewed **[OPEN D25]**. | P2 |
+| CHL-1 | The **chat list** groups conversations into **Therapists** (above) and **Peers**, with filters All / Peers / Therapists and a search that finds the member's own conversations by pen name only. It MUST NOT allow searching for other members. | P2 |
+| CHL-2 | Row states: unread count, muted, disappearing chat with time left, and ended chats dimmed at the bottom. Therapist rows show the Verified badge. | P2 |
+| CHL-3 | Row actions (swipe or long-press): mute, report, block, archive, end conversation, disappearing chat. Blocking asks "Also report?" before confirming and removes the chat from both lists. | P2 |
+| CHL-4 | When a plan lapses, chats become read-only for a grace period **[OPEN D26]**, with a renewal banner. The forum, help centre, urgent help, block and report stay available (see BIL-6). | P2 |
+| CHL-5 | Message previews appear only inside the app; push notifications stay content-free (MSG-5). | P2 |
 
 ### 6.2 Profiles and privacy (PRF)
 
@@ -243,6 +278,21 @@ Every account has two separate profiles, stored and permissioned separately.
 | PRF-6 | **Therapist profiles are public** (real name, photo, qualifications, verified badge, specialisations, languages, ratings) and visible to non-logged-in visitors only to the extent counsel approves **[OPEN]**. Their private profile holds licence documents, ID, payout and tax details. | P3 |
 | PRF-7 | Users can view what their private profile holds and what is public, in a "what others see" preview. | P2 |
 | PRF-8 | Age is collected in the private profile; the public side only ever exposes an age band to matches. | P2 |
+| PRF-9 | While a pen name is typed it is checked live: names resembling a real name, phone number, email or link are refused with a friendly reason, and suggestions are offered. Avatars are chosen from a curated set; there is no photo upload. | P2 |
+| PRF-10 | Pen-name changes are rate-limited, never break existing chats, and old names are kept for moderation **[OPEN D36]**. | P2 |
+| PRF-11 | The private profile opens only after a fresh phone verification, even on a signed-in device. Members can request corrections; a change of ID or date of birth needs re-verification. | P2 |
+
+### 6.2a Settings and account (SET)
+
+| ID | Requirement | Phase |
+|---|---|---|
+| SET-1 | **Me** (opened from the top-left avatar) shows pen name and plan status, the "Open to new chats" switch, My profiles, My plan, Account standing, Settings, Help and Log out. | P2 |
+| SET-2 | **Open to new chats** pauses matching in one tap, without leaving the app or affecting existing chats. | P2 |
+| SET-3 | **Privacy and data** lists blocked members by pen name (unblocking never reveals identity), sets the default for disappearing chats to "ask each time", explains message screening in plain language, and offers "Download my data" at any time (ACC-6). | P2 |
+| SET-4 | **Notifications:** message text on the lock screen is hidden by default; session reminders, forum replies and plan reminders are switchable; **safety and account notices cannot be switched off** (outcomes, strikes, appeals); quiet hours are supported; no re-engagement nudges (NTF-2). | P2 |
+| SET-5 | **Delete account** explains what happens (plan ends, chats removed for both people, forum posts deleted or anonymised at the member's choice), what must be kept (payment records, open safety cases) and for how long, and offers a data download first. A holding period lets the member change their mind **[OPEN D34: 14 days placeholder]**. Phone verification confirms it. | P2 |
+| SET-6 | **Account standing** shows each notice in plain language with the rule broken, its expiry and what comes next, and offers an appeal in one tap (SAF-14). Appeals are text only and are decided by a different reviewer (ADM-10). | P3 |
+| SET-7 | The post-conversation **rating** ("Did you feel heard?") uses five faces and an optional comment, is private to the member and skippable without penalty (FDB-1). | P2 |
 
 ### 6.3 Automatic matching (MAT)
 
@@ -283,6 +333,13 @@ Every account has two separate profiles, stored and permissioned separately.
 | FRM-6 | Topic categories are admin-managed; pinned community guidelines; therapist-hosted topics or Q&A MAY be added. | P3 |
 | FRM-7 | Anti-abuse: rate limits, new-account restrictions, brigading detection, ability to mute/block authors, hide specific threads. | P2 |
 | FRM-8 | Comments from therapists MUST NOT solicit private clients through contact details; offering a session happens via the in-app profile link. | P3 |
+| FRM-9 | The feed shows pinned community guidelines, admin-managed topic chips, a **My posts** entry and sort options: most recent, most supported, therapist replied, no replies yet. | P2 (therapist replied: P3) |
+| FRM-10 | Posts have a single **Support** reaction. Members see counts only, never who reacted. There are no downvotes **[OPEN D32]**. | P2 |
+| FRM-11 | Authors can delete their post at any time and edit it for 15 minutes **[OPEN D32]**. Edits are limited so a post can't be rewritten after people reply. | P2 |
+| FRM-12 | A comment removed for sharing contact details appears as a neutral "Comment hidden: shared contact details" placeholder; the commenter is told why when they try to post it. | P2 |
+| FRM-13 | New accounts' first posts are held for review; the author sees "Awaiting review" with an expected wait. Authors of posts that signal distress see a gentle "talk now" prompt (crisis card, FRM-5); other members see nothing different. | P2 |
+| FRM-14 | Free accounts may read and post in the forum **[OPEN D24]**. | P2 |
+| FRM-15 | There is no direct message, follow or "message this person" action from the forum. Tapping a pen name offers only mute and block. | P2 |
 
 ### 6.5 Therapist directory and sessions (THR)
 
@@ -304,6 +361,24 @@ Every account has two separate profiles, stored and permissioned separately.
 | THR-10 | Therapists MUST have a documented process for imminent-risk situations, including how and when a client's real identity/contact can be accessed (§6.9). | P3 |
 | THR-11 | Therapist payouts, commission and invoicing are handled in Billing (§6.6). Rates and revenue-share are **[OPEN D3]**. | P3 |
 | THR-12 | Ratings and reviews of therapists are moderated; clinical complaints route to Clinical Reviewer, not only Support. | P3 |
+| THR-14 | The therapist portal is a **web application** first; a therapist mobile app is out of scope for now **[OPEN D23]**. Navigation: Today, Inbox, Calendar, Sessions, Forum, Earnings, Profile, Help. | P3 |
+| THR-15 | **Today** shows sessions today with a Join control, unread messages, new requests and compliance alerts (e.g. licence expiring in 60 days). It MUST NOT rank therapists against each other. | P3 |
+| THR-16 | **Availability:** recurring weekly blocks per mode, one-off time off, "Pause new clients", and caps for sessions per day, buffer between sessions and new clients per week **[OPEN D30]**. Clients with bookings are notified automatically when time off is added. | P3 |
+| THR-17 | **Live session:** private notes beside the call (autosaved; only the therapist sees them), mode switching (video → voice → chat), a "Not recorded" indicator, and **Raise a concern** always visible. | P3 |
+| THR-18 | **Raise a concern** first asks whether anyone is in immediate danger, collects the concern type and optional detail, and alerts the on-call clinical lead at once. Real identity and contact details are released **only** by the clinical lead under the approved protocol, and every access is logged **[OPEN D8, D31]**. | P3 |
+| THR-19 | **Wrap-up:** attendance (attended / late / no-show), private session note, optional follow-up suggestion sent to the client as a booking offer, and a link to raise a concern. Attendance feeds billing and no-show rules. | P3 |
+| THR-20 | **Earnings:** available, pending (hold period) and paid-out balances; per-session gross, fee and net; payout method and schedule with re-authentication to change; downloadable statements **[OPEN D3]**. | P3 |
+| THR-21 | The **Therapists** tab has two views: **Find a therapist** and **My sessions**. Therapy is shown as separate from peer support, priced per session. | P3 |
+| THR-22 | The **directory** offers search by name or topic, specialisation chips, and filters for specialisation, language, session type (chat / voice / video), price range, availability and an optional therapist-gender preference (default "No preference") **[OPEN D37]**. Active filters are counted on the filter button. | P3 |
+| THR-23 | Default sort is **next available**; other sorts are highest rated, lowest price and soonest in my language. There is no paid placement and no "promoted" listing **[OPEN D38]**. | P3 |
+| THR-24 | Each directory card shows verification badge, rating, specialisations, languages, session modes, next available slot and price per session. | P3 |
+| THR-25 | When filters return no one, the screen suggests removing a filter, offers a **waitlist** for fully booked therapists, an optional short "Help me choose" questionnaire **[OPEN D37]**, and links to peer chat, the support directory and urgent help. | P3 |
+| THR-26 | **Booking confirmation** shows therapist, mode, date and time (EAT), duration, automatic reminders (1 hour and 10 minutes before), add-to-calendar, a short preparation checklist, the anonymity and no-recording statement, and the free-change deadline. | P3 |
+| THR-27 | **My sessions** lists upcoming and past sessions. Join opens 10 minutes before the start **[OPEN D40]**. Reschedule and cancel are one tap from the card. | P3 |
+| THR-28 | **Changing a booking** shows the exact free-change deadline, states charges for late changes and no-shows, offers a new time or cancellation with an optional reason, and handles a therapist's own cancellation or lateness **[OPEN D39]**. | P3 |
+| THR-29 | **Member-side call screens** (voice and video) show a timer, a quiet connection indicator, "Not recorded", mute / speaker / camera / switch mode / end, and a discreet "Something wrong? Report or get help" link. Camera is off by default and the member appears as an avatar and pen name (D15). | P3 |
+| THR-30 | On a weak connection the app **offers** to switch from video to voice (and from voice to chat) before quality degrades; the member decides **[OPEN D40]**. Voice and chat are presented as the low-data options. | P3 |
+| THR-31 | After a session the member is asked for a quick rating and an optional private comment (therapists see aggregates only, FDB-2), can book the therapist's suggested follow-up in one tap, and sees ways to talk to someone if things feel heavy. | P3 |
 
 ### 6.6 Subscriptions and billing (BIL)
 
@@ -320,6 +395,11 @@ Every account has two separate profiles, stored and permissioned separately.
 | BIL-9 | Receipts/invoices MUST be generated and emailed/SMS-linked; tax treatment **[OPEN, counsel]**. | P2 |
 | BIL-10 | If distributed through app stores, store billing rules apply to digital subscriptions and MUST be reviewed before launch **[OPEN]**. | P2 |
 | BIL-11 | Sponsored mental-wellness initiatives MAY be added but MUST NOT expose or use member data or place advertising inside conversations. | P5 |
+| BIL-12 | A paywall screen on Chats explains what needs a plan and lists what always stays free (urgent help, help centre and tickets, block/report and data controls, and the forum **[OPEN D24]**). | P2 |
+| BIL-13 | M-Pesa payments are confirmed asynchronously: the waiting screen is safe to leave, offers resend and "use another method", and any stray debit is refunded automatically within a stated time (placeholder: 24 h). | P2 |
+| BIL-14 | Receipts show the plan and payment reference only, never the pen name or any chat content. They are sent by SMS and available in billing history. | P2 |
+| BIL-15 | Cancelling takes two taps from My plan, states exactly when access ends, offers an optional reason and, if the member seems to be struggling, offers support. No guilt copy or dark patterns. | P2 |
+| BIL-16 | Therapist-session checkout is a one-off payment on its own screen, labelled "not part of your plan", with any plan discount as a separate line, cancellation and no-show terms shown before paying, and no auto-renew. | P3 |
 
 ### 6.7 Safety: blocking, reporting, moderation and strikes (SAF)
 
@@ -384,7 +464,7 @@ Violations are classed by severity. Severity governs the response; strikes gover
 | ID | Requirement | Phase |
 |---|---|---|
 | PRV-1 | Access to conversation content by staff is **deny-by-default**. It is granted only inside an open case (report, flag, appeal or crisis), scoped to the relevant messages plus necessary context, and every access is audit-logged with reason. | P2 |
-| PRV-2 | Access to a member's real identity is allowed only (a) for billing/support to the minimum extent necessary, or (b) via a logged **break-glass** action for imminent-risk or legal process, requiring a second approver where practicable. | P2 |
+| PRV-2 | Access to a member's real identity is allowed only (a) for billing/support to the minimum extent necessary, or (b) via a logged **break-glass** action for imminent-risk, legal process or serious fraud. Break-glass MUST name a reason category plus a written justification, MUST be approved by a second person (the on-call clinical lead), MUST be time-limited **[OPEN D27: 30 min placeholder]**, and the member is not notified at the time. | P2 |
 | PRV-3 | Retention schedule MUST exist for: messages, snapshots in cases, flags, payments, audit logs, deleted accounts. Defaults **[OPEN D6]**. | P2 |
 | PRV-4 | Case snapshots are retained for a limited period after case closure and then deleted; they are not a back door for long-term message storage. | P3 |
 | PRV-5 | Data MUST be encrypted at rest; secrets and keys managed centrally; production data never used in development without anonymisation. | P2 |
@@ -396,11 +476,17 @@ Violations are classed by severity. Severity governs the response; strikes gover
 
 | ID | Requirement | Phase |
 |---|---|---|
-| HLP-1 | The Help section is organised **by department**, each with its own articles, FAQs and contact route: **Getting Started, Account & Profile (public vs. private), Privacy & Anonymity, Safety & Reporting (block, report, appeals, community guidelines), Billing & Subscriptions, Therapists & Sessions, Forum, Crisis & Urgent Help, Technical Support, and Feedback**. The department list is Admin-managed **[ASSUMPTION: "help departments" means support areas of the app; confirm]**. Editable without a release. | P2 |
+| HLP-1 | The Help tab is organised **by department**, each with its own articles, FAQs and contact route: **Getting started, Account and profiles (public vs. private), Privacy and anonymity, Safety and reporting (block, report, appeals, community guidelines), Billing and plans, Therapists and sessions, Forum, Technical support, Feedback, and My tickets**. **Urgent help** is the first and most prominent card on Help home. The department list is Admin-managed **[ASSUMPTION: "help departments" means support areas of the app; confirm]** and editable without a release. | P2 |
 | HLP-1a | Each department has a clear owner on the operations side (Support, Billing, Moderation/Safety, Clinical Reviewer, Tech) and a response-time target. | P2 |
 | HLP-1b | A member can open a ticket from a department; tickets are tied to the member's account but staff see only the public profile unless the department needs the private profile (e.g. Billing). | P2 |
 | HLP-2 | The help centre includes a directory of **volunteer psychologists and support resources**, curated and maintained by the Clinical Reviewer, with disclaimers about availability. | P3 |
-| HLP-3 | Contact Support is available in-app from every department; any request that mentions risk is routed to the crisis queue regardless of department. The **Crisis & Urgent Help** department is always visible and never paywalled. | P2 |
+| HLP-3 | Contact Support is available in-app from every department; any request that mentions risk is routed to the crisis queue regardless of department. Urgent help is always visible and never paywalled. | P2 |
+| HLP-4 | Help search covers help articles only and never indexes chats, forum posts or other private data. Results show the department; if nothing fits, one tap contacts the most likely department. | P2 |
+| HLP-5 | Articles are titled as questions, written in plain numbered steps, show a last-updated date, collect a helpful / not-helpful vote and can be read in English and Kiswahili **[ASSUMPTION]**. | P2 |
+| HLP-6 | The contact form prefills the topic, is **text only** **[OPEN D28]**, warns never to share an M-Pesa PIN, password or full card number, and shows a gentle urgent-help card (without blocking the send) when the message suggests distress. | P2 |
+| HLP-7 | **Tickets** show status (open, replied, resolved) with an unread-reply marker. Staff replies are labelled "Echo staff", never a named individual. Members can close a ticket or reopen it by replying. | P2 |
+| HLP-8 | The **urgent help page** leads with emergency services, then tap-to-call crisis lines (free where possible, with hours and languages), then Echo options (therapist, peer chat, support directory) and a short grounding exercise. It shows the date the numbers were last verified **[OPEN D29]**. | P2 |
+| HLP-9 | The **support directory** (HLP-2) lists each organisation with type, cost, hours, languages and the right contact method (call, website, contact), with a disclaimer, and lets members suggest a service for the clinical team to review. | P3 |
 | FDB-1 | After a conversation reaches a threshold, or a therapist session ends, prompt for a rating ("Did you feel heard?") with optional comment. Ratings are private, never shown to the other peer. | P2 |
 | FDB-2 | Therapist ratings are shown in aggregate on their profile after a minimum review count. | P3 |
 | FDB-3 | In-app feedback and bug report are available from Settings. | P2 |
@@ -443,19 +529,75 @@ The dashboard is an internal web application with MFA, RBAC and a complete audit
 | ADM-3 | Bulk actions (e.g. mass suspend) require two-person approval. | P3 |
 | ADM-4 | Admin exports of personal data MUST be logged and restricted by role. | P2 |
 | ADM-5 | Moderator wellbeing tooling: content blurring by default, exposure limits, rotation, and access to support. | P3 |
+| ADM-6 | The Overview shows the four headline tiles (active users, paying users, active therapists, open cases) and a **Needs attention** list: unassigned S1 cases, cases near SLA breach, therapist licences expiring (60 days), unmatched payments. | P2 |
+| ADM-7 | The case queue is sorted by severity then time left on the SLA clock, with quick filters (S1, crisis, appeals, mine, unassigned) and a red clock when the SLA is breached. | P2 |
+| ADM-8 | Evidence in a case is **blurred by default** until revealed. Each reviewer sees a daily reveal counter and a limit **[OPEN D27: 20 / day placeholder]**. | P2 |
+| ADM-9 | The **break-glass** request (PRV-2) states exactly what would be revealed (name, phone, location), for how long, that it is logged, and that approval by a second person is required. | P2 |
+| ADM-10 | An appeal MUST be decided by a different reviewer than the original decision-maker. Outcomes: uphold, reduce, or overturn and restore, with an explanation sent to the member. | P3 |
+| ADM-11 | Therapist verification uses a checklist (name matches ID, licence number checked with the regulator, expiry date, qualification) and one of: approve, request more information, or reject, each with a message to the applicant. | P3 |
+| ADM-12 | Billing staff see the pen name and payment reference. A full name appears only on a payment record when needed to resolve a dispute, and that view is logged. | P2 |
+| ADM-13 | The moderation module shows AI-flag precision, overturn rate and median review time. The flag log references messages by ID and never shows message text. Strike policy changes require approval by two admins. | P3 |
+| ADM-14 | The audit log is read-only and append-only. Break-glass requests and approvals are separate entries. Exporting the log is limited to the Admin role. | P2 |
 
 ---
 
 ## 7. Screen inventory
 
-**Member app (mobile-first)**
-Welcome · Register · OTP verification · Identity verification (conditional) · Consents · Pen name & avatar · Age & language · Home (active chats + forum feed) · Match found / matching status · Chat list · Conversation · Conversation settings (mute, disappearing, skip, block, report) · Report flow · Forum feed · Topic page · Post detail & comments · Create post · Therapist directory · Therapist profile (public) · Booking / availability · Therapist chat · Voice call · Video call · Pre-call check · Plans & pricing · Checkout · Subscription management & billing history · Help centre (departments, articles, tickets) · My profiles (public / private, "what others see") · Crisis resources (global) · Account standing & strikes · Appeal · Feedback / rating · Settings (profile, privacy, notifications, language, data export, delete account)
+Numbers refer to the wireframe sets (`docs/wireframes*.html`; viewer: `docs/echo-design.html`).
 
-**Therapist app / portal**
-Application & credential upload · Verification status · Profile · Availability calendar · Client inbox · Client conversation · Session notes · Earnings & payouts · Settings
+**Member app (mobile-first)**
+
+| # | Screens |
+|---|---|
+| 1 | Welcome · Consents (separate message-screening consent) |
+| 2 | Match found · Conversation (with blocked-message notice) · Conversation menu |
+| 3 | Create post · Identifying-details warning · Distress prompt |
+| 4 | Therapist public profile · Choose mode and time · Pre-session check |
+| 5 | Report sheet (reason, details and block, confirmation) |
+| 6 | Home (active member) · Home (waiting for a match) |
+| 7 | Chat list · Plan lapsed (read-only) · Row actions |
+| 8 | Forum feed · Filter and sort |
+| 9 | Post detail · Post menu · Author's post awaiting review |
+| 10 | Paywall on Chats · Plans · Review and terms |
+| 11 | Payment method · Waiting for M-Pesa · Success |
+| 12 | Payment failed · My plan · Cancel |
+| 13 | Therapist session checkout |
+| 24 | Help home · Search results · Urgent help |
+| 25 | Department page · Article · Contact a team |
+| 26 | My tickets · Ticket conversation · Support directory |
+| 27 | Your details · Under 18 · Verify phone |
+| 28 | ID check (only when needed) · Pen name and avatar · Languages, topics and preview |
+| 29 | Me · Settings · My profiles |
+| 30 | Privacy and data · Notifications · Delete account |
+| 31 | Account standing · Appeal · "Did you feel heard?" rating |
+| 32 | Therapist directory · Filters · No results (waitlist, help me choose) |
+| 33 | Booking confirmed · My sessions · Reschedule or cancel |
+| 34 | Voice call · Video call · After the session |
+| 35 | Unlock (known device) · Log in with phone · Trust this device? |
+| 36 | Code didn't work · Lost phone or new number · Account paused |
+| 37 | Active devices · New sign-in alert · Security settings |
+| Not yet drawn | (member app: none) |
+
+**Therapist portal (desktop web)**
+
+| # | Screens |
+|---|---|
+| 14 | Application · Application status |
+| 15 | Today · Client inbox |
+| 16 | Weekly availability · Public profile editor |
+| 17 | Live session with private notes · Raise a concern |
+| 18 | Session wrap-up · Earnings and payouts |
 
 **Admin web**
-Login + MFA · Overview · Users list / detail · Cases queue / detail · AI flags · Appeals · Therapist verification queue · Therapist directory management · Subscriptions · Transactions & refunds · Revenue reports · Analytics · Resource directory · Content (help centre / guidelines) · Configuration (tags, plans, weights, strikes) · Audit log · Roles & permissions
+
+| # | Screens |
+|---|---|
+| 19 | Overview · Cases queue |
+| 20 | Case detail · Break-glass request |
+| 21 | User (public view) · Appeal review |
+| 22 | Verify a therapist · Billing and refunds |
+| 23 | AI flags and strike policy · Audit log |
+| Not yet drawn | Analytics · Help content and tickets · Configuration (plans, topics, matching weights) · Roles and permissions · Moderator wellbeing tools |
 
 ---
 
@@ -470,6 +612,10 @@ Login + MFA · Overview · Users list / detail · Cases queue / detail · AI fla
 | `Topic` | Forum topic categories (admin-managed) |
 | `Match` | Pair, shared language, age bands, status (active/ended/skipped), reason |
 | `ForumPost`, `ForumComment` | Author, topic, text, status (published/hidden/removed), reports |
+| `ForumReaction` | Post, member, type (Support); counts shown, reactors never shown |
+| `MoodCheckin` | Member, mood, timestamp; private, only if D25 keeps it |
+| `Concern` | Raised by a therapist during or after a session: type, immediate-danger flag, detail, owner, SLA |
+| `SessionNote` | Therapist private note; ownership and retention per D7 |
 | `CallSession` | Therapist, member, mode (voice/video), times, quality, consent flags |
 | `Conversation`, `Message` | Participants, type (peer/therapist), disappearing flag, expiry, state |
 | `Block` | Blocker, blocked, timestamp |
@@ -495,7 +641,8 @@ Login + MFA · Overview · Users list / detail · Cases queue / detail · AI fla
 | **Reliability** | Target availability and RPO/RTO **[OPEN]**; graceful degradation: if billing, matching or AI moderation is down, chat and **safety features keep working**. |
 | **Performance** | Fast on low-end Android devices and unreliable networks; message send p95 < 2 s on 3G-class connection **[ASSUMPTION]**; lightweight payloads and small app size. |
 | **Real-time media** | Voice/video needs low-latency infrastructure that works on mobile data; budget per-minute cost; encrypted media; graceful degradation to audio/chat. |
-| **Platforms** | Mobile-first; Android is the priority in Kenya **[ASSUMPTION]**; iOS/web member clients **[OPEN D9]**; Admin is a web app. |
+| **Platforms** | Mobile-first; Android is the priority in Kenya **[ASSUMPTION]**. The member app is one React Native + Expo codebase that runs on Android, iOS (when D9 allows) and the web **[D50]**. The therapist portal and Admin are web applications. |
+| **Client technology** | **React Native with Expo (TypeScript), routed with expo-router [D50].** One codebase serves Android, iOS and web, and can be tried on a phone in Expo Go before any store release. Sensitive values (the signed-in flag) use the phone's secure storage; app lock uses the phone's own biometrics or PIN, and Echo never stores biometric data. The app talks to the backend only through one typed API layer, so a real service can replace the mock without changing screens. Expo's web export is a fallback for people who cannot install the app, not a replacement for it. |
 | **Localisation** | English at launch; Kiswahili strongly recommended for pilot **[ASSUMPTION]**; all copy externalised for translation; KES currency; EAT time zone. |
 | **Accessibility** | WCAG 2.1 AA target for UI; scalable text, sufficient contrast (green/white/orange palette must pass); screen-reader support; avoid colour-only signalling. |
 | **Design/brand** | Primary green (calm), white (open, readable), subtle orange accents for key actions and positive moments. Chat is the centrepiece, with the forum as the community layer. Familiar, understated chat patterns; must not feel like a clinical system or a dating app. |
@@ -576,10 +723,11 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 | **D6** | Encryption and retention model (E2EE vs. server-side moderation; expiry vs. evidence) | P2 | Server-side encryption with strict access controls, scan-then-expire, snapshot-on-report |
 | **D7** | Therapist clinical notes: ownership, storage, retention | P3 | Therapist-owned records with defined platform custody |
 | **D8** | Clinical crisis protocol and SLAs | P3 (blocking P4) | Authored by qualified clinicians with counsel |
-| **D9** | Client platforms: Android only vs. iOS vs. web | P2 | Android first for pilot |
+| **D9** | Client platforms: Android only vs. iOS vs. web | P2 | Android first for pilot. The codebase is cross-platform (D50), so this decision is now about what is released and supported, not what is built |
 | **D10** | Identity verification level (OTP only vs. national ID) | P2 | OTP at sign-up; stronger verification on escalation |
 | **D11** | Minimum age and handling of minors | P2 | 18+ only for pilot |
 | **D12** | Do all members listen, or is there a separate listener programme with training? | P2 | Everyone can listen; mandatory short guidelines; revisit with data |
+| **D13** | Therapist display identity | P3 | Public: real professional name, photo and verified badge (founder decision) |
 | **D14** | Are images or voice notes allowed between members? (Brief restricts videos, addresses, phone numbers and links) | P2 | No media of any kind at launch; revisit with data |
 | **D15** | Can a member stay camera-off / pen-name only in therapist calls? Can therapists require identity? | P3 | Camera-off allowed; real identity held by platform and released only under crisis protocol |
 | **D16** | Is gender collected or used in matching? | P2 | Do not collect or use; reduces dating risk |
@@ -588,7 +736,36 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 | **D19** | Recording and review of calls; moderation of live voice/video | P3 | No recording by default; consent-based review for reported sessions |
 | **D20** | Is the forum readable by non-members/search engines? | P2 | Members only, not indexed |
 | **D21** | Forum moderation mode (pre vs post) | P2 | Pre-moderate new accounts, post-moderate trusted |
-| **D13** | Therapist display identity | P3 | Public: real professional name, photo and verified badge (founder decision) |
+| **D22** | Member app tab layout: Home · Chats · Forum · Therapists · Help, with Me at the top-left avatar | P2 | Adopt (keeps five tabs and separates the calm landing page from the chat list) |
+| **D23** | Therapist portal: web only, or also a mobile app? | P3 | Web first; mobile later |
+| **D24** | Can free accounts read and post in the forum? | P2 | Yes: reading and posting are free; chat needs a plan |
+| **D25** | Keep the Home mood check-in? If so, may it feed matching or analytics? | P2 | Optional and private; not used for matching or analytics until reviewed |
+| **D26** | Grace period after a plan lapses (chats read-only) | P2 | 7 days (placeholder) |
+| **D27** | Break-glass window, second approver and reviewer reveal limits | P2 | 30 minutes; on-call clinical lead; 20 reveals per reviewer per day (placeholders) |
+| **D28** | Help: live chat support or tickets only? Screenshots in tickets? | P2 | Tickets only, text only; revisit for technical support |
+| **D29** | Who curates and re-verifies crisis lines and the support directory, and how often? | P2 | Clinical Reviewer; re-verify on a schedule and show the last-verified date |
+| **D30** | Therapist caseload caps and minimum gaps | P3 | Therapist-set caps within a platform maximum |
+| **D31** | On-call clinical lead: hours, staffing and response targets for crisis cases | P3 (blocking P4) | Defined with clinicians before the pilot |
+| **D32** | Forum reactions (Support only?), edit window (15 min?), content-note veil for sensitive posts | P2 | Support only; 15 minutes; veil decided with the clinical lead |
+| **D33** | When is ID verification required, and with which provider? | P3 | Escalation only (closed account, repeated violations); OTP is the baseline (D10) |
+| **D34** | Account deletion: holding period, what must be retained, for how long | P2 | 14-day holding period (placeholder); payment and open-case records kept for the legal period; counsel to confirm |
+| **D35** | Sign-in method and recovery: phone + one-time code only, device-bound, no passwords; how to recover after a lost phone | P2 | Adopt; recovery via support with ID check |
+| **D36** | Pen-name change limits and whether old names are kept | P2 | Limited changes (for example once per 30 days); old names retained for moderation |
+| **D37** | Therapist gender and other preference filters; the optional "Help me choose" questionnaire | P3 | Offer the gender filter with "No preference" as default; questionnaire optional |
+| **D38** | Directory ranking and fairness: default "next available", no paid placement, treatment of new therapists and ties | P3 | No paid placement; next available by default |
+| **D39** | Cancellation window, late-change and no-show charges, therapist cancellation or lateness | P3 | Free until 24 hours before (placeholder); late changes may be charged; therapist cancellations always refunded and rebooked first |
+| **D40** | Call technology and join window; fallback rules; data use | P3 | Provider that works on mobile data in Kenya; join 10 minutes before; video → voice → chat offered, member decides |
+| **D41** | Shared-device behaviour: session length, what is cleared, whether it can be a default | P2 | 24-hour session; clear local data on exit |
+| **D42** | Lost-phone recovery: accepted proofs, reviewers, time, protection against attackers using the recovery route | P2 | ID + selfie reviewed by a person; account stays locked meanwhile |
+| **D43** | Discreet features: quick exit, neutral notifications, neutral app name or icon | P3 | Quick exit and neutral notifications at launch; icon later if feasible |
+| **D44** | New-device alerts by SMS as well as in-app, and SMS cost | P2 | Both; SMS only for new devices |
+| **D45** | Landing page imagery: drawn scenes or real photography (consent and licensing needed) | P4 | Drawn scenes at launch; photography only with explicit consent |
+| **D46** | Dark mode | P4 | Supported by the palette; ship after launch |
+| **D47** | Logo: the wordmark and ripple mark in the visual design are a sketch | P2 | Commission a proper identity using the ripple as the idea |
+| **D48** | Whether the Home mood check-in stays in the visual design (see D25) | P2 | Keep, optional and private |
+| **D49** | How real therapist photographs are framed, and what happens if a therapist prefers no photo | P3 | Arch frame; illustrated placeholder if none |
+| **D50** | Member-app technology: React Native with Expo, or a web app (PWA), or separate native apps | P2 | **Decided for the build: React Native with Expo (TypeScript).** Reasons: one codebase for Android, iOS and web; runs in Expo Go for quick testing with partners; good access to secure storage, biometrics, push notifications and calls; small-team friendly. A PWA was tried first and set aside because installing, push notifications, app lock and background behaviour are weaker on the phones that matter most. To confirm: bundle size and speed on low-end Android devices, and the app-store billing rules in BIL-10 |
+| **D51** | Which providers sit behind the mock backend: SMS one-time codes, M-Pesa, push notifications, voice and video | P2 (calls P3) | Not chosen. The app's API layer (`mobile/src/api`) lists exactly what each provider must do. Calls need a provider that works on mobile data (D40) |
 
 ### 14.2 Assumptions made
 
@@ -600,6 +777,12 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 6. Matches open directly and automatically; either party can skip or end.
 7. Pen names and avatars only; no photos and no bio.
 8. Peer chat requires an active paid plan; safety features and crisis resources are always free.
+9. The forum is free to read and post (D24).
+10. Member app navigation is Home · Chats · Forum · Therapists · Help, with Me at the top-left avatar (D22).
+11. The therapist portal and admin are desktop web applications (D23).
+12. Chats stay read-only for a 7-day grace period after a plan lapses (D26).
+13. Sign-in is phone + one-time code with no passwords (D35); ID verification is escalation-only (D33).
+14. The member app is built once in React Native with Expo and released to Android first (D9, D50).
 
 ---
 
@@ -620,10 +803,26 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 
 ## Appendix B — Suggested next documents
 
-1. **Information architecture and wireframes** for the screens in §7.
+1. **Wireframes** for the screens marked "not yet drawn" in §7 (registration, OTP, profiles, calls, settings, admin analytics and configuration), then an interactive prototype for user testing.
 2. **Community Guidelines, Privacy Notice, Terms** (plain-language drafts).
 3. **Moderation policy handbook** (examples per category, severity guide, SLA).
-4. **Clinical crisis protocol** (authored by clinicians).
-5. **Technical architecture and threat model** (including the D6 decision).
+4. **Clinical crisis protocol** (authored by clinicians), including the on-call clinical lead model (D8, D31).
+5. **Technical architecture and threat model** (including the D6 decision and the public / private profile split).
 6. **Unit economics model** (moderation, therapist, payments, AI cost per active member).
 7. **Pilot plan** (cohort size, therapist panel, success criteria, evaluation design).
+8. **Help content set** (articles in English and Kiswahili, verified crisis lines, support directory).
+
+## Appendix C — Revision history
+
+| Version | Change |
+|---|---|
+| v0.1 | First draft from the product overview: text-only peer chat, issue tags, connection requests |
+| v0.2 | Auto-matching by age and language, public forum, therapist chat / voice / video, anonymity model (public and private profiles), departmental help section |
+| v0.3 | Aligned with the 26 wireframed screens (first batch): navigation (D22), Home and chat list (NAV, CHL), forum details (FRM-9 to FRM-15), billing screens (BIL-12 to BIL-16), help centre (HLP-4 to HLP-9), therapist portal (THR-14 to THR-20), admin (ADM-6 to ADM-14), stricter break-glass (PRV-2), new decisions D22 to D32, rewritten screen inventory |
+| v0.4 | Adds registration, profile setup, settings and account screens (27–31): ACC-9 to ACC-12, PRF-9 to PRF-11, SET-1 to SET-7, new decisions D33 to D36 |
+| v0.5 | Adds the therapist directory, booking and member-side session screens (32–34): THR-21 to THR-31, new decisions D37 to D40 |
+| v0.6 | Adds returning-user login and account security screens (35–37): ACC-13 to ACC-22, new decisions D41 to D44 |
+| v0.7 | Adds the visual design direction (colour, type, ripple motif, components, hi-fi screens, landing page, therapist portal) and decisions D45 to D49 |
+| v0.8 | Records the technology decision for the member app: React Native with Expo (D50), plus D51 for the providers behind the mock. Updates Platforms and adds a Client technology row in §9, narrows D9, and adds assumption 14. Notes the first working build (see below) |
+
+**Build status at v0.8.** `mobile/` holds a working member-app front-end that runs against a mock backend saved on the device: onboarding and sign-in, Home, matching, chat with blocked-content handling, the community forum, the therapist directory, booking and simulated calls, plans and simulated M-Pesa checkout, the help centre and urgent help, and Me, settings, security, account standing and demo tools. It has 139 unit tests and six browser flows. Not built: the therapist portal and Admin dashboard (designed in the wireframes). Still placeholders: prices (D2, D3), crisis numbers and organisations (D29), Kiswahili text (needs a native reviewer), and real SMS, payment and call providers (D51).

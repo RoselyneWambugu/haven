@@ -1,0 +1,347 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Echo Wireframes — Registration and Settings</title><style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+
+  .row2{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);position:relative}
+  .row2:last-child{border-bottom:0}
+  .row2 .t{flex:1;min-width:0}
+  .row2 .t b{display:block}
+  .row2 .t span{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--mute)}
+  .unread{background:var(--orange);color:#3a2000;border-radius:999px;min-width:18px;height:18px;padding:0 5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .banner{border-radius:10px;padding:8px 10px;font-size:12px}
+  .swipe{position:absolute;right:0;top:0;bottom:0;display:flex}
+  .swipe div{width:58px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dim{opacity:.55}
+  .row2 .t span.tag{display:inline-block;overflow:visible}
+
+  .post{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;position:relative}
+  .post .who{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .post .who b{color:var(--ink)}
+  .post .ttl{font-weight:700;font-size:14px;line-height:1.25}
+  .post .snip{font-size:12px;color:#44524b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--mute);align-items:center;flex-wrap:wrap}
+  .badge{background:var(--green-l);color:var(--green-d);border:1px solid #bcd9c8;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+  .fab{position:absolute;right:14px;bottom:62px;background:var(--orange);color:#3a2000;border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.2);z-index:4}
+  .cm{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);position:relative}
+  .cm:last-child{border-bottom:0}
+  .cm .c{flex:1;font-size:12px}
+  .cm.th{background:var(--green-l);border-radius:10px;padding:8px;border:1px solid #bcd9c8;margin-bottom:6px}
+  .react{display:flex;gap:8px}
+  .react>span:not(.n){border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:#fff}
+  .react>span.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700}
+
+  .plan{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;align-items:center;gap:10px;position:relative}
+  .plan.on{border-color:var(--green);background:var(--green-l)}
+  .plan .pr{margin-left:auto;text-align:right;font-weight:700}
+  .plan .pr small{display:block;font-weight:400;color:var(--mute);font-size:11px}
+  .tog{width:38px;height:22px;border-radius:999px;background:#cfd8d3;position:relative;flex:none}
+  .tog::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+  .tog.on{background:var(--green)} .tog.on::after{left:19px}
+  .li{display:flex;gap:8px;font-size:12px;align-items:flex-start}
+  .li i{font-style:normal;color:var(--green);font-weight:800}
+  .sum{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+  .sum.t{font-weight:700;font-size:14px;border-top:1px solid var(--line);padding-top:6px;margin-top:3px}
+  .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--green-l);border-top-color:var(--green)}
+  .pill{border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;background:var(--orange);color:#3a2000}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:8px;align-items:center;background:#fff;font-size:12px;font-weight:600;line-height:1.2;position:relative}
+  .tile .ic{width:26px;height:26px;border-radius:8px;background:var(--green-l);display:flex;align-items:center;justify-content:center;flex:none;font-size:14px}
+  .res{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;position:relative}
+  .res .t{font-weight:700;font-size:13px}
+  .dot2{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--orange)}
+  .li2{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:center;font-size:13px}
+  .li2:last-child{border-bottom:0}
+  .li2 .arr{margin-left:auto;color:var(--mute)}
+  .step{display:flex;gap:8px;align-items:flex-start}
+  .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+  .dot.d{background:var(--green);border-color:var(--green);color:#fff}
+  .sev{display:inline-block;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:800}
+  .sev.s3{background:#dfe5e1;color:#44524b}
+
+  .seg{display:flex;border:1.5px solid var(--green);border-radius:10px;overflow:hidden}
+  .seg span{flex:1;text-align:center;padding:7px;font-size:12px;font-weight:600;color:var(--green)}
+  .seg span.on{background:var(--green);color:#fff}
+  .otp{display:flex;gap:6px;justify-content:center}
+  .otp>span:not(.n){width:34px;height:42px;border:1.5px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+  .otp>span.on{border-color:var(--green);background:var(--green-l)}
+  .avg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .avg .av{width:46px;height:46px;font-size:18px;margin:auto}
+  .avg .sel{outline:3px solid var(--orange);outline-offset:2px}
+  .scale{display:flex;gap:6px;justify-content:center}
+  .scale>span:not(.n){width:44px;height:44px;border:1.5px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff}
+  .scale>span.on{border-color:var(--green);background:var(--green-l)}
+  .set{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;position:relative}
+  .set:last-child{border-bottom:0}
+  .set .t{flex:1} .set .t small{display:block;color:var(--mute);font-size:11px}
+  .set .arr{color:var(--mute)}
+  .ok{color:var(--green-d);font-weight:700}
+  .err{color:#b8570b;font-weight:600}
+  .lbl2{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+</style></head><body>
+<header><h1>Echo — Wireframes: Registration, profile setup, settings and account</h1>
+<p>Draft v0.1 · low-fidelity · follows <code>screen-flows.md</code> §2 and §8, PRD §6.1, §6.2 and §7. Welcome and consents are in the first wireframe set (screen 1). Pink markers match the numbered notes beside each group. Placeholders are marked ___ . Not committed.</p></header>
+
+<section><h2>Principles</h2><ul style="max-width:1100px">
+<li><b>Private by default, said plainly.</b> Every place that asks for real details says that others never see them.</li>
+<li><b>Data minimisation:</b> under-18 sign-ups are deleted immediately; ID photos are deleted after checking; nothing is asked that isn’t used.</li>
+<li><b>No passwords:</b> sign-in is by phone and one-time code, bound to the device (D35).</li>
+<li><b>Safety is never switched off:</b> urgent help stays in the top bar and safety notices can’t be disabled.</li></ul></section>
+
+<section><h2>27 · Registration</h2><p class="sub">Three short screens. The member learns what is private before typing a single detail.</p>
+<div class="row"><div class="col"><div class="cap">27a · Your details</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Create account<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="m small">Step 1 of 7</div><div class="h" style="font-size:16px">Your details</div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span>🔒 This stays <b>private</b>. Others only ever see your pen name and avatar.</div>
+ <div><div class="m small">Full name</div><div class="input" style="padding:9px 10px;position:relative;">Amina Otieno</div></div>
+ <div><div class="m small">Phone number</div><div class="input" style="padding:9px 10px;position:relative;">🇰🇪 +254 712 345 678</div></div>
+ <div><div class="m small">Date of birth</div><div class="input" style="padding:9px 10px;position:relative;">14 / 03 / 1998<span class="n" style="top:-8px;right:-6px">2</span></div></div>
+ <div><div class="m small">Email (optional)</div><div class="input" style="padding:9px 10px;position:relative;color:var(--mute)">you@example.com</div></div>
+ <div class="small m" style="position:relative"><span class="n" style="top:-6px;right:0">3</span><u>Why do we ask for this?</u></div>
+ <div style="flex:1"></div><div class="btn">Continue</div>
+</div></div></div><div class="col"><div class="cap">27b · Under 18</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Not available yet<span class="sp"></span></div>
+<div class="body" style="gap:10px;align-items:center;text-align:center;justify-content:center">
+ <div style="font-size:32px">🌱</div><div class="h" style="font-size:16px">Echo is for people 18 and over</div>
+ <div class="small m" style="position:relative"><span class="n" style="top:-14px;right:-8px">4</span>This isn’t because you did anything wrong. Support for younger people needs extra care, and we’re not ready yet.</div>
+ <div class="card g small" style="text-align:left;width:100%"><b>You can still get support</b><div class="m">Youth helpline ___ · free · 24 hours</div><div class="m">Talk to a trusted adult or a school counsellor</div></div>
+ <div class="card small m" style="position:relative;width:100%"><span class="n" style="top:-10px;right:-8px">5</span>We’ve deleted the details you entered. Nothing was saved.</div>
+ <div class="btn sec" style="width:100%">Back to start</div>
+</div></div></div><div class="col"><div class="cap">27c · Verify phone</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Verify your number<span class="sp"></span></div>
+<div class="body" style="gap:10px;align-items:center;text-align:center">
+ <div class="m small">Step 2 of 7</div><div class="h" style="font-size:16px">Enter the 6-digit code</div>
+ <div class="small m">We sent an SMS to <b>+254 712 ••• 678</b></div>
+ <div class="otp" style="position:relative"><span class="n" style="top:-12px;right:-8px">6</span><span>4</span><span>8</span><span>2</span><span class="on">1</span><span></span><span></span></div>
+ <div class="small">Resend code in <b>0:42</b></div>
+ <div class="small m" style="position:relative"><u>Wrong number? Change it</u><span class="n" style="top:-8px;right:-14px">7</span></div>
+ <div class="card small m" style="text-align:left;width:100%">One account per phone number. After 5 wrong tries the code is locked for 15 minutes <span class="m">(placeholder)</span>.</div>
+ <div style="flex:1"></div><div class="btn off" style="width:100%">Verify</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>A plain reassurance sits above the form: these details stay private.</span></li><li><b class="nn">2</b><span>Date of birth is used only to enforce 18+ and to work out an age band for matching. Others see the band, never the date.</span></li><li><b class="nn">3</b><span>A “Why do we ask?” link explains each field in plain language.</span></li><li><b class="nn">4</b><span>Under-18s get a kind, no-blame message and real alternatives, not a dead end (D11).</span></li><li><b class="nn">5</b><span>Nothing they entered is kept. The screen says so.</span></li><li><b class="nn">6</b><span>Six-digit SMS code with resend countdown and attempt limits (placeholders).</span></li><li><b class="nn">7</b><span>One account per phone number; changing a wrong number is one tap.</span></li></ol>
+</div></section>
+
+<section><h2>28 · Setting up your public profile</h2><p class="sub">The step where an anonymous identity is built. Real-name leakage is checked while typing.</p>
+<div class="row"><div class="col"><div class="cap">28a · ID check (only when needed)</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Confirm it’s you<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span><b>Extra check needed.</b> This is shown only when we need to be sure about who is signing up, for example after an account was closed.</div>
+ <div class="lbl2">Document</div>
+ <div class="flex"><span class="chip on">National ID</span><span class="chip">Passport</span></div>
+ <div class="step"><span class="dot d">✓</span><div class="small"><b>Front of ID</b> · captured</div></div>
+ <div class="step"><span class="dot c" style="border-color:var(--orange)">2</span><div class="small"><b>Back of ID</b> · tap to capture</div></div>
+ <div class="step"><span class="dot">3</span><div class="small"><b>Quick selfie</b></div></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">2</span>🔒 Encrypted and never shown to other members. Staff can only open it with a logged reason. We delete the photos after checking <span class="m">(period placeholder)</span>.</div>
+ <div class="small" style="position:relative"><u>I can’t do this right now</u><span class="n" style="top:-8px;right:100px">3</span></div>
+ <div style="flex:1"></div><div class="btn">Capture back of ID</div>
+</div></div></div><div class="col"><div class="cap">28b · Pen name and avatar</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Your pen name<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="m small">Step 4 of 7</div><div class="h" style="font-size:16px">Choose a pen name and avatar</div>
+ <div class="m small">This is the only name others will see. Avoid your real name.</div>
+ <div class="input" style="padding:9px 10px;position:relative;border-color:var(--orange);color:var(--ink)">Amina Otieno<span class="n" style="top:-8px;right:-6px">4</span></div>
+ <div class="err small">⚠ This looks like a real name. Try something that isn’t you.</div>
+ <div class="wrap" style="position:relative"><span class="n" style="top:-10px;right:0">5</span><span class="tag g">QuietPine</span><span class="tag g">RainyDay</span><span class="tag g">BlueHeron</span><span class="tag">🔄 More</span></div>
+ <div class="lbl2" style="position:relative">Avatar<span class="n" style="top:-4px;right:0">6</span></div>
+ <div class="avg">
+  <span class="av">🌿</span><span class="av o sel">🌙</span><span class="av">🌊</span><span class="av">🔥</span>
+  <span class="av o">🌸</span><span class="av">🌲</span><span class="av o">⭐</span><span class="av">🦋</span></div>
+ <div class="m" style="font-size:10px;text-align:center">No photos. Pick any avatar.</div>
+ <div style="flex:1"></div><div class="btn off">Continue</div>
+</div></div></div><div class="col"><div class="cap">28c · Languages and preview</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Almost there<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="m small">Step 6 of 7</div><div class="h" style="font-size:16px">Languages and interests</div>
+ <div class="lbl2" style="position:relative">Languages you speak<span class="n" style="top:-4px;right:0">7</span></div>
+ <div class="wrap"><span class="chip on">English</span><span class="chip on">Kiswahili</span><span class="chip">Sheng</span><span class="chip">Luo</span><span class="chip">Kikuyu</span><span class="chip">＋</span></div>
+ <div class="lbl2" style="position:relative">Forum topics (optional)<span class="n" style="top:-4px;right:0">8</span></div>
+ <div class="wrap"><span class="chip">Anxiety</span><span class="chip on">Work stress</span><span class="chip">Grief</span><span class="chip">Loneliness</span></div>
+ <div class="lbl2" style="position:relative">What others will see<span class="n" style="top:-4px;right:0">9</span></div>
+ <div class="card g"><div class="flex"><span class="av o">🌙</span><div><b>QuietPine</b><div class="m small">25–34 · English, Kiswahili</div></div></div></div>
+ <div class="m" style="font-size:10px">Your real name, phone and ID are never shown. You can change your pen name later (limits apply).</div>
+ <div style="flex:1"></div><div class="btn">Finish</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>ID verification is not part of normal sign-up. It appears after escalation, such as a closed account or repeated violations (D10, D33).</span></li><li><b class="nn">2</b><span>Stated storage rules: encrypted, staff access is logged with a reason, photos deleted after checking.</span></li><li><b class="nn">3</b><span>If the member can’t continue, there is a way out to Support, not a dead end.</span></li><li><b class="nn">4</b><span>Live check on the pen name: names that look like real names, phone numbers or links are refused with a friendly reason.</span></li><li><b class="nn">5</b><span>Suggestions help people who find naming hard, and keep names friendly.</span></li><li><b class="nn">6</b><span>Avatars only, from a curated set. No photo upload.</span></li><li><b class="nn">7</b><span>Languages are required and drive matching (hard filter), so the list includes local languages.</span></li><li><b class="nn">8</b><span>Forum topics are optional and never used to match people (D17).</span></li><li><b class="nn">9</b><span>A preview shows exactly what other members will see: pen name, avatar, age band, languages.</span></li></ol>
+</div></section>
+
+<section><h2>29 · Me and profiles</h2><p class="sub">Reached from the avatar at the top-left of every screen (D22).</p>
+<div class="row"><div class="col"><div class="cap">29a · Me</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm o">🌙</span>Me<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:6px;overflow:hidden">
+ <div class="flex" style="position:relative"><span class="n" style="top:-6px;right:0">1</span><span class="av lg o">🌙</span><div><div class="h" style="font-size:16px">QuietPine</div><span class="badge">Monthly plan · active</span></div></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">2</span><div class="flex"><div style="flex:1"><b>Open to new chats</b><div class="m">Pause matching any time</div></div><span class="tog on"></span></div></div>
+ <div class="set"><div class="t">My profiles<small>Public and private</small></div><span class="arr">›</span></div>
+ <div class="set"><div class="t">My plan<small>Renews 20 Nov</small></div><span class="arr">›</span></div>
+ <div style="position:relative"><div class="set"><div class="t">Account standing<small><span class="ok">Good standing</span></small></div></div><span class="n" style="top:4px;right:-6px">3</span></div>
+ <div class="set"><div class="t">Settings</div><span class="arr">›</span></div>
+ <div class="set"><div class="t">Help</div><span class="arr">›</span></div>
+ <div class="set" style="color:var(--red)">Log out</div>
+</div></div></div><div class="col"><div class="cap">29b · Settings</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Settings<span class="sp"></span></div>
+<div class="body" style="gap:4px;overflow:hidden">
+ <div class="lbl2">Account</div>
+ <div style="position:relative"><div class="set"><div class="t">Phone and email<small>+254 712 ••• 678 · no email</small></div><span class="arr">›</span></div><span class="n" style="top:-2px;right:-6px">4</span></div>
+ 
+ <div class="set"><div class="t">Active devices<small>This device · 1 other</small></div><span class="arr">›</span></div>
+ <div class="lbl2">Privacy and safety</div>
+ <div class="set"><div class="t">Privacy and data</div><span class="arr">›</span></div>
+ <div class="set"><div class="t">Blocked members<small>2 blocked</small></div><span class="arr">›</span></div>
+ <div class="lbl2">App</div>
+ <div class="set"><div class="t">Notifications</div><span class="arr">›</span></div>
+ <div class="set"><div class="t">Language<small>English</small></div><span class="arr">›</span></div>
+ <div class="lbl2" style="position:relative">About<span class="n" style="top:-4px;right:0">5</span></div>
+ <div class="set"><div class="t">Terms, Privacy and Community Guidelines</div><span class="arr">›</span></div>
+ <div class="set"><div class="t">Send feedback</div><span class="arr">›</span></div>
+</div></div></div><div class="col"><div class="cap">29c · My profiles</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>My profiles<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="seg"><span class="on">Public</span><span>Private 🔒</span></div>
+ <div class="card g" style="position:relative"><span class="n" style="top:-10px;right:-8px">6</span><div class="lbl2">What others see</div><div class="flex" style="margin-top:4px"><span class="av o">🌙</span><div><b>QuietPine</b><div class="m small">25–34 · English, Kiswahili</div></div><span class="m small" style="margin-left:auto"><u>Edit</u></span></div></div>
+ <div class="card small">Pen name can be changed once every ___ days. Your chats keep working.</div>
+ <div class="card" style="position:relative"><span class="n" style="top:-10px;right:-8px">7</span><div class="flex"><span style="font-size:20px">🔒</span><div style="flex:1"><b>Private profile</b><div class="m small">Name, ID, date of birth, phone, email</div></div></div>
+  <div class="btn sec" style="padding:7px;margin-top:6px">Verify it’s you to view</div>
+  <div class="m" style="font-size:10px;margin-top:4px">We’ll send a code to your phone. Nobody else can see this, and staff can only open it with a logged reason.</div></div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">8</span><b>Preview:</b> see exactly what another member sees when they meet you. <u>Preview</u></div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>The avatar at the top-left is the entry point; it shows pen name and plan status.</span></li><li><b class="nn">2</b><span>“Open to new chats” pauses matching in one tap, right where people look for it.</span></li><li><b class="nn">3</b><span>Account standing is one tap away and written kindly: “Good standing”.</span></li><li><b class="nn">4</b><span>Sign-in is phone plus one-time code, with the active devices list. There are no passwords (D35).</span></li><li><b class="nn">5</b><span>Legal documents and feedback are grouped under About.</span></li><li><b class="nn">6</b><span>Public profile: what others see, editable, with pen-name change limits (D36).</span></li><li><b class="nn">7</b><span>The private profile needs a fresh phone check before it opens, even on a signed-in device.</span></li><li><b class="nn">8</b><span>A preview shows what another member sees when they meet you.</span></li></ol>
+</div></section>
+
+<section><h2>30 · Privacy, notifications and deleting your account</h2><p class="sub">Controls that matter most to anonymous people.</p>
+<div class="row"><div class="col"><div class="cap">30a · Privacy and data</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Privacy and data<span class="sp"></span></div>
+<div class="body" style="gap:4px;overflow:hidden">
+ <div style="position:relative"><div class="set"><div class="t">Open to new chats<small>Pause matching without leaving</small></div><span class="tog on"></span></div><span class="n" style="top:-2px;right:-6px">1</span></div>
+ <div style="position:relative"><div class="set"><div class="t">Blocked members<small>2 blocked · tap to unblock</small></div><span class="arr">›</span></div><span class="n" style="top:-2px;right:-6px">2</span></div>
+ <div style="position:relative"><div class="set"><div class="t">Disappearing chats<small>Ask me each time</small></div><span class="arr">▾</span></div><span class="n" style="top:-2px;right:-6px">3</span></div>
+ <div class="set"><div class="t">How we screen messages<small>Automated checks, human review only if flagged</small></div><span class="arr">›</span></div>
+ <div class="set"><div class="t">Who can see what<small>Public vs private data</small></div><span class="arr">›</span></div>
+ <div class="lbl2">Your data</div>
+ <div style="position:relative"><div class="set"><div class="t">Download my data<small>A copy of your account data</small></div><span class="arr">›</span></div><span class="n" style="top:-2px;right:-6px">4</span></div>
+ <div class="set" style="color:var(--red)"><div class="t">Delete my account<small>Permanently, after a short wait</small></div><span class="arr">›</span></div>
+</div></div></div><div class="col"><div class="cap">30b · Notifications</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Notifications<span class="sp"></span></div>
+<div class="body" style="gap:4px;overflow:hidden">
+ <div style="position:relative"><div class="set"><div class="t">New messages<small>Show message text on lock screen: off</small></div><span class="tog on"></span></div><span class="n" style="top:-2px;right:-6px">5</span></div>
+ <div class="set"><div class="t">Session reminders<small>1 hour and 10 minutes before</small></div><span class="tog on"></span></div>
+ <div class="set"><div class="t">Forum replies<small>Comments on my posts</small></div><span class="tog on"></span></div>
+ <div class="set"><div class="t">Plan and renewal<small>Reminders before each charge</small></div><span class="tog on"></span></div>
+ <div style="position:relative"><div class="set"><div class="t">Safety and account notices<small>Always on: outcomes, strikes, appeals</small></div><span class="m small">Required</span></div><span class="n" style="top:-2px;right:-6px">6</span></div>
+ <div class="lbl2" style="position:relative">Quiet hours<span class="n" style="top:-4px;right:0">7</span></div>
+ <div class="set"><div class="t">Do not disturb<small>22:00 – 07:00</small></div><span class="tog on"></span></div>
+ <div class="m" style="font-size:10px">We never send re-engagement nudges like “someone is waiting for you”.</div>
+</div></div></div><div class="col"><div class="cap">30c · Delete account</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Delete account<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="h" style="font-size:16px">Before you go</div>
+ <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">8</span><b>What happens</b><br>• Your plan ends, no refund for the current period<br>• Your chats are removed for both people<br>• Choose: delete or anonymise your forum posts</div>
+ <div class="flex small"><span class="radio on"></span>Delete my forum posts</div>
+ <div class="flex small"><span class="radio"></span>Keep them, with no pen name</div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">9</span><b>What we must keep</b><div class="m">Payment records and any open safety case, for the legal period <span>(___)</span>. They are not linked to a profile.</div></div>
+ <div class="small" style="position:relative"><span class="n" style="top:-6px;right:-14px;">10</span>Your account is held for <b>14 days</b> <span class="m">(placeholder)</span>. Log in to cancel.</div>
+ <div style="flex:1"></div>
+ <div class="btn sec" style="padding:8px">Download my data first</div>
+ <div class="btn" style="background:var(--red)">Verify and delete</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Pause matching without leaving the app.</span></li><li><b class="nn">2</b><span>Blocked members are listed by pen name and can be unblocked, but unblocking never reveals identity.</span></li><li><b class="nn">3</b><span>Default for disappearing chats is “ask each time”, so nothing expires without both people agreeing.</span></li><li><b class="nn">4</b><span>Members can download a copy of their data at any time (PRD ACC-6).</span></li><li><b class="nn">5</b><span>Lock-screen previews default to hidden, so a message never appears on a shared phone.</span></li><li><b class="nn">6</b><span>Safety and account notices cannot be turned off and include outcomes, strikes and appeals.</span></li><li><b class="nn">7</b><span>Quiet hours, and a promise that there are no re-engagement nudges.</span></li><li><b class="nn">8</b><span>The deletion screen says what will happen in plain terms and offers a data download first.</span></li><li><b class="nn">9</b><span>It also says what must be kept (payment records, open safety cases) and for how long (D34).</span></li><li><b class="nn">10</b><span>A short holding period lets someone change their mind; phone verification is required to confirm.</span></li></ol>
+</div></section>
+
+<section><h2>31 · Account standing, appeals and feedback</h2><p class="sub">Sanctions are explained, never hidden, and always appealable.</p>
+<div class="row"><div class="col"><div class="cap">31a · Account standing</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Account standing<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card g" style="position:relative"><b class="ok">✓ Good standing</b><div class="small m">1 warning on record. You can use everything as normal.</div></div>
+ <div class="lbl2">Notices</div>
+ <div class="card" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span>
+  <div class="step"><span class="dot d">1</span><div class="small"><b>Warning</b> · 12 Oct<div class="m">Contact sharing: we can’t allow phone numbers or links.</div><div class="m">Expires 12 Jan</div></div></div>
+  <div class="hr" style="margin:6px 0"></div>
+  <div class="small m">Next steps if it happens again:<br>2nd: short restriction · 3rd: suspension pending review</div></div>
+ <div class="btn sec" style="padding:8px;position:relative">Appeal this notice<span class="n" style="top:-10px;right:-6px">2</span></div>
+ <div class="small" style="text-align:center"><u>Read the Community Guidelines</u></div>
+</div></div></div><div class="col"><div class="cap">31b · Appeal</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Appeal<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card small"><div class="lbl2">Decision</div>Warning · 12 Oct · Contact sharing</div>
+ <div class="m small" style="position:relative">What happened? In your own words.<span class="n" style="top:-8px;right:0">3</span></div>
+ <div class="input" style="height:110px;padding:9px 10px;color:var(--ink)">I was quoting a helpline number someone else sent, not sharing my own details…</div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">4</span>A <b>different reviewer</b> will look at this and reply in the app, usually within ___ hours. You’ll keep access to everything meanwhile.</div>
+ <div class="small m">Text only. Don’t include phone numbers or links here either.</div>
+ <div style="flex:1"></div><div class="btn">Send appeal</div>
+</div></div></div><div class="col"><div class="cap">31c · Did you feel heard?</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Conversation ended<span class="sp"></span></div>
+<div class="body" style="gap:10px;align-items:center;text-align:center;justify-content:center">
+ <div class="h" style="font-size:16px">Did you feel heard?</div>
+ <div class="scale" style="position:relative"><span class="n" style="top:-12px;right:-8px">6</span><span>😞</span><span>😕</span><span>😐</span><span class="on">🙂</span><span>😊</span></div>
+ <div class="input" style="width:100%;height:70px;padding:9px 10px;text-align:left">Anything you’d like to add? (optional)</div>
+ <div class="card g small" style="position:relative;width:100%"><span class="n" style="top:-10px;right:-8px">5</span>🔒 Private. Your match never sees this.</div>
+ <div class="btn" style="width:100%">Send</div>
+ <div class="small" style="position:relative"><u>Skip</u><span class="n" style="top:-8px;right:-24px">7</span></div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Strikes are shown as a plain notice with the rule broken, the date it expires and what comes next.</span></li><li><b class="nn">2</b><span>An appeal is one tap from the notice.</span></li><li><b class="nn">3</b><span>The member tells their side in their own words, text only.</span></li><li><b class="nn">4</b><span>A different reviewer decides, within a stated time (PRD ADM-10). Access continues meanwhile.</span></li><li><b class="nn">5</b><span>Ratings are private and are never shown to the other person.</span></li><li><b class="nn">6</b><span>Five faces rather than stars, with one optional comment.</span></li><li><b class="nn">7</b><span>Skipping is always allowed and carries no penalty.</span></li></ol>
+</div></section>
+
+<section><h2>Decisions and gaps</h2><ul>
+<li><b>D33:</b> when exactly is ID verification required, and with which provider? Drawn as escalation-only.</li>
+<li><b>D34:</b> deletion holding period (14 days?), what must be retained, and for how long (counsel).</li>
+<li><b>D35:</b> sign-in by phone and one-time code only, device-bound, no passwords. Confirm, including how to recover access if a phone is lost.</li>
+<li><b>D36:</b> how often can a pen name be changed, and are old names kept for moderation?</li>
+<li><b>Email:</b> optional here. Is it needed at all, for example receipts and account recovery?</li>
+<li><b>Languages:</b> is the list English, Kiswahili, Sheng plus local languages? Matching quality depends on it.</li>
+<li><b>Not yet drawn:</b> therapist directory list, booking confirmation, in-call screens for members (voice and video), login for returning users.</li></ul></section>
+</body></html>

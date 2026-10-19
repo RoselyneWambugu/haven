@@ -1,0 +1,249 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Echo Wireframes — Plans and Checkout</title><style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+
+  .row2{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);position:relative}
+  .row2:last-child{border-bottom:0}
+  .row2 .t{flex:1;min-width:0}
+  .row2 .t b{display:block}
+  .row2 .t span{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--mute)}
+  .unread{background:var(--orange);color:#3a2000;border-radius:999px;min-width:18px;height:18px;padding:0 5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .banner{border-radius:10px;padding:8px 10px;font-size:12px}
+  .swipe{position:absolute;right:0;top:0;bottom:0;display:flex}
+  .swipe div{width:58px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dim{opacity:.55}
+  .row2 .t span.tag{display:inline-block;overflow:visible}
+
+  .post{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;position:relative}
+  .post .who{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .post .who b{color:var(--ink)}
+  .post .ttl{font-weight:700;font-size:14px;line-height:1.25}
+  .post .snip{font-size:12px;color:#44524b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--mute);align-items:center;flex-wrap:wrap}
+  .badge{background:var(--green-l);color:var(--green-d);border:1px solid #bcd9c8;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+  .fab{position:absolute;right:14px;bottom:62px;background:var(--orange);color:#3a2000;border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.2);z-index:4}
+  .cm{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);position:relative}
+  .cm:last-child{border-bottom:0}
+  .cm .c{flex:1;font-size:12px}
+  .cm.th{background:var(--green-l);border-radius:10px;padding:8px;border:1px solid #bcd9c8;margin-bottom:6px}
+  .react{display:flex;gap:8px}
+  .react>span:not(.n){border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:#fff}
+  .react>span.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700}
+
+  .plan{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;align-items:center;gap:10px;position:relative}
+  .plan.on{border-color:var(--green);background:var(--green-l)}
+  .plan .pr{margin-left:auto;text-align:right;font-weight:700}
+  .plan .pr small{display:block;font-weight:400;color:var(--mute);font-size:11px}
+  .tog{width:38px;height:22px;border-radius:999px;background:#cfd8d3;position:relative;flex:none}
+  .tog::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+  .tog.on{background:var(--green)} .tog.on::after{left:19px}
+  .li{display:flex;gap:8px;font-size:12px;align-items:flex-start}
+  .li i{font-style:normal;color:var(--green);font-weight:800}
+  .sum{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+  .sum.t{font-weight:700;font-size:14px;border-top:1px solid var(--line);padding-top:6px;margin-top:3px}
+  .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--green-l);border-top-color:var(--green)}
+  .pill{border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;background:var(--orange);color:#3a2000}
+</style></head><body>
+<header><h1>Echo — Wireframes: Plans and checkout</h1>
+<p>Draft v0.1 · low-fidelity · follows <code>screen-flows.md</code> §7 and PRD §6.6. <b>All prices are placeholders (KES ___)</b>: pricing, entitlements and refund rules are still open (D2). Pink markers refer to the notes beside each group. Not committed.</p></header>
+
+<section><h2>10 · Choosing a plan</h2><p class="sub">Peer-support plans and therapy sessions are always shown as separate things, so members know exactly what they are paying for.</p>
+<div class="row"><div class="col"><div class="cap">10a · Paywall on Chats</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm">N</span>Chats<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="align-items:center;text-align:center;justify-content:center;gap:12px">
+ <div style="font-size:30px">💬</div><div class="h">Start talking</div>
+ <div class="small m">Peer chat needs an active plan. Choose a plan that fits you, from a single day to a year.</div>
+ <div class="btn" style="width:100%;position:relative">See plans<span class="n" style="top:-10px;right:-6px">1</span></div>
+ <div class="card g small" style="text-align:left;position:relative"><span class="n" style="top:-10px;right:-8px">2</span><b>Always free</b>
+   <div class="li"><i>✓</i>Urgent help and crisis lines</div><div class="li"><i>✓</i>Help centre and support tickets</div>
+   <div class="li"><i>✓</i>Block, report and your data</div><div class="li"><i>✓</i>Forum <span class="m">(draft: free to read and post)</span></div></div>
+ <div class="small"><u>Meet a therapist instead</u></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class="on"><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class=""><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">10b · Plans</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Choose a plan<span class="sp"></span><span class=sos>Help</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="lbl">Peer support</div>
+ <div class="plan"><span class=radio></span><div><b>Daily</b><div class="m small">Try it for a day</div></div><div class="pr">KES ___<small>per day</small></div></div>
+ <div class="plan on"><span class="radio on"></span><div><b>Monthly</b> <span class="pill">Popular</span><div class="m small">Renews each month</div></div><div class="pr">KES ___<small>per month</small></div></div>
+ <div class="plan"><span class="radio"></span><div><b>Yearly</b> <span class="badge">Save ___%</span><div class="m small">Best value</div></div><div class="pr">KES ___<small>per year</small></div></div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span><b>All plans include</b>
+   <div class="li"><i>✓</i>Automatic matching and unlimited peer chat</div>
+   <div class="li"><i>✓</i>Disappearing chats</div>
+   <div class="li"><i>✓</i>Forum posting and comments</div>
+   <div class="li"><i>✓</i>Discount on therapy sessions <span class="m">(placeholder)</span></div></div>
+ <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">4</span><b>Therapist sessions are separate.</b> They’re priced per session and are not included in peer plans. <u>See therapists</u></div>
+ <div style="flex:1"></div><div class="btn">Continue</div>
+</div></div></div><div class="col"><div class="cap">10c · Review and terms</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Review your plan<span class="sp"></span><span class=sos>Help</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card g"><div class="flex"><b>Monthly peer plan</b><span class="m small" style="margin-left:auto"><u>Change</u></span></div>
+   <div class="sum"><span>Peer support · 1 month</span><span>KES ___</span></div>
+   <div class="sum t"><span>Total today</span><span>KES ___</span></div></div>
+ <div class="card" style="position:relative"><span class="n" style="top:-10px;right:-8px">5</span><div class="flex"><div style="flex:1"><b>Renew automatically</b><div class="m small">We’ll remind you 3 days before each charge. Cancel any time.</div></div><span class="tog"></span></div></div>
+ <div class="small m" style="position:relative"><span class="n" style="top:-14px;right:-22px">6</span>If you leave this off, your plan ends on <b>20 Nov</b> and we’ll remind you to renew.</div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">7</span>Your plan is for peer support only. It is not therapy or emergency care. <u>What’s included</u></div>
+ <div class="chk small"><div class="box">✓</div><div>I agree to the <u>subscription terms</u> and <u>refund policy</u></div></div>
+ <div style="flex:1"></div><div class="btn">Continue to payment</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Gentle gate, not a wall: it explains what needs a plan and what stays free.</span></li><li><b class="nn">2</b><span>Safety is never paywalled: urgent help, help centre, block/report and data controls. (Forum access for free accounts is the current draft assumption.)</span></li><li><b class="nn">3</b><span>Entitlement list comes from plan configuration. Contents and prices are placeholders (D2).</span></li><li><b class="nn">4</b><span>Therapy is shown as a separate, per-session service, never bundled into the peer plan unless you decide otherwise.</span></li><li><b class="nn">5</b><span>Auto-renew is an <u>explicit opt-in</u>, off by default, with the reminder promise stated next to it.</span></li><li><b class="nn">6</b><span>If off, the end date is stated clearly. This also covers mobile-money providers without native recurring billing.</span></li><li><b class="nn">7</b><span>Peer vs clinical disclaimer repeated at the point of purchase.</span></li></ol>
+</div></section>
+
+<section><h2>11 · Paying</h2><p class="sub">M-Pesa first, since it is how most people in Kenya will pay. Payment details never connect to the pen name.</p>
+<div class="row"><div class="col"><div class="cap">11a · Payment method</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Pay<span class="sp"></span><span class=sos>Help</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card"><div class="sum"><span>Monthly peer plan</span><span>KES ___</span></div></div>
+ <div class="lbl">Payment method</div>
+ <div class="plan on" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span><span class="radio on"></span><div><b>M-Pesa</b><div class="m small">Pay with your phone</div></div></div>
+ <div class="input" style="position:relative"><span class="n" style="top:-10px;right:-8px">2</span>0712 ••• 678<div class="m" style="font-size:10px">Use a different number</div></div>
+ <div class="plan"><span class="radio"></span><div><b>Card</b><div class="m small">Visa or Mastercard</div></div></div>
+ <div class="plan dim"><span class="radio"></span><div><b>Airtel Money</b><div class="m small">Coming soon</div></div></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span>🔒 Your payment details are never shown to other members and are never linked to your pen name.</div>
+ <div style="flex:1"></div><div class="btn">Pay KES ___</div>
+</div></div></div><div class="col"><div class="cap">11b · Waiting for M-Pesa</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar">Waiting for payment</div>
+<div class="body" style="align-items:center;text-align:center;justify-content:center;gap:12px">
+ <div class="spin"></div><div class="h">Check your phone</div>
+ <div class="small m">We sent a payment request to <b>0712 ••• 678</b>. Enter your M-Pesa PIN to confirm.</div>
+ <div class="card small" style="position:relative;width:100%"><span class="n" style="top:-10px;right:-8px">4</span>Waiting… <b>0:42</b><br><span class="m">This can take up to a minute.</span></div>
+ <div class="small">Didn’t get a prompt? <u>Send again</u></div>
+ <div class="small" style="position:relative"><u>Use another method</u><span class="n" style="top:-6px;right:-26px">5</span></div>
+ <div class="m small">Safe to leave this screen: we’ll update your plan when payment arrives.</div>
+</div></div></div><div class="col"><div class="cap">11c · Success</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar">Payment complete</div>
+<div class="body" style="align-items:center;text-align:center;justify-content:center;gap:10px">
+ <div class="av lg">✓</div><div class="h">You’re all set</div>
+ <div class="small m">Monthly peer plan is active until <b>20 Nov</b>.</div>
+ <div class="card small" style="width:100%;text-align:left;position:relative"><span class="n" style="top:-10px;right:-8px">6</span>
+  <div class="sum"><span>Receipt no.</span><span>EC-000123</span></div><div class="sum"><span>Paid</span><span>KES ___</span></div><div class="sum"><span>M-Pesa ref.</span><span>QWE••••9</span></div>
+  <div class="m" style="font-size:10px">Sent by SMS. Receipts show your plan only, never your pen name.</div></div>
+ <div class="btn" style="width:100%;position:relative">Start chatting<span class="n" style="top:-10px;right:-6px">7</span></div>
+ <div class="btn sec" style="width:100%">View receipt</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>M-Pesa is the default. Card is secondary. Other wallets can be added later.</span></li><li><b class="nn">2</b><span>Number prefilled and masked from the private profile; can be changed. (Needs private-profile access limited to billing.)</span></li><li><b class="nn">3</b><span>Reassurance that payment data is separate from the public identity.</span></li><li><b class="nn">4</b><span>Payment is confirmed asynchronously: the screen is safe to leave and the plan updates when the provider confirms.</span></li><li><b class="nn">5</b><span>Fallbacks: resend the prompt or choose another method.</span></li><li><b class="nn">6</b><span>Receipt shows the plan only, never the pen name or chats. Sent by SMS and available in billing history.</span></li><li><b class="nn">7</b><span>Primary action goes straight to a first conversation.</span></li></ol>
+</div></section>
+
+<section><h2>12 · Problems, managing and cancelling</h2><p class="sub">Failure should feel calm; cancelling should be as easy as signing up.</p>
+<div class="row"><div class="col"><div class="cap">12a · Payment failed</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar">Payment didn’t go through</div>
+<div class="body" style="gap:10px;justify-content:center">
+ <div class="card o" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span><b>We couldn’t take your payment</b><div class="small">Reason: request timed out / insufficient balance / cancelled.</div></div>
+ <div class="small m">You haven’t been charged. If money left your account, it will be refunded automatically within 24 hours.</div>
+ <div class="btn" style="position:relative">Try again<span class="n" style="top:-10px;right:-6px">2</span></div>
+ <div class="btn sec">Change payment method</div>
+ <div class="small" style="text-align:center"><u>Contact billing support</u></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span>Urgent help and your safety tools remain available.</div>
+</div></div></div><div class="col"><div class="cap">12b · My plan</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>My plan<span class="sp"></span><span class=sos>Help</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card g"><div class="flex"><b>Monthly peer plan</b><span class="badge" style="margin-left:auto">Active</span></div>
+   <div class="m small">Renews 20 Nov · KES ___</div></div>
+ <div class="card" style="position:relative"><span class="n" style="top:-10px;right:-8px">4</span><div class="flex"><div style="flex:1"><b>Auto-renew</b><div class="m small">Reminder 3 days before</div></div><span class="tog on"></span></div></div>
+ <div class="card" style="position:relative"><span class="n" style="top:-10px;right:-8px">5</span><div class="sum"><span>Payment method</span><span>M-Pesa 0712 ••• 678 ›</span></div>
+   <div class="sum"><span>Change plan</span><span>›</span></div><div class="sum"><span>Billing history and receipts</span><span>›</span></div></div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">6</span><b>Therapy sessions</b> are billed separately. <u>View sessions</u></div>
+ <div style="flex:1"></div>
+ <div class="small" style="text-align:center;color:var(--red);position:relative"><u>Cancel plan</u><span class="n" style="top:-8px;right:40px">7</span></div>
+</div></div></div><div class="col"><div class="cap">12c · Cancel</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Cancel your plan<span class="sp"></span><span class=sos>Help</span></div>
+<div class="body" style="gap:10px;overflow:hidden">
+ <div class="h" style="font-size:16px">Sorry to see you go</div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">8</span>You’ll keep full access until <b>20 Nov</b>. After that, chats become read-only for 7 days. Your history is kept.</div>
+ <div class="lbl">Why are you cancelling? (optional)</div>
+ <div class="flex small"><span class="radio"></span>Too expensive</div>
+ <div class="flex small"><span class="radio"></span>I feel better</div>
+ <div class="flex small"><span class="radio"></span>Didn’t find good matches</div>
+ <div class="flex small"><span class="radio"></span>Safety or privacy concerns</div>
+ <div class="flex small"><span class="radio"></span>Something else</div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">9</span>Not feeling okay? <u>Get urgent help</u> or <u>talk to a therapist</u>.</div>
+ <div style="flex:1"></div>
+ <div class="btn sec" style="position:relative">Keep my plan</div>
+ <div class="btn" style="background:var(--red)">Confirm cancellation<span class="n" style="top:-10px;right:-6px">10</span></div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Plain explanation and an explicit “you haven’t been charged” line; stray debits are refunded automatically.</span></li><li><b class="nn">2</b><span>Retry first, then change method, then contact billing.</span></li><li><b class="nn">3</b><span>Safety features reassurance, since someone may be mid-conversation when a payment fails.</span></li><li><b class="nn">4</b><span>Auto-renew toggle is one tap away.</span></li><li><b class="nn">5</b><span>All billing tools in one card: payment method, change plan, history and receipts.</span></li><li><b class="nn">6</b><span>Therapy sessions are billed separately and linked from here.</span></li><li><b class="nn">7</b><span>Cancel is a visible, low-emphasis link, not buried, and takes two taps.</span></li><li><b class="nn">8</b><span>Cancellation states exactly when access ends and what happens after.</span></li><li><b class="nn">9</b><span>Offers support (not a retention trick) if the member is struggling; no guilt copy, no dark patterns.</span></li><li><b class="nn">10</b><span>Confirm button is the only red element; “Keep my plan” is the secondary option.</span></li></ol>
+</div></section>
+
+<section><h2>13 · Therapist session checkout</h2><p class="sub">One-off payment, clearly separate from the peer plan.</p>
+<div class="row"><div class="col"><div class="cap">13a · Confirm and pay for a session</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Confirm session<span class="sp"></span><span class=sos>Help</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card"><div class="flex"><span class="av">AO</span><div><b>Dr. Amina Otieno</b><div class="m small">Voice · Tue 21 · 10:30 · 45 min</div></div></div></div>
+ <div class="card" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span><div class="lbl">Therapy session — not part of your plan</div>
+   <div class="sum"><span>Session</span><span>KES ___</span></div>
+   <div class="sum"><span>Plan discount</span><span>– KES ___</span></div>
+   <div class="sum t"><span>Total</span><span>KES ___</span></div></div>
+ <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">2</span><b>Cancellation:</b> free until 24h before. Later cancellations or no-shows may be charged. <u>Policy</u></div>
+ <div class="chk small" style="position:relative"><span class="n" style="top:-8px;right:-6px">3</span><div class="box">✓</div><div>I understand this is a one-off payment. No auto-renew.</div></div>
+ <div style="flex:1"></div><div class="btn">Pay with M-Pesa</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Labelled “not part of your plan”. A plan discount, if you decide to offer one, is shown as its own line.</span></li><li><b class="nn">2</b><span>Cancellation and no-show terms are stated before paying.</span></li><li><b class="nn">3</b><span>One-off payment: no auto-renew, no stored subscription.</span></li></ol>
+</div></section>
+
+<section><h2>Open decisions that affect these screens</h2><ul>
+<li><b>D2:</b> prices, daily/monthly/yearly entitlements, free tier, refund policy. All shown as placeholders.</li>
+<li><b>Grace period:</b> 7 days of read-only chats after lapse is a placeholder.</li>
+<li><b>Auto-renew mechanics:</b> mobile-money providers vary in recurring-payment support; the toggle may mean “remind me” for some methods. Confirm with the payment provider.</li>
+<li><b>Therapy bundling:</b> do any plans include therapy credits or discounts? Drawn as a discount line only.</li>
+<li><b>App stores:</b> if distributed via Google Play or the App Store, store billing rules may require their payment flow for digital subscriptions. Check before building.</li>
+<li><b>Taxes:</b> whether prices are shown inclusive of VAT.</li></ul></section>
+</body></html>

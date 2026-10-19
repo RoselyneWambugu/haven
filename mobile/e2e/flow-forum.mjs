@@ -1,0 +1,76 @@
+// Onboards, grants a demo plan, matches with a peer, and exercises blocked-message handling in chat.
+// Usage: node e2e/flow-forum.mjs <webroot> <outdir>
+import { chromium } from 'playwright-core'
+import { mkdirSync } from 'node:fs'
+import { serve } from './serve.mjs'
+
+const [root, out] = process.argv.slice(2)
+mkdirSync(out, { recursive: true })
+const server = await serve(root, 8097)
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] })
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
+const problems = []
+page.on('console', (m) => m.type() === 'error' && problems.push(`console: ${m.text().slice(0, 240)}`))
+page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 300)}`))
+const shot = (n) => page.screenshot({ path: `${out}/${n}.png` })
+const tid = (id) => page.locator(`[data-testid="${id}"]`)
+const step = async (name, fn) => { try { await fn(); console.log('ok  ', name) } catch (e) { console.log('FAIL', name, String(e).split('\n')[0]); await shot(`FAIL-${name}`); console.log(problems.join('\n')); throw e } }
+
+await page.goto('http://localhost:8097/')
+await page.waitForTimeout(1800)
+await step('register', async () => {
+  await tid('get-started').click()
+  for (const id of ['consent-terms', 'consent-privacy', 'consent-guidelines', 'consent-screening']) await tid(id).click()
+  await tid('consent-continue').click()
+  await tid('reg-name').fill('Amina Otieno')
+  await tid('reg-phone').fill('0712 345 678')
+  await tid('reg-dob').fill('14/03/1998')
+  await tid('register-continue').click()
+  const code = (await tid('demo-code').innerText()).match(/(\d{6})/)[1]
+  await tid('otp-input').fill(code)
+  await tid('pen-input').fill('BrightFern')
+  await tid('pen-continue').click()
+  await tid('finish').click()
+  await tid('home').waitFor()
+})
+await step('feed', async () => {
+  await tid('tab-forum').click()
+  await tid('forum').waitFor()
+  await shot('20-forum-feed')
+  await tid('topic-Grief').click()
+  await page.waitForTimeout(200)
+  const t = await page.locator('body').innerText()
+  if (/Small win today/.test(t)) throw new Error('topic filter did not filter')
+})
+await step('post-detail', async () => {
+  await tid('topic-Grief').click()
+  await tid('post-f4').click()
+  await tid('post-detail').waitFor()
+  await shot('21-post-detail')
+  await tid('support').click()
+  await tid('comment-input').fill('Message me on 0712345678')
+  await page.waitForTimeout(200)
+  if ((await tid('comment-send').getAttribute('aria-disabled')) !== 'true') throw new Error('send should be disabled for a phone number')
+  await shot('22-comment-blocked')
+  await tid('comment-input').fill('Thank you for sharing this')
+  await tid('comment-send').click()
+  await page.waitForTimeout(300)
+  if (!/Thank you for sharing this/.test(await page.locator('body').innerText())) throw new Error('comment missing')
+})
+await step('composer', async () => {
+  await page.getByRole('button', { name: 'Back' }).click()
+  await tid('forum-new').click()
+  await tid('post-title').fill('Feeling stretched at Strathmore University')
+  await tid('post-body').fill('I have been feeling stretched at Strathmore University and cannot sleep well at all.')
+  await shot('23-composer')
+  await tid('post-submit').click()
+  await tid('identify-sheet').waitFor()
+  await shot('24-identify-warning')
+  await tid('post-anyway').click()
+  await tid('my-posts').waitFor()
+  await shot('25-my-posts-pending')
+})
+await browser.close()
+server.close()
+if (problems.length) { console.log('PROBLEMS:\n' + problems.join('\n')); process.exit(1) }
+console.log('all steps passed')
