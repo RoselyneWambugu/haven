@@ -149,6 +149,8 @@ export interface FeedbackItem {
   at: number
   /** Whether the member agreed to send the app version and platform with it. */
   withDevice: boolean
+  /** Set when a member of staff has read and dealt with it. */
+  reviewedBy?: string
 }
 
 export type MatchState =

@@ -20,7 +20,7 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -53,8 +53,8 @@ An internal desktop-style web app at `/admin`, reached from **Echo staff** on th
 | --- | --- |
 | Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety), Resources (Safety tickets and articles), Wellbeing |
 | Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Resources (Therapist tickets and articles, crisis lines and the support directory), Wellbeing, Audit log |
-| Support / Billing | Overview, Users, Billing, Analytics (Commercial), Resources (Support and Billing tickets and articles) |
-| Admin | Everything, plus Config, Roles, departments, audit and analytics export, and strike-policy changes |
+| Support / Billing | Overview, Users, Billing, Analytics (Commercial), Resources (Support and Billing tickets and articles), Feedback |
+| Admin | Everything including Feedback, plus Config, Roles, departments, audit and analytics export, and strike-policy changes |
 
 It is connected to the rest of the demo. A report made in the member app becomes a case. Suspending or restoring the member in Users, and deciding their appeal, change what they see in the member app. A portal application can be approved, sent back or rejected in Therapists, and the portal follows. Every content view, reveal, decision, export and approval is written to the audit log.
 
@@ -70,7 +70,7 @@ It is connected to the rest of the demo. A report made in the member app becomes
 
 ## Feedback
 
-When a peer chat ends after both people have written, the chat asks *Did you feel heard?* with five faces and an optional comment. It is asked once, can be skipped, and is private to the member. **Settings, then Send feedback** sends an idea or a bug report, with the app details optional. There is no admin screen for reading feedback yet.
+When a peer chat ends after both people have written, the chat asks *Did you feel heard?* with five faces and an optional comment. It is asked once, can be skipped, and is private to the member. **Settings, then Send feedback** sends an idea or a bug report, with the app details optional. Support / Billing and Admin read the notes in the **Feedback** module, which shows no name or account and lets staff mark a note as read (logged). The felt-heard results appear only as shares once at least 10 people have answered, and members' comments are never shown.
 
 ## Rules the app enforces
 

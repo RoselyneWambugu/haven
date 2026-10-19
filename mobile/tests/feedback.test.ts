@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../src/api'
-import { shouldAskHeard, validateFeedback, wasExchange } from '../src/lib/feedback'
+import { shouldAskHeard, summariseHeard, triage, validateFeedback, wasExchange } from '../src/lib/feedback'
+import { canAccess } from '../src/lib/admin'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock } from '../src/lib/clock'
 import type { Conversation, Message } from '../src/api'
@@ -53,5 +54,41 @@ describe('feedback api', () => {
     expect(api.feedback.send('bug', '', true).ok).toBe(false)
     expect(api.feedback.send('bug', ' The chat froze ', false).ok).toBe(true)
     expect(getDb().feedback[0]).toMatchObject({ kind: 'bug', text: 'The chat froze', withDevice: false })
+  })
+})
+
+describe('staff view of feedback', () => {
+  const answered = (n: number, score = 4): Pick<Conversation, 'heard'>[] => Array.from({ length: n }, () => ({ heard: { score, comment: 'private' } }))
+
+  it('hides the felt-heard results until ten people have answered', () => {
+    expect(summariseHeard(answered(9)).answered).toBeNull()
+    const s = summariseHeard([...answered(8, 5), ...answered(2, 2)])
+    expect(s.answered).toBe(10)
+    expect(s.positive).toBe(80)
+    expect(s.shares).toEqual([0, 20, 0, 0, 80])
+  })
+  it('puts unread notes first', () => {
+    const base = { kind: 'idea' as const, withDevice: false }
+    const out = triage([
+      { ...base, id: 'a', text: 'old read', at: 1, reviewedBy: 'X' },
+      { ...base, id: 'b', text: 'old', at: 2 },
+      { ...base, id: 'c', text: 'new', at: 3 },
+    ])
+    expect(out.map((n) => n.id)).toEqual(['c', 'b', 'a'])
+  })
+  it('lets roles with the Feedback module mark a note read, and logs it', () => {
+    api.feedback.send('bug', 'It froze', false)
+    const id = getDb().feedback[0].id
+    expect(api.feedback.review(id)).toMatchObject({ ok: false, code: 'role' })
+    expect(api.admin.signIn('S. Kamau', '135790').ok).toBe(true)
+    expect(api.feedback.review(id).ok).toBe(true)
+    expect(getDb().feedback[0].reviewedBy).toBe('S. Kamau')
+    expect(getDb().admin!.audit[0].action).toBe('Marked feedback as read')
+  })
+  it('keeps moderators and clinical reviewers out', () => {
+    expect(canAccess('moderator', 'feedback')).toBe(false)
+    expect(canAccess('clinical', 'feedback')).toBe(false)
+    expect(canAccess('billing', 'feedback')).toBe(true)
+    expect(canAccess('admin', 'feedback')).toBe(true)
   })
 })
