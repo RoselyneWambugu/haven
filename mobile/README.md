@@ -58,7 +58,7 @@ An internal desktop-style web app at `/admin`, reached from **Echo staff** on th
 | Support / Billing | Overview, Users, Billing, Analytics (Commercial), Resources (Support and Billing tickets and articles), Feedback |
 | Admin | Everything including Feedback, plus Config, Roles, departments, audit and analytics export, and strike-policy changes |
 
-It is connected to the rest of the demo. A report made in the member app becomes a case. Suspending or restoring the member in Users, and deciding their appeal, change what they see in the member app. A portal application can be approved, sent back or rejected in Therapists, and the portal follows. Every content view, reveal, decision, export and approval is written to the audit log.
+It is connected to the rest of the demo. A report made in the member app becomes a case that holds a frozen snapshot of what was reported (the last 10 messages of a chat with the latest 3 flagged, or the post or comment with its context) and the count of earlier reports against the same person. Suspending or restoring the member in Users, and deciding their appeal, change what they see in the member app. A portal application can be approved, sent back or rejected in Therapists, and the portal follows. Every content view, reveal, decision, export and approval is written to the audit log.
 
 **Analytics** has four sections: Product (funnel, retention cohorts, who is using Echo), Care, Commercial and Safety, each shown only to the roles that need it. Everything is a count or a rate, never message text or identities, and groups under 10 people are hidden. Each chart has a table view. The figures are generated sample data and the page says so, except the AI-flag and appeal figures in Safety, which come from the live demo data.
 

@@ -217,7 +217,7 @@ export default function PostDetail() {
           testID="report-submit"
           label="Send report"
           onPress={() => {
-            if (reporting) api.report.submit({ target: reporting.target, targetId: reporting.id, reason, note: '' })
+            if (reporting) api.report.submit({ target: reporting.target, targetId: reporting.id, reason, note: '', postId: post.id })
             setReporting(null)
           }}
         />

@@ -158,8 +158,8 @@ export const admin = {
       const sev = SEV_BY_REASON[reason]
       return {
         id: `C-${r.id}`, severity: sev, source: 'user-report', type: REASON_LABEL[reason], slaMinutes: SLA[sev], openedAt: r.at, owner: null, status: 'new', reporter: mine,
-        reported: r.target === 'member' ? 'Reported member' : `Reported ${r.target}`, snapshotAt: r.at, ai: null, strikes: 0, priorReports: 0, decision: null, escalated: false,
-        evidence: [{ id: 'e0', who: 'reported', text: r.note || 'Message content is captured in the snapshot on the real service.', reported: true }],
+        reported: r.reportedName ?? (r.target === 'member' ? 'Reported member' : `Reported ${r.target}`), snapshotAt: r.at, ai: null, strikes: 0, priorReports: r.priorReports ?? 0, decision: null, escalated: false,
+        evidence: r.snapshot?.length ? r.snapshot : [{ id: 'e0', who: 'reported', text: r.note || 'No content was captured for this report.', reported: true }],
       }
     })
     patch((x) => ({ cases: [...add, ...x.cases] }))

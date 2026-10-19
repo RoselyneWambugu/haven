@@ -323,6 +323,20 @@ export interface SupportOrg {
 
 // ---------- reports ----------
 
+/** A member's report, with the content frozen when it was made (PRD SAF-3). */
+export interface ReportRecord {
+  id: string
+  target: string
+  targetId: string
+  reason: string
+  note: string
+  at: number
+  /** The pen name of the person reported, when it is known. */
+  reportedName?: string
+  snapshot?: EvidenceLine[]
+  priorReports?: number
+}
+
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'
 export type ReportReason = 'harassment' | 'threats' | 'sexual' | 'scam' | 'self-harm' | 'impersonation' | 'hate' | 'other'
 

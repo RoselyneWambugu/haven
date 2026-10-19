@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, FeedbackItem, ForumPost, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
+import type { Account, Conversation, Device, FeedbackItem, ForumPost, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
 import { LIVE } from '@/data/config'
 import { defaultContent } from '@/data/content'
 import { seedPosts } from '@/data/seed'
@@ -50,7 +50,7 @@ export interface DbState {
   checkout: { id: string; item: CheckoutItem; amountKes: number | null; createdAt: number } | null
   tickets: Ticket[]
   feedback: FeedbackItem[]
-  reports: { id: string; target: string; targetId: string; reason: string; note: string; at: number }[]
+  reports: ReportRecord[]
   openConversationId: string | null
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
   /** The therapist portal's own data. Null until someone first signs in to it. */

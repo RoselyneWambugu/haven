@@ -7,7 +7,8 @@ import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { peerReply, therapistThreadReply } from './bot'
-import type { AvatarKind, Conversation, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
+import { chatSnapshot, commentSnapshot, postSnapshot, priorReports } from '@/lib/snapshot'
+import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
 
 const SEC = 1000
 const MIN = 60_000
@@ -192,7 +193,7 @@ export const chat = {
     const conv = db.conversations.find((c) => c.id === id)
     if (!conv?.peer) return
     const peer = conv.peer
-    if (alsoReport) report.submit({ target: 'member', targetId: peer.id, reason: 'other', note: 'Blocked and reported from chat' })
+    if (alsoReport) report.submit({ target: 'member', targetId: peer.id, reason: 'other', note: 'Blocked and reported from chat', conversationId: id })
     updateAccount((a) => ({ ...a, blocked: [...a.blocked.filter((p) => p.id !== peer.id), peer] }))
     update((s) => ({
       conversations: s.conversations.filter((c) => c.id !== id),
@@ -210,8 +211,32 @@ export const chat = {
 // ---------------------------------------------------------------------------
 
 export const report = {
-  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string }): void {
-    update((s) => ({ reports: [...s.reports, { id: uid('r'), target: input.target, targetId: input.targetId, reason: input.reason, note: input.note, at: now() }] }))
+  /**
+   * Keeps what was reported as it is right now (SAF-3). Pass `conversationId` for a chat, or `postId` for a post or comment.
+   * The snapshot stays with the report even if the content is later edited, deleted or set to disappear.
+   */
+  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string; conversationId?: string; postId?: string }): void {
+    const db = getDb()
+    const at = now()
+    const conv = input.conversationId ? db.conversations.find((c) => c.id === input.conversationId) : undefined
+    const post = input.postId ? db.posts.find((p) => p.id === input.postId) : undefined
+    let snapshot: EvidenceLine[] | undefined
+    let reportedName: string | undefined
+    if (conv) {
+      snapshot = chatSnapshot(conv.messages)
+      reportedName = conv.peer?.penName
+    } else if (post && input.target === 'comment') {
+      snapshot = commentSnapshot(post, input.targetId)
+      reportedName = post.comments.find((c) => c.id === input.targetId)?.authorName
+    } else if (post && input.target === 'post') {
+      snapshot = postSnapshot(post)
+      reportedName = post.authorName
+    }
+    const record: ReportRecord = {
+      id: uid('r'), target: input.target, targetId: input.targetId, reason: input.reason, note: input.note, at,
+      reportedName, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
+    }
+    update((s) => ({ reports: [...s.reports, record] }))
   },
 }
 

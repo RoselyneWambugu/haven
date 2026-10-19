@@ -241,7 +241,7 @@ export default function Chat() {
           testID="report-submit"
           label="Send report"
           onPress={() => {
-            api.report.submit({ target: 'member', targetId: conv.peer?.id ?? conv.id, reason, note: '' })
+            api.report.submit({ target: 'member', targetId: conv.peer?.id ?? conv.id, reason, note: '', conversationId: conv.id })
             setReporting(false)
             if (alsoBlock) {
               api.chat.block(conv.id, false)
