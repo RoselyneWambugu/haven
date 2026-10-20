@@ -10,7 +10,7 @@ import { Sheet } from '@/components/Sheet'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { breakSuggested, onBreak } from '@/lib/wellbeing'
-import { BREAK_GLASS_MINUTES, minutesLeft, REVEALS, slaLabel } from '@/lib/admin'
+import { BREAK_GLASS_MINUTES, canSeeCase, minutesLeft, REVEALS, slaLabel } from '@/lib/admin'
 import { dayAndClock } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
@@ -46,7 +46,7 @@ export default function CaseDetail() {
   const [bgText, setBgText] = useState('')
   const [bgError, setBgError] = useState<string | null>(null)
   const [profile, setProfile] = useState<ReturnType<typeof api.admin.privateProfile>>(null)
-  const c = a?.cases.find((x) => x.id === id)
+  const c = a?.cases.find((x) => x.id === id && canSeeCase(a.role, x))
 
   useEffect(() => {
     if (id) api.admin.view(id)

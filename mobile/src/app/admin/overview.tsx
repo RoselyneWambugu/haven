@@ -5,7 +5,7 @@ import { Panel, PortalPage, Stat, useWide } from '@/components/Portal'
 import { Banner, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { licenceStatus } from '@/lib/portal'
-import { minutesLeft } from '@/lib/admin'
+import { minutesLeft, visibleCases } from '@/lib/admin'
 import { go } from '@/lib/nav'
 import { clock } from '@/lib/time'
 import { useDb } from '@/store/db'
@@ -19,7 +19,7 @@ export default function Overview() {
   const t = useNow()
   const wide = useWide()
   if (!a) return null
-  const open = a.cases.filter((c) => c.status !== 'closed')
+  const open = visibleCases(a.cases, a.role).filter((c) => c.status !== 'closed')
   const s1Unassigned = open.filter((c) => c.severity === 'S1' && !c.owner).length
   const nearBreach = open.filter((c) => minutesLeft(c, t) <= 30).length
   const overSla = open.filter((c) => minutesLeft(c, t) <= 0).length

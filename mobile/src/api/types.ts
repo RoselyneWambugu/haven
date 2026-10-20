@@ -335,10 +335,13 @@ export interface ReportRecord {
   reportedName?: string
   snapshot?: EvidenceLine[]
   priorReports?: number
+  /** Concerns about a therapist go to the clinical queue. */
+  queue?: 'clinical'
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'
-export type ReportReason = 'harassment' | 'threats' | 'sexual' | 'scam' | 'self-harm' | 'impersonation' | 'hate' | 'other'
+/** The last three are concerns about a therapist, and go to Clinical reviewers. */
+export type ReportReason = 'harassment' | 'threats' | 'sexual' | 'scam' | 'self-harm' | 'impersonation' | 'hate' | 'other' | 'therapist-conduct' | 'therapist-boundaries' | 'therapist-privacy'
 
 // ---------- results ----------
 
@@ -452,6 +455,8 @@ export interface AdminCase {
   ai: { category: string; confidence: number; model: string } | null
   strikes: number
   priorReports: number
+  /** Which team works it. Therapist concerns are for Clinical reviewers; the rest are for moderators. */
+  queue?: 'clinical'
   decision: { action: CaseAction; reason: string; by: string; at: number } | null
   escalated: boolean
 }

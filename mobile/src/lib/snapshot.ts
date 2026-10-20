@@ -43,3 +43,16 @@ export function commentSnapshot(post: Pick<ForumPost, 'title' | 'comments'>, com
 export function priorReports(reports: { targetId: string; at: number }[], targetId: string, before: number): number {
   return reports.filter((r) => r.targetId === targetId && r.at < before).length
 }
+
+/**
+ * A concern about a therapist session. Calls are not recorded, so the case holds the member's own words and the
+ * session details, plus the last messages of the chat with that therapist if there is one.
+ */
+export function sessionSnapshot(info: { therapist: string; mode: string; when: string }, note: string, thread: Message[] = []): EvidenceLine[] {
+  const chat = chatSnapshot(thread)
+  const head: EvidenceLine[] = [
+    { id: 'h0', who: 'reporter', text: clip(`Session with ${info.therapist} by ${info.mode}, ${info.when}. Calls are not recorded.`) },
+    ...(note.trim() ? [{ id: 'h1', who: 'reporter' as const, text: clip(note.trim()) }] : []),
+  ]
+  return [...head, ...chat.map((l, i) => ({ ...l, id: `e${i}` }))]
+}

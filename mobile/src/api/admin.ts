@@ -3,7 +3,7 @@ import { can } from '@/lib/roles'
 import { atLimit, canTakeCase, DEFAULT_WELLBEING, emptyExposure, mondayStart, nextRota, onBreak, WEEK, weekOf } from '@/lib/wellbeing'
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
-import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess } from '@/lib/admin'
+import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess, canSeeCase } from '@/lib/admin'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { account } from './support'
@@ -112,9 +112,9 @@ export function log(action: string, target: string, reason = '') {
   patch((a) => ({ audit: [audit(name, role, action, target, reason), ...a.audit] }))
 }
 
-const SEV_BY_REASON: Record<ReportReason, Severity> = { 'self-harm': 'S1', threats: 'S1', sexual: 'S2', hate: 'S2', harassment: 'S2', scam: 'S2', impersonation: 'S3', other: 'S3' }
+const SEV_BY_REASON: Record<ReportReason, Severity> = { 'self-harm': 'S1', threats: 'S1', sexual: 'S2', hate: 'S2', harassment: 'S2', scam: 'S2', impersonation: 'S3', other: 'S3', 'therapist-conduct': 'S2', 'therapist-boundaries': 'S1', 'therapist-privacy': 'S2' }
 const SLA: Record<Severity, number> = { S1: 60, S2: 240, S3: 720 }
-const REASON_LABEL: Record<ReportReason, string> = { 'self-harm': 'Self-harm concern', threats: 'Threat', sexual: 'Sexual content', hate: 'Hate speech', harassment: 'Harassment', scam: 'Scam or solicitation', impersonation: 'Impersonation', other: 'Other' }
+const REASON_LABEL: Record<ReportReason, string> = { 'self-harm': 'Self-harm concern', threats: 'Threat', sexual: 'Sexual content', hate: 'Hate speech', harassment: 'Harassment', scam: 'Scam or solicitation', impersonation: 'Impersonation', other: 'Other', 'therapist-conduct': 'Therapist conduct', 'therapist-boundaries': 'Therapist boundaries', 'therapist-privacy': 'Therapist privacy' }
 
 /** Applies a sanction to the member signed in on this device, so staff decisions are visible in the member app. */
 function sanctionMember(kind: Notice['kind'], rule: string) {
@@ -158,7 +158,7 @@ export const admin = {
       const sev = SEV_BY_REASON[reason]
       return {
         id: `C-${r.id}`, severity: sev, source: 'user-report', type: REASON_LABEL[reason], slaMinutes: SLA[sev], openedAt: r.at, owner: null, status: 'new', reporter: mine,
-        reported: r.reportedName ?? (r.target === 'member' ? 'Reported member' : `Reported ${r.target}`), snapshotAt: r.at, ai: null, strikes: 0, priorReports: r.priorReports ?? 0, decision: null, escalated: false,
+        reported: r.reportedName ?? (r.target === 'member' ? 'Reported member' : `Reported ${r.target}`), snapshotAt: r.at, ai: null, strikes: 0, priorReports: r.priorReports ?? 0, queue: r.queue, decision: null, escalated: false,
         evidence: r.snapshot?.length ? r.snapshot : [{ id: 'e0', who: 'reported', text: r.note || 'No content was captured for this report.', reported: true }],
       }
     })
@@ -169,7 +169,7 @@ export const admin = {
     const { name, role } = me()
     const a = getDb().admin!
     const c = a.cases.find((x) => x.id === id)
-    if (!c) return { ok: false, error: 'Case not found.' }
+    if (!c || !canSeeCase(role, c)) return { ok: false, error: 'Case not found.' }
     if (!canTakeCase(c, { name, role }, weekOf(a.rota, now())?.heavy ?? [])) return { ok: false, error: 'Severity-1 and crisis cases are worked by the moderators on this week’s heavy-queue rota. Ask someone on the rota, or a clinical reviewer.', code: 'rota' }
     patch((a) => ({ cases: a.cases.map((c) => (c.id === id ? { ...c, owner: name, status: c.status === 'new' ? 'in-review' : c.status } : c)) }))
     log('Took case', id)
@@ -177,12 +177,16 @@ export const admin = {
   },
   /** Opening a case is itself logged, because it exposes content (PRV-1). */
   view(id: string): void {
+    const c = getDb().admin?.cases.find((x) => x.id === id)
+    if (!c || !canSeeCase(me().role, c)) return
     log('Viewed case content', id, 'Review')
   },
   reveal(caseId: string, lineId: string): Res {
     const a = getDb().admin!
     const { name } = me()
     const key = `${name}|${caseId}:${lineId}`
+    const rc = a.cases.find((x) => x.id === caseId)
+    if (!rc || !canSeeCase(me().role, rc)) return { ok: false, error: 'Case not found.' }
     if (a.revealed.includes(key)) return { ok: true, value: undefined }
     const e = a.exposure[name] ?? emptyExposure()
     if (onBreak(e, now())) return { ok: false, error: 'You’re on a break. Revealing opens again when it ends.', code: 'break' }
@@ -195,7 +199,7 @@ export const admin = {
   decide(caseId: string, action: CaseAction, reason: string): Res {
     const a = getDb().admin!
     const c = a.cases.find((x) => x.id === caseId)
-    if (!c) return { ok: false, error: 'Case not found.' }
+    if (!c || !canSeeCase(me().role, c)) return { ok: false, error: 'Case not found.' }
     if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
     const { name, role } = me()
     if ((action === 'strike' || action === 'restrict' || action === 'suspend') && !can(role, 'suspendRestore')) return { ok: false, error: 'Your role recommends a sanction. Escalate the case so a moderator or Admin can apply it.', code: 'role' }

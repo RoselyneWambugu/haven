@@ -119,3 +119,7 @@ export function nextSanction(strikesNow: number, severity: Severity): 'warning' 
   if (strikesNow === 1) return 'restriction'
   return 'suspension'
 }
+
+/** Therapist concerns are for Clinical reviewers and Admins. Moderators do not see them (PRD §3.2: therapists are a clinical matter). */
+export const canSeeCase = (role: StaffRole, c: Pick<AdminCase, 'queue'>): boolean => c.queue !== 'clinical' || role === 'clinical' || role === 'admin'
+export const visibleCases = <T extends Pick<AdminCase, 'queue'>>(cases: T[], role: StaffRole): T[] => cases.filter((c) => canSeeCase(role, c))

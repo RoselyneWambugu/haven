@@ -8,7 +8,8 @@ import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { notify } from './notify'
 import { peerReply, therapistThreadReply } from './bot'
-import { chatSnapshot, commentSnapshot, postSnapshot, priorReports } from '@/lib/snapshot'
+import { chatSnapshot, commentSnapshot, postSnapshot, priorReports, sessionSnapshot } from '@/lib/snapshot'
+import { dayAndClock } from '@/lib/time'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
 
 const SEC = 1000
@@ -220,14 +221,22 @@ export const report = {
    * Keeps what was reported as it is right now (SAF-3). Pass `conversationId` for a chat, or `postId` for a post or comment.
    * The snapshot stays with the report even if the content is later edited, deleted or set to disappear.
    */
-  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string; conversationId?: string; postId?: string }): void {
+  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string; conversationId?: string; postId?: string; sessionId?: string }): void {
     const db = getDb()
     const at = now()
     const conv = input.conversationId ? db.conversations.find((c) => c.id === input.conversationId) : undefined
     const post = input.postId ? db.posts.find((p) => p.id === input.postId) : undefined
+    const sess = input.sessionId ? db.sessions.find((x) => x.id === input.sessionId) : undefined
     let snapshot: EvidenceLine[] | undefined
     let reportedName: string | undefined
-    if (conv) {
+    let queue: ReportRecord['queue']
+    if (sess) {
+      const th = THERAPISTS.find((x) => x.id === sess.therapistId)
+      const thread = db.conversations.find((c) => c.kind === 'therapist' && c.therapistId === sess.therapistId)
+      snapshot = sessionSnapshot({ therapist: th?.name ?? 'a therapist', mode: sess.mode, when: dayAndClock(sess.start) }, input.note, thread?.messages)
+      reportedName = th?.name
+      queue = 'clinical'
+    } else if (conv) {
       snapshot = chatSnapshot(conv.messages)
       reportedName = conv.peer?.penName
     } else if (post && input.target === 'comment') {
@@ -239,7 +248,7 @@ export const report = {
     }
     const record: ReportRecord = {
       id: uid('r'), target: input.target, targetId: input.targetId, reason: input.reason, note: input.note, at,
-      reportedName, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
+      reportedName, queue, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
     }
     update((s) => ({ reports: [...s.reports, record] }))
     notify.push('safety', `report:${record.id}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')

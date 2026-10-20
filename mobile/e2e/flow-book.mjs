@@ -64,6 +64,7 @@ await step('directory-and-profile', async () => {
   await tid('therapist-profile').waitFor()
   await shot('36-profile')
 })
+let sessionId = ''
 await step('book-and-pay', async () => {
   await tid('book').click()
   await tid('book-screen').waitFor()
@@ -75,6 +76,7 @@ await step('book-and-pay', async () => {
   await tid('checkout-success').waitFor({ timeout: 8000 })
   await tid('checkout-done').click()
   await tid('session-detail').waitFor()
+  sessionId = page.url().split('/').pop().split('?')[0]
   await shot('38-session')
 })
 await step('reschedule-and-cancel', async () => {
@@ -84,6 +86,19 @@ await step('reschedule-and-cancel', async () => {
   await tid('cancel-confirm').click()
   await tid('change-done').waitFor()
   await tid('change-ok').click()
+})
+await step('report-a-therapist-concern', async () => {
+  await page.evaluate((id) => window.__echo.sessions.end(id), sessionId)
+  await page.waitForTimeout(700)
+  await page.goto(`http://localhost:8096/sessions/${sessionId}`)
+  await tid('session-concern').click()
+  await tid('concern-sheet').waitFor()
+  await tid('concern-therapist-boundaries').click()
+  if (!(await tid('concern-send').isDisabled())) throw new Error('a note should be needed')
+  await tid('concern-note').fill('They asked where I live and I did not feel safe')
+  await shot('39b-concern')
+  await tid('concern-send').click()
+  await page.getByText('We received your concern').waitFor()
 })
 await browser.close()
 server.close()
