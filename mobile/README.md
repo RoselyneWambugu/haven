@@ -111,11 +111,12 @@ The Echo logo is a glowing lotus with a heart. It is drawn as shapes in `src/dat
 
 ## Not finished, on purpose
 
-- **Placeholders for open decisions.** Crisis numbers and support organisations are marked as unverified (D29). Prices are blank (D2, D3). See `src/data/config.ts` and PRD section on decisions.
-- **Calls are simulated.** Voice and video need a provider that has not been chosen. Nothing is recorded or sent.
-- **Payments are simulated.** M-Pesa takes about three seconds and can be made to fail from Demo tools.
+The full list of what is not built, every placeholder and every open decision is in [`docs/BACKLOG.md`](../docs/BACKLOG.md), for regular review. In short:
+
+- **Placeholders for open decisions.** Crisis numbers and support organisations are marked as unverified (D29). Prices are blank (D2, D3). See `src/data/config.ts` and the PRD section on decisions.
+- **Calls, payments, SMS, push and email are simulated.** They need providers that have not been chosen (D51). The backend is a mock that lives on the device.
+- **Analytics runs on generated sample data**, except the AI-flag and appeal figures.
 - **The app is in English only.** Kiswahili is still a language members can say they speak, for matching.
-- **Analytics, Resources, Config, Roles and Wellbeing have no wireframes.** They were built from the PRD, and Analytics runs on generated sample data. There is no staff screen for roles and permissions.
 
 ## Web build note
 
