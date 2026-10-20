@@ -1,6 +1,7 @@
 import { SPACES, spaceById, spaceSeedPosts } from '@/data/spaces'
 import { now } from '@/lib/clock'
 import { getDb, update } from '@/store/db'
+import { requirePlan } from './access'
 import type { Res } from './types'
 
 /** Support spaces: groups for one issue each, such as domestic violence, PTSD or grief (PRD FRM and the community rules). */
@@ -15,6 +16,8 @@ export const spaces = {
     const db = getDb()
     if (!db.account) return { ok: false, error: 'Sign in first.' }
     if (!spaceById(id)) return { ok: false, error: 'That space isn’t here.' }
+    const gate = requirePlan('Support spaces')
+    if (gate) return gate
     if (db.account.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (!db.spaces.includes(id)) update((s) => ({ spaces: [...s.spaces, id] }))
     return { ok: true, value: undefined }

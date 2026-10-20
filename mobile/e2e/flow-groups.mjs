@@ -32,6 +32,7 @@ await step('register', async () => {
   await tid('pen-continue').click()
   await tid('finish').click()
   await tid('home').waitFor()
+  await page.evaluate(() => window.__echo.demo.grantPlan('monthly'))
 })
 await step('upcoming-group-chats-under-chats', async () => {
   await tid('tab-chats').click()

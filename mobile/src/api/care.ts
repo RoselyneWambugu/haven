@@ -1,3 +1,4 @@
+import { hasPlan } from './access'
 import { canBookTherapist } from '@/lib/limits'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, canJoin, SESSION_MINUTES, MIN } from '@/lib/booking'
@@ -31,6 +32,7 @@ export const billing = {
     }
     const t = therapistOf(item.therapistId)
     if (!t || t.suspended) return { ok: false, error: 'That therapist is not available.' }
+    if (!hasPlan()) return { ok: false, error: 'Booking a therapist needs an active plan.', code: 'needs-plan' }
     if (!canBookTherapist(db.conversations, db.sessions, t.id, now())) return { ok: false, error: 'You can work with one therapist at a time. Finish or cancel your sessions with your current therapist first, then you can choose someone else.', code: 'one-therapist' }
     if (!t.modes.includes(item.mode) || (item.mode === 'video' && !db.content.flags.therapistVideo)) return { ok: false, error: `${t.name} doesn’t offer that kind of session.` }
     const slot = slotsFor(t, db.sessions, now()).find((s) => s.start === item.start)
@@ -74,7 +76,7 @@ export const billing = {
         if (item.mode === 'chat' && !conversations.some((c) => c.therapistId === th.id)) {
           const conv: Conversation = {
             id: uid('c'), kind: 'therapist', peer: null, therapistId: th.id,
-            messages: [{ id: uid('m'), from: 'system', text: `Session booked for ${dayAndClock(item.start)}. You can message ${th.name} here before then.`, at: now() }],
+            messages: [{ id: uid('m'), from: 'system', text: `Session booked for ${dayAndClock(item.start)}. You can message ${th.name} here before then. Chats with a therapist are deleted every week, unless reported.`, at: now() }],
             muted: false, archived: false, ended: false, disappearing: 'off', unread: 0, createdAt: now(), lastAt: now(),
           }
           conversations = [conv, ...conversations]

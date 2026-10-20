@@ -25,7 +25,7 @@ export const MODULES: { key: Module; label: string }[] = [
 ]
 
 const ACCESS: Record<StaffRole, Module[]> = {
-  moderator: ['overview', 'cases', 'users', 'moderation', 'appeals', 'analytics', 'resources', 'wellbeing'],
+  moderator: ['overview', 'cases', 'users', 'moderation', 'appeals', 'analytics', 'resources', 'wellbeing', 'groups'],
   clinical: ['overview', 'cases', 'appeals', 'therapists', 'analytics', 'resources', 'wellbeing', 'groups', 'audit'],
   billing: ['overview', 'users', 'billing', 'analytics', 'resources', 'feedback'],
   admin: ['overview', 'cases', 'users', 'moderation', 'appeals', 'therapists', 'billing', 'analytics', 'resources', 'feedback', 'groups', 'configuration', 'roles', 'wellbeing', 'audit'],
@@ -127,3 +127,6 @@ export const visibleCases = <T extends Pick<AdminCase, 'queue'>>(cases: T[], rol
 
 /** Clinical reviewers and Admins schedule and cancel group chats. */
 export const canManageGroups = (role: StaffRole): boolean => role === 'clinical' || role === 'admin'
+
+/** Moderators, clinical reviewers and Admins can remove a person from a group chat that is open. Cancelling or scheduling one is for clinical reviewers and Admins only. */
+export const canModerateGroups = (role: StaffRole): boolean => role === 'moderator' || role === 'clinical' || role === 'admin'

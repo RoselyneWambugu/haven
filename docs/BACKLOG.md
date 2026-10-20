@@ -2,7 +2,7 @@
 
 Everything that has not been built, every placeholder, and every decision still open, gathered in one place from the PRD build notes and the README. It is for a regular review: for each item, choose **Build**, **Defer** or **Drop**, and give it a priority.
 
-Last updated at PRD v0.31 (the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
+Last updated at PRD v0.32 (the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
 
 **How to read it.** *Source* is the PRD version whose build notes mention it, and a requirement ID where there is one. *Needs* says what blocks it: a decision, a provider, or just build time.
 
@@ -36,7 +36,7 @@ Last updated at PRD v0.31 (the mobile app, therapist portal and admin dashboard 
 | P-07 | Account deletion holding period of 14 days | D34 | Counsel |
 | P-08 | A reply to a therapist appeal within 72 hours | v0.24 | Decision |
 | P-09 | Staff wellbeing line number is a placeholder | v0.14 | Number |
-| P-10 | Number of places in group chats and spaces, and group chats being free | v0.29, v0.31 | Decision |
+| P-10 | Number of places in group chats | v0.29, v0.31 | Decision |
 | P-11 | Real therapist photographs (illustrated placeholders today) | D49 | Consent and licensing |
 
 ## 3. Member app
@@ -54,6 +54,9 @@ Last updated at PRD v0.31 (the mobile app, therapist portal and admin dashboard 
 | M-09 | Per-post setting to turn replies off | v0.26 |
 | M-10 | Replies to a member's comments, and replies from several different people to one post | v0.26 |
 | M-11 | Pricing and outcome claims on the landing page (not approved) | v0.17 |
+| M-12 | A free trial or free taste, since the whole platform needs a plan (decide; none built) | v0.32 |
+| M-13 | Different plans unlocking different things (every plan unlocks everything today) | v0.32 |
+| M-14 | A real backend must enforce the plan check for reading the community; the demo locks it in the screens only | v0.32 |
 
 ## 4. Community: forum and support spaces
 
@@ -70,15 +73,15 @@ Last updated at PRD v0.31 (the mobile app, therapist portal and admin dashboard 
 
 | # | Item | Source |
 |---|---|---|
-| G-01 | Removing a message or a person from a live group chat (facilitator controls) | v0.31 |
+| G-01 | Facilitator controls inside a live group chat: removing a message or a person from the leader's own screen. (Moderators can already remove a person, v0.32; removing a single message is not built) | v0.31 |
 | G-02 | Editing a scheduled group chat (today: cancel and reschedule) | v0.31 |
 | G-03 | Repeating weekly series | v0.29 |
 | G-04 | A waiting list when a group chat is full | v0.29 |
 | G-05 | A staff list of who signed up (only the count shows) | v0.31 |
 | G-06 | A script beyond the leader's welcome for staff-scheduled chats (a real service has real people) | v0.31 |
 | G-07 | Group chats for sensitive spaces such as domestic violence | v0.29 |
-| G-08 | Whether group chats count towards a plan or the five open chats | v0.29 |
-| G-09 | Moderators cancelling a group chat in an emergency (**open**; today only Clinical reviewers and Admins) | v0.31 |
+| G-08 | Whether group chats count towards the five open chats (they do not today) | v0.29 |
+| G-09 | A way for someone removed from a group chat to ask for a review | v0.32 |
 
 ## 6. Therapist portal
 
@@ -145,14 +148,14 @@ Last updated at PRD v0.31 (the mobile app, therapist portal and admin dashboard 
 
 The full list of numbered decisions is in PRD section 14.1. These are the ones raised while building that are still open:
 
-1. Do group chats and support spaces need a paid plan? (G-08, P-10)
-2. May moderators cancel a group chat in an emergency? (G-09)
-3. Should a therapist chat really be deleted 24 hours after a session ends? Today it lasts until 24 hours after the latest booked or finished session, so a session booked for next week keeps its chat.
-4. Is the minimum number of reviews before a therapist rating shows right at 10? (P-05)
-5. What does "available now" mean for therapists: today a session could start within 15 minutes, and "within the hour" means 60 minutes.
-6. How many places per group chat, and should a therapist have a daily cap even though there is no weekly limit?
-7. Who verifies crisis lines and how often? (D29, P-03)
-8. Content-note wording and veil for sensitive posts. (C-05, D32)
+1. Should there be a free trial or a free taste before the plan is needed? (M-12)
+2. Should deletion run on a rolling clock from the start of a chat (as built), or on a fixed day, such as every Monday for therapist chats?
+3. Is the minimum number of reviews before a therapist rating shows right at 10? (P-05)
+4. What does "available now" mean for therapists: today a session could start within 15 minutes, and "within the hour" means 60 minutes.
+5. How many places per group chat, and should a therapist have a daily cap even though there is no weekly limit? (P-10)
+6. Who verifies crisis lines and how often? (D29, P-03)
+7. Content-note wording and veil for sensitive posts. (C-05, D32)
+8. Can a person removed from a group chat appeal? (G-09)
 
 ## 12. Decided, for the record
 
@@ -162,3 +165,6 @@ The full list of numbered decisions is in PRD section 14.1. These are the ones r
 - Timed, facilitated group chats are in scope; open-ended live group chat is not (v0.29).
 - Any verified therapist may lead a group chat, and there is no weekly limit (v0.31).
 - Chats are deleted 24 hours after they start unless reported; five open peer chats and one therapist at a time (v0.29).
+- The whole platform needs a paid plan: the community, support spaces, group chats and booking, as well as peer chat. Urgent help, the help centre, settings, billing and browsing the therapist directory stay free (v0.32).
+- Moderators can remove people from a group chat but cannot schedule or cancel one; no emergency cancel (v0.32).
+- Peer chats are deleted daily and therapist chats weekly, unless reported (v0.32).

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../src/api'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
-import { CHAT_LIFETIME_MS, expiresAt, isExpired, leftLabel, sweep, timeLeft } from '../src/lib/chatLife'
+import { CHAT_LIFETIME_MS, expiresAt, isExpired, leftLabel, lifetimeLabel, sweep, timeLeft, warnBeforeMs } from '../src/lib/chatLife'
 import { canBookTherapist, currentTherapist, MAX_PEER_CHATS, openPeerChats } from '../src/lib/limits'
 import { freshState, getDb, update } from '../src/store/db'
 import type { Conversation, Message } from '../src/api'
@@ -21,12 +21,23 @@ describe('chat lifetime', () => {
     expect(isExpired(c, [], 1000 + 24 * H - 1)).toBe(false)
     expect(isExpired(c, [], 1000 + 24 * H)).toBe(true)
   })
-  it('keeps a therapist chat until 24 hours after the latest session, so a booked session never loses it', () => {
+  it('lasts a week for a therapist chat, and never ends before a booked or finished session plus 24 hours', () => {
     const c = th('t', 't-amina', 0)
-    expect(expiresAt(c, [])).toBe(24 * H)
-    expect(expiresAt(c, [{ therapistId: 't-amina', end: 100 * H, status: 'booked' }])).toBe(124 * H)
-    expect(expiresAt(c, [{ therapistId: 't-amina', end: 100 * H, status: 'cancelled' }])).toBe(24 * H)
-    expect(expiresAt(c, [{ therapistId: 't-james', end: 100 * H, status: 'booked' }])).toBe(24 * H)
+    expect(expiresAt(c, [])).toBe(7 * 24 * H)
+    expect(expiresAt(c, [{ therapistId: 't-amina', end: 5 * 24 * H, status: 'booked' }])).toBe(7 * 24 * H)
+    expect(expiresAt(c, [{ therapistId: 't-amina', end: 100 * H, status: 'completed' }])).toBe(7 * 24 * H)
+    expect(expiresAt(c, [{ therapistId: 't-amina', end: 10 * 24 * H, status: 'booked' }])).toBe(11 * 24 * H)
+    expect(expiresAt(c, [{ therapistId: 't-amina', end: 10 * 24 * H, status: 'cancelled' }])).toBe(7 * 24 * H)
+    expect(expiresAt(c, [{ therapistId: 't-james', end: 10 * 24 * H, status: 'booked' }])).toBe(7 * 24 * H)
+  })
+  it('keeps a peer chat to a day whatever sessions there are', () => {
+    expect(expiresAt(peer('p', 0), [{ therapistId: 't-amina', end: 10 * 24 * H, status: 'booked' }])).toBe(24 * H)
+  })
+  it('warns an hour before a peer chat ends and a day before a therapist chat ends', () => {
+    expect(warnBeforeMs({ kind: 'peer' })).toBe(H)
+    expect(warnBeforeMs({ kind: 'therapist' })).toBe(24 * H)
+    expect(lifetimeLabel({ kind: 'peer' })).toBe('24 hours')
+    expect(lifetimeLabel({ kind: 'therapist' })).toBe('a week')
   })
   it('words the time left plainly', () => {
     expect(leftLabel(5 * H + 12 * 60_000)).toBe('5 h 12 min')
@@ -111,6 +122,18 @@ describe('in the app', () => {
     update({ sessions: [{ id: 's1', therapistId: 't-amina', mode: 'chat', start: now() + 2 * H, end: now() + 3 * H, status: 'booked', priceKes: null, receiptNo: 'R', createdAt: 0, rating: null, followUpOffer: null, lateChargeApplied: false } as never] })
     const r = api.billing.createCheckout({ kind: 'session', therapistId: 't-james', mode: 'chat', start: now() + 5 * H })
     expect(r).toMatchObject({ ok: false, code: 'one-therapist' })
+  })
+  it('deletes a therapist chat after a week, with a day’s warning, and keeps a reported one for review', () => {
+    update({ conversations: [th('t', 't-amina', now()), th('r', 't-james', now())] })
+    api.report.submit({ target: 'member', targetId: 't-james', reason: 'other', note: '', conversationId: 'r' })
+    advanceClock(6 * 24 * 60 + 60)
+    api.chat.sweep()
+    expect(getDb().conversations.find((c) => c.id === 't')!.messages.at(-1)!.text).toContain('ends in about a day')
+    expect(getDb().conversations).toHaveLength(2)
+    advanceClock(24 * 60)
+    api.chat.sweep()
+    expect(getDb().conversations).toHaveLength(0)
+    expect(getDb().retained.map((c) => c.id)).toEqual(['r'])
   })
   it('says how long a chat has left', () => {
     const c = peer('a', now())

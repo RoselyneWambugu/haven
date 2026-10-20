@@ -1,6 +1,7 @@
 import { View } from 'react-native'
 import { Badge } from '@/components/Controls'
 import { Icon } from '@/components/Icon'
+import { PlanGate, usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -13,12 +14,14 @@ import { colors } from '@/theme'
 /** Support spaces: one group per issue. Each has a verified therapist who looks after it, its own rules, and its own feed. */
 export default function Spaces() {
   const joined = useDb((s) => s.spaces)
+  const plan = usePlan()
   return (
     <Screen testID="spaces" header={<TopBar back title="Support spaces" />}>
       <Text variant="title">Support spaces</Text>
       <Text variant="body" muted>
         Groups for one issue each, so you can talk with people who understand. You are only ever a pen name and an avatar.
       </Text>
+      {!plan ? <PlanGate what="Support spaces" /> : null}
       <Banner tone="green" icon="shield">
         A verified therapist looks after every space. Sensitive ones are only visible to members who join, and every post in them is checked before it goes live.
       </Banner>

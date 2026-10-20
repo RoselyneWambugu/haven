@@ -8,11 +8,13 @@ import { Banner, Card, EmptyState } from '@/components/Surfaces'
 import { Icon } from '@/components/Icon'
 import { colors } from '@/theme'
 import { Text } from '@/components/Text'
+import { PlanGate, usePlan } from '@/components/PlanGate'
 import { go } from '@/lib/nav'
 import { generalPosts } from '@/lib/spaces'
 import { useDb } from '@/store/db'
 
 export default function Forum() {
+  const plan = usePlan()
   const posts = useDb((s) => s.posts)
   const TOPICS = useDb((s) => s.content.topics)
   const forumOn = useDb((s) => s.content.flags.forum)
@@ -31,13 +33,16 @@ export default function Forum() {
     <Screen tab testID="forum" header={<TopBar avatar />}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text variant="title">Community</Text>
-        {forumOn ? <Button testID="forum-new" label="Write a post" size="sm" icon="pencil" onPress={() => go('/forum/new')} /> : null}
+        {forumOn && plan ? <Button testID="forum-new" label="Write a post" size="sm" icon="pencil" onPress={() => go('/forum/new')} /> : null}
       </View>
+      {!plan ? <PlanGate what="The community, support spaces and group chats" /> : null}
       {!forumOn ? (
         <Banner tone="sun" icon="clock" title="Posting is paused">
           You can still read the community. We’ll turn posting back on soon.
         </Banner>
       ) : null}
+      {plan ? (
+      <>
       <Text variant="small" muted>
         Posts use pen names. Therapists join in with general information, not treatment.
       </Text>
@@ -71,6 +76,8 @@ export default function Forum() {
           {forumOn ? <Button label="Write a post" onPress={() => go('/forum/new')} /> : null}
         </EmptyState>
       )}
+      </>
+      ) : null}
     </Screen>
   )
 }

@@ -4,6 +4,7 @@ import { Portrait } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Icon } from '@/components/Icon'
+import { usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -37,11 +38,12 @@ export default function TherapistProfile() {
   }
   const slots = slotsFor(t, sessions, now())
   const free = canBookTherapist(convs, sessions, t.id, now())
+  const plan = usePlan()
   return (
     <Screen
       testID="therapist-profile"
       header={<TopBar back />}
-      footer={<Button testID="book" label={t.suspended ? 'Not available' : !free ? 'You already have a therapist' : t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!t.acceptingNew || !!t.suspended || !free} onPress={() => go(`/book/${t.id}`)} />}
+      footer={<Button testID="book" label={t.suspended ? 'Not available' : !plan ? 'Get a plan to book' : !free ? 'You already have a therapist' : t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!plan ? false : !t.acceptingNew || !!t.suspended || !free} onPress={() => (plan ? go(`/book/${t.id}`) : go('/plans'))} />}
     >
       <View style={{ flexDirection: 'row', gap: 14 }}>
         <Portrait tone={t.tone} width={92} height={110} />

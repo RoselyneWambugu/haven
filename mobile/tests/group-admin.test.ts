@@ -36,13 +36,14 @@ describe('checking a new group chat', () => {
 })
 
 describe('who manages group chats', () => {
-  it('is clinical reviewers and Admins', () => {
+  it('is clinical reviewers and Admins for scheduling and cancelling', () => {
     expect(canManageGroups('clinical')).toBe(true)
     expect(canManageGroups('admin')).toBe(true)
     expect(canManageGroups('moderator')).toBe(false)
     expect(canManageGroups('billing')).toBe(false)
     expect(canAccess('clinical', 'groups')).toBe(true)
-    expect(canAccess('moderator', 'groups')).toBe(false)
+    expect(canAccess('moderator', 'groups')).toBe(true)
+    expect(canAccess('billing', 'groups')).toBe(false)
   })
 })
 
@@ -59,6 +60,7 @@ describe('scheduling and cancelling', () => {
     api.auth.verifyOtp(otp.value.demoCode)
     api.auth.saveProfileDraft({ penName: 'QuietHeron', avatar: 'moon', languages: ['English'] })
     api.auth.completeRegistration('web')
+    api.demo.grantPlan('monthly')
     api.groups.ensure()
     api.admin.signIn('Dr. K. Mwende', DEMO_MFA)
   })
@@ -117,5 +119,86 @@ describe('scheduling and cancelling', () => {
     api.admin.signIn('Dr. K. Mwende', DEMO_MFA)
     advanceClock(3 * 60 + 5)
     expect(api.groups.cancel(r.value.id, 'Too late now')).toMatchObject({ ok: false, code: 'started' })
+  })
+})
+
+import { canModerateGroups } from '../src/lib/admin'
+import { isRemoved, participants } from '../src/lib/groupChat'
+
+describe('removing people from a group chat', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    resetClock()
+    update(freshState())
+    for (const t of THERAPISTS) t.suspended = false
+    api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob: '14/03/1998', email: '' })
+    api.auth.acceptConsents()
+    const otp = api.auth.requestOtp('register')
+    if (!otp.ok) throw new Error('otp')
+    api.auth.verifyOtp(otp.value.demoCode)
+    api.auth.saveProfileDraft({ penName: 'QuietHeron', avatar: 'moon', languages: ['English'] })
+    api.auth.completeRegistration('web')
+    api.demo.grantPlan('monthly')
+    api.groups.ensure()
+    api.admin.signIn('T. Njeri', DEMO_MFA)
+  })
+  const grief = () => getDb().groupChats.find((x) => x.id.startsWith('gc-grief-'))!
+  const open = () => {
+    api.groups.register(grief().id)
+    advanceClock((grief().startsAt - now()) / MIN + 3)
+    api.groups.tick()
+  }
+
+  it('is for moderators, clinical reviewers and Admins, but not billing', () => {
+    expect(canModerateGroups('moderator')).toBe(true)
+    expect(canModerateGroups('clinical')).toBe(true)
+    expect(canModerateGroups('admin')).toBe(true)
+    expect(canModerateGroups('billing')).toBe(false)
+    expect(canAccess('moderator', 'groups')).toBe(true)
+    expect(canManageGroups('moderator')).toBe(false)
+  })
+  it('lists who has written, not the leader or Echo, plus the member who signed up', () => {
+    open()
+    const names = participants(grief(), 'QuietHeron').map((p) => p.name)
+    expect(names).toContain('WarmLantern')
+    expect(names).toContain('QuietHeron')
+    expect(names.some((n) => n.startsWith('Dr.'))).toBe(false)
+  })
+  it('lets a moderator remove someone with a reason, logged, and hides their messages', () => {
+    open()
+    expect(api.groups.removeParticipant(grief().id, 'WarmLantern', 'no')).toMatchObject({ ok: false, code: 'reason' })
+    expect(api.groups.removeParticipant(grief().id, 'WarmLantern', 'Kept asking others for their numbers').ok).toBe(true)
+    expect(isRemoved(grief(), 'WarmLantern')).toBe(true)
+    expect(getDb().admin!.audit[0]).toMatchObject({ action: 'Removed person from group chat' })
+    expect(api.groups.removeParticipant(grief().id, 'WarmLantern', 'Already done twice')).toMatchObject({ ok: false })
+    expect(api.groups.removeParticipant(grief().id, 'Nobody', 'Not even in the chat')).toMatchObject({ ok: false, code: 'not-in-chat' })
+  })
+  it('stops a removed person’s later scripted lines', () => {
+    open()
+    api.groups.removeParticipant(grief().id, 'SoftCurrent', 'Breaking the group rules')
+    advanceClock(10)
+    api.groups.tick()
+    expect(grief().messages.filter((m) => m.name === 'SoftCurrent' && m.at > now() - 60_000).length).toBeLessThanOrEqual(1)
+    const later = grief().messages.filter((m) => m.name === 'SoftCurrent')
+    expect(later.length).toBeLessThanOrEqual(2)
+  })
+  it('locks out the member if they are removed, tells them, and keeps them from signing up again', () => {
+    open()
+    expect(api.groups.removeParticipant(grief().id, 'QuietHeron', 'Repeated unkind messages').ok).toBe(true)
+    expect(api.groups.send(grief().id, 'Hello')).toMatchObject({ ok: false, code: 'removed' })
+    expect(getDb().notifications.some((n) => n.title === 'You were removed from a group chat')).toBe(true)
+    api.groups.unregister(grief().id)
+    expect(api.groups.register(grief().id)).toMatchObject({ ok: false, code: 'removed' })
+  })
+  it('only works while the chat is open, and not for billing staff', () => {
+    api.groups.register(grief().id)
+    expect(api.groups.removeParticipant(grief().id, 'QuietHeron', 'Not started yet really')).toMatchObject({ ok: false, code: 'not-open' })
+    open()
+    api.admin.signIn('J. Otieno', DEMO_MFA)
+    expect(api.groups.removeParticipant(grief().id, 'WarmLantern', 'Billing cannot do this')).toMatchObject({ ok: false, code: 'role' })
+  })
+  it('still does not let a moderator schedule or cancel', () => {
+    expect(api.groups.schedule(good({ startsAt: now() + 3 * H }))).toMatchObject({ ok: false, code: 'role' })
+    expect(api.groups.cancel(grief().id, 'Emergency cancel attempt')).toMatchObject({ ok: false, code: 'role' })
   })
 })

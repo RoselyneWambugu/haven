@@ -15,6 +15,7 @@ const register = () => {
   api.auth.verifyOtp(otp.value.demoCode)
   api.auth.saveProfileDraft({ penName: 'QuietHeron', avatar: 'moon', languages: ['English'] })
   api.auth.completeRegistration('web')
+  api.demo.grantPlan('monthly')
 }
 const BODY = 'Some days are harder than others and I wanted to say so.'
 

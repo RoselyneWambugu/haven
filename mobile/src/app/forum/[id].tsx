@@ -7,6 +7,7 @@ import { Button } from '@/components/Button'
 import { Badge, Check } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
+import { PlanGate, usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
 import { Banner, Card, Divider, Row } from '@/components/Surfaces'
@@ -34,6 +35,7 @@ export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const post = useDb((s) => s.posts.find((p) => p.id === id))
   const forumOn = useDb((s) => s.content.flags.forum)
+  const plan = usePlan()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [menu, setMenu] = useState(false)
@@ -53,6 +55,13 @@ export default function PostDetail() {
     )
   }
 
+  if (!plan) {
+    return (
+      <Screen testID="post-locked" header={<TopBar back />}>
+        <PlanGate what="The community" />
+      </Screen>
+    )
+  }
   const canEdit = post.mine && now() - post.createdAt <= EDIT_MS
   const draftBlock = detectBlockedContent(text)
 

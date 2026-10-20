@@ -14,6 +14,7 @@ const register = () => {
   api.auth.verifyOtp(otp.value.demoCode)
   api.auth.saveProfileDraft({ penName: 'QuietHeron', avatar: 'moon', languages: ['English'] })
   api.auth.completeRegistration('web')
+  api.demo.grantPlan('monthly')
 }
 const mine = () => getDb().posts.find((p) => p.mine)!
 

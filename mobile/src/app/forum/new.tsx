@@ -4,6 +4,7 @@ import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
+import { PlanGate, usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
 import { Banner } from '@/components/Surfaces'
@@ -25,6 +26,7 @@ export default function NewPost() {
   const first = useDb((s) => !s.account?.hasPostedBefore)
   const TOPICS = useDb((s) => s.content.topics)
   const forumOn = useDb((s) => s.content.flags.forum)
+  const plan = usePlan()
   const [topic, setTopic] = useState<string>('Wellbeing')
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -58,8 +60,9 @@ export default function NewPost() {
       testID="forum-new-screen"
       keyboard
       header={<TopBar back title="New post" />}
-      footer={<Button testID="post-submit" label="Post" disabled={!title.trim() || body.trim().length < 10} onPress={submit} />}
+      footer={<Button testID="post-submit" label="Post" disabled={!plan || !title.trim() || body.trim().length < 10} onPress={submit} />}
     >
+      {!plan ? <PlanGate what="Posting" /> : null}
       {space ? (
         <Banner testID="posting-in-space" tone="green" icon="shield" title={`Posting in ${space.name}`}>
           {space.sensitive ? 'Every post in this space is checked before it goes live. That usually takes a few minutes.' : 'Only members of this space see it here, not the general community.'}

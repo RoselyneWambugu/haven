@@ -89,3 +89,13 @@ export function validateNewGroup(i: NewGroupInput, now: number, others: Pick<Gro
   if (others.some((o) => !o.cancelled && o.facilitatorId === i.facilitatorId && overlaps(i, o))) return 'That therapist is already leading a group chat at that time.'
   return null
 }
+
+export const isRemoved = (g: Pick<GroupChat, 'removed'>, name: string): boolean => !!g.removed?.some((r) => r.name === name)
+
+/** The people in a room a moderator could remove: everyone who has written, except the leader and Echo, plus the member if signed up. */
+export function participants(g: Pick<GroupChat, 'messages' | 'registered' | 'removed'>, memberName: string | undefined): { name: string; removed: boolean; you: boolean }[] {
+  const names = new Set<string>()
+  for (const m of g.messages) if (!m.facilitator && !m.system && !m.mine) names.add(m.name)
+  if (g.registered && memberName) names.add(memberName)
+  return [...names].map((name) => ({ name, removed: isRemoved(g, name), you: name === memberName }))
+}

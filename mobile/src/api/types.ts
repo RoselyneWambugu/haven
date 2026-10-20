@@ -386,6 +386,8 @@ export interface GroupChat {
   cancelled?: { reason: string; by: string; at: number }
   /** The staff member who scheduled it, when it was not one of the standing topics. */
   createdBy?: string
+  /** People a moderator removed from the room. Their messages are hidden and they cannot write or sign up again. */
+  removed?: { name: string; reason: string; by: string; at: number }[]
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'

@@ -4,6 +4,7 @@ import { api } from '@/api'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
+import { PlanGate, usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { PostCard } from '@/components/PostCard'
 import { Banner, Card, EmptyState } from '@/components/Surfaces'
@@ -24,12 +25,21 @@ export default function SpacePage() {
   const muted = useDb((s) => s.mutedAuthors)
   const forumOn = useDb((s) => s.content.flags.forum)
   const quickExit = useDb((s) => !!s.account?.settings.quickExit)
+  const plan = usePlan()
 
   if (!space) {
     return (
       <Screen testID="space-gone" header={<TopBar back />}>
         <Text variant="title">This space isn’t here</Text>
         <Button label="Back to spaces" onPress={() => goBack('/spaces')} />
+      </Screen>
+    )
+  }
+  if (!plan) {
+    return (
+      <Screen testID="space-locked" header={<TopBar back title={space.name} />}>
+        <Text variant="title">{space.name}</Text>
+        <PlanGate what="Support spaces" />
       </Screen>
     )
   }

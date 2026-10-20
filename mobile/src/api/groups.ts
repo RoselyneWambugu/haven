@@ -1,13 +1,14 @@
 import { CLOSING, GENERIC_CLOSING, GENERIC_SCRIPT, GROUP_TEMPLATES, SCRIPTS } from '@/data/groupChats'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
-import { canRegister, deletesAt, linesDue, status, validateNewGroup, type NewGroupInput } from '@/lib/groupChat'
-import { canManageGroups } from '@/lib/admin'
+import { canRegister, deletesAt, isRemoved, linesDue, participants, status, validateNewGroup, type NewGroupInput } from '@/lib/groupChat'
+import { canManageGroups, canModerateGroups } from '@/lib/admin'
 import { uid } from '@/lib/id'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { startOfEatDay } from '@/lib/time'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { requirePlan } from './access'
 import { log, me } from './admin'
 import { notify } from './notify'
 import { report } from './social'
@@ -52,7 +53,10 @@ export const groups = {
     if (!a || !g) return { ok: false, error: 'That group chat isn’t here.' }
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (g.registered) return { ok: true, value: undefined }
+    const gate = requirePlan('Group chats')
+    if (gate) return gate
     if (g.cancelled) return { ok: false, error: 'This group chat was cancelled.', code: 'cancelled' }
+    if (isRemoved(g, a.public.penName)) return { ok: false, error: 'You were removed from this group chat.', code: 'removed' }
     if (!canRegister(g, now())) return { ok: false, error: status(g, now()) === 'open' || status(g, now()) === 'ended' ? 'This group chat has already started.' : 'This group chat is full.', code: 'closed' }
     setGroup(id, (x) => ({ ...x, registered: true }))
     showToast('You’re signed up. We’ll remind you.')
@@ -70,6 +74,9 @@ export const groups = {
     const g = db.groupChats.find((x) => x.id === id)
     if (!a || !g) return { ok: false, error: 'That group chat isn’t here.' }
     if (!g.registered) return { ok: false, error: 'Sign up to take part.', code: 'not-registered' }
+    if (isRemoved(g, a.public.penName)) return { ok: false, error: 'You were removed from this group chat by a moderator.', code: 'removed' }
+    const gate = requirePlan('Group chats')
+    if (gate) return gate
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (status(g, now()) !== 'open') return { ok: false, error: status(g, now()) === 'ended' ? 'This group chat has ended.' : 'It hasn’t started yet.', code: 'not-open' }
     const t = text.trim()
@@ -102,7 +109,7 @@ export const groups = {
       const th = THERAPISTS.find((x) => x.id === g.facilitatorId)
       const due = linesDue(script, g.posted, g, t)
       if (due.length) {
-        const msgs: GroupMessage[] = due.map(({ line, at }, i) => ({ id: `${g.id}-s${g.posted + i}`, name: line.facilitator ? th?.name ?? 'Facilitator' : line.name, avatar: line.avatar, text: line.text, at, facilitator: line.facilitator }))
+        const msgs: GroupMessage[] = due.filter(({ line }) => line.facilitator || !isRemoved(g, line.name)).map(({ line, at }, i) => ({ id: `${g.id}-s${g.posted + i}`, name: line.facilitator ? th?.name ?? 'Facilitator' : line.name, avatar: line.avatar, text: line.text, at, facilitator: line.facilitator }))
         g = { ...g, messages: [...g.messages, ...msgs].sort((a, b) => a.at - b.at), posted: g.posted + due.length }
       }
       if (status(g, t) === 'ended' && !g.closed) {
@@ -145,6 +152,29 @@ export const groups = {
     setGroup(id, (x) => ({ ...x, cancelled: { reason: reason.trim(), by: name, at: now() } }))
     if (g.registered) notify.push('session', `g:${id}:cancelled`, 'Your group chat was cancelled', `${g.topic} won’t go ahead. We’re sorry. There will be another soon.`, `/group-chats/${id}`)
     log('Cancelled group chat', g.topic, reason.trim())
+    return { ok: true, value: undefined }
+  },
+
+  /**
+   * Removes a person from a group chat that is open or about to open: moderators, clinical reviewers and Admins, with a reason, logged.
+   * Their messages are hidden, they cannot write or sign up again, and they are told. This is not a sanction; use the usual process for that.
+   */
+  removeParticipant(id: string, name: string, reason: string): Res {
+    const a = getDb().admin
+    if (!a || !a.signedIn || !canModerateGroups(a.role)) return { ok: false, error: 'Your role can’t remove people from a group chat.', code: 'role' }
+    const g = getDb().groupChats.find((x) => x.id === id)
+    if (!g) return { ok: false, error: 'That group chat isn’t here.' }
+    const st = status(g, now())
+    if (st !== 'open' && st !== 'lobby') return { ok: false, error: 'You can remove someone only while the chat is open.', code: 'not-open' }
+    const memberName = getDb().account?.public.penName
+    const target = participants(g, memberName).find((p) => p.name === name)
+    if (!target) return { ok: false, error: 'That person isn’t in this chat.', code: 'not-in-chat' }
+    if (target.removed) return { ok: false, error: 'They are already removed.' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    const { name: by } = me()
+    setGroup(id, (x) => ({ ...x, removed: [...(x.removed ?? []), { name, reason: reason.trim(), by, at: now() }] }))
+    if (target.you) notify.push('safety', `g:${id}:removed`, 'You were removed from a group chat', `A moderator removed you from “${g.topic}” because it broke the group’s rules. You can still use the rest of Echo.`, `/group-chats/${id}`)
+    log('Removed person from group chat', `${g.topic}: ${name}`, reason.trim())
     return { ok: true, value: undefined }
   },
 

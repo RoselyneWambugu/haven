@@ -4,10 +4,11 @@ import { Portrait } from '@/components/Art'
 import { Badge, Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
+import { usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
 import { Button } from '@/components/Button'
-import { Card, EmptyState } from '@/components/Surfaces'
+import { Banner, Card, EmptyState } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
@@ -40,6 +41,7 @@ export default function Therapists() {
   const [sort, setSort] = useState<DirectorySort>('next')
   const [open, setOpen] = useState(false)
   const clockNow = useNow(30_000)
+  const plan = usePlan()
   const rows = filterTherapists(THERAPISTS, sessions, filters, clockNow, sort, langs)
   const count = activeFilterCount(filters)
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
@@ -53,6 +55,11 @@ export default function Therapists() {
       <Text variant="small" muted>
         Every therapist is licensed and checked by our team. Sessions are 45 minutes, by chat, voice or video.
       </Text>
+      {!plan ? (
+        <Banner testID="book-needs-plan" tone="sun" icon="lock" title="Booking needs a plan">
+          You can look at every therapist. A plan lets you book.
+        </Banner>
+      ) : null}
       <Field testID="dir-search" label="Search" hideLabel placeholder="Search by name or topic" value={filters.query} onChangeText={(query) => setFilters({ ...filters, query })} />
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
         <Chip testID="dir-now" label="Available now" icon="clock" selected={filters.when === 'now'} onPress={() => setFilters({ ...filters, when: filters.when === 'now' ? 'any' : 'now' })} />

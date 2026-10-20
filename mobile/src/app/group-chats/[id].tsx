@@ -7,6 +7,7 @@ import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge, Check } from '@/components/Controls'
 import { Icon } from '@/components/Icon'
+import { PlanGate, usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
 import { Banner, Card } from '@/components/Surfaces'
@@ -14,7 +15,7 @@ import { Text } from '@/components/Text'
 import { GROUP_TEMPLATES } from '@/data/groupChats'
 import { THERAPISTS } from '@/data/seed'
 import { leftLabel } from '@/lib/chatLife'
-import { canRegister, deletesAt, endsAt, seatsLeft, status, whenLabel } from '@/lib/groupChat'
+import { canRegister, deletesAt, endsAt, isRemoved, seatsLeft, status, whenLabel } from '@/lib/groupChat'
 import { goBack } from '@/lib/nav'
 import { detectBlockedContent, detectDistress, explainBlock } from '@/lib/safety'
 import { clock } from '@/lib/time'
@@ -37,6 +38,8 @@ export default function GroupChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const g = useDb((s) => s.groupChats.find((x) => x.id === id))
   const t = useNow(5_000)
+  const plan = usePlan()
+  const me = useDb((s) => s.account?.public.penName)
   const insets = useSafeAreaInsets()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -96,6 +99,8 @@ export default function GroupChatScreen() {
                 </Banner>
                 <Button testID="group-unregister" variant="ghost" label="Give up my place" onPress={() => api.groups.unregister(g.id)} />
               </>
+            ) : !plan ? (
+              <PlanGate what="Group chats" testID="group-gate" />
             ) : (
               <Button testID="group-register" label="Sign up" disabled={!canRegister(g, t)} onPress={() => { const r = api.groups.register(g.id); setError(r.ok ? null : r.error) }} />
             )}
@@ -126,7 +131,8 @@ export default function GroupChatScreen() {
     setError(null)
   }
 
-  const open = st === 'open'
+  const iAmRemoved = !!me && isRemoved(g, me)
+  const open = st === 'open' && !iAmRemoved
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.paper }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} testID="group-room">
       <View style={{ paddingTop: insets.top, paddingHorizontal: 18 }}>
@@ -174,9 +180,15 @@ export default function GroupChatScreen() {
                   {item.facilitator ? ' · leads the room' : ''} · {clock(item.at)}
                 </Text>
                 <View style={{ backgroundColor: item.mine ? colors.moss : item.facilitator ? colors.lichen : colors.milk, borderWidth: item.mine || item.facilitator ? 0 : 1, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9 }}>
-                  <Text variant="body" color={item.mine ? colors.white : colors.ink}>
-                    {item.text}
-                  </Text>
+                  {!item.mine && !item.facilitator && isRemoved(g!, item.name) ? (
+                    <Text variant="small" muted italic>
+                      Message removed by a moderator
+                    </Text>
+                  ) : (
+                    <Text variant="body" color={item.mine ? colors.white : colors.ink}>
+                      {item.text}
+                    </Text>
+                  )}
                 </View>
               </View>
               {!item.mine ? (
@@ -221,9 +233,15 @@ export default function GroupChatScreen() {
         </View>
       ) : (
         <View style={{ paddingHorizontal: 18, paddingBottom: Math.max(insets.bottom, 14), paddingTop: 8 }}>
-          <Banner tone="sun" icon="lock" title={st === 'lobby' ? 'Not started yet' : 'This group chat has ended'}>
-            {st === 'lobby' ? 'You can read along once it starts. Writing opens at the start time.' : 'You can still read it until it is deleted.'}
-          </Banner>
+          {iAmRemoved ? (
+            <Banner testID="group-removed" tone="clay" icon="lock" title="You were removed from this group chat">
+              A moderator removed you because it broke the group’s rules. You can still use the rest of Echo.
+            </Banner>
+          ) : (
+            <Banner tone="sun" icon="lock" title={st === 'lobby' ? 'Not started yet' : 'This group chat has ended'}>
+              {st === 'lobby' ? 'You can read along once it starts. Writing opens at the start time.' : 'You can still read it until it is deleted.'}
+            </Banner>
+          )}
         </View>
       )}
       <Sheet visible={!!reporting} onClose={() => setReporting(null)} title="Report this message" testID="group-report-sheet">

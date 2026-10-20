@@ -33,6 +33,7 @@ await step('register', async () => {
   await tid('pen-continue').click()
   await tid('finish').click()
   await tid('home').waitFor()
+  await page.evaluate(() => window.__echo.demo.grantPlan('monthly'))
 })
 await step('spaces-from-the-community-tab', async () => {
   await tid('tab-forum').click()

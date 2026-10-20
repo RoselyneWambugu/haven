@@ -33,6 +33,16 @@ await step('register', async () => {
   await tid('finish').click()
   await tid('home').waitFor()
 })
+await step('the-community-needs-a-plan', async () => {
+  await tid('tab-forum').click()
+  await tid('forum').waitFor()
+  await tid('plan-gate').waitFor()
+  await shot('19-community-locked')
+  if (await tid('forum-new').count()) throw new Error('posting should be locked')
+  await page.evaluate(() => window.__echo.demo.grantPlan('monthly'))
+  await page.waitForTimeout(300)
+  await tid('plan-gate').waitFor({ state: 'detached' })
+})
 await step('feed', async () => {
   await tid('tab-forum').click()
   await tid('forum').waitFor()

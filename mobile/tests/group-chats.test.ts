@@ -78,6 +78,7 @@ describe('in the app', () => {
     api.auth.verifyOtp(otp.value.demoCode)
     api.auth.saveProfileDraft({ penName: 'QuietHeron', avatar: 'moon', languages: ['English'] })
     api.auth.completeRegistration('web')
+    api.demo.grantPlan('monthly')
     api.groups.ensure()
   })
   const grief = () => getDb().groupChats.find((x) => x.id.startsWith('gc-grief-'))!

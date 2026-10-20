@@ -55,7 +55,7 @@ An internal desktop-style web app at `/admin`, reached from **Echo staff** on th
 
 | Role | Modules |
 | --- | --- |
-| Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety), Resources (Safety tickets and articles), Wellbeing |
+| Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety), Resources (Safety tickets and articles), Wellbeing, Group chats (remove people only) |
 | Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Resources (Therapist tickets and articles, crisis lines and the support directory), Wellbeing, Group chats, Audit log |
 | Support / Billing | Overview, Users, Billing, Analytics (Commercial), Resources (Support and Billing tickets and articles), Feedback |
 | Admin | Everything including Feedback, plus Config, Roles, departments, audit and analytics export, and strike-policy changes |
@@ -70,13 +70,14 @@ It is connected to the rest of the demo. A concern a member raises about a thera
 
 **Roles** (Admin only) shows the team, the permission table from the PRD and which modules each role sees. Adding someone, changing a role or deactivating an account is proposed by one Admin and approved by a second, you can't change your own account, and at least two Admins stay active. The permission table is the one the API enforces, and tests check the two agree. A deactivated person can't sign in, and role changes apply at the next sign-in.
 
-**Group chats** (Clinical reviewer and Admin) schedules and cancels timed group chats: topic, leader, day and time in East Africa Time, length and places. Anyone signed up is told when one is cancelled, and both actions are logged.
+**Group chats** (Clinical reviewer and Admin) schedules and cancels timed group chats: topic, leader, day and time in East Africa Time, length and places. Anyone signed up is told when one is cancelled, and both actions are logged. Moderators see the same module but can only remove people from a chat that is open, with a reason.
 
 **Wellbeing** protects reviewers. Each reviewer has their own daily reveal count and limit, a break is suggested after a run of reveals and pauses revealing while it lasts, the heaviest cases (Severity-1 and crisis) can only be taken by moderators on that week's rota, which moves on each week, and anyone can hand a case on or ask for support without giving a reason.
 
 ## Chats, limits and group chats
 
-- **Chats end after 24 hours.** A chat is deleted 24 hours after it starts unless it was reported. Each chat shows a countdown.
+- **Chats end on a clock.** A peer chat is deleted 24 hours after it starts and a therapist chat a week after, unless reported. Each chat shows a countdown.
+- **A plan unlocks everything** except urgent help, the help centre, settings and billing: peer chat, the community, support spaces, group chats and booking a therapist. In Demo tools, *Give me a monthly plan* unlocks it.
 - **Limits.** Five open peer chats at a time, and one therapist at a time.
 - **Matching** shows a rolling die while it looks for someone.
 - **Therapists** can be filtered by *Available now* or *Within the hour*.
@@ -103,7 +104,7 @@ The Echo logo is a glowing lotus with a heart. It is drawn as shapes in `src/dat
 - Messages, posts and comments with a link, phone number, email, social handle or address are blocked before they are sent, with a plain reason. The mock backend checks again, so the rule holds even if the app is changed.
 - Members are shown only as a pen name, an avatar and an age range. Real details sit in a private profile that needs a phone code to open.
 - Under-18s are turned away at registration.
-- Peer chat needs an active plan. When a plan ends, chats become read-only. Therapist chats, urgent help, the help centre and reading the community stay free.
+- The whole platform needs an active plan, except urgent help, the help centre, settings and billing. When a plan ends, existing chats become read-only for a grace period.
 - Signs of distress offer urgent help. They never block or punish.
 - In the portal, clients are only a pen name and avatar. Inbox messages follow the same sharing limits, therapist forum replies can't invite people to book or make contact, and changing a payout needs a fresh code.
 - In the dashboard, evidence stays blurred until revealed and reveals are limited each day. Identity needs a break-glass request approved by a second person, the clinical lead, and lasts 30 minutes. An appeal can't be decided by whoever made the original decision, and strike-policy changes need two different admins.

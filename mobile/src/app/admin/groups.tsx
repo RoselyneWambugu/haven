@@ -8,9 +8,9 @@ import { Panel, PortalPage, Stat } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
-import { canManageGroups } from '@/lib/admin'
+import { canManageGroups, canModerateGroups } from '@/lib/admin'
 import { now } from '@/lib/clock'
-import { endsAt, LIMITS, seatsLeft, status, whenLabel } from '@/lib/groupChat'
+import { endsAt, LIMITS, participants, seatsLeft, status, whenLabel } from '@/lib/groupChat'
 import { startOfEatDay } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
@@ -43,9 +43,15 @@ export default function Groups() {
   const [cancelling, setCancelling] = useState<string | null>(null)
   const [why, setWhy] = useState('')
   const [cancelError, setCancelError] = useState<string | null>(null)
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
+  const [removeWhy, setRemoveWhy] = useState('')
+  const [removeError, setRemoveError] = useState<string | null>(null)
+  const account = useDb((st) => st.account)
   if (!a) return null
   const allowed = canManageGroups(a.role)
+  const canRemove = canModerateGroups(a.role)
   const leaders = THERAPISTS.filter((x) => !x.suspended && !standing?.[x.id])
+  const live = groups.filter((g) => ['lobby', 'open'].includes(status(g, t)))
   const upcoming = groups.filter((g) => ['upcoming', 'lobby', 'open'].includes(status(g, t)))
   const past = groups.filter((g) => ['ended', 'cancelled'].includes(status(g, t))).slice(-6).reverse()
   const reported = (id: string) => reports.filter((r) => r.groupChatId === id).length
@@ -128,6 +134,58 @@ export default function Groups() {
       <Panel title="Scheduled" style={{ gap: 0 }}>
         {upcoming.length ? upcoming.map(row) : <Text variant="small" muted>Nothing scheduled.</Text>}
       </Panel>
+      {canRemove ? (
+        <Panel title="People in open chats" testID="people" style={{ gap: 6 }}>
+          <Text variant="caption" muted>
+            Remove someone who breaks a group’s rules. They are told, their messages are hidden, and they can’t write or sign up again. It is not a sanction: use Moderation for that.
+          </Text>
+          {live.length ? (
+            live.map((g) => (
+              <View key={g.id} style={{ gap: 4, paddingVertical: 6 }}>
+                <Text variant="label">{g.topic}</Text>
+                {participants(g, account?.public.penName).length ? (
+                  participants(g, account?.public.penName).map((p) => (
+                    <View key={p.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text variant="small" style={{ flex: 1 }}>
+                        {p.name}
+                        {p.removed ? ' · removed' : ''}
+                      </Text>
+                      {!p.removed ? <Button testID={`remove-${p.name}`} variant="dangerGhost" size="sm" label="Remove" onPress={() => { setRemoving({ id: g.id, name: p.name }); setRemoveWhy(''); setRemoveError(null) }} /> : null}
+                    </View>
+                  ))
+                ) : (
+                  <Text variant="caption" muted>
+                    Nobody has written yet.
+                  </Text>
+                )}
+                {removing?.id === g.id ? (
+                  <View style={{ gap: 8, paddingTop: 6 }}>
+                    <Field testID="remove-reason" label={`Reason for removing ${removing.name} (required)`} value={removeWhy} onChangeText={(v) => { setRemoveWhy(v); setRemoveError(null) }} error={removeError} />
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <Button
+                        testID="remove-confirm"
+                        variant="danger"
+                        size="sm"
+                        label="Remove from this chat"
+                        onPress={() => {
+                          const r = api.groups.removeParticipant(removing.id, removing.name, removeWhy)
+                          if (!r.ok) return setRemoveError(r.error)
+                          setRemoving(null)
+                        }}
+                      />
+                      <Button variant="ghost" size="sm" label="Keep them" onPress={() => setRemoving(null)} />
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+            ))
+          ) : (
+            <Text variant="small" muted>
+              No chat is open right now.
+            </Text>
+          )}
+        </Panel>
+      ) : null}
       {allowed ? (
         <Panel title="Schedule a group chat" testID="schedule">
           <Field testID="g-topic" label="Topic" value={topic} onChangeText={(v) => { setTopic(v); setError(null); setDone(null) }} maxLength={LIMITS.maxTopic} />
@@ -180,7 +238,7 @@ export default function Groups() {
         </Panel>
       ) : (
         <Banner tone="sun" icon="lock">
-          Only clinical reviewers and Admins schedule or cancel group chats.
+          Only clinical reviewers and Admins schedule or cancel group chats. Moderators can remove people from a chat that is open.
         </Banner>
       )}
       <Panel title="Recent" style={{ gap: 0 }}>

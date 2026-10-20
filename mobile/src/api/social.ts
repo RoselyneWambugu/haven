@@ -6,10 +6,11 @@ import { canChat, planState } from '@/lib/plan'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { hasPlan, requirePlan } from './access'
 import { notify } from './notify'
 import { peerReply, postReply, therapistThreadReply } from './bot'
 import { MAX_PEER_CHATS, openPeerChats } from '@/lib/limits'
-import { sweep, timeLeft, WARN_BEFORE_MS } from '@/lib/chatLife'
+import { sweep, timeLeft, warnBeforeMs } from '@/lib/chatLife'
 import { chatSnapshot, commentSnapshot, groupSnapshot, postSnapshot, priorReports, sessionSnapshot } from '@/lib/snapshot'
 import { dayAndClock } from '@/lib/time'
 import { spaceById } from '@/data/spaces'
@@ -144,11 +145,11 @@ export const chat = {
     const t = now()
     const reported = new Set(db.reports.flatMap((r) => (r.conversationId ? [r.conversationId] : [])))
     const { keep, retain, drop } = sweep(db.conversations, db.sessions, reported, t)
-    const warn = keep.filter((c) => !c.warned && !c.ended && timeLeft(c, db.sessions, t) <= WARN_BEFORE_MS)
+    const warn = keep.filter((c) => !c.warned && !c.ended && timeLeft(c, db.sessions, t) <= warnBeforeMs(c))
     if (!drop.length && !retain.length && !warn.length) return
     const gone = new Set([...drop, ...retain].map((c) => c.id))
     update((s) => ({
-      conversations: keep.map((c) => (warn.some((w) => w.id === c.id) ? { ...c, warned: true, messages: [...c.messages, msg('system', 'This chat ends in about an hour and will then be deleted.')] } : c)),
+      conversations: keep.map((c) => (warn.some((w) => w.id === c.id) ? { ...c, warned: true, messages: [...c.messages, msg('system', c.kind === 'therapist' ? 'This chat ends in about a day and will then be deleted.' : 'This chat ends in about an hour and will then be deleted.')] } : c)),
       retained: [...s.retained, ...retain.filter((r) => !s.retained.some((x) => x.id === r.id))],
       openConversationId: s.openConversationId && gone.has(s.openConversationId) ? null : s.openConversationId,
       match: s.match.state === 'found' && gone.has(s.match.conversationId) ? { state: 'idle' } : s.match,
@@ -335,6 +336,8 @@ export const forum = {
     const db = getDb()
     const a = db.account
     if (!a) return { ok: false, error: 'Sign in first.' }
+    const gate = requirePlan('The community')
+    if (gate) return gate as Res<{ post: ForumPost; pending: boolean }>
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (!db.content.flags.forum) return { ok: false, error: 'Posting is paused for now. You can still read the community.', code: 'forum-off' }
     const title = input.title.trim()
@@ -376,6 +379,8 @@ export const forum = {
     const a = getDb().account
     const post = getDb().posts.find((p) => p.id === postId)
     if (!a || !post) return { ok: false, error: 'That post is gone.' }
+    const gate = requirePlan('The community')
+    if (gate) return gate as Res<{ comment: ForumComment }>
     if (!getDb().content.flags.forum) return { ok: false, error: 'Comments are paused for now.', code: 'forum-off' }
     if (post.status !== 'published') return { ok: false, error: 'You can comment once the post is live.', code: 'pending' }
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
@@ -392,6 +397,7 @@ export const forum = {
   },
 
   toggleSupport(id: string): void {
+    if (!hasPlan()) return void showToast('The community needs an active plan.')
     setPost(id, (p) => ({ ...p, supportedByMe: !p.supportedByMe, supports: p.supports + (p.supportedByMe ? -1 : 1) }))
   },
 
