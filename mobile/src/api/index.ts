@@ -6,6 +6,7 @@
 import { auth } from './auth'
 import { billing, sessions } from './care'
 import { demo } from './demo'
+import { groups } from './groups'
 import { notify } from './notify'
 import { feedback } from './feedback'
 import { admin } from './admin'
@@ -17,7 +18,7 @@ import { spaces } from './spaces'
 import { team } from './team'
 import { therapistAppeals } from './therapistAppeals'
 
-export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals, spaces }
+export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals, spaces, groups }
 
 /** Restarts timers for anything that was in progress when the app last closed. */
 export function resumeBackground(): void {
@@ -26,6 +27,9 @@ export function resumeBackground(): void {
   applyPortalToDirectory()
   applyStandingToDirectory()
   spaces.ensureSeeds()
+  chat.sweep()
+  groups.ensure()
+  groups.tick()
 }
 
 export * from './types'

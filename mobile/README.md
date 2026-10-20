@@ -24,7 +24,7 @@ Useful scripts:
 
 In a browser window 900 px or wider, `/` opens a landing page. Its buttons go to registration, sign-in, urgent help and the therapist and staff sign-ins. Narrower windows and phones open the Welcome screen.
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`, `concern`, `spaces`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`, `concern`, `spaces`, `groups`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -71,6 +71,14 @@ It is connected to the rest of the demo. A concern a member raises about a thera
 **Roles** (Admin only) shows the team, the permission table from the PRD and which modules each role sees. Adding someone, changing a role or deactivating an account is proposed by one Admin and approved by a second, you can't change your own account, and at least two Admins stay active. The permission table is the one the API enforces, and tests check the two agree. A deactivated person can't sign in, and role changes apply at the next sign-in.
 
 **Wellbeing** protects reviewers. Each reviewer has their own daily reveal count and limit, a break is suggested after a run of reveals and pauses revealing while it lasts, the heaviest cases (Severity-1 and crisis) can only be taken by moderators on that week's rota, which moves on each week, and anyone can hand a case on or ask for support without giving a reason.
+
+## Chats, limits and group chats
+
+- **Chats end after 24 hours.** A chat is deleted 24 hours after it starts unless it was reported. Each chat shows a countdown.
+- **Limits.** Five open peer chats at a time, and one therapist at a time.
+- **Matching** shows a rolling die while it looks for someone.
+- **Therapists** can be filtered by *Available now* or *Within the hour*.
+- **Upcoming group chats** (under Chats) are timed, facilitated chats on one topic. Sign up, go in when it opens, and it is deleted 24 hours after it ends unless a message was reported. In Demo tools, *Start the next group chat now* opens one so you can see the room.
 
 ## Support spaces
 

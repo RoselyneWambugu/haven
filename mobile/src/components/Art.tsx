@@ -152,7 +152,7 @@ export function Face({ mood, selected, size = 44 }: { mood: Mood; selected?: boo
 // The ripple: the signature motion. Slow, and still for anyone who prefers reduced motion.
 // ---------------------------------------------------------------------------
 
-function useReducedMotion(): boolean {
+export function useReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false)
   useEffect(() => {
     let live = true

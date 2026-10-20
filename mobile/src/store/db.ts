@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, FeedbackItem, ForumPost, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
+import type { Account, Conversation, Device, FeedbackItem, ForumPost, GroupChat, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
 import { LIVE } from '@/data/config'
 import { defaultContent } from '@/data/content'
 import { seedPosts } from '@/data/seed'
@@ -54,6 +54,11 @@ export interface DbState {
   notifications: AppNote[]
   /** Support spaces the member has joined. */
   spaces: string[]
+  /** Chats that ran out of time while reported. Kept for the safety review and never shown to the member. */
+  retained: Conversation[]
+  /** Timed group chats: upcoming, open and recently ended. */
+  groupChats: GroupChat[]
+  retainedGroups: GroupChat[]
   reports: ReportRecord[]
   openConversationId: string | null
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
@@ -94,6 +99,9 @@ export function freshState(): DbState {
     feedback: [],
     notifications: [],
     spaces: [],
+    retained: [],
+    groupChats: [],
+    retainedGroups: [],
     reports: [],
     openConversationId: null,
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },

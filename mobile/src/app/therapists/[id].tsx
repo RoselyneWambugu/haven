@@ -10,6 +10,7 @@ import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
 import { now } from '@/lib/clock'
+import { canBookTherapist } from '@/lib/limits'
 import { slotsFor } from '@/lib/directory'
 import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
@@ -26,6 +27,7 @@ export default function TherapistProfile() {
   const sessions = useDb((s) => s.sessions)
   const money = useMoney()
   const flags = useDb((s) => s.content.flags)
+  const convs = useDb((s) => s.conversations)
   if (!t) {
     return (
       <Screen header={<TopBar back />} testID="therapist-gone">
@@ -34,11 +36,12 @@ export default function TherapistProfile() {
     )
   }
   const slots = slotsFor(t, sessions, now())
+  const free = canBookTherapist(convs, sessions, t.id, now())
   return (
     <Screen
       testID="therapist-profile"
       header={<TopBar back />}
-      footer={<Button testID="book" label={t.suspended ? 'Not available' : t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!t.acceptingNew || !!t.suspended} onPress={() => go(`/book/${t.id}`)} />}
+      footer={<Button testID="book" label={t.suspended ? 'Not available' : !free ? 'You already have a therapist' : t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!t.acceptingNew || !!t.suspended || !free} onPress={() => go(`/book/${t.id}`)} />}
     >
       <View style={{ flexDirection: 'row', gap: 14 }}>
         <Portrait tone={t.tone} width={92} height={110} />
@@ -55,6 +58,11 @@ export default function TherapistProfile() {
           </View>
         </View>
       </View>
+      {!free ? (
+        <Banner testID="one-therapist" tone="sun" icon="lock" title="You already have a therapist">
+          You can work with one therapist at a time. Once your sessions with them are done and their chat has ended, you can choose someone else.
+        </Banner>
+      ) : null}
       <Banner tone="green" icon="shield" title="Licence checked">
         {t.licenceBody}, no. {t.licenceNumber}. Valid to {dayLong(t.licenceValidTo)}.
       </Banner>

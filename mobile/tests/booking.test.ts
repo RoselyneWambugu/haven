@@ -79,3 +79,42 @@ describe('money', () => {
     expect(kes(0)).toBe('KES 0')
   })
 })
+
+import { availability, filterTherapists as ft, NO_FILTERS as NF, slotsFor as sf, soonSlot } from '../src/lib/directory'
+import { fromEat as fe } from '../src/lib/time'
+import { THERAPISTS as TH } from '../src/data/seed'
+
+describe('available now or within the hour', () => {
+  // Dr. Amina Otieno is on Mondays 09:00 to 12:00.
+  const amina = { ...TH[0], acceptingNew: true, suspended: false }
+  const mon = (h: number, m = 0) => fe(2026, 9, 19, h, m) // Monday 19 Oct 2026, East Africa Time
+  it('is on now inside a block with a session left, rounded up to the quarter hour', () => {
+    const slot = soonSlot(amina, [], mon(10, 3))
+    expect(slot).toMatchObject({ soon: true })
+    expect(slot!.start).toBe(mon(10, 15))
+    expect(availability(amina, [], mon(10, 3)).state).toBe('now')
+  })
+  it('starts within the hour when the block opens soon', () => {
+    const a = availability(amina, [], mon(8, 20))
+    expect(a.state).toBe('hour')
+    expect(a.slot!.start).toBe(mon(9, 0))
+  })
+  it('is not available when too little of the block is left, too early, or on another day', () => {
+    expect(soonSlot(amina, [], mon(11, 30))).toBeNull()
+    expect(soonSlot(amina, [], mon(7, 0))).toBeNull()
+    expect(soonSlot(amina, [], mon(10, 0) + 24 * 3600_000 * 2)).toBeNull()
+  })
+  it('is not offered by a therapist who is paused, suspended, or already booked then', () => {
+    expect(soonSlot({ ...amina, acceptingNew: false }, [], mon(10, 3))).toBeNull()
+    expect(soonSlot({ ...amina, suspended: true }, [], mon(10, 3))).toBeNull()
+    expect(soonSlot(amina, [{ therapistId: amina.id, status: 'booked', start: mon(10, 15) }], mon(10, 3))).toBeNull()
+  })
+  it('puts the immediate slot first in the booking times and filters the directory', () => {
+    const slots = sf(amina as never, [], mon(10, 3))
+    expect(slots[0].soon).toBe(true)
+    const rows = ft([amina as never], [], { ...NF, when: 'now' }, mon(10, 3))
+    expect(rows).toHaveLength(1)
+    expect(ft([amina as never], [], { ...NF, when: 'now' }, mon(7, 0))).toHaveLength(0)
+    expect(ft([amina as never], [], { ...NF, when: 'hour' }, mon(8, 30))).toHaveLength(1)
+  })
+})

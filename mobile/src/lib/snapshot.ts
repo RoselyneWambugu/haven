@@ -56,3 +56,12 @@ export function sessionSnapshot(info: { therapist: string; mode: string; when: s
   ]
   return [...head, ...chat.map((l, i) => ({ ...l, id: `e${i}` }))]
 }
+
+/** A reported message in a group chat, with the messages around it. The conversation is kept even when the room is deleted. */
+export function groupSnapshot(messages: { id: string; name: string; text: string; mine?: boolean; system?: boolean }[], targetId: string): EvidenceLine[] {
+  const spoken = messages.filter((m) => !m.system)
+  const at = spoken.findIndex((m) => m.id === targetId)
+  const from = Math.max(0, at - CONTEXT_MESSAGES + 1)
+  const window = at < 0 ? spoken.slice(-CONTEXT_MESSAGES) : spoken.slice(from, at + 1 + 2)
+  return window.map((m, i) => ({ id: `e${i}`, who: m.mine ? 'reporter' : 'reported', text: clip(`${m.name}: ${m.text}`), reported: m.id === targetId }))
+}

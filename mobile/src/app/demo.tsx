@@ -32,8 +32,13 @@ export default function Demo() {
         <Button variant="quiet" label="Pause my account" onPress={act(() => api.demo.setStanding('paused'))} />
         <Button variant="quiet" label="Restore good standing" onPress={act(() => api.demo.setStanding('good'))} />
       </View>
+      <Text variant="h3">Group chats</Text>
+      <View style={{ gap: 8 }}>
+        <Button testID="demo-start-group" variant="quiet" label="Start the next group chat now" onPress={act(() => api.demo.startNextGroupChat())} />
+      </View>
       <Text variant="h3">Time</Text>
       <View style={{ gap: 8 }}>
+        <Button variant="quiet" label="Move forward 10 minutes" onPress={act(() => api.demo.advanceClock(10))} />
         <Button variant="quiet" label="Move forward 1 hour" onPress={act(() => api.demo.advanceClock(60))} />
         <Button variant="quiet" label="Move forward 1 day" onPress={act(() => api.demo.advanceClock(1440))} />
       </View>

@@ -8,7 +8,9 @@ import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { notify } from './notify'
 import { peerReply, postReply, therapistThreadReply } from './bot'
-import { chatSnapshot, commentSnapshot, postSnapshot, priorReports, sessionSnapshot } from '@/lib/snapshot'
+import { MAX_PEER_CHATS, openPeerChats } from '@/lib/limits'
+import { sweep, timeLeft, WARN_BEFORE_MS } from '@/lib/chatLife'
+import { chatSnapshot, commentSnapshot, groupSnapshot, postSnapshot, priorReports, sessionSnapshot } from '@/lib/snapshot'
 import { dayAndClock } from '@/lib/time'
 import { spaceById } from '@/data/spaces'
 import { needsCheck } from '@/lib/spaces'
@@ -69,6 +71,10 @@ function pickPeer(): Peer | null {
 function resolveMatch() {
   const db = getDb()
   if (db.match.state !== 'searching') return
+  if (openPeerChats(db.conversations, db.sessions, now()) >= MAX_PEER_CHATS) {
+    update({ match: { state: 'idle' } })
+    return
+  }
   const peer = pickPeer()
   if (!peer) {
     later('match', 6 * SEC, resolveMatch) // keep looking
@@ -76,7 +82,7 @@ function resolveMatch() {
   }
   const conv: Conversation = {
     id: uid('c'), kind: 'peer', peer, therapistId: null,
-    messages: [msg('system', `You’re matched with ${peer.penName}. Say hello when you’re ready.`)],
+    messages: [msg('system', `You’re matched with ${peer.penName}. Say hello when you’re ready.`), msg('system', 'Chats end and are deleted 24 hours after they start, unless one is reported.')],
     muted: false, archived: false, ended: false, disappearing: 'off', unread: 1, createdAt: now(), lastAt: now(),
   }
   update((s) => ({ conversations: [conv, ...s.conversations], match: { state: 'found', conversationId: conv.id } }))
@@ -91,6 +97,7 @@ export const match = {
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (!canChat(planState(db.subscription, now()))) return { ok: false, error: 'Peer chat needs an active plan.', code: 'needs-plan' }
     if (!a.public.openToChats) return { ok: false, error: 'Matching is paused. Turn on “Open to new chats” first.', code: 'paused-matching' }
+    if (openPeerChats(db.conversations, db.sessions, now()) >= MAX_PEER_CHATS) return { ok: false, error: `You have ${MAX_PEER_CHATS} chats open, which is the most at one time. End one, or wait for one to expire, to meet someone new.`, code: 'chat-limit' }
     update({ match: { state: 'searching', startedAt: now() } })
     later('match', 4 * SEC, resolveMatch)
     return { ok: true, value: undefined }
@@ -128,6 +135,26 @@ export const match = {
 // ---------------------------------------------------------------------------
 
 export const chat = {
+  /**
+   * Ends and deletes chats that are 24 hours old, and adds an "ending soon" note an hour before. A reported chat is moved
+   * out of the member's view and kept for the safety review. Safe to call often.
+   */
+  sweep(): void {
+    const db = getDb()
+    const t = now()
+    const reported = new Set(db.reports.flatMap((r) => (r.conversationId ? [r.conversationId] : [])))
+    const { keep, retain, drop } = sweep(db.conversations, db.sessions, reported, t)
+    const warn = keep.filter((c) => !c.warned && !c.ended && timeLeft(c, db.sessions, t) <= WARN_BEFORE_MS)
+    if (!drop.length && !retain.length && !warn.length) return
+    const gone = new Set([...drop, ...retain].map((c) => c.id))
+    update((s) => ({
+      conversations: keep.map((c) => (warn.some((w) => w.id === c.id) ? { ...c, warned: true, messages: [...c.messages, msg('system', 'This chat ends in about an hour and will then be deleted.')] } : c)),
+      retained: [...s.retained, ...retain.filter((r) => !s.retained.some((x) => x.id === r.id))],
+      openConversationId: s.openConversationId && gone.has(s.openConversationId) ? null : s.openConversationId,
+      match: s.match.state === 'found' && gone.has(s.match.conversationId) ? { state: 'idle' } : s.match,
+    }))
+  },
+
   open(id: string): void {
     update({ openConversationId: id })
     setConv(id, (c) => ({ ...c, unread: 0 }))
@@ -223,17 +250,21 @@ export const report = {
    * Keeps what was reported as it is right now (SAF-3). Pass `conversationId` for a chat, or `postId` for a post or comment.
    * The snapshot stays with the report even if the content is later edited, deleted or set to disappear.
    */
-  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string; conversationId?: string; postId?: string; sessionId?: string }): void {
+  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string; conversationId?: string; postId?: string; sessionId?: string; groupChatId?: string }): void {
     const db = getDb()
     const at = now()
     const conv = input.conversationId ? db.conversations.find((c) => c.id === input.conversationId) : undefined
     const post = input.postId ? db.posts.find((p) => p.id === input.postId) : undefined
+    const group = input.groupChatId ? db.groupChats.find((g) => g.id === input.groupChatId) : undefined
     const sess = input.sessionId ? db.sessions.find((x) => x.id === input.sessionId) : undefined
     let snapshot: EvidenceLine[] | undefined
     let reportedName: string | undefined
     let queue: ReportRecord['queue']
     let therapistId: string | undefined
-    if (sess) {
+    if (group) {
+      snapshot = groupSnapshot(group.messages, input.targetId)
+      reportedName = group.messages.find((m) => m.id === input.targetId)?.name
+    } else if (sess) {
       const th = THERAPISTS.find((x) => x.id === sess.therapistId)
       const thread = db.conversations.find((c) => c.kind === 'therapist' && c.therapistId === sess.therapistId)
       snapshot = sessionSnapshot({ therapist: th?.name ?? 'a therapist', mode: sess.mode, when: dayAndClock(sess.start) }, input.note, thread?.messages)
@@ -252,7 +283,7 @@ export const report = {
     }
     const record: ReportRecord = {
       id: uid('r'), target: input.target, targetId: input.targetId, reason: input.reason, note: input.note, at,
-      reportedName, queue, therapistId, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
+      reportedName, queue, therapistId, conversationId: input.conversationId, groupChatId: input.groupChatId, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
     }
     update((s) => ({ reports: [...s.reports, record] }))
     notify.push('safety', `report:${record.id}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')

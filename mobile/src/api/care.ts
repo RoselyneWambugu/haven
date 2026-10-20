@@ -1,3 +1,4 @@
+import { canBookTherapist } from '@/lib/limits'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, canJoin, SESSION_MINUTES, MIN } from '@/lib/booking'
 import { now } from '@/lib/clock'
@@ -30,6 +31,7 @@ export const billing = {
     }
     const t = therapistOf(item.therapistId)
     if (!t || t.suspended) return { ok: false, error: 'That therapist is not available.' }
+    if (!canBookTherapist(db.conversations, db.sessions, t.id, now())) return { ok: false, error: 'You can work with one therapist at a time. Finish or cancel your sessions with your current therapist first, then you can choose someone else.', code: 'one-therapist' }
     if (!t.modes.includes(item.mode) || (item.mode === 'video' && !db.content.flags.therapistVideo)) return { ok: false, error: `${t.name} doesn’t offer that kind of session.` }
     const slot = slotsFor(t, db.sessions, now()).find((s) => s.start === item.start)
     if (!slot || !slot.modes.includes(item.mode)) return { ok: false, error: 'That time was just taken. Please pick another.', code: 'taken' }

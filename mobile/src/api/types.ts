@@ -137,6 +137,8 @@ export interface Conversation {
   lastAt: number
   /** The member's private "Did you feel heard?" answer, or 'skipped'. Never shown to the other person (FDB-1). */
   heard?: { score: number; comment: string } | 'skipped'
+  /** Set once the "ending soon" note has been added. */
+  warned?: boolean
 }
 
 export type FeedbackKind = 'idea' | 'bug' | 'other'
@@ -342,6 +344,44 @@ export interface ReportRecord {
   /** Concerns about a therapist go to the clinical queue. */
   queue?: 'clinical'
   therapistId?: string
+  /** The chat that was reported, so it is kept past 24 hours. */
+  conversationId?: string
+  /** The group chat that was reported, so it is kept past 24 hours. */
+  groupChatId?: string
+}
+
+// ---------- timed group chats ----------
+
+export interface GroupMessage {
+  id: string
+  name: string
+  avatar: AvatarKind
+  text: string
+  at: number
+  mine?: boolean
+  facilitator?: boolean
+  /** A note from Echo, such as the closing line. */
+  system?: boolean
+}
+
+/** A facilitated group chat at a set time, on one topic, with a limited number of places. */
+export interface GroupChat {
+  id: string
+  topic: string
+  blurb: string
+  facilitatorId: string
+  startsAt: number
+  durationMin: number
+  capacity: number
+  /** Places already taken by other people (a stand-in; the real service knows). */
+  takenOthers: number
+  registered: boolean
+  messages: GroupMessage[]
+  /** How many scripted lines have been posted, so each is posted once. */
+  posted: number
+  /** Set when the closing note has been posted. */
+  closed?: boolean
+  warned?: boolean
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'

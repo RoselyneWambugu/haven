@@ -94,7 +94,12 @@ function Notifier() {
   const signedIn = useDb((s) => s.signedIn)
   const t = useNow()
   useEffect(() => {
-    if (signedIn) api.notify.sync()
+    if (signedIn) {
+      api.chat.sweep()
+      api.groups.ensure()
+      api.groups.tick()
+      api.notify.sync()
+    }
   }, [signedIn, t])
   return null
 }
