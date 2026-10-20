@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo Wireframes</title>
+<style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Echo — Wireframes for the five high-risk screens</h1>
+  <p>Draft v0.1 · low-fidelity · brand: green, white, subtle orange for important actions · companion to <code>PRD.md</code> and <code>screen-flows.md</code>.
+  Pink numbered markers refer to the notes beside each screen. Placeholder copy is illustrative, not final. Not committed.</p>
+</header>
+
+<!-- ============ 1. WELCOME + CONSENTS ============ -->
+<section>
+  <h2>1 · Welcome and consents</h2>
+  <p class="sub">Sets expectations before any data is collected: peer support is not therapy, not for emergencies, and messages are screened.</p>
+  <div class="row">
+    <div class="col">
+      <div class="cap">1a · Welcome</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="body" style="justify-content:space-between">
+          <div class="flex" style="justify-content:space-between"><b style="color:var(--green);font-size:18px">echo</b><span class="sos">Need urgent help?</span></div>
+          <div class="col" style="gap:12px;align-items:center;text-align:center">
+            <div class="av lg">e</div>
+            <div class="h">A space to speak.<br>Someone to listen.</div>
+            <div class="m">Talk anonymously with people who understand, share in a community forum, or reach a qualified therapist.</div>
+          </div>
+          <div class="card o" style="position:relative">
+            <span class="n" style="top:-10px;left:-8px">1</span>
+            <div class="small"><b>Good to know</b><br>Echo is peer support, not therapy or emergency care. If you are in danger, tap “Need urgent help”.</div>
+          </div>
+          <div class="col">
+            <div class="btn" style="position:relative"><span class="n" style="top:-10px;right:-6px">2</span>Get started</div>
+            <div class="btn sec">I already have an account</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">1b · Consents</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span>Before we begin<span class="sp"></span><span class="sos">Help</span></div>
+        <div class="body">
+          <div class="m">Step 3 of 7</div>
+          <div class="h">Your privacy, your choice</div>
+          <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span>
+            <b>Others never see your real name.</b><br>They see only your pen name and avatar. Your details stay in a private profile.</div>
+          <div class="chk"><div class="box">✓</div><div>I am 18 or over and accept the <u>Terms</u></div></div>
+          <div class="chk"><div class="box">✓</div><div>I have read the <u>Privacy Notice</u></div></div>
+          <div class="chk"><div class="box">✓</div><div>I agree to the <u>Community Guidelines</u>: no sharing phone numbers, addresses or links</div></div>
+          <div class="chk" style="position:relative"><span class="n" style="top:-6px;left:-26px">4</span><div class="box"></div><div><b>Message screening.</b> Automated tools check messages for abuse and safety risks. Trained staff may review only reported or flagged content. <u>Learn more</u></div></div>
+          <div style="flex:1"></div>
+          <div class="btn off" style="position:relative"><span class="n" style="top:-10px;right:-6px">5</span>Continue</div>
+          <div class="m small" style="text-align:center">You can withdraw consent in Settings; some features may stop.</div>
+        </div>
+      </div>
+    </div>
+    <ol class="notes">
+      <li><b class="nn">1</b><span>Peer-support vs therapy vs emergency disclaimer shown before sign-up, not buried in terms.</span></li>
+      <li><b class="nn">2</b><span>Single primary action in brand green. The urgent-help pill stays top-right on every screen.</span></li>
+      <li><b class="nn">3</b><span>Plain-language anonymity promise: public (pen name, avatar) vs private (name, ID, age, phone).</span></li>
+      <li><b class="nn">4</b><span>Message-screening consent is a <u>separate, unticked</u> box; it is required to continue, but recorded on its own with version and time.</span></li>
+      <li><b class="nn">5</b><span>Continue stays disabled until every box is ticked. Under-18 date of birth leads to a polite stop screen with resources.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 2. MATCH FOUND + CHAT ============ -->
+<section>
+  <h2>2 · Match found and chat</h2>
+  <p class="sub">Automatic matching by age band and language. Chat enforces the no-links, no-phone, no-address, no-video rules before sending.</p>
+  <div class="row">
+    <div class="col">
+      <div class="cap">2a · Match found</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar">Chats<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+        <div class="body" style="align-items:center;text-align:center;justify-content:center;gap:12px">
+          <div class="m">We found someone for you</div>
+          <div class="av lg o">S</div>
+          <div class="h">SilverRiver</div>
+          <div class="wrap" style="justify-content:center"><span class="tag g">Age 25–34</span><span class="tag g">English · Kiswahili</span></div>
+          <div class="card small" style="position:relative;text-align:left"><span class="n" style="top:-10px;right:-8px">1</span>
+            You are matched by age range and language only. You will never see each other’s real names or contact details.</div>
+          <div class="btn" style="width:100%">Say hello</div>
+          <div class="btn sec" style="width:100%;position:relative"><span class="n" style="top:-10px;right:-6px">2</span>Not now, find someone else</div>
+        </div>
+        <div class="tabs"><div class="on"><span class="ico"></span>Chats</div><div><span class="ico"></span>Forum</div><div><span class="ico"></span>Therapists</div><div><span class="ico"></span>Help</div><div><span class="ico"></span>Me</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">2b · Conversation, with a blocked message</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span><span class="av sm o">S</span>SilverRiver<span class="sp"></span><span class="sos">Help</span><span>⋮</span></div>
+        <div class="body" style="background:#fafcfb">
+          <div class="sys">Peer support, not professional treatment. Be kind.</div>
+          <div class="bub in">Hi, how has your week been?</div>
+          <div class="bub out">Rough, honestly. Work has been a lot.</div>
+          <div class="bub in">That sounds heavy. Want to tell me more?</div>
+          <div class="bub out" style="opacity:.55;position:relative;border:1.5px dashed #fff">call me on 07xx…<span class="n" style="top:-10px;left:-8px">3</span></div>
+          <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">4</span>
+            <b>Message not sent.</b> To keep everyone anonymous and safe, phone numbers, addresses, links and videos can’t be shared here. <u>Why?</u></div>
+        </div>
+        <div class="composer"><div class="input">Write a message…</div><div class="send">➤</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">2c · Conversation menu</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span><span class="av sm o">S</span>SilverRiver<span class="sp"></span><span>⋮</span></div>
+        <div class="body" style="background:#fafcfb">
+          <div class="bub in">That sounds heavy. Want to tell me more?</div>
+          <div class="scrim"></div>
+          <div class="sheet" style="position:absolute">
+            <div class="grab"></div>
+            <div class="flex"><span>🔕</span>Mute</div><div class="hr"></div>
+            <div class="flex" style="position:relative"><span class="n" style="top:-4px;right:0">5</span><span>⏳</span><div>Disappearing chat (24h)<div class="m">Both of you must agree</div></div></div><div class="hr"></div>
+            <div class="flex"><span>🚫</span>Block</div><div class="hr"></div>
+            <div class="flex" style="color:var(--red)"><span>⚑</span>Report</div><div class="hr"></div>
+            <div class="flex"><span>✕</span>End conversation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="notes">
+      <li><b class="nn">1</b><span>Shows only pen name, avatar, age <em>band</em> and shared language. No bio, no photos, no gender.</span></li>
+      <li><b class="nn">2</b><span>Declining is free and neutral; the other person is not told. Rate limit prevents “shopping” for matches.</span></li>
+      <li><b class="nn">3</b><span>Blocked message stays on the sender’s screen only; it is not delivered.</span></li>
+      <li><b class="nn">4</b><span>Friendly, specific explanation. Detection must also catch spaced digits, “dot com”, number words.</span></li>
+      <li><b class="nn">5</b><span>Disappearing chats require mutual opt-in and are visible in the thread header when on.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 3. CREATE POST ============ -->
+<section>
+  <h2>3 · Create a forum post</h2>
+  <p class="sub">The forum is public, so it warns about identifying details before publishing and offers support if the post signals distress.</p>
+  <div class="row">
+    <div class="col">
+      <div class="cap">3a · Compose</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>✕</span>New post<span class="sp"></span><div class="btn off" style="padding:5px 12px;font-size:12px">Post</div></div>
+        <div class="body">
+          <div class="flex"><span class="av sm">N</span><div><b>NightOwl22</b><div class="m">Posting publicly as your pen name</div></div></div>
+          <div class="input">Title</div>
+          <div class="input" style="height:140px">I’ve been feeling overwhelmed since I moved to Kisumu for my job at…</div>
+          <div class="flex"><span class="m">Topic</span><span class="tag g">Work stress ▾</span></div>
+          <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span>
+            <b>Heads up:</b> this post may reveal where you work or live. Anyone can read it. <u>Edit</u> &nbsp;·&nbsp; <u>Post anyway</u>?</div>
+          <div class="m small">Phone numbers, addresses and links can’t be posted.</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">3b · Identifying-details warning</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>✕</span>New post</div>
+        <div class="body">
+          <div class="input" style="color:var(--ink)">Overwhelmed since the move</div>
+          <div class="input err" style="height:120px;color:var(--ink)">I’ve been feeling overwhelmed since I moved to <mark style="background:#fde3c0">Kisumu</mark> for my job at <mark style="background:#fde3c0">Acme Ltd</mark>…</div>
+          <div class="scrim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="h" style="font-size:16px">Keep yourself anonymous</div>
+            <div class="small">We spotted details that could identify you:</div>
+            <div class="wrap"><span class="tag" style="border-color:var(--orange)">Kisumu · place</span><span class="tag" style="border-color:var(--orange)">Acme Ltd · workplace</span></div>
+            <div class="small m">You decide. We only warn; we never post for you.</div>
+            <div class="btn" style="position:relative"><span class="n" style="top:-10px;right:-6px">2</span>Edit my post</div>
+            <div class="btn sec">Post anyway</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">3c · Distress detected</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>✕</span>New post</div>
+        <div class="body">
+          <div class="input" style="color:var(--ink)">I can’t do this anymore</div>
+          <div class="scrim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="h" style="font-size:16px;position:relative;padding-right:24px">You don’t have to face this alone<span class="n" style="top:0;right:0">3</span></div>
+            <div class="small">If you are thinking about hurting yourself, please reach out now.</div>
+            <div class="btn warn">📞 Call a crisis line (free)</div>
+            <div class="btn sec">Talk to a therapist</div>
+            <div class="small" style="text-align:center"><u>Continue with my post</u></div>
+            <div class="m small" style="text-align:center">Numbers are verified by our clinical team.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol class="notes">
+      <li><b class="nn">1</b><span>Inline nudge while typing, using detection of names, places, workplaces, schools. Warn-only; the author stays in control.</span></li>
+      <li><b class="nn">2</b><span>“Edit” is the primary action; “Post anyway” is available but visually secondary.</span></li>
+      <li><b class="nn">3</b><span>Supportive, non-punitive, never blocks the post. Also triggers a priority review in the moderation queue. Numbers must be verified before launch.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 4. THERAPIST PROFILE + BOOKING ============ -->
+<section>
+  <h2>4 · Therapist profile and booking</h2>
+  <p class="sub">Therapists are public and verified. Members choose chat, voice or video, and can keep camera off.</p>
+  <div class="row">
+    <div class="col">
+      <div class="cap">4a · Public profile</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span>Therapist<span class="sp"></span><span class="sos">Help</span></div>
+        <div class="body">
+          <div class="flex" style="align-items:flex-start">
+            <div class="av lg">AO</div>
+            <div><div class="h">Dr. Amina Otieno</div><div class="m">Clinical Psychologist</div>
+              <div class="flex" style="position:relative"><span class="tag g">✓ Verified</span><span class="small">★ 4.8 (126)</span><span class="n" style="top:-6px;right:-18px">1</span></div></div>
+          </div>
+          <div class="wrap"><span class="tag">Anxiety</span><span class="tag">Grief</span><span class="tag">Relationships</span><span class="tag">English · Kiswahili</span></div>
+          <div class="small">Licence no. 1234 · valid to Mar 2027</div>
+          <div class="card small">“I help people feel heard and build practical coping skills.”</div>
+          <div class="m small">Session types</div>
+          <div class="flex" style="position:relative"><span class="n" style="top:-8px;right:-4px">2</span>
+            <span class="tag g">💬 Chat</span><span class="tag g">📞 Voice</span><span class="tag g">🎥 Video</span></div>
+          <div class="flex"><b>KES 1,500</b><span class="m">per 45-min session</span></div>
+          <div style="flex:1"></div>
+          <div class="btn">Book a session</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">4b · Choose mode and time</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span>Book with Dr. Otieno</div>
+        <div class="body">
+          <div class="m">1 · How would you like to talk?</div>
+          <div class="flex"><div class="slot">💬 Chat</div><div class="slot on">📞 Voice</div><div class="slot">🎥 Video</div></div>
+          <div class="m">2 · Pick a time (EAT)</div>
+          <div class="flex"><div class="slot">Mon 20</div><div class="slot on">Tue 21</div><div class="slot">Wed 22</div></div>
+          <div class="flex"><div class="slot x">09:00</div><div class="slot on">10:30</div><div class="slot">14:00</div></div>
+          <div class="flex"><div class="slot">15:30</div><div class="slot x">17:00</div><div class="slot">18:30</div></div>
+          <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span>
+            You stay anonymous. Dr. Otieno sees your pen name and avatar. You can keep your camera off.</div>
+          <div class="card small">Voice · Tue 21 · 10:30<br><b>KES 1,500</b> · free to reschedule until 24h before</div>
+          <div style="flex:1"></div>
+          <div class="btn" style="position:relative"><span class="n" style="top:-10px;right:-6px">4</span>Confirm and pay</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">4c · Pre-session check (video)</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span>Starting soon<span class="sp"></span><span class="sos">Help</span></div>
+        <div class="body">
+          <div class="card" style="height:170px;background:#e9efec;display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative">
+            <div class="av lg o">N</div><div class="m small" style="margin-top:6px">Camera off · showing your avatar</div>
+            <span class="n" style="top:-8px;left:-8px">5</span>
+          </div>
+          <div class="flex" style="justify-content:center;gap:16px">
+            <div class="slot" style="flex:none;width:70px">🎥<br>Camera<br><b>Off</b></div>
+            <div class="slot on" style="flex:none;width:70px">🎤<br>Mic<br><b>On</b></div>
+            <div class="slot" style="flex:none;width:70px">🔊<br>Speaker</div>
+          </div>
+          <div class="card small">📶 Connection: <b>weak</b>. We’ll switch to voice or chat if needed.</div>
+          <div class="m small">This session is not recorded.</div>
+          <div style="flex:1"></div>
+          <div class="btn">Join session</div>
+        </div>
+      </div>
+    </div>
+    <ol class="notes">
+      <li><b class="nn">1</b><span>Therapist details are public by design: real name, qualifications, verification status and expiry.</span></li>
+      <li><b class="nn">2</b><span>Only modes this therapist offers are shown. Price and session length are visible before booking.</span></li>
+      <li><b class="nn">3</b><span>Reassurance about anonymity. Whether therapists can require identity or camera-on is an open decision (D15).</span></li>
+      <li><b class="nn">4</b><span>Clear price and cancellation terms; payment via mobile money or card (see plans flow).</span></li>
+      <li><b class="nn">5</b><span>Camera defaults to off; the avatar is shown. Fallback video → voice → chat on poor networks. “Not recorded” stated plainly (D19).</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 5. REPORT SHEET ============ -->
+<section>
+  <h2>5 · Report sheet</h2>
+  <p class="sub">Reachable from any message, post, comment or profile. Fast for someone distressed, with block offered alongside.</p>
+  <div class="row">
+    <div class="col">
+      <div class="cap">5a · Choose a reason</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span><span class="av sm o">S</span>SilverRiver</div>
+        <div class="body" style="background:#fafcfb">
+          <div class="bub in" style="outline:2px solid var(--orange)">Send me your number, you’re cute 😉</div>
+          <div class="scrim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="h" style="font-size:16px">What’s happening?</div>
+            <div class="m small">Your report is private. They won’t know it was you.</div>
+            <div class="flex"><span class="radio"></span>Harassment or bullying</div>
+            <div class="flex"><span class="radio on"></span>Sexual or romantic advances</div>
+            <div class="flex"><span class="radio"></span>Threats or scary behaviour</div>
+            <div class="flex"><span class="radio"></span>Scam or asking for money</div>
+            <div class="flex"><span class="radio"></span>Worried they may hurt themselves</div>
+            <div class="flex"><span class="radio"></span>Something else</div>
+            <div class="btn" style="position:relative"><span class="n" style="top:-10px;right:-6px">1</span>Next</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">5b · Details and block</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar"><span>‹</span>Report</div>
+        <div class="body">
+          <div class="card small"><b>Reported message</b><br>“Send me your number, you’re cute 😉”<div class="m">We’ll also save a few messages around it for the reviewer.</div></div>
+          <div class="input" style="height:80px">Anything else we should know? (optional)</div>
+          <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">2</span>
+            <div class="chk"><div class="box">✓</div><div><b>Also block SilverRiver</b><div class="m">They’ll no longer be able to message or match with you.</div></div></div></div>
+          <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span>
+            If you feel unsafe right now, <u>get urgent help</u>.</div>
+          <div style="flex:1"></div>
+          <div class="btn">Send report</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="cap">5c · Confirmation</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="bar">Report sent</div>
+        <div class="body" style="align-items:center;text-align:center;justify-content:center;gap:12px">
+          <div class="av lg">✓</div>
+          <div class="h">Thank you</div>
+          <div class="small">Our team will review this. We’ll let you know the outcome, though we can’t share details about the other person.</div>
+          <div class="card small" style="position:relative;text-align:left"><span class="n" style="top:-10px;right:-8px">4</span>
+            <b>Need to talk to someone?</b><br>Peer support isn’t a substitute for professional help. <u>See help options</u></div>
+          <div class="btn" style="width:100%">Back to chat</div>
+          <div class="btn sec" style="width:100%">Find someone else</div>
+        </div>
+      </div>
+    </div>
+    <ol class="notes">
+      <li><b class="nn">1</b><span>Seven options or fewer; one tap then Next. “Worried they may hurt themselves” routes to the crisis queue, not the abuse queue.</span></li>
+      <li><b class="nn">2</b><span>Block pre-ticked but optional; reporting alone doesn’t hide the person.</span></li>
+      <li><b class="nn">3</b><span>Persistent urgent-help link, since reporters may be shaken.</span></li>
+      <li><b class="nn">4</b><span>Outcome is generic (“action taken” / “no violation found”); sanctions are never disclosed to the reporter.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Design notes</h2>
+  <p class="sub">Things these wireframes assume that you may want to change.</p>
+  <ul>
+    <li>Gender, bio, photos and distance are deliberately absent from every member-facing screen to keep the app from feeling like dating.</li>
+    <li>The “Need urgent help?” entry is present in the top bar on nearly every screen; crisis numbers shown must be verified by the clinical team.</li>
+    <li>Prices, copy and therapist details are placeholders.</li>
+    <li>Navigation is five bottom tabs (Chats, Forum, Therapists, Help, Me), per the screen-flows document.</li>
+  </ul>
+</section>
+</body>
+</html>

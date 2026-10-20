@@ -1,0 +1,90 @@
+// Walks the real onboarding flow in Chromium against the exported web build and takes screenshots.
+// Usage: node e2e/flow-onboarding.mjs <webroot> <outdir>
+import { chromium } from 'playwright-core'
+import { mkdirSync } from 'node:fs'
+import { serve } from './serve.mjs'
+
+const [root, out] = process.argv.slice(2)
+mkdirSync(out, { recursive: true })
+const server = await serve(root, 8099)
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] })
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
+const problems = []
+page.on('console', (m) => ['error'].includes(m.type()) && problems.push(`console: ${m.text().slice(0, 240)}`))
+page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 300)}`))
+const shot = async (n) => page.screenshot({ path: `${out}/${n}.png` })
+const tid = (id) => page.locator(`[data-testid="${id}"]`)
+const step = async (name, fn) => { try { await fn(); console.log('ok  ', name) } catch (e) { console.log('FAIL', name, String(e).split('\n')[0]); await shot(`FAIL-${name}`); throw e } }
+
+await page.goto('http://localhost:8099/')
+await page.waitForTimeout(1800)
+await step('welcome', async () => { await tid('welcome').waitFor(); await shot('01-welcome') })
+await step('consent', async () => {
+  await tid('get-started').click()
+  await tid('consent').waitFor()
+  await shot('02-consent')
+  const btn = tid('consent-continue')
+  if ((await btn.getAttribute('aria-disabled')) !== 'true') throw new Error('continue should be disabled until all four are ticked')
+  for (const id of ['consent-terms', 'consent-privacy', 'consent-guidelines', 'consent-screening']) await tid(id).click()
+  await shot('03-consent-ticked')
+  await btn.click()
+})
+await step('register-under-18', async () => {
+  await tid('register').waitFor()
+  await tid('reg-name').fill('Young Person')
+  await tid('reg-phone').fill('0712345678')
+  await tid('reg-dob').fill('01/01/2012')
+  await tid('register-continue').click()
+  await tid('under-18').waitFor()
+  await shot('04-under-18')
+})
+await step('back-and-register-adult', async () => {
+  await page.getByRole('button', { name: 'Back to start' }).click()
+  await tid('welcome').waitFor()
+  await tid('get-started').click()
+  for (const id of ['consent-terms', 'consent-privacy', 'consent-guidelines', 'consent-screening']) await tid(id).click()
+  await tid('consent-continue').click()
+  await tid('register').waitFor()
+  await tid('reg-name').fill('Amina Otieno')
+  await tid('reg-phone').fill('0712 345 678')
+  await tid('reg-dob').fill('14/03/1998')
+  await shot('05-register-filled')
+  await tid('register-continue').click()
+  await tid('otp').waitFor()
+})
+await step('otp-wrong-then-right', async () => {
+  await tid('otp-input').fill('000000')
+  await tid('otp-error').waitFor()
+  await shot('06-otp-wrong')
+  const banner = await tid('demo-code').innerText()
+  const code = banner.match(/(\d{6})/)?.[1]
+  if (!code) throw new Error('no demo code shown: ' + banner)
+  await tid('otp-input').fill(code)
+  await tid('pen-name').waitFor()
+})
+await step('pen-name-real-name-refused', async () => {
+  await tid('pen-input').fill('AminaOtieno')
+  await page.waitForTimeout(300)
+  await shot('07-pen-real-name')
+  const text = await page.locator('body').innerText()
+  if (!/looks like a real name/i.test(text)) throw new Error('real-name warning not shown')
+  if ((await tid('pen-continue').getAttribute('aria-disabled')) !== 'true') throw new Error('continue should be disabled')
+})
+await step('pen-name-ok', async () => {
+  await tid('pen-input').fill('QuietHeron')
+  await tid('avatar-leaf').click()
+  await shot('08-pen-ok')
+  await tid('pen-continue').click()
+  await tid('languages').waitFor()
+})
+await step('languages-and-finish', async () => {
+  await tid('lang-Kiswahili').click()
+  await shot('09-languages')
+  await tid('finish').click()
+  await page.waitForURL('**/home')
+  await page.waitForTimeout(500)
+  await shot('10-home')
+})
+console.log(problems.length ? 'PROBLEMS:\n' + problems.join('\n') : 'no console errors')
+await browser.close()
+server.close()

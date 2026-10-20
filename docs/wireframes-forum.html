@@ -1,0 +1,178 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Echo Wireframes — Forum</title><style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+
+  .row2{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);position:relative}
+  .row2:last-child{border-bottom:0}
+  .row2 .t{flex:1;min-width:0}
+  .row2 .t b{display:block}
+  .row2 .t span{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--mute)}
+  .unread{background:var(--orange);color:#3a2000;border-radius:999px;min-width:18px;height:18px;padding:0 5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .banner{border-radius:10px;padding:8px 10px;font-size:12px}
+  .swipe{position:absolute;right:0;top:0;bottom:0;display:flex}
+  .swipe div{width:58px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dim{opacity:.55}
+  .row2 .t span.tag{display:inline-block;overflow:visible}
+
+  .post{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;position:relative}
+  .post .who{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .post .who b{color:var(--ink)}
+  .post .ttl{font-weight:700;font-size:14px;line-height:1.25}
+  .post .snip{font-size:12px;color:#44524b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--mute);align-items:center;flex-wrap:wrap}
+  .badge{background:var(--green-l);color:var(--green-d);border:1px solid #bcd9c8;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+  .fab{position:absolute;right:14px;bottom:62px;background:var(--orange);color:#3a2000;border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.2);z-index:4}
+  .cm{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);position:relative}
+  .cm:last-child{border-bottom:0}
+  .cm .c{flex:1;font-size:12px}
+  .cm.th{background:var(--green-l);border-radius:10px;padding:8px;border:1px solid #bcd9c8;margin-bottom:6px}
+  .react{display:flex;gap:8px}
+  .react>span:not(.n){border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:#fff}
+  .react>span.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700}
+</style></head><body>
+<header><h1>Echo — Wireframes: Forum feed and post detail</h1>
+<p>Draft v0.1 · low-fidelity · follows <code>screen-flows.md</code> §4 and PRD §6.4a. Tab bar uses the Home / Chats / Forum / Therapists / Help layout proposed in the home wireframes (D22). Pink markers refer to the notes beside each screen group. Placeholder copy is illustrative. Not committed.</p></header>
+
+<section><h2>8 · Forum feed</h2><p class="sub">A supportive community feed, not a social network: no followers, no public “who reacted”, no direct messages from posts.</p>
+<div class="row"><div class="col"><div class="cap">8a · Feed</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm">N</span>Forum<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:8px;overflow:hidden;padding-bottom:0">
+ <div class="card g small" style="position:relative;padding:8px"><span class="n" style="top:-10px;right:-8px">1</span>📌 <b>Community guidelines</b> · Be kind. No contact details or links. <u>Read</u></div>
+ <div class="flex" style="overflow:hidden;position:relative;flex:none"><span class="chip on">All</span><span class="chip">Anxiety</span><span class="chip">Grief</span><span class="chip">Work</span><span class="chip">＋</span><span class="n" style="top:-8px;right:-6px">2</span></div>
+ <div class="flex m small" style="flex:none"><span>Sort:</span><b style="color:var(--green-d)">Recent ▾</b><span style="margin-left:auto">My posts</span></div>
+ <div class="post"><span class="n" style="top:-10px;right:-6px">3</span><div class="who"><span class="av sm ">R</span><b>RainyDay</b><span>· 2h</span><span class="tag g" style="margin-left:auto;font-size:10px">Anxiety</span></div><div class="ttl">Struggling to sleep before exams</div><div class="snip">Every night my mind races about failing and I just lie awake. Has anyone found something that actually works?</div><div class="meta"><span>💚 34</span><span>💬 12</span><span class="badge">✓ Therapist replied</span></div></div>
+ <div class="post"><div class="who"><span class="av sm ">Q</span><b>QuietPine</b><span>· 2h</span><span class="tag g" style="margin-left:auto;font-size:10px">Grief</span></div><div class="ttl">Lost my dad last month</div><div class="snip">I don’t know how to explain it to people at work. Everyone says “be strong” and it makes me feel worse.</div><div class="meta"><span>💚 51</span><span>💬 8</span></div></div>
+ <div class="post"><div class="who"><span class="av sm ">M</span><b>MorningSun</b><span>· 2h</span><span class="tag g" style="margin-left:auto;font-size:10px">Wellbeing</span></div><div class="ttl">Small win today</div><div class="snip">I went for a walk for the first time in weeks. Just wanted to share this with people who understand.</div><div class="meta"><span>💚 40</span><span>💬 5</span></div></div>
+</div><div class="fab">＋ New post<span class="n" style="top:-10px;right:-6px">4</span></div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class="on"><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class=""><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">8b · Filter and sort</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm">N</span>Forum<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="post"><div class="who"><span class="av sm ">R</span><b>RainyDay</b><span>· 2h</span><span class="tag g" style="margin-left:auto;font-size:10px">Anxiety</span></div><div class="ttl">Struggling to sleep before exams</div><div class="snip">Every night my mind races…</div><div class="meta"><span>💚 34</span><span>💬 12</span><span class="badge">✓ Therapist replied</span></div></div>
+ <div class="scrim"></div>
+ <div class="sheet"><div class="grab"></div>
+  <div class="h" style="font-size:16px">Filter forum</div>
+  <div class="lbl">Topic</div>
+  <div class="wrap"><span class="chip on">All</span><span class="chip">Anxiety</span><span class="chip">Grief</span><span class="chip">Loneliness</span><span class="chip">Relationships</span><span class="chip">Family</span><span class="chip">Work stress</span><span class="chip">Life changes</span><span class="chip">Wellbeing</span></div>
+  <div class="lbl" style="position:relative">Sort by<span class="n" style="top:-6px;left:60px">5</span></div>
+  <div class="flex"><span class="radio on"></span>Most recent</div>
+  <div class="flex"><span class="radio"></span>Most supported</div>
+  <div class="flex"><span class="radio"></span>Therapist replied</div>
+  <div class="flex"><span class="radio"></span>No replies yet</div>
+  <div class="btn" style="position:relative">Show posts<span class="n" style="top:-10px;right:-6px">6</span></div>
+ </div></div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Pinned community guidelines at the top; dismissible but always reachable from the post composer.</span></li><li><b class="nn">2</b><span>Topic chips are admin-managed. Horizontal scroll with “＋” for the full list.</span></li><li><b class="nn">3</b><span>Each card: pen name, topic, two-line preview, a single “Support” reaction (counts only, no reactor list), comment count and a green badge when a therapist has replied. No follower counts, no “trending” pressure.</span></li><li><b class="nn">4</b><span>“New post” button in orange as the one important action on this screen.</span></li><li><b class="nn">5</b><span>Sort includes “Therapist replied” and “No replies yet”, so quiet posts get attention.</span></li><li><b class="nn">6</b><span>Applying a filter is a single tap; the filter state is shown as a chip on the feed.</span></li></ol>
+</div></section>
+
+<section><h2>9 · Post detail</h2><p class="sub">Comments from members and therapists, with moderation visible but not shaming.</p>
+<div class="row"><div class="col"><div class="cap">9a · Post with comments</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Post<span class="sp"></span><span class="sos">Help</span><span style="position:relative">⋮<span class="n" style="top:-10px;right:-12px">1</span></span></div>
+<div class="body" style="gap:8px;overflow:hidden;padding:12px">
+ <div class="who flex"><span class="av sm">R</span><div class="small"><b>RainyDay</b><div class="m">2h · Anxiety</div></div></div>
+ <div class="h" style="font-size:16px">Struggling to sleep before exams</div>
+ <div class="small">Every night my mind races about failing and I just lie awake. Has anyone found something that actually works?</div>
+ <div class="react" style="position:relative"><span class="on">💚 Support 34</span><span>💬 12</span><span>⚑ Report</span><span class="n" style="top:-10px;right:-6px">2</span></div>
+ <div class="hr"></div>
+ <div class="cm th" style="position:relative"><span class="n" style="top:-8px;right:-6px">3</span><span class="av sm">AO</span><div class="c"><b>Dr. Amina Otieno</b> <span class="badge">✓ Therapist</span><br>Racing thoughts at night are very common before exams. A short wind-down routine can help…<div class="m" style="margin-top:3px;font-size:10px">General information, not treatment for your situation. <u>View profile</u></div></div></div>
+ <div class="cm"><span class="av sm o">S</span><div class="c"><b>SilverRiver</b> · 1h<br>Writing tomorrow’s worries on paper before bed helped me. 💚</div></div>
+ <div class="cm" style="position:relative"><span class="n" style="top:2px;right:-6px">4</span><span class="av sm">K</span><div class="c"><b>KindLeaf</b> · 40m<br><span class="m"><i>Comment hidden: shared contact details. <u>Why?</u></i></span></div></div>
+</div>
+<div class="composer" style="position:relative"><span class="n" style="top:-10px;right:44px">5</span><div class="input">Add a comment…</div><div class="send">➤</div></div></div></div><div class="col"><div class="cap">9b · Post menu</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Post<span class="sp"></span><span>⋮</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="h" style="font-size:16px">Struggling to sleep before exams</div><div class="small">Every night my mind races…</div>
+ <div class="scrim"></div>
+ <div class="sheet"><div class="grab"></div>
+  <div class="flex"><span>🔕</span><div>Mute RainyDay<div class="m">Hide their posts and comments</div></div></div><div class="hr"></div>
+  <div class="flex"><span>🙈</span>Hide this thread</div><div class="hr"></div>
+  <div class="flex" style="color:var(--red);position:relative"><span>⚑</span>Report post<span class="n" style="top:-4px;right:0">6</span></div><div class="hr"></div>
+  <div class="flex"><span>🚫</span><div>Block RainyDay<div class="m">Also removes any chat with them</div></div></div>
+  <div class="hr"></div><div class="m small" style="position:relative">If this is your post: <b>Delete</b> · <b>Edit</b> (15 min)<span class="n" style="top:-6px;right:0">7</span></div>
+ </div></div></div></div><div class="col"><div class="cap">9c · Author’s post awaiting review</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Your post<span class="sp"></span><span class="sos">Help</span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">8</span>
+   <b>Awaiting review</b><br>New members’ first posts are checked by our team before they’re shown. This usually takes under a few hours.</div>
+ <div class="who flex"><span class="av sm">N</span><div class="small"><b>NightOwl22</b> (you)<div class="m">Anxiety</div></div></div>
+ <div class="h" style="font-size:16px">Overwhelmed since the move</div>
+ <div class="small">I’ve been feeling overwhelmed since I moved for my new job…</div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">9</span>
+   <b>Need to talk now?</b><div class="m">Chat with a peer, or reach a therapist or urgent help.</div></div>
+ <div style="flex:1"></div>
+ <div class="btn sec">Edit post</div><div class="btn sec" style="color:var(--red);border-color:var(--red)">Delete post</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Overflow menu opens the actions in 9b.</span></li><li><b class="nn">2</b><span>One reaction (“Support”), a comment count and a Report entry. There are no downvotes. Authors see counts, not who reacted.</span></li><li><b class="nn">3</b><span>Therapist comments are highlighted, show the real name and a verified badge, and carry a standing line: general information, not treatment. Tapping opens their public profile (and from there, booking).</span></li><li><b class="nn">4</b><span>Comments with contact details or links never appear. The author sees a neutral placeholder; the commenter is told why when they try to post.</span></li><li><b class="nn">5</b><span>Composer applies the same checks as chat (links, phone numbers, addresses) plus identifying-detail warnings. There is no “message this person” button anywhere in the forum.</span></li><li><b class="nn">6</b><span>Report and block are always in the menu. Report on a post snapshots it into a case.</span></li><li><b class="nn">7</b><span>Authors can delete any time. Edits are limited to 15 minutes to prevent changing a post after replies; deletion doesn’t remove snapshots held in an open case.</span></li><li><b class="nn">8</b><span>First posts from new accounts are held for review. The author sees a clear status and expected wait.</span></li><li><b class="nn">9</b><span>Authors of posts that signal distress get a gentle prompt to talk now. Others see nothing different.</span></li></ol>
+</div></section>
+
+<section><h2>Design notes and open questions</h2><ul>
+<li><b>No dating mechanics:</b> no photos, no profile pages for members, no follow, no DM from a post. Tapping a pen name does nothing except offer mute and block.</li>
+<li><b>Therapist solicitation:</b> therapist comments may link to their in-app profile, nothing else (PRD FRM-8).</li>
+<li><b>Reactions:</b> the draft uses a single “Support” reaction. Do you also want “I relate”? More reactions add moderation and visual noise.</li>
+<li><b>Visibility:</b> members only, not indexed by search engines (D20). Free accounts can read and post.</li>
+<li><b>Edit window:</b> 15 minutes is my default. Easy to change.</li>
+<li><b>Sensitive posts:</b> a collapsed “content note” veil for self-harm or abuse topics is not drawn here. Decide with the clinical lead whether to add it.</li></ul></section>
+</body></html>

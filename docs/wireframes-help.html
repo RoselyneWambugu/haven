@@ -1,0 +1,260 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Echo Wireframes — Help Centre</title><style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+
+  .row2{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);position:relative}
+  .row2:last-child{border-bottom:0}
+  .row2 .t{flex:1;min-width:0}
+  .row2 .t b{display:block}
+  .row2 .t span{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--mute)}
+  .unread{background:var(--orange);color:#3a2000;border-radius:999px;min-width:18px;height:18px;padding:0 5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .banner{border-radius:10px;padding:8px 10px;font-size:12px}
+  .swipe{position:absolute;right:0;top:0;bottom:0;display:flex}
+  .swipe div{width:58px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dim{opacity:.55}
+  .row2 .t span.tag{display:inline-block;overflow:visible}
+
+  .post{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;position:relative}
+  .post .who{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .post .who b{color:var(--ink)}
+  .post .ttl{font-weight:700;font-size:14px;line-height:1.25}
+  .post .snip{font-size:12px;color:#44524b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--mute);align-items:center;flex-wrap:wrap}
+  .badge{background:var(--green-l);color:var(--green-d);border:1px solid #bcd9c8;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+  .fab{position:absolute;right:14px;bottom:62px;background:var(--orange);color:#3a2000;border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.2);z-index:4}
+  .cm{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);position:relative}
+  .cm:last-child{border-bottom:0}
+  .cm .c{flex:1;font-size:12px}
+  .cm.th{background:var(--green-l);border-radius:10px;padding:8px;border:1px solid #bcd9c8;margin-bottom:6px}
+  .react{display:flex;gap:8px}
+  .react>span:not(.n){border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:#fff}
+  .react>span.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700}
+
+  .plan{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;align-items:center;gap:10px;position:relative}
+  .plan.on{border-color:var(--green);background:var(--green-l)}
+  .plan .pr{margin-left:auto;text-align:right;font-weight:700}
+  .plan .pr small{display:block;font-weight:400;color:var(--mute);font-size:11px}
+  .tog{width:38px;height:22px;border-radius:999px;background:#cfd8d3;position:relative;flex:none}
+  .tog::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+  .tog.on{background:var(--green)} .tog.on::after{left:19px}
+  .li{display:flex;gap:8px;font-size:12px;align-items:flex-start}
+  .li i{font-style:normal;color:var(--green);font-weight:800}
+  .sum{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+  .sum.t{font-weight:700;font-size:14px;border-top:1px solid var(--line);padding-top:6px;margin-top:3px}
+  .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--green-l);border-top-color:var(--green)}
+  .pill{border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;background:var(--orange);color:#3a2000}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:8px;align-items:center;background:#fff;font-size:12px;font-weight:600;line-height:1.2;position:relative}
+  .tile .ic{width:26px;height:26px;border-radius:8px;background:var(--green-l);display:flex;align-items:center;justify-content:center;flex:none;font-size:14px}
+  .res{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;position:relative}
+  .res .t{font-weight:700;font-size:13px}
+  .dot2{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--orange)}
+  .li2{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);align-items:center;font-size:13px}
+  .li2:last-child{border-bottom:0}
+  .li2 .arr{margin-left:auto;color:var(--mute)}
+  .step{display:flex;gap:8px;align-items:flex-start}
+  .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+  .dot.d{background:var(--green);border-color:var(--green);color:#fff}
+  .sev{display:inline-block;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:800}
+  .sev.s3{background:#dfe5e1;color:#44524b}
+</style></head><body>
+<header><h1>Echo — Wireframes: Help centre</h1>
+<p>Draft v0.1 · low-fidelity · follows <code>screen-flows.md</code> §9 and PRD §6.10 (HLP-1 to HLP-3). Uses the Home / Chats / Forum / Therapists / Help tab layout (D22). Crisis numbers, organisation names, response times and amounts are placeholders and must be verified before launch. Pink markers match the numbered notes beside each group. Not committed.</p></header>
+
+<section><h2>Principles</h2><ul style="max-width:1100px">
+<li><b>Urgent help comes first.</b> It is the top card on Help home and is also the orange pill on every screen. It is never behind a paywall.</li>
+<li><b>Organised by department</b>, so each topic has an owner and a contact route (Support, Billing, Safety, Clinical, Tech).</li>
+<li><b>Plain language, English and Kiswahili.</b> Short articles, step-by-step where possible.</li>
+<li><b>Private by design.</b> Staff see the pen name only; tickets are text only; messages that mention risk are routed to the crisis queue, whatever department they were sent to.</li></ul></section>
+
+<section><h2>24 · Help home, search and urgent help</h2><p class="sub">Three ways in: browse, search, or ask for urgent help.</p>
+<div class="row"><div class="col"><div class="cap">24a · Help home</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span class="av sm">N</span>Help<span class="sp"></span><span class="sos">Need urgent help?</span></div>
+<div class="body" style="gap:10px;overflow:hidden">
+ <div class="input" style="padding:9px 10px;position:relative">🔍 Search help articles<span class="n" style="top:-8px;right:-6px">1</span></div>
+ <div class="card o" style="position:relative;border-width:1.5px"><span class="n" style="top:-10px;right:-8px">2</span><div class="flex"><span style="font-size:22px">🛟</span><div style="flex:1"><b>Need urgent help now?</b><div class="small">Crisis lines and people you can talk to</div></div><span>›</span></div></div>
+ <div class="lbl" style="position:relative">Browse by topic<span class="n" style="top:-4px;right:40%">3</span></div>
+ <div class="grid2">
+  <div class="tile"><span class="ic">🚀</span>Getting started</div><div class="tile"><span class="ic">👤</span>Account and profiles</div>
+  <div class="tile"><span class="ic">🔒</span>Privacy and anonymity</div><div class="tile"><span class="ic">🛡️</span>Safety and reporting</div>
+  <div class="tile"><span class="ic">💳</span>Billing and plans</div><div class="tile"><span class="ic">🩺</span>Therapists and sessions</div>
+  <div class="tile"><span class="ic">💬</span>Forum</div><div class="tile"><span class="ic">🛠️</span>Technical support</div>
+  <div class="tile"><span class="ic">📝</span>Feedback</div><div class="tile"><span class="ic">📋</span>My tickets<span class="n" style="top:-8px;right:-6px">4</span></div>
+ </div>
+ <div class="small" style="text-align:center;position:relative">Can’t find what you need? <u>Contact us</u><span class="n" style="top:-8px;right:-4px">5</span></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class="on"><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">24b · Search results</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Search<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="input" style="padding:9px 10px;color:var(--ink)">🔍 refund <span style="float:right">✕</span></div>
+ <div class="m small">3 results in help articles</div>
+ <div class="res" style="position:relative"><span class="n" style="top:-10px;right:-8px">6</span><div class="t">How refunds work</div><div class="small m">Eligibility, timelines and how to ask for a refund…</div><span class="tag g" style="font-size:10px">Billing and plans</span></div>
+ <div class="res"><div class="t">Payment failed or charged twice</div><div class="small m">What to do if money left your account but your plan didn’t start…</div><span class="tag g" style="font-size:10px">Billing and plans</span></div>
+ <div class="res"><div class="t">Cancelling a therapy session</div><div class="small m">Free cancellation up to 24 hours before…</div><span class="tag g" style="font-size:10px">Therapists and sessions</span></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">7</span><b>Didn’t find it?</b> Ask the <b>Billing team</b> directly.<div class="btn" style="padding:8px;margin-top:6px">Contact Billing</div></div>
+ <div class="m small" style="position:relative">Search covers help articles only, never chats or forum posts.<span class="n" style="top:-10px;right:0">8</span></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class="on"><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">24c · Urgent help</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Urgent help<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="h" style="font-size:16px">You’re not alone</div>
+ <div class="small">In immediate danger? Contact emergency services now.</div>
+ <div class="btn" style="background:var(--red);position:relative">📞 Call emergency services<span class="n" style="top:-10px;right:-6px">9</span></div>
+ <div class="lbl">Crisis lines</div>
+ <div class="res" style="position:relative"><span class="n" style="top:-10px;right:-8px">10</span><div class="flex"><div style="flex:1"><div class="t">Crisis line name ___</div><div class="m small">Free · 24 hours · English, Kiswahili</div></div><div class="btn warn" style="padding:6px 12px">Call</div></div></div>
+ <div class="res"><div class="flex"><div style="flex:1"><div class="t">Helpline name ___</div><div class="m small">Free · 8am–10pm</div></div><div class="btn warn" style="padding:6px 12px">Call</div></div></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">11</span><b>Talk to someone on Echo</b><div class="flex" style="margin-top:4px"><span class="tag g">🩺 Therapist</span><span class="tag g">💬 Peer chat</span><span class="tag g">🤝 Support directory</span></div></div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">12</span>🌬️ <b>Grounding exercise</b> · 2 min</div>
+ <div class="m" style="font-size:10px">Numbers checked by our clinical team on ___. Echo peer support is not a replacement for emergency or professional care.</div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Search covers help articles only, never chats or forum posts.</span></li><li><b class="nn">2</b><span>Urgent help is the first and most prominent card, in the brand’s orange.</span></li><li><b class="nn">3</b><span>The ten tiles map to the departments in PRD HLP-1. Admins can edit this list without a release.</span></li><li><b class="nn">4</b><span>“My tickets” sits with the departments so people can find their past questions.</span></li><li><b class="nn">5</b><span>A plain “Contact us” entry for anyone who doesn’t know which department to pick.</span></li><li><b class="nn">6</b><span>Results show the department so members learn where to look next time.</span></li><li><b class="nn">7</b><span>If search fails, one tap contacts the most likely department.</span></li><li><b class="nn">8</b><span>Search is limited to help content; it never indexes private data.</span></li><li><b class="nn">9</b><span>Emergency services is the single most prominent action on the urgent help page.</span></li><li><b class="nn">10</b><span>Crisis lines are tap-to-call, free where possible, and show their hours and languages. Each number must be verified by the clinical team and re-checked on a schedule.</span></li><li><b class="nn">11</b><span>Echo options sit below external help: therapist, peer chat, and the support directory.</span></li><li><b class="nn">12</b><span>A short grounding exercise is available without leaving the app.</span></li></ol>
+</div></section>
+
+<section><h2>25 · Department, article and contact form</h2><p class="sub">From a topic to an answer, or to a person if the answer isn’t enough.</p>
+<div class="row"><div class="col"><div class="cap">25a · Department page</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Safety and reporting<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="grid2" style="position:relative"><span class="n" style="top:-10px;right:-6px">1</span>
+  <div class="card g small" style="text-align:center">⚑<br><b>Report a problem</b></div>
+  <div class="card g small" style="text-align:center">📊<br><b>My account standing</b></div></div>
+ <div class="lbl">Articles</div>
+ <div>
+  <div class="li2">How blocking works<span class="arr">›</span></div>
+  <div class="li2">How to report someone<span class="arr">›</span></div>
+  <div class="li2" style="position:relative">What happens after I report<span class="n" style="top:-2px;right:16px">2</span><span class="arr">›</span></div>
+  <div class="li2">Strikes and suspensions<span class="arr">›</span></div>
+  <div class="li2">How to appeal a decision<span class="arr">›</span></div>
+  <div class="li2">Community guidelines<span class="arr">›</span></div></div>
+ <div style="flex:1"></div>
+ <div class="card small" style="position:relative"><span class="n" style="top:-10px;right:-8px">3</span>Still need help? <b>Contact the Safety team</b><div class="m">Usually replies within ___ hours</div></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class="on"><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">25b · Article</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Article<span class="sp"></span><span class=small><u>Kiswahili</u></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="tag g" style="align-self:flex-start;font-size:10px">Safety and reporting</div>
+ <div class="h" style="font-size:16px">What happens after I report?</div>
+ <div class="m" style="font-size:10px;position:relative">Updated 2 Oct 2026 · 2 min read<span class="n" style="top:-10px;right:0">4</span></div>
+ <div class="step"><span class="dot d">1</span><div class="small"><b>We receive it.</b> A trained reviewer looks at the reported messages.</div></div>
+ <div class="step"><span class="dot d">2</span><div class="small"><b>We decide.</b> They may warn, restrict or suspend the person, or take no action.</div></div>
+ <div class="step"><span class="dot d">3</span><div class="small"><b>We let you know.</b> You’ll see an outcome. We can’t share details about the other person.</div></div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">5</span>If you feel unsafe right now, <u>get urgent help</u>.</div>
+ <div class="flex small" style="position:relative">Was this helpful? <span class="chip">👍 Yes</span><span class="chip">👎 No</span><span class="n" style="top:-12px;right:0">6</span></div>
+ <div class="lbl">Related</div>
+ <div class="li2">Strikes and suspensions<span class="arr">›</span></div>
+ <div class="li2">How to appeal a decision<span class="arr">›</span></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class="on"><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">25c · Contact a team</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Contact us<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="m small">Topic</div>
+ <div class="input" style="padding:8px 10px;position:relative">Billing and plans ▾<span class="n" style="top:-8px;right:-6px">7</span></div>
+ <div class="m small">Subject</div><div class="input" style="padding:8px 10px;color:var(--ink)">Charged twice for monthly plan</div>
+ <div class="m small">Message</div><div class="input" style="height:86px;padding:8px 10px;color:var(--ink)">I was charged twice on 17 Oct. Reference QWE…9. I feel really stressed about this and can’t cope.</div>
+ <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">8</span>It sounds like things are hard right now. <u>Urgent help is here</u> if you need it. You can still send this message.</div>
+ <div class="small m" style="position:relative"><span class="n" style="top:-8px;right:0">9</span>Never share your M-Pesa PIN, password or full card number. Text only.</div>
+ <div class="small m">We’ll reply here in the app. Usually within ___ hours.</div>
+ <div style="flex:1"></div><div class="btn" style="position:relative">Send<span class="n" style="top:-10px;right:-6px">10</span></div>
+</div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Safety and reporting gets quick actions for the two things members actually do: report, and check their standing or appeal.</span></li><li><b class="nn">2</b><span>Articles are short, titled as a question, and ordered by what people ask most.</span></li><li><b class="nn">3</b><span>Every department page ends with a way to reach that team and an honest response time.</span></li><li><b class="nn">4</b><span>Articles show when they were last updated, and can be read in Kiswahili.</span></li><li><b class="nn">5</b><span>Steps are numbered and plain; the safety card is repeated where it matters.</span></li><li><b class="nn">6</b><span>Simple helpful / not helpful feedback improves the articles.</span></li><li><b class="nn">7</b><span>Topic is prefilled from where you came from, and can be changed.</span></li><li><b class="nn">8</b><span>If a message suggests distress, a gentle card offers urgent help without blocking the send.</span></li><li><b class="nn">9</b><span>Reminder not to share PINs, passwords or card numbers. Tickets are text only.</span></li><li><b class="nn">10</b><span>Send. Replies arrive in the app; there is no email or phone requirement.</span></li></ol>
+</div></section>
+
+<section><h2>26 · Tickets and the support directory</h2><p class="sub">Follow a request to resolution, and find outside help that Echo has checked.</p>
+<div class="row"><div class="col"><div class="cap">26a · My tickets</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>My tickets<span class="sp"></span></div>
+<div class="body" style="gap:6px;overflow:hidden">
+ <div class="flex"><span class="chip on">All</span><span class="chip">Open</span><span class="chip">Resolved</span></div>
+ <div class="res" style="position:relative"><span class="n" style="top:-10px;right:-8px">1</span><div class="flex"><div style="flex:1"><div class="t">Charged twice for monthly plan</div><div class="m small">Billing · reply from Echo · 2h</div></div><span class="dot2"></span></div><span class="badge" style="margin-top:4px;display:inline-block;background:var(--orange-l);color:#9a5207;border-color:var(--orange)">Replied</span></div>
+ <div class="res"><div class="t">Can’t join video session</div><div class="m small">Technical support · 1 day</div><span class="badge" style="margin-top:4px;display:inline-block">Open</span></div>
+ <div class="res dim"><div class="t">How do I change my pen name?</div><div class="m small">Account · 12 Oct</div><span class="sev s3" style="margin-top:4px;display:inline-block">Resolved</span></div>
+ <div style="flex:1"></div>
+ <div class="btn" style="position:relative">New ticket<span class="n" style="top:-10px;right:-6px">2</span></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class="on"><span class="ico"></span>Help</div></div></div></div><div class="col"><div class="cap">26b · Ticket conversation</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Charged twice…<span class="sp"></span><span class=badge>Replied</span></div>
+<div class="body" style="gap:8px;overflow:hidden;background:#fafcfb">
+ <div class="sys" style="position:relative">Billing · opened 17 Oct<span class="n" style="top:-8px;right:-14px">3</span></div>
+ <div class="bub out">I was charged twice on 17 Oct. Reference QWE…9.</div>
+ <div class="bub in" style="position:relative"><b class="small">Echo Billing team</b> <span class="badge">Echo staff</span><br>Thanks for flagging this. We’ve found the duplicate charge and approved a refund.<span class="n" style="top:-8px;right:-8px">4</span></div>
+ <div class="sys">Refund approved · KES ___ · 1–3 working days</div>
+ <div class="card g small" style="position:relative"><span class="n" style="top:-10px;right:-8px">5</span>Our team sees your <b>pen name</b> and payment reference only.</div>
+ <div class="flex" style="justify-content:center"><div class="btn sec" style="padding:6px 14px;position:relative">Mark as resolved<span class="n" style="top:-10px;right:-6px">6</span></div></div>
+ <div style="flex:1"></div>
+</div><div class="composer"><div class="input">Reply…</div><div class="send">➤</div></div></div></div><div class="col"><div class="cap">26c · Support directory</div><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="bar"><span>‹</span>Support directory<span class="sp"></span></div>
+<div class="body" style="gap:8px;overflow:hidden">
+ <div class="card o small" style="position:relative"><span class="n" style="top:-10px;right:-8px">7</span>Listed and checked by our clinical team. Availability varies. Not a substitute for emergency services.</div>
+ <div class="flex" style="overflow:hidden;flex:none"><span class="chip on">All</span><span class="chip">Counselling</span><span class="chip">Helplines</span><span class="chip">Legal</span></div>
+ <div class="res" style="position:relative"><span class="n" style="top:-10px;right:-8px">8</span><div class="t">Organisation name ___</div><div class="small m">Volunteer psychologists · free · English, Kiswahili · Mon–Fri</div><div class="flex" style="margin-top:4px"><span class="tag g">Counselling</span><div class="btn sec" style="padding:4px 12px;margin-left:auto">Contact</div></div></div>
+ <div class="res"><div class="t">Organisation name ___</div><div class="small m">Helpline · free · 24 hours</div><div class="flex" style="margin-top:4px"><span class="tag g">Helpline</span><div class="btn sec" style="padding:4px 12px;margin-left:auto">Call</div></div></div>
+ <div class="res"><div class="t">Organisation name ___</div><div class="small m">Legal aid for abuse · free · Nairobi</div><div class="flex" style="margin-top:4px"><span class="tag g">Legal</span><div class="btn sec" style="padding:4px 12px;margin-left:auto">Website</div></div></div>
+ <div class="m" style="font-size:10px;position:relative"><span class="n" style="top:-8px;right:0">9</span>Last checked ___. Know of a service we should list? <u>Suggest one</u></div>
+</div><div class="tabs"><div class=""><span class="ico"></span>Home</div><div class=""><span class="ico"></span>Chats</div><div class=""><span class="ico"></span>Forum</div><div class=""><span class="ico"></span>Therapists</div><div class="on"><span class="ico"></span>Help</div></div></div></div>
+<ol class="notes"><li><b class="nn">1</b><span>Status is always visible: open, replied, resolved. An orange dot marks an unread reply.</span></li><li><b class="nn">2</b><span>New ticket is a single button, in line with the other help entries.</span></li><li><b class="nn">3</b><span>Opening a ticket shows when and for which department it was opened.</span></li><li><b class="nn">4</b><span>Staff replies are labelled “Echo staff”, never as a named individual.</span></li><li><b class="nn">5</b><span>Reassurance that staff see only the pen name and payment reference (see admin billing view).</span></li><li><b class="nn">6</b><span>Members can close their own ticket, or reopen it by replying.</span></li><li><b class="nn">7</b><span>Support directory: external organisations and volunteer psychologists checked by the clinical team (PRD HLP-2), with a clear disclaimer.</span></li><li><b class="nn">8</b><span>Each listing states cost, hours and languages, and offers the right contact method (call, website or contact).</span></li><li><b class="nn">9</b><span>Members can suggest a service; the clinical team reviews and re-verifies listings regularly.</span></li></ol>
+</div></section>
+
+<section><h2>Decisions and gaps</h2><ul>
+<li><b>Response times:</b> every “within ___ hours” is a placeholder. Set per department and staff accordingly.</li>
+<li><b>Live chat support:</b> not drawn. Do you want live help for urgent billing or technical problems, or tickets only?</li>
+<li><b>Screenshots in tickets:</b> drawn as text only. Technical support often needs a screenshot; if allowed, it must avoid personal information.</li>
+<li><b>Kiswahili and Sheng:</b> who writes and reviews the translations?</li>
+<li><b>Support directory:</b> who curates it, how often it is re-verified, and whether Echo can list organisations it hasn’t partnered with.</li>
+<li><b>Not drawn:</b> admin screens for editing help content and answering tickets.</li></ul></section>
+</body></html>

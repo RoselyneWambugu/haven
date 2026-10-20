@@ -1,0 +1,303 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Echo Wireframes — Therapist Portal</title><style>
+  :root{
+    --green:#2E7D5B; --green-d:#1f5c42; --green-l:#E6F2EB; --orange:#F28C28; --orange-l:#FDEFDC;
+    --ink:#1d2a24; --mute:#6b7a72; --line:#d5ded9; --bg:#f4f7f5; --white:#fff; --red:#c0392b; --red-l:#fbe9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  header p{margin:0;color:var(--mute);max-width:820px}
+  section{max-width:1400px;margin:0 auto;padding:24px}
+  section>h2{font-size:18px;margin:0 0 4px}
+  section>p.sub{margin:0 0 16px;color:var(--mute)}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .cap{font-weight:600;font-size:13px}
+  .phone{width:300px;height:620px;background:var(--white);border:2px solid #9fb0a7;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .status{height:22px;background:#eef3f0;font-size:10px;color:var(--mute);display:flex;justify-content:space-between;padding:4px 14px}
+  .bar{height:46px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);font-weight:600}
+  .bar .sp{flex:1}
+  .body{flex:1;padding:14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative}
+  .tabs{height:50px;border-top:1px solid var(--line);display:flex;font-size:10px;color:var(--mute)}
+  .tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .tabs .on{color:var(--green);font-weight:700}
+  .ico{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px}
+  .sos{background:var(--orange-l);color:#9a5207;border:1px solid var(--orange);border-radius:999px;font-size:11px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn{background:var(--green);color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:600}
+  .btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn.warn{background:var(--orange);color:#3a2000}
+  .btn.off{background:#cfd8d3;color:#7b8a82}
+  .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .card.g{background:var(--green-l);border-color:#bcd9c8}
+  .card.o{background:var(--orange-l);border-color:#f3c48a}
+  .card.r{background:var(--red-l);border-color:#e8b4ad}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  .av.o{background:var(--orange);color:#3a2000}
+  .av.lg{width:64px;height:64px;font-size:22px}
+  .av.sm{width:26px;height:26px;font-size:11px}
+  .h{font-size:18px;font-weight:700;line-height:1.2}
+  .m{color:var(--mute);font-size:12px}
+  .small{font-size:12px}
+  .chk{display:flex;gap:8px;align-items:flex-start;font-size:12px}
+  .box{width:16px;height:16px;border:1.5px solid var(--green);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);font-weight:800}
+  .input{border:1.5px solid var(--line);border-radius:10px;padding:10px;color:var(--mute);background:#fff}
+  .input.err{border-color:var(--orange)}
+  .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11px;background:#fff}
+  .tag.g{background:var(--green-l);border-color:#bcd9c8;color:var(--green-d)}
+  .bub{max-width:78%;padding:8px 10px;border-radius:14px;font-size:13px}
+  .bub.in{background:#eef2f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.out{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:11px;color:var(--mute);background:#eef3f0;border-radius:999px;padding:3px 10px;text-align:center}
+  .composer{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;align-items:center}
+  .composer .input{flex:1;padding:8px 10px}
+  .send{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+  .slot{border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px;flex:1}
+  .slot.on{border-color:var(--green);background:var(--green-l);font-weight:700;color:var(--green-d)}
+  .slot.x{color:#aab5af;text-decoration:line-through}
+  .flex{display:flex;gap:8px;align-items:center}
+  .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  .radio{width:16px;height:16px;border:1.5px solid var(--green);border-radius:50%;flex:none}
+  .radio.on{background:radial-gradient(var(--green) 45%,transparent 50%)}
+  .scrim{position:absolute;inset:0;background:rgba(20,30,25,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .grab{width:40px;height:4px;background:#c9d3ce;border-radius:4px;align-self:center}
+  .n{position:absolute;width:20px;height:20px;border-radius:50%;background:#d6336c;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 0 0 2px #fff}
+  ol.notes{margin:0;padding-left:0;list-style:none;width:300px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  ol.notes li{display:flex;gap:8px}
+  ol.notes b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .legend{font-size:12px;color:var(--mute);margin-top:6px}
+  .hr{height:1px;background:var(--line)}
+
+  .row2{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);position:relative}
+  .row2:last-child{border-bottom:0}
+  .row2 .t{flex:1;min-width:0}
+  .row2 .t b{display:block}
+  .row2 .t span{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11px;color:var(--mute)}
+  .unread{background:var(--orange);color:#3a2000;border-radius:999px;min-width:18px;height:18px;padding:0 5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .banner{border-radius:10px;padding:8px 10px;font-size:12px}
+  .swipe{position:absolute;right:0;top:0;bottom:0;display:flex}
+  .swipe div{width:58px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dim{opacity:.55}
+  .row2 .t span.tag{display:inline-block;overflow:visible}
+
+  .post{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px;position:relative}
+  .post .who{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .post .who b{color:var(--ink)}
+  .post .ttl{font-weight:700;font-size:14px;line-height:1.25}
+  .post .snip{font-size:12px;color:#44524b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post .meta{display:flex;gap:10px;font-size:11px;color:var(--mute);align-items:center;flex-wrap:wrap}
+  .badge{background:var(--green-l);color:var(--green-d);border:1px solid #bcd9c8;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+  .fab{position:absolute;right:14px;bottom:62px;background:var(--orange);color:#3a2000;border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.2);z-index:4}
+  .cm{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);position:relative}
+  .cm:last-child{border-bottom:0}
+  .cm .c{flex:1;font-size:12px}
+  .cm.th{background:var(--green-l);border-radius:10px;padding:8px;border:1px solid #bcd9c8;margin-bottom:6px}
+  .react{display:flex;gap:8px}
+  .react>span:not(.n){border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;background:#fff}
+  .react>span.on{background:var(--green-l);border-color:var(--green);color:var(--green-d);font-weight:700}
+
+  .plan{border:1.5px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;align-items:center;gap:10px;position:relative}
+  .plan.on{border-color:var(--green);background:var(--green-l)}
+  .plan .pr{margin-left:auto;text-align:right;font-weight:700}
+  .plan .pr small{display:block;font-weight:400;color:var(--mute);font-size:11px}
+  .tog{width:38px;height:22px;border-radius:999px;background:#cfd8d3;position:relative;flex:none}
+  .tog::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+  .tog.on{background:var(--green)} .tog.on::after{left:19px}
+  .li{display:flex;gap:8px;font-size:12px;align-items:flex-start}
+  .li i{font-style:normal;color:var(--green);font-weight:800}
+  .sum{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+  .sum.t{font-weight:700;font-size:14px;border-top:1px solid var(--line);padding-top:6px;margin-top:3px}
+  .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--green-l);border-top-color:var(--green)}
+  .pill{border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;background:var(--orange);color:#3a2000}
+
+  .win{width:620px;height:470px;background:#fff;border:2px solid #9fb0a7;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;position:relative;font-size:12px}
+  .chrome{height:24px;background:#eef3f0;display:flex;align-items:center;gap:5px;padding:0 10px;border-bottom:1px solid var(--line);font-size:10px;color:var(--mute)}
+  .chrome i{width:8px;height:8px;border-radius:50%;background:#c4cfc9;display:inline-block}
+  .chrome .url{margin-left:10px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:1px 10px;flex:1;max-width:260px}
+  .app{flex:1;display:flex;min-height:0}
+  .nav{width:128px;border-right:1px solid var(--line);padding:10px 8px;display:flex;flex-direction:column;gap:2px;background:#fafcfb;flex:none}
+  .nav b.brand{color:var(--green);font-size:16px;margin:0 6px 8px}
+  .nav div{padding:6px 8px;border-radius:8px;color:#44524b}
+  .nav div.on{background:var(--green-l);color:var(--green-d);font-weight:700}
+  .main{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0;overflow:hidden;position:relative}
+  .main h3{margin:0;font-size:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{border:1px solid var(--line);border-radius:10px;padding:8px;position:relative}
+  .stat b{font-size:20px;display:block}
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{font-size:10px;text-transform:uppercase;color:var(--mute);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+  .tbl td{padding:6px;border-bottom:1px solid var(--line)}
+  .step{display:flex;gap:8px;align-items:flex-start}
+  .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+  .dot.d{background:var(--green);border-color:var(--green);color:#fff}
+  .dot.c{border-color:var(--orange);color:#9a5207}
+  .cal{display:grid;grid-template-columns:36px repeat(5,1fr);gap:2px;font-size:10px}
+  .cal .h{text-align:center;font-weight:700;color:var(--mute);font-size:10px;padding:2px 0;line-height:1.2}
+  .cal .t{color:var(--mute);text-align:right;padding-right:4px}
+  .cal .c{height:22px;background:#f4f7f5;border-radius:4px}
+  .cal .v{background:#cfe6d9;color:var(--green-d);font-weight:700;display:flex;align-items:center;justify-content:center;border-radius:4px}
+  .cal .p{background:#fbe0bd;color:#7a4504;font-weight:700;display:flex;align-items:center;justify-content:center;border-radius:4px}
+  .cal .x{background:#dfe5e1;color:#6b7a72;display:flex;align-items:center;justify-content:center;border-radius:4px}
+  .split{display:flex;gap:10px;flex:1;min-height:0}
+  .pane{border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden;position:relative}
+  .vid{background:#26332d;border-radius:10px;flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;position:relative;gap:6px}
+  .ctl{display:flex;gap:8px;justify-content:center}
+  .ctl>span:not(.n){width:34px;height:34px;border-radius:50%;background:#e8eeea;display:flex;align-items:center;justify-content:center}
+  .ctl>span.end{background:var(--red);color:#fff}
+  .nw{width:100%;max-width:1288px;list-style:none;padding:0;margin:14px 0 0;columns:2;column-gap:28px;font-size:12px}
+  .nw li{display:flex;gap:8px;break-inside:avoid;margin-bottom:8px}
+  .nw b.nn{flex:none;width:18px;height:18px;border-radius:50%;background:#d6336c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+</style></head><body>
+<header><h1>Echo — Wireframes: Therapist portal</h1>
+<p>Draft v0.1 · low-fidelity · follows <code>screen-flows.md</code> §5 (therapist side) and PRD §6.5. Drawn as a <b>desktop web portal</b>, since therapists work with notes, calendars and calls; a mobile version is not drawn (D23). Prices, fees and review times are placeholders. Pink markers match the numbered notes under each pair. Not committed.</p></header>
+
+<section><h2>14 · Application and verification</h2><p class="sub">Only verified, licensed therapists are listed. Documents are for staff only; the profile is public.</p>
+<div class="row"><div class="col"><div class="cap">14a · Application</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">therapists.echo/apply</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="main">
+<div class="m small">Step 2 of 4</div><h3>Professional details and documents</h3>
+<div class="grid3" style="grid-template-columns:1fr 1fr">
+ <div><div class="m small">Full name (shown publicly)</div><div class="input" style="padding:6px">Dr. Amina Otieno</div></div>
+ <div><div class="m small">Profession</div><div class="input" style="padding:6px">Clinical Psychologist ▾</div></div>
+ <div><div class="m small">Registering body</div><div class="input" style="padding:6px">Counsellors and Psychologists Board ▾</div></div>
+ <div><div class="m small">Licence number · expiry</div><div class="input" style="padding:6px">1234 · 31 Mar 2027</div></div>
+</div>
+<div class="lbl" style="position:relative">Documents (staff only, never public)<span class="n" style="top:-4px;right:0">1</span></div>
+<div class="grid3">
+ <div class="card g small">✓ Licence<br><span class="m">licence.pdf</span></div>
+ <div class="card g small">✓ National ID<br><span class="m">id.jpg</span></div>
+ <div class="card o small" style="position:relative">＋ Qualification certificate<br><span class="m">Required</span></div>
+</div>
+<div class="chk small" style="position:relative"><span class="n" style="top:-6px;right:0">2</span><div class="box">✓</div><div>I understand my name, photo and qualifications will be <b>public</b> on Echo.</div></div>
+<div class="chk small"><div class="box">✓</div><div>I accept the <u>Therapist Code of Conduct</u> and the <u>crisis escalation protocol</u>.</div></div>
+<div style="flex:1"></div>
+<div class="flex" style="justify-content:flex-end"><div class="btn sec" style="padding:7px 16px">Save draft</div><div class="btn" style="padding:7px 18px">Continue</div></div></div></div></div></div><div class="col"><div class="cap">14b · Status and follow-ups</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">therapists.echo/application</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="main">
+<h3>Application status</h3>
+<div class="card" style="position:relative"><span class="n" style="top:-8px;right:-6px">3</span>
+ <div class="step"><span class="dot d">✓</span><div><b>Submitted</b><div class="m">12 Oct</div></div></div>
+ <div style="height:10px;border-left:2px solid var(--line);margin-left:8px"></div>
+ <div class="step"><span class="dot c">!</span><div><b>Under review</b> <span class="pill">Action needed</span><div class="m">Reviewer: Clinical team</div></div></div>
+ <div style="height:10px;border-left:2px solid var(--line);margin-left:8px"></div>
+ <div class="step"><span class="dot"></span><div><b>Decision</b><div class="m">Approved or not approved, with reasons</div></div></div></div>
+<div class="card o" style="position:relative"><span class="n" style="top:-8px;right:-6px">4</span><b>More information needed</b><div class="small">“Please upload a clearer copy of your licence. The expiry date isn’t readable.”</div><div class="btn" style="padding:6px 14px;display:inline-block;margin-top:6px">Upload new copy</div></div>
+<div class="card g small" style="position:relative"><span class="n" style="top:-8px;right:-6px">5</span>Once approved you’ll build your public profile and set availability. We re-check your licence before it expires and you’ll be reminded 60 days ahead.</div>
+<div class="m small">Typical review time: ___ working days (placeholder)</div></div></div></div></div></div>
+<ol class="nw"><li><b class="nn">1</b><span>Documents (licence, ID, certificate) are private, visible only to the clinical reviewers.</span></li><li><b class="nn">2</b><span>Public-profile consent is explicit, along with the Code of Conduct and the crisis protocol.</span></li><li><b class="nn">3</b><span>Clear status steps, so applicants are never left guessing.</span></li><li><b class="nn">4</b><span>“More information needed” gives specific reasons and one-step upload.</span></li><li><b class="nn">5</b><span>After approval: build profile, set availability. Licence expiry is tracked and the therapist is reminded 60 days ahead; expired = hidden from booking.</span></li></ol>
+</section>
+
+<section><h2>15 · Today and inbox</h2><p class="sub">The working home for a therapist: what’s next, who needs a reply, and what needs attention.</p>
+<div class="row"><div class="col"><div class="cap">15a · Today</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/today</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="on">Today</div><div class="">Inbox</div><div class="">Calendar</div><div class="">Sessions</div><div class="">Forum</div><div class="">Earnings</div><div class="">Profile</div><div class="">Help</div></div><div class="main">
+<div class="flex"><h3>Good morning, Dr. Otieno</h3><span class="badge" style="margin-left:auto">✓ Verified</span></div>
+<div class="grid3">
+ <div class="stat">Sessions today<b>3</b><span class="n" style="top:-8px;right:-6px">1</span></div><div class="stat">Unread messages<b>2</b></div><div class="stat">New requests<b>1</b></div></div>
+<div class="lbl">Upcoming</div>
+<table class="tbl"><tr><th>Time</th><th>Client</th><th>Mode</th><th></th></tr>
+ <tr><td><b>10:30</b></td><td><span class="av sm o" style="display:inline-flex;vertical-align:middle">N</span> NightOwl22 <span class="tag g" style="font-size:10px">First session</span></td><td>📞 Voice</td><td><div class="btn" style="padding:4px 10px;position:relative">Join in 12 min<span class="n" style="top:-8px;right:-8px">2</span></div></td></tr>
+ <tr><td>13:00</td><td><span class="av sm" style="display:inline-flex;vertical-align:middle">R</span> RainyDay</td><td>🎥 Video</td><td><span class="m">Session 4</span></td></tr>
+ <tr><td>16:30</td><td><span class="av sm o" style="display:inline-flex;vertical-align:middle">K</span> KindLeaf</td><td>💬 Chat</td><td><span class="m">Session 2</span></td></tr></table>
+<div class="card o small" style="position:relative"><span class="n" style="top:-8px;right:-6px">3</span>⚠ <b>Your licence expires in 45 days.</b> Upload your renewal to stay listed. <u>Renew now</u></div></div></div></div></div><div class="col"><div class="cap">15b · Client inbox</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/inbox</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="">Today</div><div class="on">Inbox</div><div class="">Calendar</div><div class="">Sessions</div><div class="">Forum</div><div class="">Earnings</div><div class="">Profile</div><div class="">Help</div></div><div class="main">
+<h3>Inbox</h3>
+<div class="split">
+ <div class="pane" style="width:190px;flex:none;padding:4px">
+  <div class="row2" style="background:var(--green-l);border-radius:8px;padding:6px"><span class="av sm o">N</span><div class="t"><b>NightOwl22</b><span>Thanks, see you Tuesday</span></div><span class="unread">1</span></div>
+  <div class="row2" style="padding:6px"><span class="av sm">R</span><div class="t"><b>RainyDay</b><span>Slept better this week</span></div></div>
+  <div class="row2" style="padding:6px"><span class="av sm">K</span><div class="t"><b>KindLeaf</b><span>Can we move to Friday?</span></div><span class="unread">1</span></div>
+  <div class="row2" style="padding:6px"><span class="av sm dim">M</span><div class="t dim"><b>MorningSun</b><span>Closed</span></div></div></div>
+ <div class="pane" style="flex:1">
+  <div class="card g small" style="position:relative"><span class="n" style="top:-8px;right:-6px">4</span>🔒 Clients are anonymous: you see a pen name and avatar only.</div>
+  <div class="flex"><span class="av sm o">N</span><b>NightOwl22</b><span class="tag g" style="font-size:10px">Next: Tue 10:30 voice</span><span style="margin-left:auto;position:relative">⋮<span class="n" style="top:-12px;right:-12px">5</span></span></div>
+  <div class="bub in">Thanks, see you Tuesday.</div>
+  <div class="bub out" style="align-self:flex-end">Looking forward to it. Have a calm evening.</div>
+  <div style="flex:1"></div>
+  <div class="flex"><div class="input" style="flex:1;padding:6px;position:relative">Write a reply…<span class="n" style="top:-12px;right:6px">6</span></div><div class="send">➤</div></div>
+  <div class="m" style="font-size:10px">Links, phone numbers and addresses can’t be sent. Offer a session using “Offer a time”.</div></div></div></div></div></div></div></div>
+<ol class="nw"><li><b class="nn">1</b><span>Quick numbers for the day. Nothing is gamified (no rankings against other therapists).</span></li><li><b class="nn">2</b><span>Join appears when the session is about to start; clients are shown as pen name and avatar only.</span></li><li><b class="nn">3</b><span>Licence and compliance alerts surface here, not buried in settings.</span></li><li><b class="nn">4</b><span>The inbox repeats the anonymity rule so a therapist never expects identity details.</span></li><li><b class="nn">5</b><span>Overflow menu: offer a time, raise a concern, close thread. Concern leads to the form in section 17.</span></li><li><b class="nn">6</b><span>Same sharing limits as members: no links, phone numbers or addresses. Offers move to booking, not private contact.</span></li></ol>
+</section>
+
+<section><h2>16 · Availability and public profile</h2><p class="sub">Therapists control capacity; members only see what is published.</p>
+<div class="row"><div class="col"><div class="cap">16a · Weekly availability</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/calendar</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="">Today</div><div class="">Inbox</div><div class="on">Calendar</div><div class="">Sessions</div><div class="">Forum</div><div class="">Earnings</div><div class="">Profile</div><div class="">Help</div></div><div class="main">
+<div class="flex"><h3>Weekly availability</h3><span class="m small">Times in EAT</span></div>
+<div class="split" style="gap:12px">
+ <div style="flex:1;position:relative"><div class="cal"><div></div><div class="h">Mon</div><div class="h">Tue</div><div class="h">Wed</div><div class="h">Thu</div><div class="h">Fri</div><div class="t">09:00</div><div class="v">💬</div><div class="v">💬</div><div class="x"></div><div class="v">💬</div><div class="c "></div><div class="t">10:00</div><div class="p">📞🎥</div><div class="v">💬</div><div class="x"></div><div class="v">💬</div><div class="v">💬</div><div class="t">11:00</div><div class="p">📞🎥</div><div class="c "></div><div class="x"></div><div class="c "></div><div class="v">💬</div><div class="t">12:00</div><div class="x"></div><div class="x"></div><div class="x"></div><div class="x"></div><div class="x"></div><div class="t">13:00</div><div class="v">💬</div><div class="p">📞🎥</div><div class="c "></div><div class="v">💬</div><div class="p">📞🎥</div><div class="t">14:00</div><div class="v">💬</div><div class="p">📞🎥</div><div class="c "></div><div class="v">💬</div><div class="p">📞🎥</div><div class="t">15:00</div><div class="c "></div><div class="v">💬</div><div class="c "></div><div class="c "></div><div class="c "></div><div class="t">16:00</div><div class="v">💬</div><div class="v">💬</div><div class="c "></div><div class="c "></div><div class="c "></div></div><span class="n" style="top:-8px;right:-4px">1</span>
+  <div class="flex small" style="margin-top:6px"><span class="badge" style="background:#cfe6d9">💬 Chat</span><span class="badge" style="background:#fbe0bd;color:#7a4504;border-color:#f3c48a">📞🎥 Voice and video</span><span class="badge" style="background:#dfe5e1;color:#6b7a72;border-color:#c4cfc9">Blocked</span></div></div>
+ <div style="width:190px;display:flex;flex-direction:column;gap:8px">
+  <div class="card small" style="position:relative"><span class="n" style="top:-8px;right:-6px">2</span><div class="flex"><div style="flex:1"><b>Pause new clients</b><div class="m">Existing clients unaffected</div></div><span class="tog"></span></div></div>
+  <div class="card small" style="position:relative"><span class="n" style="top:-8px;right:-6px">3</span><div class="sum"><span>Max sessions / day</span><b>5</b></div><div class="sum"><span>Buffer between</span><b>15 min</b></div><div class="sum"><span>Max new clients / wk</span><b>3</b></div></div>
+  <div class="card small" style="position:relative"><span class="n" style="top:-8px;right:-6px">4</span><b>Time off</b><div class="m">Add a day or range</div><u>＋ Add time off</u></div>
+ </div></div></div></div></div></div><div class="col"><div class="cap">16b · Public profile editor</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/profile</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="">Today</div><div class="">Inbox</div><div class="">Calendar</div><div class="">Sessions</div><div class="">Forum</div><div class="">Earnings</div><div class="on">Profile</div><div class="">Help</div></div><div class="main">
+<div class="flex"><h3>Public profile</h3><span class="card o small" style="margin-left:auto;padding:3px 8px;position:relative"><span class="n" style="top:-10px;left:-8px;right:auto">5</span>Everyone can see this</span></div>
+<div class="split" style="gap:12px">
+ <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+  <div class="flex"><span class="av">AO</span><div class="btn sec" style="padding:5px 10px">Change photo</div></div>
+  <div class="m small">Short bio (no contact details or links)</div><div class="input" style="height:54px;padding:6px">I help people feel heard and build practical coping skills.</div>
+  <div class="m small">Specialisations</div><div class="wrap"><span class="tag g">Anxiety</span><span class="tag g">Grief</span><span class="tag g">Relationships</span><span class="tag">＋</span></div>
+  <div class="m small">Languages</div><div class="wrap"><span class="tag g">English</span><span class="tag g">Kiswahili</span></div>
+  <div class="m small" style="position:relative">Session modes and price<span class="n" style="top:-8px;right:0">6</span></div><div class="flex"><span class="tag g">💬 Chat</span><span class="tag g">📞 Voice</span><span class="tag g">🎥 Video</span><span class="small"><b>KES ___</b> / 45 min</span></div>
+ </div>
+ <div style="width:200px"><div class="lbl" style="position:relative">What members see<span class="n" style="top:-6px;right:0">7</span></div>
+  <div class="card" style="margin-top:4px"><div class="flex" style="align-items:flex-start"><span class="av">AO</span><div><b>Dr. Amina Otieno</b><div class="m small">Clinical Psychologist</div><span class="tag g" style="font-size:10px">✓ Verified</span> <span class="small">★ 4.8</span></div></div>
+   <div class="small" style="margin-top:6px">I help people feel heard and build practical coping skills.</div><div class="wrap" style="margin-top:6px"><span class="tag">Anxiety</span><span class="tag">Grief</span></div><div class="m small" style="margin-top:6px">Licence valid to Mar 2027</div></div></div>
+</div>
+<div class="flex" style="justify-content:flex-end"><div class="btn" style="padding:7px 18px">Save and publish</div></div></div></div></div></div></div>
+<ol class="nw"><li><b class="nn">1</b><span>Recurring weekly blocks, each with the modes available (chat, voice and video). Times in EAT.</span></li><li><b class="nn">2</b><span>“Pause new clients” stops new bookings without affecting existing clients.</span></li><li><b class="nn">3</b><span>Caps on sessions, buffers and new clients per week protect against overload.</span></li><li><b class="nn">4</b><span>Time off is added as one-off blocks; clients with bookings are notified automatically.</span></li><li><b class="nn">5</b><span>The profile is public: banner makes it unmistakable. No contact details or links allowed in the bio.</span></li><li><b class="nn">6</b><span>Modes and price are set per therapist within platform rules (price range is open, D3).</span></li><li><b class="nn">7</b><span>Live preview shows exactly what members see in the directory.</span></li></ol>
+</section>
+
+<section><h2>17 · Live session and raising a concern</h2><p class="sub">Calls take place in-app. The client may be camera-off and remains a pen name; the therapist keeps private notes beside the session.</p>
+<div class="row"><div class="col"><div class="cap">17a · Video session with private notes</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/session/4821</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="">Today</div><div class="">Inbox</div><div class="">Calendar</div><div class="on">Sessions</div><div class="">Forum</div><div class="">Earnings</div><div class="">Profile</div><div class="">Help</div></div><div class="main">
+<div class="flex"><b>Session 4 · RainyDay</b><span class="tag g" style="font-size:10px">🎥 Video</span><span class="m" style="margin-left:auto">Not recorded</span><b style="margin-left:8px">32:10 left</b></div>
+<div class="split">
+ <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0">
+  <div class="vid"><div class="av lg o">R</div><div class="small">Camera off · pen name and avatar shown</div>
+   <div style="position:absolute;right:8px;bottom:8px;width:90px;height:56px;border-radius:8px;background:#3d4d45;font-size:10px;display:flex;align-items:center;justify-content:center">You</div>
+   <div style="position:absolute;left:8px;top:8px;background:rgba(255,255,255,.15);border-radius:999px;padding:2px 8px;font-size:10px">📶 Good</div></div>
+  <div class="ctl" style="position:relative"><span class="n" style="top:-12px;right:-6px">1</span><span>🎤</span><span>🎥</span><span title="Switch">💬</span><span class="end">✕</span></div></div>
+ <div style="width:190px;display:flex;flex-direction:column;gap:8px">
+  <div class="pane" style="flex:1;position:relative"><span class="n" style="top:2px;right:2px">2</span><b>Private notes</b><div class="m" style="font-size:10px">Only you can see these. Autosaved.</div><div class="input" style="flex:1;padding:6px;font-size:11px">Sleep improved since last week. Exam anxiety remains. Try wind-down routine…</div></div>
+  <div class="btn warn" style="padding:8px;position:relative">⚠ Raise a concern<span class="n" style="top:-8px;right:-6px">3</span></div></div></div></div></div></div></div><div class="col"><div class="cap">17b · Raise a concern</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/session/4821</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="">Today</div><div class="">Inbox</div><div class="">Calendar</div><div class="on">Sessions</div><div class="">Forum</div><div class="">Earnings</div><div class="">Profile</div><div class="">Help</div></div><div class="main">
+<div class="flex"><b>Session 4 · RainyDay</b><span class="m" style="margin-left:auto">Concern form</span></div>
+<div class="card r" style="position:relative"><span class="n" style="top:-8px;right:-6px">4</span><b>Is anyone in immediate danger?</b>
+ <div class="flex" style="margin-top:6px"><div class="btn" style="padding:6px 12px;background:var(--red)">Yes, right now</div><div class="btn sec" style="padding:6px 12px">No, but I’m concerned</div></div></div>
+<div class="lbl">What concerns you?</div>
+<div class="flex small"><span class="radio on"></span>Risk of self-harm or suicide</div>
+<div class="flex small"><span class="radio"></span>Risk of harm to others</div>
+<div class="flex small"><span class="radio"></span>Abuse or exploitation</div>
+<div class="flex small"><span class="radio"></span>Behaviour toward me</div>
+
+<div class="card g small" style="position:relative"><span class="n" style="top:-8px;right:-6px">5</span>On submit, the <b>on-call clinical lead</b> is alerted at once. Real identity and contact details are released <b>only</b> by the clinical lead under the approved protocol, and every access is logged.</div>
+<div class="card small" style="position:relative"><span class="n" style="top:-8px;right:-6px">6</span>Meanwhile: stay with the client, share crisis lines, and don’t end the session abruptly. <u>See protocol</u></div>
+<div class="flex" style="justify-content:flex-end"><div class="btn sec" style="padding:6px 14px">Cancel</div><div class="btn warn" style="padding:6px 14px">Send to clinical lead</div></div></div></div></div></div></div>
+<ol class="nw"><li><b class="nn">1</b><span>Controls include switching mode (video to voice to chat) when the connection is poor. “Not recorded” is shown (D19).</span></li><li><b class="nn">2</b><span>Private notes: visible only to the therapist, autosaved, stored under the clinical records policy (D7).</span></li><li><b class="nn">3</b><span>“Raise a concern” is always one click away during a session.</span></li><li><b class="nn">4</b><span>First question separates immediate danger from concern, driving how fast the clinical lead responds.</span></li><li><b class="nn">5</b><span>Real identity or contact details are never released to the therapist directly; the on-call clinical lead decides under the protocol (D8, D15), and every access is logged.</span></li><li><b class="nn">6</b><span>Practical guidance while waiting, so the therapist isn’t left alone with the situation.</span></li></ol>
+</section>
+
+<section><h2>18 · Wrap-up and earnings</h2><p class="sub">Light-touch admin after a session, and a clear view of what the therapist earns.</p>
+<div class="row"><div class="col"><div class="cap">18a · Session wrap-up</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/session/4821/wrap-up</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="">Today</div><div class="">Inbox</div><div class="">Calendar</div><div class="on">Sessions</div><div class="">Forum</div><div class="">Earnings</div><div class="">Profile</div><div class="">Help</div></div><div class="main">
+<h3>Wrap up session</h3>
+<div class="flex small"><span class="m">Attendance:</span><span class="n" style="position:absolute;top:46px;left:318px;margin:0">1</span><span class="chip on">Attended</span><span class="chip">Late</span><span class="chip">No-show</span></div>
+<div class="m small">Private session note (autosaved)</div>
+<div class="input" style="height:92px;padding:6px;position:relative">Discussed exam anxiety and sleep. Agreed to try a wind-down routine. Follow up on grief next session.<span class="n" style="top:-8px;right:-6px">2</span></div>
+<div class="card g small" style="position:relative"><span class="n" style="top:-8px;right:-6px">3</span>Notes are stored encrypted. Ownership, retention and who may access them follow the clinical records policy <span class="m">(D7, to be defined)</span>.</div>
+<div class="flex small" style="position:relative"><div class="box">✓</div>Suggest a follow-up<span class="tag g">Tue 28 · 10:30 ▾</span><span class="n" style="top:-8px;right:20px">4</span></div>
+<div class="flex small"><div class="box"></div>I have a concern to flag <span class="m">(opens concern form)</span></div>
+<div style="flex:1"></div>
+<div class="flex" style="justify-content:flex-end"><div class="btn" style="padding:7px 18px">Save and close</div></div></div></div></div></div><div class="col"><div class="cap">18b · Earnings and payouts</div><div class="win"><div class="chrome"><i></i><i></i><i></i><span class="url">portal.echo/earnings</span><span style="margin-left:auto" class="sos">Therapist support</span></div><div class="app"><div class="nav"><b class="brand">echo</b><div class="">Today</div><div class="">Inbox</div><div class="">Calendar</div><div class="">Sessions</div><div class="">Forum</div><div class="on">Earnings</div><div class="">Profile</div><div class="">Help</div></div><div class="main">
+<div class="flex"><h3>Earnings</h3><span class="m" style="margin-left:auto">October</span></div>
+<div class="grid3"><div class="stat">Available<b>KES ___</b><span class="n" style="top:-8px;right:-6px">5</span></div><div class="stat">Pending (24h hold)<b>KES ___</b></div><div class="stat">Paid out this month<b>KES ___</b></div></div>
+<table class="tbl"><tr><th>Date</th><th>Client</th><th>Gross</th><th>Fee</th><th>Net</th></tr>
+ <tr><td>Oct 17</td><td>RainyDay · 🎥</td><td>___</td><td>___</td><td><b>___</b></td></tr>
+ <tr><td>Oct 17</td><td>KindLeaf · 💬</td><td>___</td><td>___</td><td><b>___</b></td></tr>
+ <tr><td>Oct 16</td><td>NightOwl22 · 📞</td><td>___</td><td>___</td><td><b>___</b></td></tr></table>
+<div class="card small" style="position:relative"><span class="n" style="top:-8px;right:-6px">6</span><div class="sum"><span>Payout to <b>M-Pesa 0722 ••• 114</b></span><span><u>Change</u></span></div><div class="sum"><span>Schedule</span><span>Weekly, Fridays</span></div></div>
+<div class="flex small"><u>Download statement (PDF)</u><span class="m" style="margin-left:auto;position:relative">Fees and tax: placeholders (D3)<span class="n" style="top:-10px;right:130px">7</span></span></div></div></div></div></div></div>
+<ol class="nw"><li><b class="nn">1</b><span>Attendance outcome feeds billing and no-show rules.</span></li><li><b class="nn">2</b><span>Private note stays with the therapist.</span></li><li><b class="nn">3</b><span>Storage and ownership of clinical notes are an open decision (D7).</span></li><li><b class="nn">4</b><span>One-click follow-up suggestion goes to the client as a booking offer.</span></li><li><b class="nn">5</b><span>Balance, pending funds and payouts at a glance (placeholders for amounts).</span></li><li><b class="nn">6</b><span>Payout method and schedule are therapist-managed; changes require re-authentication.</span></li><li><b class="nn">7</b><span>Fee, commission and tax handling still to be set (D3).</span></li></ol>
+</section>
+
+<section><h2>Open questions</h2><ul>
+<li><b>D23:</b> web portal first, or a mobile app for therapists too? Drawn as web.</li>
+<li><b>Caseload and safety:</b> should the platform enforce maximum active clients and a minimum gap between a therapist’s sessions?</li>
+<li><b>Forum:</b> the portal nav includes “Forum”; therapist comments follow PRD FRM-2 and FRM-8 (general information, no soliciting).</li>
+<li><b>Peer supervision / support for therapists:</b> not drawn; consider a channel for therapists to consult the clinical lead.</li>
+<li><b>On-call clinical lead:</b> the concern flow assumes one exists, with response targets. Needs staffing before the pilot.</li></ul></section>
+</body></html>

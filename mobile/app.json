@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Echo",
+    "slug": "echo",
+    "scheme": "echo",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F5F6EA",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ke.echo.app",
+      "infoPlist": { "NSFaceIDUsageDescription": "Echo uses Face ID to keep your conversations private." }
+    },
+    "android": {
+      "package": "ke.echo.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1C372A",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "allowBackup": false,
+      "blockedPermissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "Echo",
+      "shortName": "Echo",
+      "backgroundColor": "#F5F6EA",
+      "themeColor": "#F5F6EA",
+      "description": "A space to speak. Someone to listen."
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      ["expo-local-authentication", { "faceIDPermission": "Echo uses Face ID to keep your conversations private." }],
+      ["expo-splash-screen", { "backgroundColor": "#F5F6EA", "image": "./assets/splash-icon.png", "imageWidth": 160 }]
+    ]
+  }
+}

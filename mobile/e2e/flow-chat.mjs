@@ -1,0 +1,98 @@
+// Onboards, grants a demo plan, matches with a peer, and exercises blocked-message handling in chat.
+// Usage: node e2e/flow-chat.mjs <webroot> <outdir>
+import { chromium } from 'playwright-core'
+import { mkdirSync } from 'node:fs'
+import { serve } from './serve.mjs'
+
+const [root, out] = process.argv.slice(2)
+mkdirSync(out, { recursive: true })
+const server = await serve(root, 8098)
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] })
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
+const problems = []
+page.on('console', (m) => m.type() === 'error' && problems.push(`console: ${m.text().slice(0, 240)}`))
+page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 300)}`))
+const shot = (n) => page.screenshot({ path: `${out}/${n}.png` })
+const tid = (id) => page.locator(`[data-testid="${id}"]`)
+const step = async (name, fn) => { try { await fn(); console.log('ok  ', name) } catch (e) { console.log('FAIL', name, String(e).split('\n')[0]); await shot(`FAIL-${name}`); throw e } }
+
+await page.goto('http://localhost:8098/')
+await page.waitForTimeout(1800)
+await step('register', async () => {
+  await tid('get-started').click()
+  for (const id of ['consent-terms', 'consent-privacy', 'consent-guidelines', 'consent-screening']) await tid(id).click()
+  await tid('consent-continue').click()
+  await tid('reg-name').fill('Amina Otieno')
+  await tid('reg-phone').fill('0712 345 678')
+  await tid('reg-dob').fill('14/03/1998')
+  await tid('register-continue').click()
+  const code = (await tid('demo-code').innerText()).match(/(\d{6})/)[1]
+  await tid('otp-input').fill(code)
+  await tid('pen-input').fill('QuietPine')
+  await tid('pen-continue').click()
+  await tid('finish').click()
+  await tid('home').waitFor()
+  await shot('10-home-no-plan')
+})
+await step('match-needs-plan', async () => {
+  await tid('find-someone').click()
+  await tid('match-blocked').waitFor()
+  await shot('11-match-needs-plan')
+  await page.getByRole('button', { name: 'Back' }).click()
+})
+await step('match-found', async () => {
+  await page.evaluate(() => window.__echo.demo.grantPlan('monthly'))
+  await tid('find-someone').click()
+  await tid('match-searching').waitFor()
+  await shot('12-match-searching')
+  await tid('match-found').waitFor({ timeout: 15000 })
+  await shot('13-match-found')
+})
+await step('chat-blocked-and-ok', async () => {
+  await tid('match-say-hello').click()
+  await tid('chat').waitFor()
+  await tid('chat-input').fill('call me on 0712 345 678')
+  await tid('chat-send').click()
+  await tid('chat-block-reason').waitFor()
+  await shot('14-chat-blocked')
+  const kept = await tid('chat-input').inputValue()
+  if (!kept.includes('0712')) throw new Error('blocked text should stay in the box')
+  await tid('chat-input').fill('Hi, thanks for talking with me today')
+  await tid('chat-send').click()
+  await page.waitForTimeout(4200)
+  await shot('15-chat-reply')
+  const body = await page.locator('body').innerText()
+  if (!/thanks for talking/.test(body)) throw new Error('sent message missing')
+})
+await step('felt-heard', async () => {
+  await tid('chat-menu').click()
+  await page.getByText('End this conversation').click()
+  await page.getByRole('button', { name: 'End conversation' }).click()
+  await tid('heard').waitFor()
+  await tid('heard-4').click()
+  await tid('heard-note').fill('They listened')
+  await shot('15b-heard')
+  await tid('heard-send').click()
+  await tid('heard').waitFor({ state: 'detached' })
+})
+await step('send-feedback', async () => {
+  await page.goto('http://localhost:8098/settings/feedback')
+  await tid('feedback').waitFor()
+  await tid('fb-send').click()
+  await page.getByText('Write a few words first.').waitFor()
+  await tid('fb-bug').click()
+  await tid('fb-text').fill('The send button froze once')
+  await shot('15c-feedback')
+  await tid('fb-send').click()
+  await tid('settings').waitFor()
+})
+await step('chat-list', async () => {
+  await page.goto('http://localhost:8098/chats')
+  await tid('tab-chats').click()
+  await tid('chats').waitFor()
+  await shot('16-chat-list')
+})
+await browser.close()
+server.close()
+if (problems.length) { console.log('PROBLEMS:\n' + problems.join('\n')); process.exit(1) }
+console.log('all steps passed')
