@@ -13,6 +13,7 @@ import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
 import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
+import { liveStars, ratingLabel, summarise } from '@/lib/ratings'
 import { dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -49,7 +50,7 @@ export default function TherapistProfile() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Icon name="star" size={15} color={colors.sun} />
             <Text variant="small">
-              {t.rating.toFixed(1)} · {t.reviews} reviews
+              {ratingLabel(summarise(t, liveStars(sessions, t.id)))}
             </Text>
           </View>
         </View>

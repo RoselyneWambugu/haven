@@ -1,3 +1,4 @@
+import { liveStars, summarise } from './ratings'
 import type { Therapist, Session } from '@/api/types'
 import { generateSlots, type Mode, type Slot } from './booking'
 import { isSameEatDay, startOfEatDay } from './time'
@@ -62,9 +63,11 @@ export function filterTherapists(
     return true
   })
   const firstSlot = (r: DirectoryRow) => r.slots[0]?.start ?? Number.MAX_SAFE_INTEGER
+  // Therapists with too few reviews have no rating yet, so they follow the rated ones.
+  const stars = (r: DirectoryRow) => summarise(r.therapist, liveStars(sessions, r.therapist.id)).average ?? -1
   const langScore = (r: DirectoryRow) => r.therapist.languages.filter((l) => memberLanguages.includes(l)).length
   rows.sort((a, b) => {
-    if (sort === 'rating') return b.therapist.rating - a.therapist.rating || firstSlot(a) - firstSlot(b)
+    if (sort === 'rating') return stars(b) - stars(a) || firstSlot(a) - firstSlot(b)
     if (sort === 'price') return (a.therapist.priceKes ?? 0) - (b.therapist.priceKes ?? 0) || firstSlot(a) - firstSlot(b)
     if (sort === 'language') return langScore(b) - langScore(a) || firstSlot(a) - firstSlot(b)
     return firstSlot(a) - firstSlot(b) // next available; no paid placement (D38)

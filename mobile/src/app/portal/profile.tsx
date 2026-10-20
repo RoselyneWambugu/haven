@@ -11,6 +11,7 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
+import { liveStars, ratingLabel, summarise } from '@/lib/ratings'
 import { dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -21,6 +22,7 @@ const MODES: { value: Mode; label: string }[] = [{ value: 'chat', label: 'Chat' 
 /** The public profile (THR-4): what members see, with a live preview. Contact details and links are refused. */
 export default function Profile() {
   const p = useDb((s) => s.portal)
+  const sessions = useDb((s) => s.sessions)
   const TOPICS = useDb((s) => s.content.topics)
   const wide = useWide()
   const th = THERAPISTS.find((t) => t.id === p?.therapistId)
@@ -94,7 +96,7 @@ export default function Profile() {
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Icon name="star" size={14} color={colors.sun} />
-                <Text variant="caption">{th.rating.toFixed(1)}</Text>
+                <Text variant="caption">{ratingLabel(summarise(th, liveStars(sessions, th.id)))}</Text>
                 <Badge icon="check" label="Verified" />
               </View>
             </View>

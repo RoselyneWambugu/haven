@@ -15,6 +15,7 @@ import { now } from '@/lib/clock'
 import { activeFilterCount, filterTherapists, NO_FILTERS, type DirectoryFilters, type DirectorySort } from '@/lib/directory'
 import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
+import { liveStars, ratingLabel, summarise } from '@/lib/ratings'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
 import { colors } from '@/theme'
@@ -71,7 +72,7 @@ export default function Therapists() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Icon name="star" size={14} color={colors.sun} />
                   <Text variant="caption">
-                    {t.rating.toFixed(1)} ({t.reviews}) · {t.languages.join(', ')}
+                    {ratingLabel(summarise(t, liveStars(sessions, t.id)))} · {t.languages.join(', ')}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
