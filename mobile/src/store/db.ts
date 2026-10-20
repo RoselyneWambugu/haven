@@ -52,6 +52,8 @@ export interface DbState {
   tickets: Ticket[]
   feedback: FeedbackItem[]
   notifications: AppNote[]
+  /** Support spaces the member has joined. */
+  spaces: string[]
   reports: ReportRecord[]
   openConversationId: string | null
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
@@ -91,6 +93,7 @@ export function freshState(): DbState {
     tickets: [],
     feedback: [],
     notifications: [],
+    spaces: [],
     reports: [],
     openConversationId: null,
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },

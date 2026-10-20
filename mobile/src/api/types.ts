@@ -187,6 +187,8 @@ export interface ForumPost {
   status: 'published' | 'pending' | 'hidden'
   mine: boolean
   authorKey: string
+  /** The support space this post belongs to. Space posts stay out of the general community feed. */
+  space?: string
 }
 
 // ---------- therapists and sessions ----------

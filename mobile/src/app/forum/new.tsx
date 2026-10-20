@@ -10,6 +10,8 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { describeDetail, detectBlockedContent, detectDistress, detectIdentifyingDetails, explainBlock } from '@/lib/safety'
 import { replace } from '@/lib/nav'
+import { useLocalSearchParams } from 'expo-router'
+import { spaceById } from '@/data/spaces'
 import { useDb } from '@/store/db'
 
 /**
@@ -17,6 +19,9 @@ import { useDb } from '@/store/db'
  * workplace or name) get a gentle heads-up the writer can ignore. Signs of distress offer help, never block (PRD FRM-2 to FRM-5, CRS-3).
  */
 export default function NewPost() {
+  const { space: spaceId } = useLocalSearchParams<{ space?: string }>()
+  const space = spaceById(spaceId)
+  const joined = useDb((s) => (space ? s.spaces.includes(space.id) : true))
   const first = useDb((s) => !s.account?.hasPostedBefore)
   const TOPICS = useDb((s) => s.content.topics)
   const forumOn = useDb((s) => s.content.flags.forum)
@@ -32,7 +37,7 @@ export default function NewPost() {
   const distress = detectDistress(all).level
 
   function publish() {
-    const r = api.forum.create({ topic, title, body })
+    const r = api.forum.create({ topic, title, body, space: space?.id })
     if (!r.ok) {
       setConfirm(false)
       return setError(r.error)
@@ -55,14 +60,23 @@ export default function NewPost() {
       header={<TopBar back title="New post" />}
       footer={<Button testID="post-submit" label="Post" disabled={!title.trim() || body.trim().length < 10} onPress={submit} />}
     >
-      <Text variant="small" muted>
-        Topic
-      </Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {TOPICS.map((t) => (
-          <Chip key={t} label={t} selected={topic === t} onPress={() => setTopic(t)} />
-        ))}
-      </View>
+      {space ? (
+        <Banner testID="posting-in-space" tone="green" icon="shield" title={`Posting in ${space.name}`}>
+          {space.sensitive ? 'Every post in this space is checked before it goes live. That usually takes a few minutes.' : 'Only members of this space see it here, not the general community.'}
+          {joined ? '' : ' Join the space first to post.'}
+        </Banner>
+      ) : (
+        <>
+          <Text variant="small" muted>
+            Topic
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {TOPICS.map((t) => (
+              <Chip key={t} label={t} selected={topic === t} onPress={() => setTopic(t)} />
+            ))}
+          </View>
+        </>
+      )}
       <Field testID="post-title" label="Title" value={title} onChangeText={setTitle} maxLength={90} />
       <Field testID="post-body" label="What’s on your mind?" value={body} onChangeText={setBody} multiline minHeight={160} maxLength={2000} hint="Posted under your pen name. No links, phone numbers or addresses." />
       {!forumOn ? (
@@ -70,7 +84,7 @@ export default function NewPost() {
           You can write your post, but it can’t be shared until posting is turned back on.
         </Banner>
       ) : null}
-      {first ? (
+      {first && !space?.sensitive ? (
         <Banner tone="green" icon="shield">
           Your first post is checked before it goes live. That usually takes a few minutes.
         </Banner>

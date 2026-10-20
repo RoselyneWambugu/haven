@@ -24,7 +24,7 @@ Useful scripts:
 
 In a browser window 900 px or wider, `/` opens a landing page. Its buttons go to registration, sign-in, urgent help and the therapist and staff sign-ins. Narrower windows and phones open the Welcome screen.
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`, `concern`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`, `concern`, `spaces`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -71,6 +71,10 @@ It is connected to the rest of the demo. A concern a member raises about a thera
 **Roles** (Admin only) shows the team, the permission table from the PRD and which modules each role sees. Adding someone, changing a role or deactivating an account is proposed by one Admin and approved by a second, you can't change your own account, and at least two Admins stay active. The permission table is the one the API enforces, and tests check the two agree. A deactivated person can't sign in, and role changes apply at the next sign-in.
 
 **Wellbeing** protects reviewers. Each reviewer has their own daily reveal count and limit, a break is suggested after a run of reveals and pauses revealing while it lasts, the heaviest cases (Severity-1 and crisis) can only be taken by moderators on that week's rota, which moves on each week, and anyone can hand a case on or ask for support without giving a reason.
+
+## Support spaces
+
+The Community tab opens **Support spaces**: groups for one issue each (domestic violence, PTSD, grief, anxiety, depression, addiction and recovery). A space is a topic-scoped forum, not live chat. Each has a verified therapist who leads it, a pinned welcome, its own rules and a link to Urgent help. Domestic violence and PTSD are sensitive: you join to read them, every post is checked before it goes live, and there is a Quick exit button. Posts in a space stay out of the general feed and Home.
 
 ## Notifications
 

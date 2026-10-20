@@ -11,7 +11,7 @@ import type { ForumPost } from '@/api'
 import { colors } from '@/theme'
 
 /** One post in a list: author (pen name and avatar only), topic, a short preview, and counts. */
-export function PostCard({ post }: { post: ForumPost }) {
+export function PostCard({ post, showTopic = true }: { post: ForumPost; showTopic?: boolean }) {
   const therapistReplied = post.comments.some((c) => c.therapistId)
   return (
     <Card testID={`post-${post.id}`} onPress={() => go(`/forum/${post.id}`)} accessibilityLabel={`${post.title}, by ${post.authorName}`}>
@@ -24,7 +24,7 @@ export function PostCard({ post }: { post: ForumPost }) {
           {relative(post.createdAt, now())}
         </Text>
         <View style={{ flex: 1 }} />
-        <Badge label={post.topic} tone="plain" />
+        {showTopic ? <Badge label={post.topic} tone="plain" /> : null}
       </View>
       <Text variant="h3" style={{ marginTop: 10 }}>
         {post.title}

@@ -10,6 +10,8 @@ import { notify } from './notify'
 import { peerReply, postReply, therapistThreadReply } from './bot'
 import { chatSnapshot, commentSnapshot, postSnapshot, priorReports, sessionSnapshot } from '@/lib/snapshot'
 import { dayAndClock } from '@/lib/time'
+import { spaceById } from '@/data/spaces'
+import { needsCheck } from '@/lib/spaces'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
 
 const SEC = 1000
@@ -279,7 +281,7 @@ function addReply(id: string, kind: 'peer' | 'therapist') {
   if (!p || !p.mine || p.status !== 'published' || !db.content.flags.forum) return
   if (p.comments.some((c) => (kind === 'therapist' ? !!c.therapistId : !c.mine && !c.therapistId))) return
   const { text, peer } = postReply(kind, p.title, p.body)
-  const th = THERAPISTS[0]
+  const th = THERAPISTS.find((x) => x.id === spaceById(p.space)?.facilitatorId) ?? THERAPISTS[0]
   const c: ForumComment = {
     id: uid('cm'), authorName: kind === 'therapist' ? th.name : peer.name, authorAvatar: kind === 'therapist' ? 'leaf' : peer.avatar,
     therapistId: kind === 'therapist' ? th.id : null, therapistName: kind === 'therapist' ? th.name : null, text, at: now(), hiddenReason: null, mine: false,
@@ -298,7 +300,7 @@ function publishPending(id: string) {
 }
 
 export const forum = {
-  create(input: { topic: string; title: string; body: string }): Res<{ post: ForumPost; pending: boolean }> {
+  create(input: { topic: string; title: string; body: string; space?: string }): Res<{ post: ForumPost; pending: boolean }> {
     const db = getDb()
     const a = db.account
     if (!a) return { ok: false, error: 'Sign in first.' }
@@ -310,9 +312,12 @@ export const forum = {
     if (body.length < 10) return { ok: false, error: 'Write a little more. A few sentences is plenty.', code: 'body' }
     const check = detectBlockedContent(`${title}\n${body}`)
     if (check.blocked) return { ok: false, error: explainBlock(check.reasons), code: 'blocked' }
-    const pending = !a.hasPostedBefore
+    const space = input.space ? spaceById(input.space) : undefined
+    if (input.space && !space) return { ok: false, error: 'That space isn’t here.', code: 'space' }
+    if (space && !db.spaces.includes(space.id)) return { ok: false, error: 'Join this space to post in it.', code: 'not-joined' }
+    const pending = needsCheck(space, !!a.hasPostedBefore)
     const post: ForumPost = {
-      id: uid('post'), authorName: a.public.penName, authorAvatar: a.public.avatar, authorKey: 'me', topic: input.topic, title, body,
+      id: uid('post'), authorName: a.public.penName, authorAvatar: a.public.avatar, authorKey: 'me', topic: space ? space.name : input.topic, space: space?.id, title, body,
       createdAt: now(), supports: 0, supportedByMe: false, comments: [], status: pending ? 'pending' : 'published', mine: true,
     }
     update((s) => ({ posts: [post, ...s.posts] }))

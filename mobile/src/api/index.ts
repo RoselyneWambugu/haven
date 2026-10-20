@@ -13,10 +13,11 @@ import { config, resources, suggestService } from './content'
 import { applyPortalToDirectory, applyStandingToDirectory, portal } from './portal'
 import { chat, forum, match, report } from './social'
 import { account, tickets } from './support'
+import { spaces } from './spaces'
 import { team } from './team'
 import { therapistAppeals } from './therapistAppeals'
 
-export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals }
+export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals, spaces }
 
 /** Restarts timers for anything that was in progress when the app last closed. */
 export function resumeBackground(): void {
@@ -24,6 +25,7 @@ export function resumeBackground(): void {
   forum.resume()
   applyPortalToDirectory()
   applyStandingToDirectory()
+  spaces.ensureSeeds()
 }
 
 export * from './types'
