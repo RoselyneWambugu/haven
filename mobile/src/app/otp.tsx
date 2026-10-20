@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Pressable, TextInput, View, type TextInputInstance } from 'react-native'
+import { Pressable, TextInput, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
@@ -22,7 +22,7 @@ export default function Otp() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [left, setLeft] = useState(30)
-  const input = useRef<TextInputInstance>(null)
+  const input = useRef<TextInput>(null)
 
   useEffect(() => {
     const t = setInterval(() => setLeft((n) => Math.max(0, n - 1)), 1000)

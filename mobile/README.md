@@ -6,6 +6,8 @@ The backend is a **mock** that lives on the device. Everything a screen needs go
 
 ## Run it
 
+The app is on **Expo SDK 57**, so it opens in the current Expo Go from the app stores. Check the version in Expo Go before you scan: if yours is for a different SDK, it will say the project is incompatible.
+
 ```sh
 npm install
 npx expo start          # press w for web, or scan the QR code with Expo Go
