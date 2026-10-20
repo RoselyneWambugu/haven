@@ -72,7 +72,7 @@ It is connected to the rest of the demo. A concern a member raises about a thera
 
 ## Notifications
 
-A bell at the top of each tab opens the notification centre, a stand-in for push. It lists new messages, session reminders (an hour and ten minutes before), plan reminders, account notices and receipts for reports. Safety and account notices can't be switched off. Quiet hours (10pm to 7am) hold other notes until morning, and more than five an hour are kept in the list but not counted as new. Settings has a lock-screen preview for the privacy options. Nothing is really pushed, texted or emailed yet.
+A bell at the top of each tab opens the notification centre, a stand-in for push. It lists new messages, replies to your community post (a peer and a verified therapist reply a short while after it goes live), session reminders (an hour and ten minutes before), plan reminders, account notices and receipts for reports. Safety and account notices can't be switched off. Quiet hours (10pm to 7am) hold other notes until morning, and more than five an hour are kept in the list but not counted as new. Settings has a lock-screen preview for the privacy options. Nothing is really pushed, texted or emailed yet.
 
 ## Feedback
 

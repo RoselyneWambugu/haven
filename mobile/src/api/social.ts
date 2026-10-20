@@ -7,7 +7,7 @@ import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { notify } from './notify'
-import { peerReply, therapistThreadReply } from './bot'
+import { peerReply, postReply, therapistThreadReply } from './bot'
 import { chatSnapshot, commentSnapshot, postSnapshot, priorReports, sessionSnapshot } from '@/lib/snapshot'
 import { dayAndClock } from '@/lib/time'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
@@ -267,12 +267,34 @@ function setPost(id: string, fn: (p: ForumPost) => ForumPost) {
   update((s) => ({ posts: s.posts.map((p) => (p.id === id ? fn(p) : p)) }))
 }
 
+/** A peer and then a verified therapist reply to a member's own post, a little while after it is live. */
+function scheduleReplies(id: string, wait = 1) {
+  later(`reply-peer-${id}`, 20 * SEC * wait, () => addReply(id, 'peer'))
+  later(`reply-th-${id}`, 45 * SEC * wait, () => addReply(id, 'therapist'))
+}
+
+function addReply(id: string, kind: 'peer' | 'therapist') {
+  const db = getDb()
+  const p = db.posts.find((x) => x.id === id)
+  if (!p || !p.mine || p.status !== 'published' || !db.content.flags.forum) return
+  if (p.comments.some((c) => (kind === 'therapist' ? !!c.therapistId : !c.mine && !c.therapistId))) return
+  const { text, peer } = postReply(kind, p.title, p.body)
+  const th = THERAPISTS[0]
+  const c: ForumComment = {
+    id: uid('cm'), authorName: kind === 'therapist' ? th.name : peer.name, authorAvatar: kind === 'therapist' ? 'leaf' : peer.avatar,
+    therapistId: kind === 'therapist' ? th.id : null, therapistName: kind === 'therapist' ? th.name : null, text, at: now(), hiddenReason: null, mine: false,
+  }
+  setPost(id, (x) => ({ ...x, comments: [...x.comments, c] }))
+  notify.push('forum', `reply:${c.id}`, 'New reply to your post', `${c.authorName} replied to “${p.title}”.`, `/forum/${id}`)
+}
+
 function publishPending(id: string) {
   const p = getDb().posts.find((x) => x.id === id)
   if (!p || p.status !== 'pending') return
   setPost(id, (x) => ({ ...x, status: 'published' }))
   showToast('Your post is now live.')
   notify.push('forum', `post:${id}`, 'Your post is now live', p.title, `/forum/${id}`)
+  scheduleReplies(id)
 }
 
 export const forum = {
@@ -296,6 +318,7 @@ export const forum = {
     update((s) => ({ posts: [post, ...s.posts] }))
     updateAccount((x) => ({ ...x, hasPostedBefore: true }))
     if (pending) later(`pub-${post.id}`, 15 * SEC, () => publishPending(post.id))
+    else scheduleReplies(post.id)
     return { ok: true, value: { post, pending } }
   },
 
@@ -347,7 +370,10 @@ export const forum = {
   },
 
   resume(): void {
-    for (const p of getDb().posts) if (p.status === 'pending') later(`pub-${p.id}`, 4 * SEC, () => publishPending(p.id))
+    for (const p of getDb().posts) {
+      if (p.status === 'pending') later(`pub-${p.id}`, 4 * SEC, () => publishPending(p.id))
+      else if (p.mine && p.status === 'published' && now() - p.createdAt < 10 * MIN) scheduleReplies(p.id, 0.2)
+    }
   },
 }
 

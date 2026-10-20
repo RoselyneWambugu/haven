@@ -70,6 +70,16 @@ await step('composer', async () => {
   await tid('my-posts').waitFor()
   await shot('25-my-posts-pending')
 })
+await step('replies-arrive-and-notify', async () => {
+  // The post goes live after about 15 s, a peer replies about 20 s later and a therapist about 25 s after that.
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('echo.demo.v1') || '{}').notifications?.filter((n) => n.title === 'New reply to your post').length === 2, null, { timeout: 90000 })
+  await page.goto('http://localhost:8097/notifications')
+  await tid('notification-centre').waitFor()
+  await page.getByText('New reply to your post').first().click()
+  await tid('post-detail').waitFor()
+  await page.getByText('General information, not treatment or advice for you.').waitFor()
+  await shot('26-post-with-replies')
+})
 await browser.close()
 server.close()
 if (problems.length) { console.log('PROBLEMS:\n' + problems.join('\n')); process.exit(1) }
