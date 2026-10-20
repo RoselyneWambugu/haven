@@ -50,7 +50,7 @@ export function filterTherapists(
   memberLanguages: string[] = [],
 ): DirectoryRow[] {
   const q = filters.query.trim().toLowerCase()
-  let rows = therapists.map((t) => ({ therapist: t, slots: slotsFor(t, sessions, now) }))
+  let rows = therapists.filter((t) => !t.suspended).map((t) => ({ therapist: t, slots: slotsFor(t, sessions, now) }))
   rows = rows.filter(({ therapist: t, slots }) => {
     if (q && !`${t.name} ${t.title} ${t.specialisations.join(' ')} ${t.languages.join(' ')}`.toLowerCase().includes(q)) return false
     if (filters.specialisation && !t.specialisations.includes(filters.specialisation)) return false

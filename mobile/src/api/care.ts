@@ -29,7 +29,7 @@ export const billing = {
       return { ok: true, value: { title: `${plan.label} peer plan`, amountKes: plan.priceKes } }
     }
     const t = therapistOf(item.therapistId)
-    if (!t) return { ok: false, error: 'That therapist is not available.' }
+    if (!t || t.suspended) return { ok: false, error: 'That therapist is not available.' }
     if (!t.modes.includes(item.mode) || (item.mode === 'video' && !db.content.flags.therapistVideo)) return { ok: false, error: `${t.name} doesn’t offer that kind of session.` }
     const slot = slotsFor(t, db.sessions, now()).find((s) => s.start === item.start)
     if (!slot || !slot.modes.includes(item.mode)) return { ok: false, error: 'That time was just taken. Please pick another.', code: 'taken' }

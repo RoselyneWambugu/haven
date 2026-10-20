@@ -211,6 +211,8 @@ export interface Therapist {
   gender: 'woman' | 'man'
   availability: AvailabilityBlock[]
   acceptingNew: boolean
+  /** Set when staff suspend the therapist. They are hidden from the directory and can't be booked. */
+  suspended?: boolean
 }
 
 export type SessionStatus = 'booked' | 'completed' | 'cancelled' | 'missed'
@@ -565,6 +567,8 @@ export interface AdminState {
   staff: StaffAccount[]
   pendingStaff: { change: StaffChange; requestedBy: string } | null
   wellbeing: WellbeingCfg
+  /** Therapists staff have suspended, by therapist id. */
+  therapistStanding?: Record<string, { reason: string; by: string; at: number }>
   /** Who works the heavy queue (Severity-1 and crisis cases) each week. */
   rota: RotaWeek[]
   cases: AdminCase[]

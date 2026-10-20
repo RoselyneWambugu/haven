@@ -57,6 +57,18 @@ function patch(fn: (p: PortalState) => Partial<PortalState>) {
 }
 
 /** What members see in the directory follows what the therapist publishes. A real backend would do this itself. */
+/** Whether staff have suspended this therapist. */
+export const isSuspended = (therapistId: string): boolean => !!getDb().admin?.therapistStanding?.[therapistId]
+
+/** Hides suspended therapists from the directory and stops bookings with them. */
+export function applyStandingToDirectory(): void {
+  for (const t of THERAPISTS) {
+    const off = isSuspended(t.id)
+    t.suspended = off
+    if (off) t.acceptingNew = false
+  }
+}
+
 export function applyPortalToDirectory(): void {
   const p = getDb().portal
   if (!p) return
@@ -65,7 +77,7 @@ export function applyPortalToDirectory(): void {
   const blocked = p.timeOff
   Object.assign(t, {
     bio: p.profile.bio, specialisations: p.profile.specialisations, languages: p.profile.languages, modes: p.profile.modes,
-    priceKes: p.profile.priceKes, availability: p.availability, acceptingNew: !p.paused && blocked.every((b) => !(b.start <= now() && now() < b.end)),
+    priceKes: p.profile.priceKes, availability: p.availability, acceptingNew: !p.paused && !isSuspended(p.therapistId) && blocked.every((b) => !(b.start <= now() && now() < b.end)),
   })
 }
 

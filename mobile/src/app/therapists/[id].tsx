@@ -38,7 +38,7 @@ export default function TherapistProfile() {
     <Screen
       testID="therapist-profile"
       header={<TopBar back />}
-      footer={<Button testID="book" label={t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!t.acceptingNew} onPress={() => go(`/book/${t.id}`)} />}
+      footer={<Button testID="book" label={t.suspended ? 'Not available' : t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!t.acceptingNew || !!t.suspended} onPress={() => go(`/book/${t.id}`)} />}
     >
       <View style={{ flexDirection: 'row', gap: 14 }}>
         <Portrait tone={t.tone} width={92} height={110} />

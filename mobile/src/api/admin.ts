@@ -7,7 +7,8 @@ import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyAp
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { notify } from './notify'
-import { applyPortalToDirectory } from './portal'
+import { applyPortalToDirectory, applyStandingToDirectory } from './portal'
+import { THERAPISTS } from '@/data/seed'
 import { account } from './support'
 import type {
   AdminAppeal, AdminCase, AdminState, AdminUser, Applicant, AuditEntry, BreakGlassRequest, CaseAction, Notice, ReportReason, Res, Severity, StaffRole,
@@ -253,6 +254,45 @@ export const admin = {
     update((s) => (s.portal ? { portal: { ...s.portal, paused: false, review: null } } : {}))
     applyPortalToDirectory()
     log('Lifted therapist pause', p.therapistId, reason.trim())
+    return { ok: true, value: undefined }
+  },
+
+  /**
+   * Suspends a therapist: they leave the directory, can't be booked, and their booked sessions are cancelled with no charge
+   * (the member is told). Clinical reviewers and Admins, with a reason, logged.
+   */
+  suspendTherapist(therapistId: string, reason: string): Res {
+    if (!can(me().role, 'verifyTherapists')) return { ok: false, error: 'Only clinical reviewers and Admins suspend therapists.', code: 'role' }
+    const th = THERAPISTS.find((x) => x.id === therapistId)
+    if (!th) return { ok: false, error: 'Therapist not found.' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    const a = getDb().admin!
+    if (a.therapistStanding?.[therapistId]) return { ok: false, error: 'Already suspended.' }
+    const { name } = me()
+    patch((x) => ({ therapistStanding: { ...(x.therapistStanding ?? {}), [therapistId]: { reason: reason.trim(), by: name, at: now() } } }))
+    const t = now()
+    const hit = getDb().sessions.filter((s) => s.therapistId === therapistId && s.status === 'booked' && s.start > t)
+    if (hit.length) {
+      update((s) => ({ sessions: s.sessions.map((x) => (hit.some((h) => h.id === x.id) ? { ...x, status: 'cancelled' as const, lateChargeApplied: false } : x)) }))
+      for (const s of hit) notify.push('session', `suspended:${s.id}`, 'Your session can’t go ahead', `${th.name} is not available. It is cancelled and you won’t be charged. You can book someone else.`, `/sessions/${s.id}`)
+    }
+    applyStandingToDirectory()
+    log('Suspended therapist', th.name, reason.trim())
+    return { ok: true, value: undefined }
+  },
+  reinstateTherapist(therapistId: string, reason: string): Res {
+    if (!can(me().role, 'verifyTherapists')) return { ok: false, error: 'Only clinical reviewers and Admins reinstate therapists.', code: 'role' }
+    const th = THERAPISTS.find((x) => x.id === therapistId)
+    const a = getDb().admin!
+    if (!th || !a.therapistStanding?.[therapistId]) return { ok: false, error: 'This therapist is not suspended.' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    patch((x) => {
+      const { [therapistId]: _gone, ...rest } = x.therapistStanding ?? {}
+      return { therapistStanding: rest }
+    })
+    applyStandingToDirectory()
+    applyPortalToDirectory()
+    log('Reinstated therapist', th.name, reason.trim())
     return { ok: true, value: undefined }
   },
 

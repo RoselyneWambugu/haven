@@ -10,7 +10,7 @@ import { notify } from './notify'
 import { feedback } from './feedback'
 import { admin } from './admin'
 import { config, resources, suggestService } from './content'
-import { applyPortalToDirectory, portal } from './portal'
+import { applyPortalToDirectory, applyStandingToDirectory, portal } from './portal'
 import { chat, forum, match, report } from './social'
 import { account, tickets } from './support'
 import { team } from './team'
@@ -22,6 +22,7 @@ export function resumeBackground(): void {
   match.resume()
   forum.resume()
   applyPortalToDirectory()
+  applyStandingToDirectory()
 }
 
 export * from './types'

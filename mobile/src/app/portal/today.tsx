@@ -20,6 +20,7 @@ const MODE = { chat: 'Chat', voice: 'Voice', video: 'Video' } as const
 /** The working home: what is next, who needs a reply, and what needs attention. Nothing is ranked or scored (THR-15). */
 export default function Today() {
   const p = useDb((s) => s.portal)
+  const suspended = useDb((s) => !!(s.portal && s.admin?.therapistStanding?.[s.portal.therapistId]))
   const wide = useWide()
   if (!p) return null
   const th = THERAPISTS.find((t) => t.id === p.therapistId)!
@@ -37,6 +38,11 @@ export default function Today() {
       {licence.state !== 'ok' ? (
         <Banner tone="sun" icon="clock" title={licence.state === 'expired' ? 'Your licence has expired' : `Your licence expires in ${licence.days} days`}>
           {licence.state === 'expired' ? 'You’re hidden from booking until you upload a renewal.' : 'Upload your renewal to stay listed.'}
+        </Banner>
+      ) : null}
+      {suspended ? (
+        <Banner testID="suspended-notice" tone="clay" icon="lock" title="Your account is suspended">
+          You are not shown to members and can’t take new bookings. A clinical reviewer will be in touch.
         </Banner>
       ) : null}
       {p.review ? (
