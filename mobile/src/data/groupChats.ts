@@ -104,3 +104,9 @@ export const CLOSING: Record<string, string> = {
   recovery: 'Thank you for being here. This group chat has ended. It will be deleted in 24 hours. Keep going.',
   burnout: 'Thank you for being here. This group chat has ended. It will be deleted in 24 hours. Take care of yourselves.',
 }
+
+/** For a group chat staff schedule, which has no standing script: the facilitator opens it, and members take it from there. */
+export const GENERIC_SCRIPT: ScriptLine[] = [
+  { name: '', avatar: 'leaf', facilitator: true, text: 'Welcome, everyone. Thank you for being here. There is no pressure to say anything, and you can write as much or as little as you like. When you are ready, tell us in a few words what brought you today.' },
+]
+export const GENERIC_CLOSING = 'Thank you for being here. This group chat has ended. It will be deleted in 24 hours.'

@@ -1,12 +1,15 @@
-import { CLOSING, GROUP_TEMPLATES, SCRIPTS } from '@/data/groupChats'
+import { CLOSING, GENERIC_CLOSING, GENERIC_SCRIPT, GROUP_TEMPLATES, SCRIPTS } from '@/data/groupChats'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
-import { canRegister, deletesAt, linesDue, status } from '@/lib/groupChat'
+import { canRegister, deletesAt, linesDue, status, validateNewGroup, type NewGroupInput } from '@/lib/groupChat'
+import { canManageGroups } from '@/lib/admin'
 import { uid } from '@/lib/id'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { startOfEatDay } from '@/lib/time'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { log, me } from './admin'
+import { notify } from './notify'
 import { report } from './social'
 import type { GroupChat, GroupMessage, ReportReason, Res } from './types'
 
@@ -49,6 +52,7 @@ export const groups = {
     if (!a || !g) return { ok: false, error: 'That group chat isn’t here.' }
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (g.registered) return { ok: true, value: undefined }
+    if (g.cancelled) return { ok: false, error: 'This group chat was cancelled.', code: 'cancelled' }
     if (!canRegister(g, now())) return { ok: false, error: status(g, now()) === 'open' || status(g, now()) === 'ended' ? 'This group chat has already started.' : 'This group chat is full.', code: 'closed' }
     setGroup(id, (x) => ({ ...x, registered: true }))
     showToast('You’re signed up. We’ll remind you.')
@@ -94,7 +98,7 @@ export const groups = {
       }
       let g = g0
       const key = g.id.split('-')[1]
-      const script = SCRIPTS[key] ?? []
+      const script = SCRIPTS[key] ?? GENERIC_SCRIPT
       const th = THERAPISTS.find((x) => x.id === g.facilitatorId)
       const due = linesDue(script, g.posted, g, t)
       if (due.length) {
@@ -103,13 +107,45 @@ export const groups = {
       }
       if (status(g, t) === 'ended' && !g.closed) {
         const end = g.startsAt + g.durationMin * MIN
-        g = { ...g, closed: true, messages: [...g.messages, { id: `${g.id}-end`, name: 'Echo', avatar: 'leaf', text: CLOSING[key] ?? 'This group chat has ended. It will be deleted in 24 hours.', at: end, system: true }] }
+        g = { ...g, closed: true, messages: [...g.messages, { id: `${g.id}-end`, name: 'Echo', avatar: 'leaf', text: CLOSING[key] ?? GENERIC_CLOSING, at: end, system: true }] }
       }
       if (g !== g0) changed = true
       keep.push(g)
     }
     if (!changed) return
     update((s) => ({ groupChats: keep, retainedGroups: [...s.retainedGroups, ...retain.filter((r) => !s.retainedGroups.some((x) => x.id === r.id))] }))
+  },
+
+  /** Staff schedule a group chat. Clinical reviewers and Admins only, and it is written to the audit log. */
+  schedule(input: NewGroupInput): Res<{ id: string }> {
+    const a = getDb().admin
+    if (!a || !a.signedIn || !canManageGroups(a.role)) return { ok: false, error: 'Only clinical reviewers and Admins schedule group chats.', code: 'role' }
+    const th = THERAPISTS.find((x) => x.id === input.facilitatorId)
+    const ok = !!th && !th.suspended && !a.therapistStanding?.[input.facilitatorId]
+    const err = validateNewGroup(input, now(), getDb().groupChats, ok)
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    const id = `gc-custom-${uid('g')}`
+    const g: GroupChat = { id, topic: input.topic.trim(), blurb: input.blurb.trim(), facilitatorId: input.facilitatorId, startsAt: input.startsAt, durationMin: input.durationMin, capacity: input.capacity, takenOthers: 0, registered: false, messages: [], posted: 0, createdBy: me().name }
+    update((s) => ({ groupChats: [...s.groupChats, g].sort((x, y) => x.startsAt - y.startsAt) }))
+    log('Scheduled group chat', g.topic, `${th?.name}, ${input.durationMin} min`)
+    return { ok: true, value: { id } }
+  },
+
+  /** Cancels a group chat before it starts. Anyone signed up is told. */
+  cancel(id: string, reason: string): Res {
+    const a = getDb().admin
+    if (!a || !a.signedIn || !canManageGroups(a.role)) return { ok: false, error: 'Only clinical reviewers and Admins cancel group chats.', code: 'role' }
+    const g = getDb().groupChats.find((x) => x.id === id)
+    if (!g) return { ok: false, error: 'That group chat isn’t here.' }
+    const st = status(g, now())
+    if (st === 'cancelled') return { ok: false, error: 'It is already cancelled.' }
+    if (st === 'open' || st === 'ended') return { ok: false, error: 'It has already started, so it can’t be cancelled.', code: 'started' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    const { name } = me()
+    setGroup(id, (x) => ({ ...x, cancelled: { reason: reason.trim(), by: name, at: now() } }))
+    if (g.registered) notify.push('session', `g:${id}:cancelled`, 'Your group chat was cancelled', `${g.topic} won’t go ahead. We’re sorry. There will be another soon.`, `/group-chats/${id}`)
+    log('Cancelled group chat', g.topic, reason.trim())
+    return { ok: true, value: undefined }
   },
 
   /** Report a message in a group chat. The conversation so far is kept with the report. */

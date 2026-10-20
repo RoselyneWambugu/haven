@@ -382,6 +382,10 @@ export interface GroupChat {
   /** Set when the closing note has been posted. */
   closed?: boolean
   warned?: boolean
+  /** Set when staff cancel it before it starts. */
+  cancelled?: { reason: string; by: string; at: number }
+  /** The staff member who scheduled it, when it was not one of the standing topics. */
+  createdBy?: string
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'

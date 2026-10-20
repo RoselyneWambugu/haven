@@ -76,7 +76,11 @@ export default function GroupChatScreen() {
         <Text variant="body" muted>
           {g.blurb}
         </Text>
-        {st === 'ended' ? (
+        {st === 'cancelled' ? (
+          <Banner testID="group-cancelled" tone="sun" icon="clock" title="This group chat was cancelled">
+            We’re sorry. There will be another soon, and you’ll find it under Chats.
+          </Banner>
+        ) : st === 'ended' ? (
           <Banner testID="group-ended" tone="sun" icon="clock" title="This group chat has ended">
             It was deleted or will be 24 hours after it ended.
           </Banner>

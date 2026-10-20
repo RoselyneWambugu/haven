@@ -24,7 +24,7 @@ Useful scripts:
 
 In a browser window 900 px or wider, `/` opens a landing page. Its buttons go to registration, sign-in, urgent help and the therapist and staff sign-ins. Narrower windows and phones open the Welcome screen.
 
-Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`, `concern`, `spaces`, `groups`. Build the web export first, then pass its folder.
+Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`, `concern`, `spaces`, `groups`, `groupadmin`. Build the web export first, then pass its folder.
 
 ## Trying the app
 
@@ -56,7 +56,7 @@ An internal desktop-style web app at `/admin`, reached from **Echo staff** on th
 | Role | Modules |
 | --- | --- |
 | Moderator | Overview, Cases, Users, Moderation, Appeals, Analytics (Safety), Resources (Safety tickets and articles), Wellbeing |
-| Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Resources (Therapist tickets and articles, crisis lines and the support directory), Wellbeing, Audit log |
+| Clinical reviewer | Overview, Cases, Appeals, Therapists, Analytics (Care and Safety), Resources (Therapist tickets and articles, crisis lines and the support directory), Wellbeing, Group chats, Audit log |
 | Support / Billing | Overview, Users, Billing, Analytics (Commercial), Resources (Support and Billing tickets and articles), Feedback |
 | Admin | Everything including Feedback, plus Config, Roles, departments, audit and analytics export, and strike-policy changes |
 
@@ -69,6 +69,8 @@ It is connected to the rest of the demo. A concern a member raises about a thera
 **Config** (Admin only) holds the plans and entitlements, the community topics, matching settings, feature flags and limits. Plan changes involve money, so a second admin has to approve them. Matching's age-range and language rules, and the safety features, are shown as always on and are not settings. Everything staff change here is read by the member app straight away, with no release.
 
 **Roles** (Admin only) shows the team, the permission table from the PRD and which modules each role sees. Adding someone, changing a role or deactivating an account is proposed by one Admin and approved by a second, you can't change your own account, and at least two Admins stay active. The permission table is the one the API enforces, and tests check the two agree. A deactivated person can't sign in, and role changes apply at the next sign-in.
+
+**Group chats** (Clinical reviewer and Admin) schedules and cancels timed group chats: topic, leader, day and time in East Africa Time, length and places. Anyone signed up is told when one is cancelled, and both actions are logged.
 
 **Wellbeing** protects reviewers. Each reviewer has their own daily reveal count and limit, a break is suggested after a run of reveals and pauses revealing while it lasts, the heaviest cases (Severity-1 and crisis) can only be taken by moderators on that week's rota, which moves on each week, and anyone can hand a case on or ask for support without giving a reason.
 
