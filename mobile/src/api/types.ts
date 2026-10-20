@@ -415,7 +415,7 @@ export interface PortalState {
   application: 'none' | 'submitted' | 'more-info' | 'approved'
   paused: boolean
   /** Set by a clinical review of a concern about this therapist. A pause set this way is lifted only by a clinical reviewer. */
-  review?: { kind: 'warning' | 'paused'; text: string; at: number } | null
+  review?: { kind: 'warning' | 'paused'; text: string; at: number; by?: string } | null
   caps: { perDay: number; bufferMin: number; newPerWeek: number }
   availability: AvailabilityBlock[]
   timeOff: { id: string; start: number; end: number }[]
@@ -498,6 +498,10 @@ export interface AdminAppeal {
   slaHours: number
   status: 'open' | 'upheld' | 'reduced' | 'overturned'
   reviewer: string | null
+  /** Set when a therapist is appealing a clinical decision about them. */
+  therapistId?: string
+  /** The reviewer's explanation, shown to a therapist. Members see theirs on the notice. */
+  response?: string
 }
 
 export interface BreakGlassRequest {

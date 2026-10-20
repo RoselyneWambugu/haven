@@ -6,6 +6,7 @@ import { uid } from '@/lib/id'
 import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess, canSeeCase } from '@/lib/admin'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { afterAppeal, canSeeAppeal, currentDecision } from '@/lib/therapistAppeal'
 import { notify } from './notify'
 import { applyPortalToDirectory, applyStandingToDirectory } from './portal'
 import { THERAPISTS } from '@/data/seed'
@@ -142,12 +143,37 @@ function applyTherapistOutcome(c: AdminCase, action: CaseAction): void {
     const p = db.portal
     if (p && c.therapistId && p.therapistId === c.therapistId) {
       const paused = action === 'pause-therapist'
-      update((s) => (s.portal ? { portal: { ...s.portal, paused: paused ? true : s.portal.paused, review: { kind: paused ? 'paused' : 'warning', text: paused ? THERAPIST_PAUSED : THERAPIST_WARNING, at: now() } } } : {}))
+      update((s) => (s.portal ? { portal: { ...s.portal, paused: paused ? true : s.portal.paused, review: { kind: paused ? 'paused' : 'warning', text: paused ? THERAPIST_PAUSED : THERAPIST_WARNING, at: now(), by: me().name } } } : {}))
       applyPortalToDirectory()
     }
   }
   if (action === 'escalate' || !c.id.startsWith('C-r')) return
   notify.push('safety', `concern:${c.id}`, 'An update on your concern', action === 'dismiss' ? 'A clinical reviewer looked at it and did not find a breach of our standards. You can raise a concern again if something else happens.' : 'A clinical reviewer looked at it and took action. We can’t share details about another person. Thank you for telling us.', '/home')
+}
+
+/** An appeal by a therapist changes what is in force against them: nothing, one step down, or nothing at all. */
+function applyTherapistAppeal(ap: AdminAppeal, outcome: 'upheld' | 'reduced' | 'overturned', explanation: string, reviewer: string): void {
+  const a = getDb().admin!
+  const id = ap.therapistId!
+  const decision = currentDecision(getDb().portal?.therapistId === id ? getDb().portal?.review : null, a.therapistStanding?.[id])
+  if (decision) {
+    const keep = afterAppeal(decision.kind, outcome)
+    if (!keep.suspended && a.therapistStanding?.[id]) {
+      patch((x) => {
+        const { [id]: _gone, ...rest } = x.therapistStanding ?? {}
+        return { therapistStanding: rest }
+      })
+    }
+    update((s) => {
+      if (!s.portal || s.portal.therapistId !== id) return {}
+      const review = keep.review ? { kind: keep.review, text: keep.review === 'paused' ? THERAPIST_PAUSED : THERAPIST_WARNING, at: now(), by: reviewer } : null
+      const paused = keep.review === 'paused' ? true : decision.kind === 'warning' ? s.portal.paused : false
+      return { portal: { ...s.portal, review, paused } }
+    })
+    applyStandingToDirectory()
+    applyPortalToDirectory()
+  }
+  patch((x) => ({ appeals: x.appeals.map((q) => (q.id === ap.id ? { ...q, status: outcome, reviewer, response: explanation } : q)) }))
 }
 
 export const admin = {
@@ -388,7 +414,7 @@ export const admin = {
         id: `A-${n.id}`, noticeId: n.id, caseId: 'C-member', penName: db.account!.public.penName, decision: `${n.kind}: ${n.rule}`, decidedBy: 'T. Njeri', statement: n.appealText ?? '', openedAt: n.at,
         slaHours: 24, status: n.appeal === 'pending' ? 'open' : (n.appeal as AdminAppeal['status']), reviewer: n.appeal === 'pending' ? null : 'A. Mwangi',
       }))
-    return [...fromMember, ...a.appeals]
+    return [...fromMember, ...a.appeals].filter((x) => canSeeAppeal(a.role, x))
   },
   decideAppeal(id: string, outcome: 'upheld' | 'reduced' | 'overturned', explanation: string): Res {
     const ap = this.appeals().find((x) => x.id === id)
@@ -397,7 +423,9 @@ export const admin = {
     if (ap.status !== 'open') return { ok: false, error: 'This appeal has already been decided.' }
     if (ap.decidedBy === name) return { ok: false, error: 'You made the original decision. An appeal must be reviewed by someone else.', code: 'same-reviewer' }
     if (explanation.trim().length < 10) return { ok: false, error: 'Explain the outcome to the member.', code: 'explanation' }
-    if (ap.noticeId) {
+    if (ap.therapistId) {
+      applyTherapistAppeal(ap, outcome, explanation.trim(), name)
+    } else if (ap.noticeId) {
       updateAccount((acct) => ({
         ...acct,
         notices: acct.notices.map((n) => (n.id === ap.noticeId ? { ...n, appeal: outcome } : n)),

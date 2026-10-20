@@ -43,11 +43,13 @@ export default function Today() {
       {suspended ? (
         <Banner testID="suspended-notice" tone="clay" icon="lock" title="Your account is suspended">
           You are not shown to members and can’t take new bookings. A clinical reviewer will be in touch.
+          <Button testID="appeal-link" size="sm" variant="quiet" label="Appeal this decision" onPress={() => go('/portal/appeal')} />
         </Banner>
       ) : null}
       {p.review ? (
         <Banner testID="review-notice" tone="sun" icon="shield" title={p.review.kind === 'paused' ? 'Paused by a clinical review' : 'A clinical reviewer has written to you'}>
           {p.review.text}
+          <Button testID="appeal-link-review" size="sm" variant="quiet" label="Appeal this decision" onPress={() => go('/portal/appeal')} />
         </Banner>
       ) : null}
       {p.paused && p.review?.kind !== 'paused' ? (

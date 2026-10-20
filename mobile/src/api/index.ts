@@ -14,8 +14,9 @@ import { applyPortalToDirectory, applyStandingToDirectory, portal } from './port
 import { chat, forum, match, report } from './social'
 import { account, tickets } from './support'
 import { team } from './team'
+import { therapistAppeals } from './therapistAppeals'
 
-export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify }
+export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals }
 
 /** Restarts timers for anything that was in progress when the app last closed. */
 export function resumeBackground(): void {
