@@ -63,7 +63,7 @@ export function TopBar({
         ) : null}
         {logo ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <LogoMark color={dark ? colors.paper : colors.fern} />
+            <LogoMark size={40} />
             <Text variant="h2" color={fg}>
               echo
             </Text>

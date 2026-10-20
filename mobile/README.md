@@ -92,6 +92,10 @@ A bell at the top of each tab opens the notification centre, a stand-in for push
 
 When a peer chat ends after both people have written, the chat asks *Did you feel heard?* with five faces and an optional comment. It is asked once, can be skipped, and is private to the member. **Settings, then Send feedback** sends an idea or a bug report, with the app details optional. Support / Billing and Admin read the notes in the **Feedback** module, which shows no name or account and lets staff mark a note as read (logged). The felt-heard results appear only as shares once at least 10 people have answered, and members' comments are never shown.
 
+## The logo
+
+The Echo logo is a glowing lotus with a heart. It is drawn as shapes in `src/data/lotus.ts`, so the app, the icons and the web all use the same drawing. `node --experimental-strip-types e2e/make-icons.mjs` rewrites the icon and splash images in `assets/` and the SVG brand files in `docs/brand/`.
+
 ## Rules the app enforces
 
 - Messages, posts and comments with a link, phone number, email, social handle or address are blocked before they are sent, with a plain reason. The mock backend checks again, so the rule holds even if the app is changed.

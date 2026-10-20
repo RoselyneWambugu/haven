@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Easing, Platform, StyleSheet, View, type ViewStyle } from 'react-native'
-import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg'
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg'
 import type { AvatarKind, PortraitTone } from '@/api/types'
 import { colors } from '@/theme'
+import { LOTUS_VIEWBOX, lotusScene, ON_DARK } from '@/data/lotus'
 
 // ---------------------------------------------------------------------------
 // Avatars: drawn marks, never photos (PRD PRF-1)
@@ -115,14 +116,34 @@ export function Scene({ sun = [264, 120], sky = colors.lichen, pond = true }: { 
 // Logo
 // ---------------------------------------------------------------------------
 
-export function LogoMark({ size = 26, color = colors.fern }: { size?: number; color?: string }) {
+/**
+ * The Echo logo: the glowing lotus with a heart, on its deep teal tile. The tile makes it read on any background, light or dark.
+ * Under about 40 px the veins and the glow are left out, so it stays crisp.
+ */
+export function LogoMark({ size = 26 }: { size?: number; color?: string }) {
+  const scene = lotusScene(ON_DARK, { rich: size >= 40, tile: true, radius: 230 })
   return (
-    <Svg width={size} height={size} viewBox="0 0 32 32" fill="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Circle cx={16} cy={16} r={3} fill={colors.sun} />
-      <Path d="M10.5 10.5a7.8 7.8 0 0 0 0 11" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
-      <Path d="M21.5 10.5a7.8 7.8 0 0 1 0 11" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
-      <Path d="M6.4 6.6a13.4 13.4 0 0 0 0 18.8" stroke={color} strokeWidth={2.2} strokeLinecap="round" opacity={0.55} />
-      <Path d="M25.6 6.6a13.4 13.4 0 0 1 0 18.8" stroke={color} strokeWidth={2.2} strokeLinecap="round" opacity={0.55} />
+    <Svg width={size} height={size} viewBox={LOTUS_VIEWBOX} fill="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <Defs>
+        {scene.gradients.map((g) =>
+          g.kind === 'linear' ? (
+            <LinearGradient key={g.id} id={g.id} gradientUnits="userSpaceOnUse" x1={g.x1} y1={g.y1} x2={g.x2} y2={g.y2}>
+              {g.stops.map((s) => (
+                <Stop key={s.offset} offset={s.offset} stopColor={s.color} stopOpacity={s.opacity} />
+              ))}
+            </LinearGradient>
+          ) : (
+            <RadialGradient key={g.id} id={g.id} gradientUnits="userSpaceOnUse" cx={g.cx} cy={g.cy} r={g.r}>
+              {g.stops.map((s) => (
+                <Stop key={s.offset} offset={s.offset} stopColor={s.color} stopOpacity={s.opacity} />
+              ))}
+            </RadialGradient>
+          ),
+        )}
+      </Defs>
+      {scene.shapes.map((s, i) => (
+        <Path key={i} d={s.d} fill={s.fill} fillOpacity={s.fillOpacity} stroke={s.stroke} strokeWidth={s.strokeWidth} strokeOpacity={s.strokeOpacity} strokeLinejoin="round" strokeLinecap="round" />
+      ))}
     </Svg>
   )
 }

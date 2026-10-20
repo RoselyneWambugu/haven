@@ -41,7 +41,7 @@ export function DashboardFrame({
 
   const logo = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      <LogoMark color={dark ? colors.paper : colors.fern} />
+      <LogoMark size={40} />
       <View>
         <Text variant="h3" color={fg}>
           {brand}

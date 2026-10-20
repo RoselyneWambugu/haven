@@ -1,29 +1,49 @@
-// Renders the Echo logo mark to the PNG assets Expo needs. Usage: node e2e/make-icons.mjs
+// Draws the Echo logo into the icon files Expo needs, and the brand SVGs. Usage: node --experimental-strip-types e2e/make-icons.mjs
 import { chromium } from 'playwright-core'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { lotusSvg, mono, ON_DARK } from '../src/data/lotus.ts'
 
-const mark = (stroke, bg, pad, size, sun = '#F0A34A') => `<html><body style="margin:0;width:${size}px;height:${size}px;background:${bg}">
-<svg width="${size}" height="${size}" viewBox="${-pad} ${-pad} ${32 + 2 * pad} ${32 + 2 * pad}" fill="none">
-<circle cx="16" cy="16" r="3" fill="${sun}"/>
-<path d="M10.5 10.5a7.8 7.8 0 0 0 0 11" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M21.5 10.5a7.8 7.8 0 0 1 0 11" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M6.4 6.6a13.4 13.4 0 0 0 0 18.8" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
-<path d="M25.6 6.6a13.4 13.4 0 0 1 0 18.8" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
-</svg></body></html>`
+const TEAL = '#1B3F3B'
+
+/** The logo in a square, with `pad` units of room around its 1024-unit box. `bg` is a colour, or 'teal' for the deep teal with a little light in the middle. */
+const frame = (inner, size, pad = 0, bg = 'none') => {
+  const box = `${-pad} ${-pad} ${1024 + 2 * pad} ${1024 + 2 * pad}`
+  const back = bg === 'none' ? '' : bg === 'teal'
+    ? `<defs><radialGradient id="echo-bg" gradientUnits="userSpaceOnUse" cx="512" cy="500" r="${(1024 + 2 * pad) * 0.75}"><stop offset="0" stop-color="#2B5C54"/><stop offset="1" stop-color="${TEAL}"/></radialGradient></defs><rect x="${-pad}" y="${-pad}" width="${1024 + 2 * pad}" height="${1024 + 2 * pad}" fill="url(#echo-bg)"/>`
+    : `<rect x="${-pad}" y="${-pad}" width="${1024 + 2 * pad}" height="${1024 + 2 * pad}" fill="${bg}"/>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${box}" fill="none">${back}${inner}</svg>`
+}
+const page = (svg) => `<html><body style="margin:0;background:transparent">${svg}</body></html>`
 
 const jobs = [
-  ['icon.png', 1024, mark('#F5F6EA', '#1C372A', 4, 1024)],
-  ['splash-icon.png', 1024, mark('#1C372A', 'transparent', 0, 1024)],
-  ['android-icon-foreground.png', 512, mark('#F5F6EA', 'transparent', 14, 512)],
-  ['android-icon-background.png', 512, `<html><body style="margin:0;width:512px;height:512px;background:#1C372A"></body></html>`],
-  ['android-icon-monochrome.png', 432, mark('#000', 'transparent', 14, 432, '#000')],
-  ['favicon.png', 48, mark('#1C372A', '#F5F6EA', 2, 48)],
+  // iOS and the store listing: the logo on its tile, with no transparency (the phone rounds the corners).
+  ['icon.png', 1024, frame(lotusSvg(ON_DARK), 1024, 0, 'teal')],
+  // Android adaptive icon: the logo sits inside the safe zone on the teal background.
+  ['android-icon-foreground.png', 512, frame(lotusSvg(ON_DARK), 512, 170)],
+  ['android-icon-background.png', 512, frame('', 512, 0, 'teal')],
+  // Android themed icon: one colour, the phone tints it.
+  ['android-icon-monochrome.png', 432, frame(lotusSvg(mono('#000')), 432, 170)],
+  // The splash screen sits on teal, so the glowing logo shows without a tile.
+  ['splash-icon.png', 1024, frame(lotusSvg(ON_DARK), 1024, 0)],
+  // A tab icon is tiny: the tile with rounded corners, without the veins and the glow.
+  ['favicon.png', 64, frame(lotusSvg(ON_DARK, { rich: false, tile: true, radius: 200 }), 64, 0)],
 ]
+
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] })
-for (const [file, size, html] of jobs) {
-  const page = await browser.newPage({ viewport: { width: size, height: size } })
-  await page.setContent(html)
-  await page.screenshot({ path: `assets/${file}`, omitBackground: true })
-  await page.close()
+for (const [file, size, svg] of jobs) {
+  const p = await browser.newPage({ viewport: { width: size, height: size } })
+  await p.setContent(page(svg))
+  await p.screenshot({ path: `assets/${file}`, omitBackground: true })
+  await p.close()
 }
 await browser.close()
-console.log('icons written')
+
+mkdirSync('../docs/brand', { recursive: true })
+const out = {
+  'echo-logo.svg': frame(lotusSvg(ON_DARK, { tile: true, radius: 230 }), 1024, 0),
+  'echo-logo-no-tile.svg': frame(lotusSvg(ON_DARK), 1024, 0),
+  'echo-logo-mono.svg': frame(lotusSvg(mono('#1B3F3B')), 1024, 0),
+  'echo-app-icon.svg': frame(lotusSvg(ON_DARK), 1024, 0, 'teal'),
+}
+for (const [f, svg] of Object.entries(out)) writeFileSync(`../docs/brand/${f}`, svg)
+console.log('icons and brand files written')
