@@ -1,10 +1,9 @@
 import { useEffect } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { router, Slot, useSegments } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api } from '@/api'
-import { LogoMark } from '@/components/Art'
 import { Badge } from '@/components/Controls'
+import { DashboardFrame, type NavItem } from '@/components/Frame'
 import { Text } from '@/components/Text'
 import { canAccess, MODULES, ROLE_LABEL } from '@/lib/admin'
 import { useDb } from '@/store/db'
@@ -19,7 +18,6 @@ const KEY_OF: Record<string, string> = { case: 'cases', user: 'users', appeal: '
 export default function AdminLayout() {
   const segs = useSegments() as string[]
   const page = segs[1] ?? ''
-  const insets = useSafeAreaInsets()
   const signedIn = useDb((s) => s.admin?.signedIn ?? false)
   const role = useDb((s) => s.admin?.role ?? 'moderator')
   const name = useDb((s) => s.admin?.staffName ?? '')
@@ -36,54 +34,31 @@ export default function AdminLayout() {
     if (signedIn) api.admin.syncReports()
   }, [signedIn, reportCount])
 
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.paper, paddingTop: insets.top }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: colors.fern, flexWrap: 'wrap' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <LogoMark color={colors.paper} />
-          <Text variant="h3" color={colors.paper}>
-            echo admin
+  const items: NavItem[] = MODULES.filter((m) => canAccess(role, m.key)).map((m) => ({ key: m.key, label: m.label, testID: `anav-${m.key}`, onPress: () => router.push(`/admin/${m.key}` as never) }))
+  const user = signedIn ? (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <Badge icon="check" label="MFA" />
+        <View testID="role-badge" style={{ backgroundColor: colors.lichen, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
+          <Text variant="small" bold color={colors.mossDeep}>
+            {ROLE_LABEL[role]}
           </Text>
         </View>
-        <View style={{ flex: 1 }} />
-        {signedIn ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Badge icon="check" label="MFA" />
-            <View testID="role-badge" style={{ backgroundColor: colors.lichen, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-              <Text variant="small" bold color={colors.mossDeep}>
-                {ROLE_LABEL[role]}
-              </Text>
-            </View>
-            <Text variant="small" color={colors.paper}>
-              {name}
-            </Text>
-            <Pressable testID="admin-sign-out" accessibilityRole="button" accessibilityLabel="Sign out" onPress={() => { api.admin.signOut(); router.replace('/admin/sign-in' as never) }} style={{ minHeight: 40, justifyContent: 'center' }}>
-              <Text variant="small" color={colors.lichen} style={{ textDecorationLine: 'underline' }}>
-                Sign out
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
       </View>
-      {signedIn ? (
-        <View style={{ borderBottomWidth: 1, borderBottomColor: colors.line, backgroundColor: colors.paper }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, gap: 4 }} accessibilityRole="tablist">
-            {MODULES.filter((m) => canAccess(role, m.key)).map((m) => {
-              const on = section === m.key
-              return (
-                <Pressable key={m.key} testID={`anav-${m.key}`} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => router.push(`/admin/${m.key}` as never)} style={{ paddingHorizontal: 14, minHeight: 48, justifyContent: 'center', borderBottomWidth: 3, borderBottomColor: on ? colors.moss : 'transparent' }}>
-                  <Text variant="label" color={on ? colors.mossDeep : colors.muted}>
-                    {m.label}
-                  </Text>
-                </Pressable>
-              )
-            })}
-          </ScrollView>
-        </View>
-      ) : null}
-      <View style={{ flex: 1 }}>
-        <Slot />
-      </View>
+      <Text variant="small" color={colors.paper}>
+        {name}
+      </Text>
+      <Pressable testID="admin-sign-out" accessibilityRole="button" accessibilityLabel="Sign out" onPress={() => { api.admin.signOut(); router.replace('/admin/sign-in' as never) }} style={{ minHeight: 40, justifyContent: 'center' }}>
+        <Text variant="small" color={colors.lichen} style={{ textDecorationLine: 'underline' }}>
+          Sign out
+        </Text>
+      </Pressable>
     </View>
+  ) : null
+
+  return (
+    <DashboardFrame brand="echo admin" dark items={items} active={section} user={user} showNav={signedIn}>
+      <Slot />
+    </DashboardFrame>
   )
 }
