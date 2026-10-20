@@ -6,6 +6,8 @@ import { uid } from '@/lib/id'
 import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess, canSeeCase } from '@/lib/admin'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { notify } from './notify'
+import { applyPortalToDirectory } from './portal'
 import { account } from './support'
 import type {
   AdminAppeal, AdminCase, AdminState, AdminUser, Applicant, AuditEntry, BreakGlassRequest, CaseAction, Notice, ReportReason, Res, Severity, StaffRole,
@@ -128,6 +130,25 @@ function sanctionMember(kind: Notice['kind'], rule: string) {
   })
 }
 
+
+const THERAPIST_WARNING = 'A clinical reviewer has looked at a concern raised about a session and asked you to review our standards of practice. This is a warning, not a suspension.'
+const THERAPIST_PAUSED = 'New clients are paused while a clinical reviewer looks at a concern raised about a session. Your existing clients are not affected. A clinical reviewer will lift the pause.'
+
+/** What a clinical decision on a therapist concern changes: the therapist's portal, and a plain update to the member who raised it. */
+function applyTherapistOutcome(c: AdminCase, action: CaseAction): void {
+  const db = getDb()
+  if (action === 'warn-therapist' || action === 'pause-therapist') {
+    const p = db.portal
+    if (p && c.therapistId && p.therapistId === c.therapistId) {
+      const paused = action === 'pause-therapist'
+      update((s) => (s.portal ? { portal: { ...s.portal, paused: paused ? true : s.portal.paused, review: { kind: paused ? 'paused' : 'warning', text: paused ? THERAPIST_PAUSED : THERAPIST_WARNING, at: now() } } } : {}))
+      applyPortalToDirectory()
+    }
+  }
+  if (action === 'escalate' || !c.id.startsWith('C-r')) return
+  notify.push('safety', `concern:${c.id}`, 'An update on your concern', action === 'dismiss' ? 'A clinical reviewer looked at it and did not find a breach of our standards. You can raise a concern again if something else happens.' : 'A clinical reviewer looked at it and took action. We can’t share details about another person. Thank you for telling us.', '/home')
+}
+
 export const admin = {
   signIn(name: string, code: string): Res {
     const roster = getDb().admin?.staff ?? STAFF.map((s, i) => ({ id: `st${i + 1}`, ...s, active: true, lastSignInAt: null }))
@@ -158,7 +179,7 @@ export const admin = {
       const sev = SEV_BY_REASON[reason]
       return {
         id: `C-${r.id}`, severity: sev, source: 'user-report', type: REASON_LABEL[reason], slaMinutes: SLA[sev], openedAt: r.at, owner: null, status: 'new', reporter: mine,
-        reported: r.reportedName ?? (r.target === 'member' ? 'Reported member' : `Reported ${r.target}`), snapshotAt: r.at, ai: null, strikes: 0, priorReports: r.priorReports ?? 0, queue: r.queue, decision: null, escalated: false,
+        reported: r.reportedName ?? (r.target === 'member' ? 'Reported member' : `Reported ${r.target}`), snapshotAt: r.at, ai: null, strikes: 0, priorReports: r.priorReports ?? 0, queue: r.queue, therapistId: r.therapistId, decision: null, escalated: false,
         evidence: r.snapshot?.length ? r.snapshot : [{ id: 'e0', who: 'reported', text: r.note || 'No content was captured for this report.', reported: true }],
       }
     })
@@ -202,6 +223,9 @@ export const admin = {
     if (!c || !canSeeCase(me().role, c)) return { ok: false, error: 'Case not found.' }
     if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
     const { name, role } = me()
+    const clinicalActions: CaseAction[] = ['dismiss', 'warn-therapist', 'pause-therapist', 'escalate']
+    if (c.queue === 'clinical' && !clinicalActions.includes(action)) return { ok: false, error: 'A therapist concern is closed with no action, a warning, a pause on new clients, or escalation.', code: 'action' }
+    if (c.queue !== 'clinical' && (action === 'warn-therapist' || action === 'pause-therapist')) return { ok: false, error: 'That action is only for therapist concerns.', code: 'action' }
     if ((action === 'strike' || action === 'restrict' || action === 'suspend') && !can(role, 'suspendRestore')) return { ok: false, error: 'Your role recommends a sanction. Escalate the case so a moderator or Admin can apply it.', code: 'role' }
     const memberName = getDb().account?.public.penName
     const targetIsMember = !!memberName && c.reported === memberName
@@ -214,7 +238,21 @@ export const admin = {
           : q,
       ),
     }))
+    if (c.queue === 'clinical') applyTherapistOutcome(c, action)
     log(action === 'dismiss' ? 'Dismissed case' : action === 'escalate' ? 'Escalated case' : `Decided: ${action}`, caseId, reason.trim())
+    return { ok: true, value: undefined }
+  },
+
+  /** Lifts a clinical pause on new clients. Only Clinical reviewers and Admins, with a reason, and it is logged. */
+  liftTherapistPause(reason: string): Res {
+    const { role } = me()
+    if (role !== 'clinical' && role !== 'admin') return { ok: false, error: 'Only clinical reviewers and Admins lift a pause.', code: 'role' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    const p = getDb().portal
+    if (!p || p.review?.kind !== 'paused') return { ok: false, error: 'There is no pause to lift.' }
+    update((s) => (s.portal ? { portal: { ...s.portal, paused: false, review: null } } : {}))
+    applyPortalToDirectory()
+    log('Lifted therapist pause', p.therapistId, reason.trim())
     return { ok: true, value: undefined }
   },
 

@@ -39,7 +39,12 @@ export default function Today() {
           {licence.state === 'expired' ? 'You’re hidden from booking until you upload a renewal.' : 'Upload your renewal to stay listed.'}
         </Banner>
       ) : null}
-      {p.paused ? (
+      {p.review ? (
+        <Banner testID="review-notice" tone="sun" icon="shield" title={p.review.kind === 'paused' ? 'Paused by a clinical review' : 'A clinical reviewer has written to you'}>
+          {p.review.text}
+        </Banner>
+      ) : null}
+      {p.paused && p.review?.kind !== 'paused' ? (
         <Banner tone="sun" icon="lock" title="New clients are paused">
           Existing clients are unaffected. You can turn this off in Calendar.
         </Banner>

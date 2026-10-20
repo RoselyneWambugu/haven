@@ -1,0 +1,113 @@
+// Onboards, grants a demo plan, matches with a peer, and exercises blocked-message handling in chat.
+// Usage: node e2e/flow-concern.mjs <webroot> <outdir>
+import { chromium } from 'playwright-core'
+import { mkdirSync } from 'node:fs'
+import { serve } from './serve.mjs'
+
+const [root, out] = process.argv.slice(2)
+mkdirSync(out, { recursive: true })
+const server = await serve(root, 8102)
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] })
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 })
+const problems = []
+page.on('console', (m) => m.type() === 'error' && problems.push(`console: ${m.text().slice(0, 240)}`))
+page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 300)}`))
+const shot = (n) => page.screenshot({ path: `${out}/${n}.png` })
+const tid = (id) => page.locator(`[data-testid="${id}"]`)
+const step = async (name, fn) => { try { await fn(); console.log('ok  ', name) } catch (e) { console.log('FAIL', name, String(e).split('\n')[0]); await shot(`FAIL-${name}`); console.log(problems.join('\n')); throw e } }
+const login = async (name) => {
+  await page.waitForTimeout(600) // let the last change reach storage before reloading
+  await page.goto('http://localhost:8102/admin/sign-in')
+  await page.waitForTimeout(1500)
+  if (await tid('admin-sign-out').count()) await tid('admin-sign-out').click()
+  await tid('admin-sign-in').waitFor()
+  await tid(`staff-${name}`).click()
+  await tid('mfa-code').fill('135790')
+  await tid('admin-sign-in-go').click()
+  await tid('admin-overview').waitFor()
+}
+let noticeId = null
+const flush = () => page.waitForTimeout(900)
+const body = async () => page.locator('body').innerText()
+
+await page.goto('http://localhost:8102/welcome')
+await page.waitForTimeout(1800)
+await step('member-and-a-completed-session', async () => {
+  await tid('get-started').click()
+  for (const id of ['consent-terms', 'consent-privacy', 'consent-guidelines', 'consent-screening']) await tid(id).click()
+  await tid('consent-continue').click()
+  await tid('reg-name').fill('Amina Otieno')
+  await tid('reg-phone').fill('0712 345 678')
+  await tid('reg-dob').fill('14/03/1998')
+  await tid('register-continue').click()
+  const code = (await tid('demo-code').innerText()).match(/(\d{6})/)[1]
+  await tid('otp-input').fill(code)
+  await tid('pen-input').fill('BrightFern')
+  await tid('pen-continue').click()
+  await tid('finish').click()
+  await tid('home').waitFor()
+  await page.evaluate(() => window.__echo.portal.signIn())
+  await flush()
+  await page.evaluate(() => {
+    const db = JSON.parse(localStorage.getItem('echo.demo.v1'))
+    db.sessions = [{ id: 's-e2e', therapistId: db.portal.therapistId, mode: 'video', start: Date.now() - 7200000, end: Date.now() - 3600000, status: 'completed', priceKes: null, receiptNo: 'R-1', createdAt: 0, rating: null, followUpOffer: null, lateChargeApplied: false }]
+    localStorage.setItem('echo.demo.v1', JSON.stringify(db))
+  })
+  await page.goto('http://localhost:8102/sessions/s-e2e')
+  await tid('session-detail').waitFor()
+})
+await step('member-reports-a-concern', async () => {
+  await tid('session-concern').click()
+  await tid('concern-therapist-conduct').click()
+  await tid('concern-note').fill('They were dismissive and cut me off')
+  await tid('concern-send').click()
+  await page.getByText('We received your concern').waitFor()
+  await flush()
+})
+await step('moderators-do-not-see-it', async () => {
+  await login('T. Njeri')
+  await tid('anav-cases').click()
+  await tid('admin-cases').waitFor()
+  await flush()
+  if ((await body()).includes('Therapist conduct')) throw new Error('a moderator should not see therapist concerns')
+})
+await step('clinical-reviewer-pauses-the-therapist', async () => {
+  await login('Dr. K. Mwende')
+  await tid('anav-cases').click()
+  await tid('admin-cases').waitFor()
+  await flush()
+  await page.getByText('Therapist conduct').first().click()
+  await tid('admin-case').waitFor()
+  await page.getByRole('tab', { name: 'Pause new clients' }).click()
+  await tid('decision-reason').fill('Pending a closer review of this session')
+  await shot('160-clinical-case')
+  await tid('submit-decision').click()
+  await tid('lift-pause').waitFor()
+  await flush()
+})
+await step('therapist-sees-the-pause-and-cannot-lift-it', async () => {
+  await page.goto('http://localhost:8102/portal/today')
+  await tid('review-notice').waitFor()
+  await shot('161-portal-paused')
+  if (!(await body()).includes('Paused by a clinical review')) throw new Error('missing pause notice')
+})
+await step('member-is-told-and-clinical-lifts-it', async () => {
+  await page.goto('http://localhost:8102/notifications')
+  await tid('notification-centre').waitFor()
+  await page.getByText('An update on your concern').waitFor()
+  await login('Dr. K. Mwende')
+  const caseId = await page.evaluate(() => JSON.parse(localStorage.getItem('echo.demo.v1')).admin.cases.find((c) => c.queue === 'clinical').id)
+  await page.goto(`http://localhost:8102/admin/case/${caseId}`)
+  await tid('lift-pause').waitFor()
+  await tid('lift-reason').fill('Review complete, no further action')
+  await tid('lift-submit').click()
+  await tid('lift-pause').waitFor({ state: 'detached' })
+  await flush()
+  await page.goto('http://localhost:8102/portal/today')
+  await tid('portal-today').waitFor()
+  if (await tid('review-notice').count()) throw new Error('notice should be gone')
+})
+await browser.close()
+server.close()
+if (problems.length) { console.log('PROBLEMS:\n' + problems.join('\n')); process.exit(1) }
+console.log('all steps passed')

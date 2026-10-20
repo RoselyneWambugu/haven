@@ -230,12 +230,14 @@ export const report = {
     let snapshot: EvidenceLine[] | undefined
     let reportedName: string | undefined
     let queue: ReportRecord['queue']
+    let therapistId: string | undefined
     if (sess) {
       const th = THERAPISTS.find((x) => x.id === sess.therapistId)
       const thread = db.conversations.find((c) => c.kind === 'therapist' && c.therapistId === sess.therapistId)
       snapshot = sessionSnapshot({ therapist: th?.name ?? 'a therapist', mode: sess.mode, when: dayAndClock(sess.start) }, input.note, thread?.messages)
       reportedName = th?.name
       queue = 'clinical'
+      therapistId = sess.therapistId
     } else if (conv) {
       snapshot = chatSnapshot(conv.messages)
       reportedName = conv.peer?.penName
@@ -248,7 +250,7 @@ export const report = {
     }
     const record: ReportRecord = {
       id: uid('r'), target: input.target, targetId: input.targetId, reason: input.reason, note: input.note, at,
-      reportedName, queue, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
+      reportedName, queue, therapistId, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
     }
     update((s) => ({ reports: [...s.reports, record] }))
     notify.push('safety', `report:${record.id}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')

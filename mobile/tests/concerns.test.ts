@@ -74,3 +74,64 @@ describe('from report to case', () => {
     expect(api.admin.decide(id, 'escalate', 'Needs the clinical lead').ok).toBe(true)
   })
 })
+
+describe('what a clinical decision does', () => {
+  let id = ''
+  beforeEach(() => {
+    vi.useFakeTimers()
+    resetClock()
+    update(freshState())
+    api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob: '14/03/1998', email: '' })
+    api.auth.acceptConsents()
+    const otp = api.auth.requestOtp('register')
+    if (!otp.ok) throw new Error('otp')
+    api.auth.verifyOtp(otp.value.demoCode)
+    api.auth.saveProfileDraft({ penName: 'QuietHeron', avatar: 'moon', languages: ['English'] })
+    api.auth.completeRegistration('web')
+    api.portal.signIn()
+    const th = getDb().portal!.therapistId
+    update({ sessions: [{ id: 's9', therapistId: th, mode: 'video', start: 1000, end: 4000, status: 'completed', priceKes: null, receiptNo: 'R', createdAt: 0, rating: null, followUpOffer: null, lateChargeApplied: false } as never] })
+    api.report.submit({ target: 'session', targetId: 's9', reason: 'therapist-conduct', note: 'They were rude to me', sessionId: 's9' })
+    api.admin.signIn('Dr. K. Mwende', DEMO_MFA)
+    api.admin.syncReports()
+    id = getDb().admin!.cases.find((x) => x.id.startsWith('C-r') && x.queue === 'clinical')!.id
+  })
+  const updates = () => getDb().notifications.filter((n) => n.title === 'An update on your concern')
+
+  it('warning: tells the therapist it is not a suspension, and the member that action was taken', () => {
+    expect(api.admin.decide(id, 'warn-therapist', 'Tone fell short of standards').ok).toBe(true)
+    const p = getDb().portal!
+    expect(p.review).toMatchObject({ kind: 'warning' })
+    expect(p.paused).toBe(false)
+    expect(updates()).toHaveLength(1)
+    expect(updates()[0].body).toContain('took action')
+    expect(JSON.stringify(p.review)).not.toMatch(/QuietHeron/)
+  })
+  it('pause: stops new clients, and only a clinical reviewer can lift it', () => {
+    expect(api.admin.decide(id, 'pause-therapist', 'Pending a closer review').ok).toBe(true)
+    expect(getDb().portal!.paused).toBe(true)
+    expect(api.portal.setPaused(false)).toMatchObject({ ok: false, code: 'review' })
+    expect(getDb().portal!.paused).toBe(true)
+    api.admin.signIn('T. Njeri', DEMO_MFA)
+    expect(api.admin.liftTherapistPause('Moderators should not').ok).toBe(false)
+    api.admin.signIn('Dr. K. Mwende', DEMO_MFA)
+    expect(api.admin.liftTherapistPause('no').ok).toBe(false)
+    expect(api.admin.liftTherapistPause('Review complete, no further action').ok).toBe(true)
+    expect(getDb().portal).toMatchObject({ paused: false, review: null })
+    expect(getDb().admin!.audit[0].action).toBe('Lifted therapist pause')
+  })
+  it('no action: leaves the therapist alone and tells the member generically', () => {
+    api.admin.decide(id, 'dismiss', 'No breach found on review')
+    expect(getDb().portal!.review ?? null).toBeNull()
+    expect(updates()[0].body).toContain('did not find a breach')
+  })
+  it('escalating tells nobody yet', () => {
+    api.admin.decide(id, 'escalate', 'Needs the clinical lead')
+    expect(updates()).toHaveLength(0)
+    expect(getDb().portal!.review ?? null).toBeNull()
+  })
+  it('keeps member sanctions and therapist outcomes apart', () => {
+    expect(api.admin.decide(id, 'strike', 'Wrong ladder')).toMatchObject({ ok: false, code: 'action' })
+    expect(api.admin.decide('C-1042', 'pause-therapist', 'Not a therapist case')).toMatchObject({ ok: false, code: 'action' })
+  })
+})

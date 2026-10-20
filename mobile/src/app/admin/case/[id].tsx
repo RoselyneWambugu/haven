@@ -23,6 +23,18 @@ const ACTIONS: { value: CaseAction; label: string }[] = [
   { value: 'suspend', label: 'Suspend' },
   { value: 'escalate', label: 'Escalate' },
 ]
+const THERAPIST_ACTIONS: { value: CaseAction; label: string }[] = [
+  { value: 'dismiss', label: 'No action' },
+  { value: 'warn-therapist', label: 'Warn' },
+  { value: 'pause-therapist', label: 'Pause new clients' },
+  { value: 'escalate', label: 'Escalate' },
+]
+const THERAPIST_HINT: Partial<Record<CaseAction, string>> = {
+  dismiss: 'No breach found. The member is told generically.',
+  'warn-therapist': 'The therapist is warned and told it is not a suspension. The member is told we took action.',
+  'pause-therapist': 'New clients are paused until a clinical reviewer lifts it. Existing clients are not affected.',
+  escalate: 'Hands the case to the clinical lead.',
+}
 const REASONS: { value: BreakGlassRequest['reasonCode']; label: string }[] = [
   { value: 'imminent-risk', label: 'Imminent risk to life' },
   { value: 'legal', label: 'Legal request (attach reference)' },
@@ -39,6 +51,9 @@ export default function CaseDetail() {
   const t = useNow()
   const wide = useWide()
   const [action, setAction] = useState<CaseAction>('strike')
+  const portal = useDb((st) => st.portal)
+  const [liftReason, setLiftReason] = useState('')
+  const [liftError, setLiftError] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [sheet, setSheet] = useState(false)
@@ -56,8 +71,11 @@ export default function CaseDetail() {
   const exp = a.exposure[a.staffName]
   const req = a.breakGlass.find((b) => b.caseId === c.id && (b.status === 'pending' || (b.status === 'approved' && (b.expiresAt ?? 0) > t)))
 
+  const clinical = c.queue === 'clinical'
+  const act: CaseAction = clinical && !THERAPIST_ACTIONS.some((x) => x.value === action) ? 'dismiss' : action
+
   function decide() {
-    const r = api.admin.decide(c!.id, action, reason)
+    const r = api.admin.decide(c!.id, act, reason)
     if (!r.ok) return setError(r.error)
     setError(null)
     setReason('')
@@ -161,17 +179,34 @@ export default function CaseDetail() {
         </Banner>
       ) : (
         <Panel title="Decision" testID="decision">
-          <Segmented value={action} onChange={setAction} options={ACTIONS} />
+          <Segmented value={act} onChange={setAction} options={clinical ? THERAPIST_ACTIONS : ACTIONS} />
           <Text variant="caption" muted>
-            {action === 'escalate' ? 'Sends the case to a clinical reviewer.' : action === 'strike' ? 'The sanction follows the strike ladder.' : action === 'dismiss' ? 'No violation found. The reporter is told generically.' : 'The member is told the rule and how to appeal.'}
+            {clinical ? THERAPIST_HINT[act] : action === 'escalate' ? 'Sends the case to a clinical reviewer.' : action === 'strike' ? 'The sanction follows the strike ladder.' : action === 'dismiss' ? 'No violation found. The reporter is told generically.' : 'The member is told the rule and how to appeal.'}
           </Text>
           <Field testID="decision-reason" label="Reason (required)" value={reason} onChangeText={(v) => { setReason(v); setError(null) }} multiline minHeight={80} />
           <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
             <Button testID="submit-decision" label="Submit decision" onPress={decide} />
-            <Button testID="open-break-glass" variant="dangerGhost" label="Request private profile (break-glass)" onPress={() => { setSheet(true); setBgError(null) }} />
+            {clinical ? null : <Button testID="open-break-glass" variant="dangerGhost" label="Request private profile (break-glass)" onPress={() => { setSheet(true); setBgError(null) }} />}
           </View>
         </Panel>
       )}
+
+      {clinical && c.decision?.action === 'pause-therapist' && portal?.review?.kind === 'paused' && portal.therapistId === c.therapistId ? (
+        <Panel tone="sun" title="New clients are paused" testID="lift-pause">
+          <Text variant="small">The therapist can’t switch this off. Lift it when the review is done.</Text>
+          <Field testID="lift-reason" label="Reason (required)" value={liftReason} onChangeText={(v) => { setLiftReason(v); setLiftError(null) }} error={liftError} />
+          <Button
+            testID="lift-submit"
+            variant="quiet"
+            label="Lift pause"
+            onPress={() => {
+              const r = api.admin.liftTherapistPause(liftReason)
+              if (!r.ok) return setLiftError(r.error)
+              setLiftReason('')
+            }}
+          />
+        </Panel>
+      ) : null}
 
       {req ? (
         <Panel tone="sun" title="Private profile" testID="bg-status">

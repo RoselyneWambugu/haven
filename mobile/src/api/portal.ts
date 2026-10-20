@@ -102,9 +102,12 @@ export const portal = {
     patch(() => ({ availability: cellsToBlocks(cells) }))
     applyPortalToDirectory()
   },
-  setPaused(paused: boolean): void {
+  /** A pause set by a clinical review can't be switched off here. A clinical reviewer lifts it. */
+  setPaused(paused: boolean): Res {
+    if (!paused && getDb().portal?.review?.kind === 'paused') return { ok: false, error: 'This pause was set by a clinical review. A clinical reviewer will lift it.', code: 'review' }
     patch(() => ({ paused }))
     applyPortalToDirectory()
+    return { ok: true, value: undefined }
   },
   setCaps(caps: Partial<PortalState['caps']>): void {
     patch((p) => ({ caps: { ...p.caps, ...caps } }))

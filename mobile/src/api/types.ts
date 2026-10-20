@@ -337,6 +337,7 @@ export interface ReportRecord {
   priorReports?: number
   /** Concerns about a therapist go to the clinical queue. */
   queue?: 'clinical'
+  therapistId?: string
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'
@@ -411,6 +412,8 @@ export interface PortalState {
   therapistId: string
   application: 'none' | 'submitted' | 'more-info' | 'approved'
   paused: boolean
+  /** Set by a clinical review of a concern about this therapist. A pause set this way is lifted only by a clinical reviewer. */
+  review?: { kind: 'warning' | 'paused'; text: string; at: number } | null
   caps: { perDay: number; bufferMin: number; newPerWeek: number }
   availability: AvailabilityBlock[]
   timeOff: { id: string; start: number; end: number }[]
@@ -429,7 +432,7 @@ export type StaffRole = 'moderator' | 'clinical' | 'billing' | 'admin'
 export type Severity = 'S1' | 'S2' | 'S3'
 export type CaseStatus = 'new' | 'in-review' | 'waiting' | 'closed'
 export type CaseSource = 'user-report' | 'ai-flag' | 'crisis-flag' | 'appeal'
-export type CaseAction = 'dismiss' | 'strike' | 'restrict' | 'suspend' | 'escalate'
+export type CaseAction = 'dismiss' | 'strike' | 'restrict' | 'suspend' | 'escalate' | 'warn-therapist' | 'pause-therapist'
 
 export interface EvidenceLine {
   id: string
@@ -457,6 +460,8 @@ export interface AdminCase {
   priorReports: number
   /** Which team works it. Therapist concerns are for Clinical reviewers; the rest are for moderators. */
   queue?: 'clinical'
+  /** For a therapist concern: which therapist it is about. */
+  therapistId?: string
   decision: { action: CaseAction; reason: string; by: string; at: number } | null
   escalated: boolean
 }
