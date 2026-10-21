@@ -64,11 +64,20 @@ export function syncAdmin(): Promise<boolean> {
     if (error || !d) return !!getDb().admin?.signedIn
     if (d.ok !== true || !d.name) return false
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
+    if (d.role === 'clinical' || d.role === 'admin') await syncLinks()
     return true
   })().finally(() => {
     syncing = null
   })
   return syncing
+}
+
+async function syncLinks(): Promise<void> {
+  const { data } = await supabase().rpc('admin_therapist_links')
+  const d = data as { ok?: boolean; links?: { id: string; linked: boolean; pending: boolean; tail: string }[] } | null
+  if (!d?.ok || !d.links) return
+  const links = Object.fromEntries(d.links.map((l) => [l.id, { linked: l.linked, pending: l.pending, tail: l.tail }]))
+  update((s) => (s.admin ? { admin: { ...s.admin, therapistLinks: links } } : {}))
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
@@ -159,6 +168,10 @@ export const remoteAdmin = {
   liftTherapistPause: (reason: string, therapistId?: string) => act('admin_lift_pause', { p_therapist: therapistId ?? '', p_reason: reason }),
   suspendTherapist: (therapistId: string, reason: string) => act('admin_suspend_therapist', { p_therapist: therapistId, p_reason: reason }),
   reinstateTherapist: (therapistId: string, reason: string) => act('admin_reinstate_therapist', { p_therapist: therapistId, p_reason: reason }),
+
+  /** Links a therapist to the phone number they will sign in to the portal with. */
+  linkTherapist: (therapistId: string, phone: string) => act('admin_link_therapist', { p_therapist: therapistId, p_phone: phone }),
+  unlinkTherapist: (therapistId: string, reason: string) => act('admin_unlink_therapist', { p_therapist: therapistId, p_reason: reason }),
 
   users(): AdminUser[] {
     return getDb().admin?.users ?? []

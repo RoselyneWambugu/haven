@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { remoteAdmin } from '@/backend/remoteAdmin'
+import { normaliseKenyanPhone } from '@/lib/identity'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -25,6 +28,9 @@ export default function Therapists() {
   const [picked, setPicked] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [phone, setPhone] = useState('')
+  const [linkError, setLinkError] = useState<string | null>(null)
+  const links = a?.therapistLinks ?? {}
   const apps = api.admin.applicants()
   const standing = a?.therapistStanding ?? {}
   const concerns = (id: string) => (a?.cases ?? []).filter((c) => c.therapistId === id).length
@@ -38,6 +44,22 @@ export default function Therapists() {
     setError(null)
     setReason('')
     setPicked(null)
+  }
+  async function link() {
+    if (!sel) return
+    const n = normaliseKenyanPhone(phone)
+    if (!n) return setLinkError('Enter a Kenyan mobile number, like 0712 345 678.')
+    const r = await remoteAdmin.linkTherapist(sel.id, n)
+    if (!r.ok) return setLinkError(r.error)
+    setLinkError(null)
+    setPhone('')
+  }
+  async function unlink() {
+    if (!sel) return
+    const r = await remoteAdmin.unlinkTherapist(sel.id, reason)
+    if (!r.ok) return setLinkError(r.error)
+    setLinkError(null)
+    setReason('')
   }
   return (
     <PortalPage testID="admin-therapists" title="Therapists" sub="Clinical checks sit with clinicians.">
@@ -76,6 +98,32 @@ export default function Therapists() {
             <Banner tone="clay" icon="lock" title="Suspended">
               {standing[sel.id].reason} · by {standing[sel.id].by}
             </Banner>
+          ) : null}
+          {REMOTE && canAct ? (
+            <View style={{ gap: 8 }} testID="link-therapist">
+              <Text variant="label">Portal sign-in</Text>
+              {links[sel.id]?.linked || links[sel.id]?.pending ? (
+                <>
+                  <Banner tone="green" icon="lock">
+                    {links[sel.id].linked ? `Linked to a number ending ${links[sel.id].tail}.` : `Waiting for the number ending ${links[sel.id].tail} to sign in for the first time.`}
+                  </Banner>
+                  <Text variant="caption" muted>
+                    To unlink, give a reason below.
+                  </Text>
+                  <Button testID="unlink-therapist" variant="quiet" label="Unlink number" onPress={unlink} />
+                </>
+              ) : (
+                <>
+                  <Field testID="link-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={(v) => { setPhone(v); setLinkError(null) }} keyboardType="phone-pad" error={linkError} />
+                  <Button testID="link-therapist-go" label="Link number" onPress={link} />
+                </>
+              )}
+              {links[sel.id] && (links[sel.id].linked || links[sel.id].pending) && linkError ? (
+                <Text variant="small" color="#b3402a">
+                  {linkError}
+                </Text>
+              ) : null}
+            </View>
           ) : null}
           {canAct ? (
             <>

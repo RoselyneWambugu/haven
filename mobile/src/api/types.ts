@@ -638,6 +638,8 @@ export interface AdminState {
   audit: AuditEntry[]
   /** Posts waiting for a moderator. Only on the real backend. */
   held?: HeldPost[]
+  /** Which therapists have a phone number linked, by therapist id. Only on the real backend. */
+  therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string }>
 }
 
 export interface HeldPost {

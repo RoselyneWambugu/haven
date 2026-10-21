@@ -158,7 +158,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-21 | Reporting a therapist from a chat when there is no session (M-02) on the server | v0.37 |
 | Q-22 | Late-change charges and refunds for cancelled sessions (the flag is kept; nothing is charged or refunded yet) | v0.37 |
 | Q-23 | Remove the old unused function `private.apply_paid_order` (replaced by `settle_order`) | v0.37 |
-| Q-24 | An admin screen to link a therapist to a phone number and to approve a new therapist, in place of the SQL command | v0.38 |
+| Q-24 | ~~An admin screen to link a therapist to a phone number~~ done in v0.40 (Therapists module). Approving a new therapist is still to do | v0.38 |
 | Q-25 | The clinical lead's side of a concern a therapist raises, and the clinical reviewers' queue for session reports (both are stored; nothing reads them) | v0.38 |
 | Q-26 | Enforce "new clients a week" for a therapist (it is stored, not enforced) | v0.38 |
 | Q-27 | Therapist applications, licence upload and checks, and appeals on the server (still mock) | v0.38 |

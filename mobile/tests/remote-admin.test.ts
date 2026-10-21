@@ -149,6 +149,25 @@ describe('actions', () => {
   })
 })
 
+describe('linking therapists', () => {
+  it('links and unlinks a number, and shows which therapists are linked', async () => {
+    const f = fake({ replies: { admin_state: { ...STATE(), role: 'clinical' }, admin_therapist_links: { ok: true, links: [{ id: 't-amina', linked: true, pending: false, tail: '072' }, { id: 't-james', linked: false, pending: true, tail: '073' }] } } })
+    await syncAdmin()
+    expect(getDb().admin?.therapistLinks?.['t-amina']).toEqual({ linked: true, pending: false, tail: '072' })
+    expect(getDb().admin?.therapistLinks?.['t-james']?.pending).toBe(true)
+    await remoteAdmin.linkTherapist('t-amina', '+254712000072')
+    expect(f.calls.find((c) => c.name === 'admin_link_therapist')?.args).toEqual({ p_therapist: 't-amina', p_phone: '+254712000072' })
+    await remoteAdmin.unlinkTherapist('t-amina', 'Left the practice')
+    expect(f.calls.find((c) => c.name === 'admin_unlink_therapist')?.args).toEqual({ p_therapist: 't-amina', p_reason: 'Left the practice' })
+  })
+
+  it('does not ask for links when the role can’t see them', async () => {
+    const f = fake()
+    await syncAdmin()
+    expect(f.calls.map((c) => c.name)).not.toContain('admin_therapist_links')
+  })
+})
+
 describe('members’ notices', () => {
   it('shows staff decisions in the member app, including the account standing', async () => {
     fake({ replies: {
