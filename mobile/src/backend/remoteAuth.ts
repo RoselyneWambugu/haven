@@ -11,6 +11,7 @@ import { toAccount, type RemoteAccount } from './map'
 import { startPolling, stopPolling } from './remoteChat'
 import { clearTherapistCache } from './remoteTherapists'
 import { restoreAdmin, stopAdminPolling } from './remoteAdmin'
+import { syncHelp } from './remoteHelp'
 import { restorePortal, stopPortalPolling } from './remotePortal'
 
 const MIN = 60_000
@@ -224,6 +225,7 @@ export const remoteAccountActions = {
 
 /** On start-up: keep the signed-in member's session, or clear what was cached if the session has ended. */
 export async function restoreSession(): Promise<void> {
+  void syncHelp()
   await restorePortal()
   await restoreAdmin()
   const { data } = await supabase().auth.getSession()

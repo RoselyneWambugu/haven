@@ -8,6 +8,7 @@ import { REMOTE } from '@/backend/client'
 import { remoteAccountActions, remoteAuth } from '@/backend/remoteAuth'
 import { remoteChat, remoteMatch, remoteReport } from '@/backend/remoteChat'
 import { remoteBilling } from '@/backend/remoteBilling'
+import { remoteResources, remoteSuggestService, remoteTickets } from '@/backend/remoteHelp'
 import { appealNotice } from '@/backend/remoteNotices'
 import { remoteAdmin, remoteTeam } from '@/backend/remoteAdmin'
 import { remoteSessions } from '@/backend/remoteTherapists'
@@ -19,10 +20,10 @@ import { groups } from './groups'
 import { notify } from './notify'
 import { feedback } from './feedback'
 import { admin as mockAdmin } from './admin'
-import { config, resources, suggestService } from './content'
+import { config, resources as mockResources, suggestService as mockSuggestService } from './content'
 import { applyPortalToDirectory, applyStandingToDirectory, portal as mockPortal } from './portal'
 import { chat as mockChat, forum as mockForum, match as mockMatch, report as mockReport } from './social'
-import { account as mockAccount, tickets } from './support'
+import { account as mockAccount, tickets as mockTickets } from './support'
 import { spaces as mockSpaces } from './spaces'
 import { team as mockTeam } from './team'
 import { therapistAppeals } from './therapistAppeals'
@@ -40,6 +41,9 @@ const sessions = (REMOTE ? remoteSessions : mockSessions) as typeof mockSessions
 const billing = (REMOTE ? remoteBilling : mockBilling) as typeof mockBilling
 const forum = (REMOTE ? remoteForum : mockForum) as typeof mockForum
 const spaces = (REMOTE ? remoteSpaces : mockSpaces) as typeof mockSpaces
+const resources = (REMOTE ? remoteResources : mockResources) as typeof mockResources
+const suggestService = (REMOTE ? remoteSuggestService : mockSuggestService) as typeof mockSuggestService
+const tickets = (REMOTE ? remoteTickets : mockTickets) as typeof mockTickets
 const team = (REMOTE ? remoteTeam : mockTeam) as typeof mockTeam
 const admin = (REMOTE ? remoteAdmin : mockAdmin) as typeof mockAdmin
 const report = (REMOTE ? remoteReport : mockReport) as typeof mockReport

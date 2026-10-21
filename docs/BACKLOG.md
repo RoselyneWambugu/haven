@@ -166,6 +166,8 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-30 | Dashboard modules still on the mock: analytics, resources, configuration, wellbeing and rota, billing and refunds, feedback, group chats, AI flags, therapist applications | v0.39 |
 | Q-31 | ~~Break-glass access to a private profile on the server~~ done in v0.44. The member is not told; a notice after the fact is not built | v0.39 |
 | Q-32 | Hide a reported comment, and tell the reporter the outcome of a report | v0.39 |
+| Q-36 | Notify the member when staff reply to a ticket (the unread mark shows; no push or in-app notification yet) | v0.46 |
+| Q-37 | Let staff see closed tickets and search them; today only open and replied ones are listed | v0.46 |
 | Q-34 | A refund request screen in the member app (the server accepts requests; nothing in the app sends one) | v0.45 |
 | Q-35 | Track installs and directory views for analytics, and history for events before v0.45 | v0.45 |
 | Q-33 | A break from reviewing (the 20 a day limit is enforced; breaks are not), and heavy-queue rota that rotates by itself | v0.39 |

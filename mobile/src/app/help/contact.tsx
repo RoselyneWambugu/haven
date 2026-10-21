@@ -22,8 +22,8 @@ export default function Contact() {
   const [error, setError] = useState<string | null>(null)
   const distress = detectDistress(`${subject} ${text}`).level !== 'none'
 
-  function send() {
-    const r = api.tickets.create({ deptId, subject, text })
+  async function send() {
+    const r = await api.tickets.create({ deptId, subject, text })
     if (!r.ok) return setError(r.error)
     replace(`/help/ticket/${r.value.ticket.id}`)
   }

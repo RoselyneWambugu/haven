@@ -58,8 +58,8 @@ export default function Orgs() {
         testID="suggest-send"
         variant="quiet"
         label="Suggest this service"
-        onPress={() => {
-          const r = api.suggestService(name, note)
+        onPress={async () => {
+          const r = await api.suggestService(name, note)
           if (!r.ok) return setMsg(r.error)
           setName('')
           setNote('')

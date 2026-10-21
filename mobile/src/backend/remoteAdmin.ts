@@ -6,6 +6,7 @@ import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
 import { stopPolling } from './remoteChat'
+import { syncStaffHelp } from './remoteHelp'
 import { stopPortalPolling } from './remotePortal'
 
 const OFFLINE = 'We couldn’t reach Echo. Check your connection and try again.'
@@ -65,7 +66,7 @@ export function syncAdmin(): Promise<boolean> {
     if (error || !d) return !!getDb().admin?.signedIn
     if (d.ok !== true || !d.name) return false
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
-    await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling()])
+    await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling(), syncStaffHelp()])
     if (d.role === 'clinical' || d.role === 'admin') await syncLinks()
     if (d.role === 'admin') await syncInvites()
     return true

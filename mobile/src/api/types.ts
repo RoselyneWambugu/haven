@@ -309,6 +309,8 @@ export interface Ticket {
   messages: TicketMessage[]
   createdAt: number
   routedToCrisis: boolean
+  /** Staff see the pen name of the member who wrote in. Only on the real backend. */
+  penName?: string
 }
 
 export interface CrisisLine {
