@@ -38,8 +38,8 @@ export default function NewPost() {
   const details = detectIdentifyingDetails(all)
   const distress = detectDistress(all).level
 
-  function publish() {
-    const r = api.forum.create({ topic, title, body, space: space?.id })
+  async function publish() {
+    const r = await api.forum.create({ topic, title, body, space: space?.id })
     if (!r.ok) {
       setConfirm(false)
       return setError(r.error)

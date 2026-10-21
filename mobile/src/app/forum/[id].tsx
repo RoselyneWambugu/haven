@@ -65,8 +65,8 @@ export default function PostDetail() {
   const canEdit = post.mine && now() - post.createdAt <= EDIT_MS
   const draftBlock = detectBlockedContent(text)
 
-  function sendComment() {
-    const r = api.forum.comment(post!.id, text)
+  async function sendComment() {
+    const r = await api.forum.comment(post!.id, text)
     if (!r.ok) return setError(r.error)
     setText('')
     setError(null)
@@ -238,8 +238,8 @@ export default function PostDetail() {
         {eError ? <Banner tone="clay">{eError}</Banner> : null}
         <Button
           label="Save changes"
-          onPress={() => {
-            const r = api.forum.edit(post.id, { title: eTitle, body: eBody })
+          onPress={async () => {
+            const r = await api.forum.edit(post.id, { title: eTitle, body: eBody })
             if (!r.ok) return setEError(r.error)
             setEditing(false)
           }}

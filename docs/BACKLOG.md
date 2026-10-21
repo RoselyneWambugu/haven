@@ -2,7 +2,7 @@
 
 Everything that has not been built, every placeholder, and every decision still open, gathered in one place from the PRD build notes and the README. It is for a regular review: for each item, choose **Build**, **Defer** or **Drop**, and give it a priority.
 
-Last updated at PRD v0.34 (backend slices 1 and 2, accounts and privacy and peer matching and chat, are built on Supabase; the rest of the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
+Last updated at PRD v0.35 (backend slices 1 to 3, accounts and privacy, peer matching and chat, and the forum and support spaces, are built on Supabase; the rest of the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
 
 **How to read it.** *Source* is the PRD version whose build notes mention it, and a requirement ID where there is one. *Needs* says what blocks it: a decision, a provider, or just build time.
 
@@ -12,7 +12,7 @@ Last updated at PRD v0.34 (backend slices 1 and 2, accounts and privacy and peer
 
 | # | Item | Source | Needs |
 |---|---|---|---|
-| S-01 | The rest of the real backend. **Accounts and privacy (v0.33) and peer matching and chat (v0.34) are built** (`docs/BACKEND.md`). Still on the device mock: therapist chats, forum and spaces, group chats, billing, therapist portal and admin data | v0.8 | Next slices; decision D6 (encryption and retention) |
+| S-01 | The rest of the real backend. **Accounts and privacy (v0.33), peer matching and chat (v0.34), and the forum and support spaces (v0.35) are built** (`docs/BACKEND.md`). Still on the device mock: therapist chats, group chats, billing, therapist portal and admin data | v0.8 | Next slices; decision D6 (encryption and retention) |
 | S-02 | Real SMS one-time codes for sign-up and sign-in (the backend is ready; it uses test numbers with fixed codes until a provider is chosen) | v0.8, D51 | SMS provider; D44 (SMS cost) |
 | S-03 | Real M-Pesa and card payments, refunds, reconciliation | v0.8, D51 | Payment provider; D2, D3 |
 | S-04 | Real push notifications, and SMS and email delivery (NTF-1) | v0.19 | Push, SMS and email providers |
@@ -146,6 +146,9 @@ Last updated at PRD v0.34 (backend slices 1 and 2, accounts and privacy and peer
 | Q-09 | Real-time delivery of messages (the app asks every 3 seconds today) | v0.34 |
 | Q-10 | Staff screens that read reports from the server (`private.reports`) and the "felt heard" answer saved on the server | v0.34 |
 | Q-11 | Server check of the plan for matching, chat and community (M-14), once billing is on the server | v0.34 |
+| Q-12 | A staff review queue for held posts. Until it exists, held posts go live after 15 seconds on the server, which is not a real check | v0.35 |
+| Q-13 | Therapist replies in the forum and spaces, and the leading therapist's view of a space, once therapist accounts are on the server | v0.35 |
+| Q-14 | Hiding or removing posts and comments after a report (staff action), and a ban on a member from posting | v0.35 |
 | Q-05 | Remove demo hooks (`window.__echo`, Demo tools, scripted replies) when a real backend is connected | v0.8 |
 
 ---

@@ -8,6 +8,7 @@ import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
+import { syncForum } from './remoteForum'
 
 /** What the server sends for a peer or a blocked person. */
 interface RemotePeer { id: string; pen_name: string; avatar: Peer['avatar']; languages: string[]; age_band: AgeBand }
@@ -108,15 +109,20 @@ async function checkMatch(): Promise<void> {
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
+let ticks = 0
 
 /** Checks the server every few seconds while someone is signed in: for a match while searching, and for new messages always. */
 export function startPolling(): void {
   if (timer) return
   timer = setInterval(() => {
     if (!getDb().signedIn) return stopPolling()
+    ticks += 1
+    // The community changes more slowly than a chat, so it is asked about a third as often.
+    if (ticks % 3 === 0) void syncForum()
     void (getDb().match.state === 'searching' ? checkMatch() : Promise.resolve()).then(syncChats)
   }, POLL_MS)
   void syncChats()
+  void syncForum()
 }
 
 export function stopPolling(): void {
@@ -250,6 +256,12 @@ export const remoteReport = {
 
   /** Chat reports go to the server, which keeps the last messages as they are now. Posts, groups and sessions are still on the device. */
   submit(input: Parameters<typeof mockReport.submit>[0]): void {
+    if (input.postId && (input.target === 'post' || input.target === 'comment')) {
+      const call = input.target === 'post' ? rpc('report_post', { p_post: input.postId, p_reason: reasonOf(input.reason), p_note: input.note }) : rpc('report_comment', { p_comment: input.targetId, p_reason: reasonOf(input.reason), p_note: input.note })
+      void call.then((r) => (r.ok ? undefined : showToast(r.error)))
+      notify.push('safety', `report:${input.targetId}:${now()}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')
+      return
+    }
     if (!input.conversationId) return mockReport.submit(input)
     settle(rpc('report_chat', { p_conversation: input.conversationId, p_reason: reasonOf(input.reason), p_note: input.note }))
     notify.push('safety', `report:${input.conversationId}:${now()}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')
