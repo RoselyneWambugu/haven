@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { api, type StaffRole } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { remoteAdmin } from '@/backend/remoteAdmin'
+import { normaliseKenyanPhone } from '@/lib/identity'
 import { Button } from '@/components/Button'
 import { Badge, Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -25,10 +28,10 @@ export default function Roles() {
   const [error, setError] = useState<string | null>(null)
   const [ok, setOk] = useState<string | null>(null)
   const [editing, setEditing] = useState<{ id: string; name: string; role: StaffRole } | null>(null)
-  const [adding, setAdding] = useState<{ name: string; role: StaffRole } | null>(null)
+  const [adding, setAdding] = useState<{ name: string; role: StaffRole; phone: string } | null>(null)
   if (!a) return null
   const admin = a.role === 'admin'
-  const pending = a.pendingStaff
+  const pending = REMOTE ? null : a.pendingStaff
   const result = (r: { ok: boolean; error?: string }, msg?: string) => {
     setError(r.ok ? null : (r.error ?? null))
     setOk(r.ok ? (msg ?? null) : null)
@@ -38,7 +41,7 @@ export default function Roles() {
   return (
     <PortalPage testID="admin-roles" title="Roles and permissions" sub="Who is on the team, what each role may do, and what it can see.">
       <Banner tone="green" icon="lock" title="Everyone signs in with a second factor">
-        This can’t be turned off for any account (RBAC-2). Every action is written to the audit log. Changes to the team need a second Admin to approve.
+        {REMOTE ? 'Every action is written to the audit log. Changes to the team take effect at once (approval by a second Admin is not built yet). You can’t change your own account.' : 'This can’t be turned off for any account (RBAC-2). Every action is written to the audit log. Changes to the team need a second Admin to approve.'}
       </Banner>
       {error ? <Banner tone="clay">{error}</Banner> : null}
       {ok ? (
@@ -75,16 +78,33 @@ export default function Roles() {
             {admin ? (
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 <Button testID={`role-${s.name}`} size="sm" variant="quiet" label="Change role" disabled={!!pending} onPress={() => { setError(null); setEditing({ id: s.id, name: s.name, role: s.role }) }} />
-                <Button testID={`active-${s.name}`} size="sm" variant="ghost" label={s.active ? 'Deactivate' : 'Reactivate'} disabled={!!pending} onPress={() => result(api.team.proposeStaff({ kind: 'active', id: s.id, active: !s.active }), 'Sent for approval by a second Admin.')} />
+                <Button testID={`active-${s.name}`} size="sm" variant="ghost" label={s.active ? 'Deactivate' : 'Reactivate'} disabled={!!pending} onPress={async () => (REMOTE ? result(await remoteAdmin.setStaff(s.id, { active: !s.active }), 'Done.') : result(api.team.proposeStaff({ kind: 'active', id: s.id, active: !s.active }), 'Sent for approval by a second Admin.'))} />
+                {REMOTE && s.role === 'moderator' ? <Button testID={`heavy-${s.name}`} size="sm" variant="ghost" label={a.heavy?.[s.id] ? 'Off heavy queue' : 'On heavy queue'} onPress={async () => result(await remoteAdmin.setStaff(s.id, { heavy: !a.heavy?.[s.id] }), 'Done.')} /> : null}
               </View>
             ) : null}
           </View>
         ))}
-        {admin ? <Button testID="add-staff" size="sm" variant="quiet" icon="plus" label="Add a person" disabled={!!pending} onPress={() => { setError(null); setAdding({ name: '', role: 'moderator' }) }} /> : null}
+        {admin ? <Button testID="add-staff" size="sm" variant="quiet" icon="plus" label="Add a person" disabled={!!pending} onPress={() => { setError(null); setAdding({ name: '', role: 'moderator', phone: '' }) }} /> : null}
         <Text variant="caption" muted>
           Keep at least {MIN_ACTIVE_ADMINS} active Admins so every sensitive change can have a second approver. You can’t change your own account.
         </Text>
       </Panel>
+
+      {REMOTE && (a.staffInvites ?? []).length > 0 ? (
+        <Panel title="Waiting for a first sign-in" testID="staff-invites">
+          {(a.staffInvites ?? []).map((i) => (
+            <View key={i.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', minHeight: 44 }}>
+              <View style={{ flex: 1, minWidth: 180 }}>
+                <Text variant="label">{i.name}</Text>
+                <Text variant="caption" muted>
+                  {roleName(i.role)} · number ending {i.tail} · invited by {i.by}
+                </Text>
+              </View>
+              {admin ? <Button size="sm" variant="ghost" label="Cancel invitation" onPress={async () => result(await remoteAdmin.cancelInvite(i.name), 'Invitation cancelled.')} /> : null}
+            </View>
+          ))}
+        </Panel>
+      ) : null}
 
       <Panel title="What each role may do" testID="matrix">
         <View style={{ flexDirection: 'row', paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: colors.line }}>
@@ -158,9 +178,9 @@ export default function Roles() {
             <Button
               testID="role-save"
               label="Propose change"
-              onPress={() => {
-                const r = api.team.proposeStaff({ kind: 'role', id: editing.id, role: editing.role })
-                result(r, 'Sent for approval by a second Admin.')
+              onPress={async () => {
+                const r = REMOTE ? await remoteAdmin.setStaff(editing.id, { role: editing.role }) : api.team.proposeStaff({ kind: 'role', id: editing.id, role: editing.role })
+                result(r, REMOTE ? 'Done.' : 'Sent for approval by a second Admin.')
                 if (r.ok) setEditing(null)
               }}
             />
@@ -177,16 +197,21 @@ export default function Roles() {
                 <Chip key={r} label={roleName(r)} selected={adding.role === r} onPress={() => setAdding({ ...adding, role: r })} />
               ))}
             </View>
+            {REMOTE ? <Field testID="new-staff-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={adding.phone} onChangeText={(v) => setAdding({ ...adding, phone: v })} keyboardType="phone-pad" /> : null}
             <Text variant="caption" muted>
-              They set up their second factor the first time they sign in.
+              {REMOTE ? 'They become staff the first time this number signs in at the staff sign-in page.' : 'They set up their second factor the first time they sign in.'}
             </Text>
             {error ? <Banner tone="clay">{error}</Banner> : null}
             <Button
               testID="add-save"
               label="Propose"
-              onPress={() => {
-                const r = api.team.proposeStaff({ kind: 'add', name: adding.name, role: adding.role })
-                result(r, 'Sent for approval by a second Admin.')
+              onPress={async () => {
+                let r: { ok: boolean; error?: string }
+                if (REMOTE) {
+                  const n = normaliseKenyanPhone(adding.phone)
+                  r = n ? await remoteAdmin.addStaff(adding.name, adding.role, n) : { ok: false, error: 'Enter a Kenyan mobile number, like 0712 345 678.' }
+                } else r = api.team.proposeStaff({ kind: 'add', name: adding.name, role: adding.role })
+                result(r, REMOTE ? 'Added.' : 'Sent for approval by a second Admin.')
                 if (r.ok) setAdding(null)
               }}
             />

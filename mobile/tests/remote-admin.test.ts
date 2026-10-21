@@ -168,6 +168,37 @@ describe('linking therapists', () => {
   })
 })
 
+describe('managing the team', () => {
+  it('adds, changes and invites staff through the server, and lists invitations for Admins', async () => {
+    const f = fake({ replies: {
+      admin_state: { ...STATE(), role: 'admin' },
+      admin_staff_invites: { ok: true, invites: [{ name: 'Invited Person', role: 'clinical', tail: '085', by: 'A', at: now() }], heavy: { a1: true } },
+    } })
+    await syncAdmin()
+    expect(getDb().admin?.staffInvites).toHaveLength(1)
+    expect(getDb().admin?.heavy).toEqual({ a1: true })
+    await remoteAdmin.addStaff('Invited Person', 'clinical', '+254712000085')
+    expect(f.calls.find((c) => c.name === 'admin_add_staff')?.args).toEqual({ p_name: 'Invited Person', p_role: 'clinical', p_phone: '+254712000085' })
+    await remoteAdmin.setStaff('a1', { role: 'billing' })
+    expect(f.calls.find((c) => c.name === 'admin_set_staff')?.args).toEqual({ p_account: 'a1', p_role: 'billing', p_active: null, p_heavy: null })
+    await remoteAdmin.setStaff('a1', { heavy: false })
+    expect(f.calls.filter((c) => c.name === 'admin_set_staff')[1].args).toEqual({ p_account: 'a1', p_role: null, p_active: null, p_heavy: false })
+    await remoteAdmin.cancelInvite('Invited Person')
+    expect(f.calls.find((c) => c.name === 'admin_cancel_invite')?.args).toEqual({ p_name: 'Invited Person' })
+  })
+
+  it('passes the server’s refusal back, such as the last-Admin rule', async () => {
+    fake({ replies: { admin_set_staff: { ok: false, code: 'admins', error: 'Keep at least 2 active Admins.' } } })
+    expect(await remoteAdmin.setStaff('a1', { active: false })).toMatchObject({ ok: false, code: 'admins' })
+  })
+
+  it('does not ask for invitations unless the person is an Admin', async () => {
+    const f = fake()
+    await syncAdmin()
+    expect(f.calls.map((c) => c.name)).not.toContain('admin_staff_invites')
+  })
+})
+
 describe('members’ notices', () => {
   it('shows staff decisions in the member app, including the account standing', async () => {
     fake({ replies: {

@@ -65,6 +65,7 @@ export function syncAdmin(): Promise<boolean> {
     if (d.ok !== true || !d.name) return false
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
     if (d.role === 'clinical' || d.role === 'admin') await syncLinks()
+    if (d.role === 'admin') await syncInvites()
     return true
   })().finally(() => {
     syncing = null
@@ -78,6 +79,13 @@ async function syncLinks(): Promise<void> {
   if (!d?.ok || !d.links) return
   const links = Object.fromEntries(d.links.map((l) => [l.id, { linked: l.linked, pending: l.pending, tail: l.tail }]))
   update((s) => (s.admin ? { admin: { ...s.admin, therapistLinks: links } } : {}))
+}
+
+async function syncInvites(): Promise<void> {
+  const { data } = await supabase().rpc('admin_staff_invites')
+  const d = data as { ok?: boolean; invites?: NonNullable<AdminState['staffInvites']>; heavy?: Record<string, boolean> } | null
+  if (!d?.ok) return
+  update((s) => (s.admin ? { admin: { ...s.admin, staffInvites: d.invites ?? [], heavy: d.heavy ?? {} } } : {}))
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
@@ -172,6 +180,12 @@ export const remoteAdmin = {
   /** Links a therapist to the phone number they will sign in to the portal with. */
   linkTherapist: (therapistId: string, phone: string) => act('admin_link_therapist', { p_therapist: therapistId, p_phone: phone }),
   unlinkTherapist: (therapistId: string, reason: string) => act('admin_unlink_therapist', { p_therapist: therapistId, p_reason: reason }),
+
+  /** Adds a person to the team by phone number. They become staff when that number signs in. */
+  addStaff: (name: string, role: StaffRole, phone: string) => act('admin_add_staff', { p_name: name, p_role: role, p_phone: phone }),
+  setStaff: (accountId: string, change: { role?: StaffRole; active?: boolean; heavy?: boolean }) =>
+    act('admin_set_staff', { p_account: accountId, p_role: change.role ?? null, p_active: change.active ?? null, p_heavy: change.heavy ?? null }),
+  cancelInvite: (name: string) => act('admin_cancel_invite', { p_name: name }),
 
   users(): AdminUser[] {
     return getDb().admin?.users ?? []
