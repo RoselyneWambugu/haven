@@ -18,13 +18,13 @@ export default function Register() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [why, setWhy] = useState(false)
 
-  function submit() {
+  async function submit() {
     const r = api.auth.submitDetails({ fullName, phone, dob, email })
     if (!r.ok) {
       if (r.code === 'under-18') return replace('/under-18')
       return setErrors({ [r.code ?? 'form']: r.error })
     }
-    const otp = api.auth.requestOtp('register')
+    const otp = await api.auth.requestOtp('register')
     if (!otp.ok) return setErrors({ form: otp.error })
     go('/otp?purpose=register')
   }

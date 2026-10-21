@@ -33,8 +33,8 @@ export default function Profiles() {
   const unlocked = reauthUntil > now()
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
-  function verify() {
-    const r = api.auth.requestOtp('reauth', account!.private.phone)
+  async function verify() {
+    const r = await api.auth.requestOtp('reauth', account!.private.phone)
     if (r.ok) go('/otp?purpose=reauth')
   }
 
@@ -115,8 +115,8 @@ export default function Profiles() {
         <Button
           testID="save-pen-name"
           label="Save"
-          onPress={() => {
-            const r = api.auth.changePenName(name.trim())
+          onPress={async () => {
+            const r = await api.auth.changePenName(name.trim())
             if (!r.ok) return setNameError(r.error)
             setEditing(false)
           }}

@@ -14,6 +14,8 @@ import { AtkinsonHyperlegibleNext_700Bold } from '@expo-google-fonts/atkinson-hy
 import { api, resumeBackground } from '@/api'
 import { SecurityAlert } from '@/components/SecurityAlert'
 import { ToastHost } from '@/components/ToastHost'
+import { REMOTE } from '@/backend/client'
+import { restoreSession } from '@/backend/remoteAuth'
 import { getDb, loadDb, useDb } from '@/store/db'
 import { useFront } from '@/store/useFront'
 import { useNow } from '@/store/useNow'
@@ -120,7 +122,7 @@ export default function RootLayout() {
   useEffect(() => {
     // The backend is a mock, so on the web build the browser tests can drive it directly.
     if (Platform.OS === 'web') (globalThis as { __echo?: typeof api }).__echo = api
-    loadDb().then(() => {
+    loadDb().then(() => (REMOTE ? restoreSession().catch(() => undefined) : undefined)).then(() => {
       resumeBackground()
       setReady(true)
     })

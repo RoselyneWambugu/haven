@@ -24,9 +24,9 @@ export default function Languages() {
 
   const band = reg?.dob ? ageBand(ageOn(new Date(reg.dob), new Date(now()))) : null
 
-  function finish() {
+  async function finish() {
     api.auth.saveProfileDraft({ languages: langs, topics })
-    const r = api.auth.completeRegistration(Platform.OS)
+    const r = await api.auth.completeRegistration(Platform.OS)
     if (!r.ok) return setError(r.error)
     resetTo('/home')
   }

@@ -3,7 +3,9 @@
  * an in-memory mock that is saved on the device. To go live, give each group
  * the same methods and point them at the real service.
  */
-import { auth } from './auth'
+import { auth as mockAuth } from './auth'
+import { REMOTE } from '@/backend/client'
+import { remoteAccountActions, remoteAuth } from '@/backend/remoteAuth'
 import { billing, sessions } from './care'
 import { demo } from './demo'
 import { groups } from './groups'
@@ -13,10 +15,30 @@ import { admin } from './admin'
 import { config, resources, suggestService } from './content'
 import { applyPortalToDirectory, applyStandingToDirectory, portal } from './portal'
 import { chat, forum, match, report } from './social'
-import { account, tickets } from './support'
+import { account as mockAccount, tickets } from './support'
 import { spaces } from './spaces'
 import { team } from './team'
 import { therapistAppeals } from './therapistAppeals'
+
+/**
+ * The real backend answers later than the mock, so screens `await` these calls. The type stays the mock's
+ * because an `await` of an immediate answer is harmless, and the tests read the mock's answers directly.
+ */
+const auth = (REMOTE ? remoteAuth : mockAuth) as typeof mockAuth
+
+const account: typeof mockAccount = REMOTE
+  ? {
+      ...mockAccount,
+      signOutDevice(id) {
+        mockAccount.signOutDevice(id)
+        remoteAccountActions.revokeDevice(id)
+      },
+      requestDeletion(keepPosts) {
+        mockAccount.requestDeletion(keepPosts)
+        remoteAccountActions.requestDeletion()
+      },
+    }
+  : mockAccount
 
 export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals, spaces, groups }
 

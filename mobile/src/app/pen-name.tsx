@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { api } from '@/api'
 import { Avatar, AVATAR_KINDS } from '@/components/Art'
@@ -9,8 +9,9 @@ import { Screen, TopBar } from '@/components/Layout'
 import { Text } from '@/components/Text'
 import { suggestPenNames } from '@/lib/safety'
 import { go } from '@/lib/nav'
+import { REMOTE } from '@/backend/client'
 import { getDb } from '@/store/db'
-import type { AvatarKind } from '@/api'
+import type { AvatarKind, Res } from '@/api'
 import { colors } from '@/theme'
 
 /**
@@ -24,7 +25,20 @@ export default function PenName() {
   const suggestions = useMemo(() => suggestPenNames(seed, 3), [seed])
   const [touched, setTouched] = useState(false)
 
-  const check = name.trim() ? api.auth.checkPenName(name.trim()) : null
+  const [check, setCheck] = useState<Res | null>(null)
+  useEffect(() => {
+    const value = name.trim()
+    if (!value) return setCheck(null)
+    let current = true
+    // The real backend is asked after a short pause, so it isn't called on every key press.
+    const t = setTimeout(() => {
+      void Promise.resolve(api.auth.checkPenName(value)).then((r) => current && setCheck(r))
+    }, REMOTE ? 350 : 0)
+    return () => {
+      current = false
+      clearTimeout(t)
+    }
+  }, [name])
   const error = touched && check && !check.ok ? check.error : null
   const ok = !!check && check.ok
 

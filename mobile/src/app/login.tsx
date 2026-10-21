@@ -18,8 +18,8 @@ export default function Login() {
   const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  function send() {
-    const r = api.auth.requestOtp('login', phone)
+  async function send() {
+    const r = await api.auth.requestOtp('login', phone)
     if (!r.ok) return setError(r.error)
     go('/otp?purpose=login')
   }

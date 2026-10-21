@@ -29,8 +29,8 @@ export default function Otp() {
     return () => clearInterval(t)
   }, [])
 
-  function verify(value: string) {
-    const r = api.auth.verifyOtp(value)
+  async function verify(value: string) {
+    const r = await api.auth.verifyOtp(value)
     if (!r.ok) {
       setError(r.error)
       if (r.code === 'wrong') setCode('')
@@ -45,8 +45,8 @@ export default function Otp() {
     }
   }
 
-  function resend() {
-    const r = purpose === 'login' ? api.auth.requestOtp('login', otp?.phone ?? '') : api.auth.requestOtp(purpose)
+  async function resend() {
+    const r = await (purpose === 'login' ? api.auth.requestOtp('login', otp?.phone ?? '') : api.auth.requestOtp(purpose))
     if (!r.ok) return setError(r.error)
     setError(null)
     setCode('')
@@ -70,7 +70,7 @@ export default function Otp() {
         We sent a text message to {phone || 'your phone'}.
       </Text>
 
-      {otp ? (
+      {otp?.code ? (
         <Banner tone="sun" title="Demo mode" testID="demo-code">
           No text message is sent in this demo. Your code is <Text variant="small" bold>{otp.code}</Text>.
         </Banner>

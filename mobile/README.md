@@ -2,7 +2,7 @@
 
 The member app for Echo, an anonymous peer-support and therapy platform for Kenya. Built with React Native and Expo (TypeScript), so it runs in Expo Go on a phone and in a browser.
 
-The backend is a **mock** that lives on the device. Everything a screen needs goes through `src/api`, so a real service can replace it without changing screens. Nothing here talks to a server, sends a real SMS, or takes a real payment.
+The backend is a **mock** that lives on the device by default. Accounts and sign-in can run on a real Supabase backend instead: copy `.env.example` to `.env` and follow `docs/BACKEND.md`. Everything a screen needs goes through `src/api`, so a real service can replace it without changing screens. Nothing here talks to a server, sends a real SMS, or takes a real payment.
 
 ## Run it
 

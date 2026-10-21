@@ -2,7 +2,7 @@
 
 Everything that has not been built, every placeholder, and every decision still open, gathered in one place from the PRD build notes and the README. It is for a regular review: for each item, choose **Build**, **Defer** or **Drop**, and give it a priority.
 
-Last updated at PRD v0.32 (the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
+Last updated at PRD v0.33 (the first backend slice, accounts and privacy, is built on Supabase; the rest of the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
 
 **How to read it.** *Source* is the PRD version whose build notes mention it, and a requirement ID where there is one. *Needs* says what blocks it: a decision, a provider, or just build time.
 
@@ -12,8 +12,8 @@ Last updated at PRD v0.32 (the mobile app, therapist portal and admin dashboard 
 
 | # | Item | Source | Needs |
 |---|---|---|---|
-| S-01 | A real backend. Everything runs on the device with a saved mock today | v0.8 | Backend design and hosting; decision D6 (encryption and retention) |
-| S-02 | Real SMS one-time codes for sign-up and sign-in | v0.8, D51 | SMS provider; D44 (SMS cost) |
+| S-01 | The rest of the real backend. **Accounts and privacy are built** (v0.33, `docs/BACKEND.md`). Still on the device mock: matching and chats, forum and spaces, group chats, billing, therapist portal and admin data | v0.8 | Next slices; decision D6 (encryption and retention) |
+| S-02 | Real SMS one-time codes for sign-up and sign-in (the backend is ready; it uses test numbers with fixed codes until a provider is chosen) | v0.8, D51 | SMS provider; D44 (SMS cost) |
 | S-03 | Real M-Pesa and card payments, refunds, reconciliation | v0.8, D51 | Payment provider; D2, D3 |
 | S-04 | Real push notifications, and SMS and email delivery (NTF-1) | v0.19 | Push, SMS and email providers |
 | S-05 | Real voice and video calls | v0.8, D40, D51 | Call provider that works on mobile data in Kenya |
@@ -140,6 +140,9 @@ Last updated at PRD v0.32 (the mobile app, therapist portal and admin dashboard 
 | Q-02 | The app runs on Expo SDK 57 so it opens in the store Expo Go; move back to SDK 58 when the store version supports it | v0.27 |
 | Q-03 | Accessibility review with real users (screen reader, large text, reduced motion) | all |
 | Q-04 | Security review before any real data: the mock backend, device storage and demo hooks are not safe for real use | v0.8 |
+| Q-06 | Server list of common names for pen names (the server checks only the member's own name; the app has a names list) | v0.33 |
+| Q-07 | Account deletion after the holding period, and "sign out everywhere" on the server (both are only recorded today) | v0.33 |
+| Q-08 | Break-glass staff access to private identities (D27) | v0.33 |
 | Q-05 | Remove demo hooks (`window.__echo`, Demo tools, scripted replies) when a real backend is connected | v0.8 |
 
 ---
@@ -158,6 +161,8 @@ The full list of numbered decisions is in PRD section 14.1. These are the ones r
 8. Can a person removed from a group chat appeal? (G-09)
 
 ## 12. Decided, for the record
+
+- The backend is the Supabase project `haven`; the first slice is accounts and privacy; SMS uses test numbers until a provider is chosen (v0.33).
 
 - The app is in English only (D52).
 - Member app technology is React Native with Expo (D50).
