@@ -97,12 +97,12 @@ export default function GroupChatScreen() {
                 <Banner tone="green" icon="check" title="You’re signed up">
                   The room opens {st === 'lobby' ? 'in a few minutes' : whenLabel(g.startsAt, t)}. We’ll remind you an hour and ten minutes before.
                 </Banner>
-                <Button testID="group-unregister" variant="ghost" label="Give up my place" onPress={() => api.groups.unregister(g.id)} />
+                <Button testID="group-unregister" variant="ghost" label="Give up my place" onPress={() => { void api.groups.unregister(g.id) }} />
               </>
             ) : !plan ? (
               <PlanGate what="Group chats" testID="group-gate" />
             ) : (
-              <Button testID="group-register" label="Sign up" disabled={!canRegister(g, t)} onPress={() => { const r = api.groups.register(g.id); setError(r.ok ? null : r.error) }} />
+              <Button testID="group-register" label="Sign up" disabled={!canRegister(g, t)} onPress={async () => { const r = await api.groups.register(g.id); setError(r.ok ? null : r.error) }} />
             )}
             {error ? <Banner tone="clay">{error}</Banner> : null}
           </>
@@ -121,8 +121,8 @@ export default function GroupChatScreen() {
     )
   }
 
-  function send() {
-    const r = api.groups.send(g!.id, text)
+  async function send() {
+    const r = await api.groups.send(g!.id, text)
     if (!r.ok) {
       if (r.code !== 'empty') setError(r.error)
       return
@@ -255,7 +255,7 @@ export default function GroupChatScreen() {
           testID="group-report-submit"
           label="Send report"
           onPress={() => {
-            if (reporting) api.groups.report(g.id, reporting.id, reason)
+            if (reporting) void api.groups.report(g.id, reporting.id, reason)
             setReporting(null)
           }}
         />

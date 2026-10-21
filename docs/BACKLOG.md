@@ -12,7 +12,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 
 | # | Item | Source | Needs |
 |---|---|---|---|
-| S-01 | The rest of the real backend. **Accounts and privacy (v0.33), peer matching and chat (v0.34), and the forum and support spaces (v0.35) are built** (`docs/BACKEND.md`). Still on the device mock: group chats, therapist applications and appeals, and admin data | v0.8 | Next slices; decision D6 (encryption and retention) |
+| S-01 | The rest of the real backend. **Accounts and privacy (v0.33), peer matching and chat (v0.34), and the forum and support spaces (v0.35) are built** (`docs/BACKEND.md`). Group chats (v0.49) and the admin data are also built. Still on the device mock: therapist appeals, AI flags | v0.8 | Next slices; decision D6 (encryption and retention) |
 | S-02 | Real SMS one-time codes for sign-up and sign-in (the backend is ready; it uses test numbers with fixed codes until a provider is chosen) | v0.8, D51 | SMS provider; D44 (SMS cost) |
 | S-03 | Real M-Pesa and card payments, refunds, reconciliation. The server side is ready (orders, plan, `confirm_payment` for a provider's webhook); no provider is connected, and payments work only for listed test numbers | v0.8, D51 | Payment provider and an edge function for its webhook; D2, D3 |
 | S-04 | Real push notifications, and SMS and email delivery (NTF-1) | v0.19 | Push, SMS and email providers |
@@ -167,6 +167,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-31 | ~~Break-glass access to a private profile on the server~~ done in v0.44. The member is not told; a notice after the fact is not built | v0.39 |
 | Q-32 | Hide a reported comment, and tell the reporter the outcome of a report | v0.39 |
 | Q-40 | Enforce the grace period after a plan ends, the account-deletion holding period (and a job that deletes), and apply the therapy discount to session prices | v0.48 |
+| Q-41 | Run `supabase/group_chat_cleanup.sql` in the SQL editor so ended group chats are deleted after 24 hours. Also: group chats don't yet send push reminders from the server, and the facilitator can't remove a single message (G-01) | v0.49 |
 | Q-38 | Upload of licence, ID and qualification documents for therapist applications (private storage, reviewers only) | v0.47 |
 | Q-39 | Licence-expiry reminders and a check on the regulator's register; therapist appeals on the server | v0.47 |
 | Q-36 | Notify the member when staff reply to a ticket (the unread mark shows; no push or in-app notification yet) | v0.46 |

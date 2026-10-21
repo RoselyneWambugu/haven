@@ -57,8 +57,8 @@ export default function Groups() {
   const reported = (id: string) => reports.filter((r) => r.groupChatId === id).length
   const startsAt = startOfEatDay(now()) + day * DAY + hour * HOUR
 
-  function create() {
-    const r = api.groups.schedule({ topic, blurb, facilitatorId: who, startsAt, durationMin: mins, capacity: seats })
+  async function create() {
+    const r = await api.groups.schedule({ topic, blurb, facilitatorId: who, startsAt, durationMin: mins, capacity: seats })
     if (!r.ok) {
       setDone(null)
       return setError(r.error)
@@ -104,8 +104,8 @@ export default function Groups() {
                   variant="danger"
                   size="sm"
                   label="Cancel this group chat"
-                  onPress={() => {
-                    const r = api.groups.cancel(g.id, why)
+                  onPress={async () => {
+                    const r = await api.groups.cancel(g.id, why)
                     if (!r.ok) return setCancelError(r.error)
                     setCancelling(null)
                     setWhy('')
@@ -167,8 +167,8 @@ export default function Groups() {
                         variant="danger"
                         size="sm"
                         label="Remove from this chat"
-                        onPress={() => {
-                          const r = api.groups.removeParticipant(removing.id, removing.name, removeWhy)
+                        onPress={async () => {
+                          const r = await api.groups.removeParticipant(removing.id, removing.name, removeWhy)
                           if (!r.ok) return setRemoveError(r.error)
                           setRemoving(null)
                         }}

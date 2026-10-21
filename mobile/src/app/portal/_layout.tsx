@@ -15,6 +15,7 @@ const NAV: { key: string; label: string; path: string }[] = [
   { key: 'calendar', label: 'Calendar', path: '/portal/calendar' },
   { key: 'sessions', label: 'Sessions', path: '/portal/sessions' },
   { key: 'forum', label: 'Forum', path: '/portal/forum' },
+  { key: 'groups', label: 'Group chats', path: '/portal/groups' },
   { key: 'earnings', label: 'Earnings', path: '/portal/earnings' },
   { key: 'profile', label: 'Profile', path: '/portal/profile' },
   { key: 'help', label: 'Help', path: '/portal/help' },

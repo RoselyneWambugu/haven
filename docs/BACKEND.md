@@ -121,7 +121,9 @@ Migration `20261021000700_admin.sql`, checks in `supabase/tests/admin.sql`.
   - **Limits:** the days between pen-name changes is enforced.
   - The server patches the existing rules in place (`private.patch_function`) so no rule was rewritten by hand. Migration `20261021001900_configuration.sql`, checks in `supabase/tests/configuration.sql`. Members read the settings with `app_config()`, and the app already hides what is switched off.
   - **Stored and shown but not enforced yet:** the grace period after a plan ends, the account-deletion holding period (nothing deletes accounts yet), and the therapy discount (no discount is applied to session prices yet).
-- **Still on the mock** (the dashboard says so at the top): group chats, AI flags, therapist appeals and licence-expiry reminders.
+- **Group chats** (members, staff and the therapist who leads). Four weekly rooms (grief, anxiety, recovery, burnout) are created by the server each week, and a clinical reviewer or Admin can schedule or cancel others. The server enforces the plan, the number of places, the ten-minute lobby, the 500-character limit and the contact filter, and it keeps removed people out. Members see only their own room's messages; a moderator's removal hides the person's lines and blocks them from writing or signing up again. The therapist who leads writes through the portal (**Group chats**), from the lobby on. A report keeps the last eight lines with the report and the room is then kept. Migration `20261021002000_group_chats.sql`, checks in `supabase/tests/group_chats.sql`.
+  - **Deletion needs one manual step.** Rooms are deleted 24 hours after they end, unless reported. The deleting job is in `supabase/group_chat_cleanup.sql` because the tooling used for migrations does not run deleting SQL. Run it once in the Supabase SQL editor (it asks you to confirm because it deletes). Until then ended rooms are kept.
+- **Still on the mock** (the dashboard says so at the top): AI flags, therapist appeals and licence-expiry reminders.
 
 ## Setup
 

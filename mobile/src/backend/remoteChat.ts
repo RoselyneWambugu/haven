@@ -14,6 +14,7 @@ import { syncNotices } from './remoteNotices'
 import { syncPlan } from './remoteBilling'
 import { syncDirectory, syncSessions } from './remoteTherapists'
 import { syncForum } from './remoteForum'
+import { syncGroups } from './remoteGroups'
 
 /** What the server sends for a peer or a blocked person. */
 interface RemotePeer { id: string; pen_name: string; avatar: Peer['avatar']; languages: string[]; age_band: AgeBand }
@@ -125,6 +126,8 @@ export function startPolling(): void {
     ticks += 1
     // The community changes more slowly than a chat, so it is asked about a third as often.
     if (ticks % 3 === 0) void syncForum()
+    // A room that is open moves as fast as a chat; the list of rooms changes slowly.
+    if (ticks % (getDb().groupChats.some((g) => g.registered && Date.now() >= g.startsAt - 600_000 && Date.now() < g.startsAt + g.durationMin * 60_000) ? 2 : 10) === 0) void syncGroups()
     if (ticks % 10 === 0) {
       void syncPlan()
       void syncSessions()
@@ -140,6 +143,7 @@ export function startPolling(): void {
   }, POLL_MS)
   void syncChats()
   void syncForum()
+  void syncGroups()
   void syncPlan()
   void syncSessions()
   void syncNotices()

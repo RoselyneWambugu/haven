@@ -392,6 +392,8 @@ export interface GroupChat {
   createdBy?: string
   /** People a moderator removed from the room. Their messages are hidden and they cannot write or sign up again. */
   removed?: { name: string; reason: string; by: string; at: number }[]
+  /** Pen names of the people signed up. Staff get this from the server, which knows who is in the room. */
+  roster?: string[]
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'
