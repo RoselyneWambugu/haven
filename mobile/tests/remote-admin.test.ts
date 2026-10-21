@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin, remoteAdmin, stopAdminPolling, syncAdmin } from '../src/backend/remoteAdmin'
+import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin, remoteAdmin, remoteTeam, syncAnalytics, stopAdminPolling, syncAdmin } from '../src/backend/remoteAdmin'
 import { appealNotice, syncNotices } from '../src/backend/remoteNotices'
 import { stopPolling } from '../src/backend/remoteChat'
 import { freshState, getDb, update } from '../src/store/db'
@@ -312,6 +312,61 @@ describe('strike policy and break-glass', () => {
   it('returns nothing when the approval has ended', async () => {
     fake({ replies: { admin_private_profile: { ok: false, code: 'expired', error: 'This approval has ended.' } } })
     expect(await remoteAdmin.privateProfile('b1')).toBeNull()
+  })
+})
+
+describe('wellbeing and the rota', () => {
+  it('shows the limits, my reveals and the rota from the server', async () => {
+    fake({ replies: { admin_wellbeing: { ok: true, cfg: { dailyLimit: 12, breakEvery: 4, breakMinutes: 5 }, exposure: { count: 3, sinceBreak: 3, breakUntil: null }, rota: [{ weekStart: 1000, heavy: ['M. Test One'] }] } } })
+    await syncAdmin()
+    const a = getDb().admin!
+    expect(a.wellbeing).toEqual({ dailyLimit: 12, breakEvery: 4, breakMinutes: 5 })
+    expect(a.exposure['M. Test One']).toEqual({ count: 3, sinceBreak: 3, breakUntil: null })
+    expect(a.rota).toEqual([{ weekStart: 1000, heavy: ['M. Test One'] }])
+  })
+
+  it('sends limits, breaks, rota changes, hand-on and support requests to the server', async () => {
+    const f = fake()
+    await remoteTeam.setWellbeing({ dailyLimit: 10, breakEvery: 4, breakMinutes: 5 })
+    await remoteTeam.startBreak()
+    await remoteTeam.setRota(1000, ['M. Bravo'])
+    await remoteTeam.handOn('C-r:abc')
+    remoteTeam.askForSupport()
+    await Promise.resolve()
+    const sent = f.calls.filter((c) => c.name !== 'admin_state' && !c.name.startsWith('admin_policy') && c.name !== 'admin_break_glass' && c.name !== 'admin_wellbeing' && c.name !== 'admin_billing')
+    expect(sent.map((c) => [c.name, c.args])).toEqual([
+      ['admin_set_wellbeing', { p_daily: 10, p_every: 4, p_minutes: 5 }],
+      ['admin_start_break', {}],
+      ['admin_set_rota', { p_week: 1000, p_names: ['M. Bravo'] }],
+      ['admin_hand_on', { p_case: 'C-r:abc' }],
+      ['admin_ask_support', undefined],
+    ])
+  })
+
+  it('passes the daily limit refusal back', async () => {
+    fake({ replies: { admin_reveal: { ok: false, code: 'limit', error: 'You’ve reached today’s limit.' } } })
+    expect(await remoteAdmin.reveal('C-r:abc', 'e1')).toMatchObject({ ok: false, code: 'limit' })
+  })
+})
+
+describe('analytics and billing', () => {
+  it('keeps the live analytics, and says when there are none', async () => {
+    fake({ replies: { admin_analytics: { ok: true, days: [{ t: 1, registered: 4 }], cohorts: [], who: { rows: [], cols: [], cells: [] }, reviewMinutes: [5, 9] } } })
+    await syncAdmin()
+    expect(await syncAnalytics()).toBe(true)
+    expect(getDb().admin?.analytics?.reviewMinutes).toEqual([5, 9])
+    fake({ replies: { admin_analytics: { ok: false, code: 'not-staff' } } })
+    expect(await syncAnalytics()).toBe(false)
+  })
+
+  it('lists refunds from the server and decides them there', async () => {
+    const f = fake({ replies: { admin_billing: { ok: true, refunds: [{ id: 'R-1', penName: 'QuietPine', plan: 'Monthly', reason: 'Did not use it', status: 'pending', decidedBy: null }], unmatched: 2, failed: 3 } } })
+    await syncAdmin()
+    expect(getDb().admin?.refunds).toHaveLength(1)
+    expect(getDb().admin?.unmatchedPayments).toBe(2)
+    expect(getDb().admin?.failedPayments).toBe(3)
+    await remoteAdmin.decideRefund('R-1', true)
+    expect(f.calls.find((c) => c.name === 'admin_decide_refund')?.args).toEqual({ p_id: 'R-1', p_approve: true })
   })
 })
 

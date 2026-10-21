@@ -1,5 +1,6 @@
 import { admin as mockAdmin, seed } from '@/api/admin'
-import type { AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
+import { team as mockTeam } from '@/api/team'
+import type { AdminRefund, Exposure, RotaWeek, WellbeingCfg, AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
 import { now } from '@/lib/clock'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
@@ -64,7 +65,7 @@ export function syncAdmin(): Promise<boolean> {
     if (error || !d) return !!getDb().admin?.signedIn
     if (d.ok !== true || !d.name) return false
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
-    await Promise.all([syncPolicy(), syncBreakGlass()])
+    await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling()])
     if (d.role === 'clinical' || d.role === 'admin') await syncLinks()
     if (d.role === 'admin') await syncInvites()
     return true
@@ -89,6 +90,20 @@ async function syncPolicy(): Promise<void> {
   update((s) => (s.admin ? { admin: { ...s.admin, policy: d.policy!, policyChange: d.pending ? { policy: d.pending.policy, requestedBy: d.pending.requestedBy, approvals: [], id: d.pending.id, mine: d.pending.mine } : null } } : {}))
 }
 
+async function syncWellbeing(): Promise<void> {
+  const { data } = await supabase().rpc('admin_wellbeing')
+  const d = data as { ok?: boolean; cfg?: WellbeingCfg; exposure?: Exposure; rota?: RotaWeek[] } | null
+  if (!d?.ok || !d.cfg || !d.exposure) return
+  update((s) => (s.admin ? { admin: { ...s.admin, wellbeing: d.cfg!, exposure: { ...s.admin.exposure, [s.admin.staffName]: d.exposure! }, rota: d.rota ?? [] } } : {}))
+}
+
+async function syncBilling(): Promise<void> {
+  const { data } = await supabase().rpc('admin_billing')
+  const d = data as { ok?: boolean; refunds?: AdminRefund[]; unmatched?: number; failed?: number } | null
+  if (!d?.ok) return
+  update((s) => (s.admin ? { admin: { ...s.admin, refunds: d.refunds ?? [], unmatchedPayments: d.unmatched ?? 0, failedPayments: d.failed ?? 0 } } : {}))
+}
+
 async function syncBreakGlass(): Promise<void> {
   const { data } = await supabase().rpc('admin_break_glass')
   const d = data as { ok?: boolean; requests?: BreakGlassRequest[] } | null
@@ -101,6 +116,15 @@ async function syncInvites(): Promise<void> {
   const d = data as { ok?: boolean; invites?: NonNullable<AdminState['staffInvites']>; heavy?: Record<string, boolean>; pending?: AdminState['staffPending'] } | null
   if (!d?.ok) return
   update((s) => (s.admin ? { admin: { ...s.admin, staffInvites: d.invites ?? [], heavy: d.heavy ?? {}, staffPending: d.pending ?? null } } : {}))
+}
+
+/** Fetches the analytics in one reply. The module asks when it opens, because the figures are the heaviest the server works out. */
+export async function syncAnalytics(): Promise<boolean> {
+  const { data } = await supabase().rpc('admin_analytics')
+  const d = data as ({ ok?: boolean } & NonNullable<AdminState['analytics']>) | null
+  if (!d?.ok) return false
+  update((s) => (s.admin ? { admin: { ...s.admin, analytics: { days: d.days, cohorts: d.cohorts, who: d.who, reviewMinutes: d.reviewMinutes } } } : {}))
+  return true
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
@@ -191,6 +215,24 @@ async function proposal(fn: string, args: Record<string, unknown>): Promise<Res<
   return r.ok ? { ok: true, value: { proposed: r.proposed === true } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
 }
 
+/** Reviewer wellbeing and the heavy-queue rota, kept on the server. Team changes themselves are in `remoteAdmin`. */
+export const remoteTeam = {
+  ...mockTeam,
+  setWellbeing: (cfg: WellbeingCfg) => act('admin_set_wellbeing', { p_daily: cfg.dailyLimit, p_every: cfg.breakEvery, p_minutes: cfg.breakMinutes }),
+  startBreak: () => act('admin_start_break', {}),
+  endBreak(): void {
+    void act('admin_end_break', {})
+  },
+  ensureRota(): void {
+    void call('admin_ensure_rota').then(() => syncAdmin())
+  },
+  setRota: (weekStart: number, heavy: string[]) => act('admin_set_rota', { p_week: weekStart, p_names: heavy }),
+  handOn: (caseId: string) => act('admin_hand_on', { p_case: caseId }),
+  askForSupport(): void {
+    void call('admin_ask_support')
+  },
+}
+
 export const remoteAdmin = {
   ...mockAdmin,
 
@@ -260,6 +302,8 @@ export const remoteAdmin = {
     }
     return { name: d.name ?? '', phone: d.phone ?? '', location: d.location ?? '', minutesLeft: d.minutesLeft ?? 0 }
   },
+
+  decideRefund: (id: string, approve: boolean) => act('admin_decide_refund', { p_id: id, p_approve: approve }),
 
   users(): AdminUser[] {
     return getDb().admin?.users ?? []

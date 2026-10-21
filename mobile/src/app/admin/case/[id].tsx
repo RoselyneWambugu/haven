@@ -110,7 +110,7 @@ export default function CaseDetail() {
       ) : null}
       {c.owner === a.staffName && c.status !== 'closed' ? (
         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-          <Button testID="hand-on" size="sm" variant="quiet" label="Hand this case on" onPress={() => { const r = api.team.handOn(c.id); setError(r.ok ? null : r.error) }} />
+          <Button testID="hand-on" size="sm" variant="quiet" label="Hand this case on" onPress={async () => { const r = await api.team.handOn(c.id); setError(r.ok ? null : r.error) }} />
           <Button size="sm" variant="ghost" label="Take a break" onPress={() => api.team.startBreak()} />
         </View>
       ) : null}

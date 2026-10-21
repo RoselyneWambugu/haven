@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Share, View } from 'react-native'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { syncAnalytics } from '@/backend/remoteAdmin'
 import { Button } from '@/components/Button'
 import { BarList, ChartCard, Columns, DataTable, Heat, LineChart, Meter, StatTile } from '@/components/Charts'
 import { Chip } from '@/components/Controls'
@@ -38,7 +40,11 @@ export default function Analytics() {
   const section: Section = chosen && allowed.includes(chosen) ? chosen : allowed[0]
   const [error, setError] = useState<string | null>(null)
   const anchor = startOfEatDay(now())
-  const days = useMemo(() => buildDays(anchor), [anchor])
+  const live = a?.analytics
+  const days = useMemo(() => live?.days ?? buildDays(anchor), [anchor, live])
+  useEffect(() => {
+    if (REMOTE && a?.signedIn) void syncAnalytics()
+  }, [a?.signedIn])
   const cur = sum(days, range)
   const prev = sum(days, range, 1)
   const labels = days.slice(-range).map((d) => dayShort(d.t))
@@ -67,9 +73,15 @@ export default function Analytics() {
       sub="Counts and rates only. No message content, no identities, and small groups are hidden."
       actions={canExportAnalytics(a.role) ? <Button testID="export-analytics" variant="quiet" label="Export CSV (Admin)" onPress={exportCsv} /> : undefined}
     >
-      <Banner tone="sun" icon="clock" title="Sample data">
-        These figures are generated for the demo, the same every time. The AI-flag and appeal figures in Safety come from the live demo data.
-      </Banner>
+      {live ? (
+        <Banner tone="green" icon="check" title="Live data">
+          Counted from real use, with groups under {MIN_CELL} hidden. Installs and directory views are not tracked yet, so they show as zero. The AI-flag figures in Safety are still sample data.
+        </Banner>
+      ) : (
+        <Banner tone="sun" icon="clock" title="Sample data">
+          These figures are generated for the demo, the same every time. The AI-flag and appeal figures in Safety come from the live demo data.
+        </Banner>
+      )}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
         {SECTIONS.filter((s) => allowed.includes(s.key)).map((s) => (
           <Chip key={s.key} testID={`an-${s.key}`} label={s.label} selected={section === s.key} onPress={() => setSection(s.key)} />
@@ -93,8 +105,8 @@ export default function Analytics() {
 
   function product() {
     const steps = memberFunnel(cur)
-    const co = cohorts(anchor)
-    const who = whoIsUsing()
+    const co = live?.cohorts ?? cohorts(anchor)
+    const who = live?.who ?? whoIsUsing()
     const activation = ratio(cur.firstMessage, cur.registered)
     const prevActivation = ratio(prev.firstMessage, prev.registered)
     const lastD7 = [...co].reverse().find((c) => c.d7 !== null)
@@ -187,7 +199,7 @@ export default function Analytics() {
   }
 
   function safety() {
-    const mins = reviewMinutes()
+    const mins = live?.reviewMinutes ?? reviewMinutes()
     const med = percentile(mins, 50)
     const p95 = percentile(mins, 95)
     const reportRate = ratio(cur.reports * 1000, cur.conversations)

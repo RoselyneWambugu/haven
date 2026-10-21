@@ -9,7 +9,7 @@ import { remoteAccountActions, remoteAuth } from '@/backend/remoteAuth'
 import { remoteChat, remoteMatch, remoteReport } from '@/backend/remoteChat'
 import { remoteBilling } from '@/backend/remoteBilling'
 import { appealNotice } from '@/backend/remoteNotices'
-import { remoteAdmin } from '@/backend/remoteAdmin'
+import { remoteAdmin, remoteTeam } from '@/backend/remoteAdmin'
 import { remoteSessions } from '@/backend/remoteTherapists'
 import { remotePortal } from '@/backend/remotePortal'
 import { remoteForum, remoteSpaces } from '@/backend/remoteForum'
@@ -24,7 +24,7 @@ import { applyPortalToDirectory, applyStandingToDirectory, portal as mockPortal 
 import { chat as mockChat, forum as mockForum, match as mockMatch, report as mockReport } from './social'
 import { account as mockAccount, tickets } from './support'
 import { spaces as mockSpaces } from './spaces'
-import { team } from './team'
+import { team as mockTeam } from './team'
 import { therapistAppeals } from './therapistAppeals'
 
 /**
@@ -40,6 +40,7 @@ const sessions = (REMOTE ? remoteSessions : mockSessions) as typeof mockSessions
 const billing = (REMOTE ? remoteBilling : mockBilling) as typeof mockBilling
 const forum = (REMOTE ? remoteForum : mockForum) as typeof mockForum
 const spaces = (REMOTE ? remoteSpaces : mockSpaces) as typeof mockSpaces
+const team = (REMOTE ? remoteTeam : mockTeam) as typeof mockTeam
 const admin = (REMOTE ? remoteAdmin : mockAdmin) as typeof mockAdmin
 const report = (REMOTE ? remoteReport : mockReport) as typeof mockReport
 

@@ -644,6 +644,9 @@ export interface AdminState {
   staffPending?: { id: string; summary: string; requestedBy: string; mine: boolean; at: number } | null
   staffInvites?: { name: string; role: StaffRole; tail: string; by: string; at: number }[]
   heavy?: Record<string, boolean>
+  /** Live analytics from the server. Only on the real backend. */
+  analytics?: { days: import('@/lib/analytics').Day[]; cohorts: import('@/lib/analytics').Cohort[]; who: import('@/lib/analytics').Breakdown; reviewMinutes: number[] }
+  failedPayments?: number
   therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string }>
 }
 
