@@ -1,5 +1,5 @@
 import { portal as mockPortal } from '@/api/portal'
-import type { AvatarKind, ConcernType, ForumComment, Message, PortalConcern, PortalProfile, PortalSession, PortalState, PortalThread, Res } from '@/api/types'
+import type { AdminAppeal, AvatarKind, ConcernType, ForumComment, Message, PortalConcern, PortalProfile, PortalSession, PortalState, PortalThread, Res } from '@/api/types'
 import type { AvailabilityBlock, Mode } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
@@ -34,6 +34,7 @@ function toPortal(d: RemotePortal, prev: PortalState | null): PortalState {
     application: 'approved',
     paused: d.paused,
     review: prev?.review ?? null,
+    appealState: prev?.appealState,
     caps: d.caps,
     availability: d.availability,
     timeOff: d.time_off,
@@ -47,6 +48,22 @@ function toPortal(d: RemotePortal, prev: PortalState | null): PortalState {
   }
 }
 
+type ServerDecision = NonNullable<NonNullable<PortalState['appealState']>['decision']>
+interface ServerAppeal { id: string; status: 'open' | 'upheld' | 'reduced' | 'overturned'; response: string | null; openedAt: number; slaHours: number }
+
+/** What is in force against the therapist, and where their appeal stands. A warning or a pause also shows as the notice on Today. */
+async function syncAppealState(): Promise<void> {
+  const { data } = await supabase().rpc('portal_appeal_state')
+  const d = data as { ok?: boolean; decision?: ServerDecision | null; appeal?: ServerAppeal | null } | null
+  if (!d?.ok) return
+  const therapist = getDb().portal?.therapistId ?? ''
+  const latest: AdminAppeal | null = d.appeal
+    ? { id: d.appeal.id, noticeId: null, caseId: '', penName: '', decision: '', decidedBy: '', statement: '', openedAt: d.appeal.openedAt, slaHours: d.appeal.slaHours, status: d.appeal.status, reviewer: null, therapistId: therapist, response: d.appeal.response ?? undefined }
+    : null
+  const decision = d.decision ?? null
+  update((s) => (s.portal ? { portal: { ...s.portal, appealState: { decision, latest }, review: decision && decision.kind !== 'suspended' ? { kind: decision.kind, text: decision.text, at: decision.at, by: decision.by } : null } } : {}))
+}
+
 let syncing: Promise<boolean> | null = null
 
 /** Brings the therapist's schedule, inbox, sessions and settings in line with the server. False when this sign-in isn't a therapist. */
@@ -58,6 +75,7 @@ export function syncPortal(): Promise<boolean> {
     if (error || !d) return !!getDb().portal?.signedIn
     if (d.ok !== true || !d.therapist_id) return false
     update((s) => ({ portal: toPortal(d as RemotePortal, s.portal) }))
+    await syncAppealState()
     return true
   })().finally(() => {
     syncing = null
@@ -132,6 +150,23 @@ const settle = (call: Promise<{ ok: boolean; error?: string }>): void => {
 }
 
 let availabilityTimer: ReturnType<typeof setTimeout> | null = null
+
+export const remoteTherapistAppeals = {
+  decision() {
+    const d = getDb().portal?.appealState?.decision
+    return d ?? null
+  },
+  latest(): AdminAppeal | null {
+    return getDb().portal?.appealState?.latest ?? null
+  },
+  async submit(statement: string): Promise<Res> {
+    const { data, error } = await supabase().rpc('portal_appeal', { p_statement: statement })
+    const d = data as { ok?: boolean; error?: string; code?: string } | null
+    if (error || !d) return { ok: false, error: OFFLINE }
+    await syncAppealState()
+    return d.ok ? { ok: true, value: undefined } : { ok: false, error: d.error ?? OFFLINE, code: d.code }
+  },
+}
 
 export const remotePortal = {
   ...mockPortal,

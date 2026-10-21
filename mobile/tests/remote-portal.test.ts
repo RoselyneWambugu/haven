@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { portalRequestOtp, portalVerifyOtp, remotePortal, stopPortalPolling, syncPortal } from '../src/backend/remotePortal'
+import { portalRequestOtp, portalVerifyOtp, remotePortal, remoteTherapistAppeals, stopPortalPolling, syncPortal } from '../src/backend/remotePortal'
 import { stopPolling } from '../src/backend/remoteChat'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock, now } from '../src/lib/clock'
@@ -175,5 +175,41 @@ describe('working in the portal', () => {
     expect(getDb().portal).toBeNull()
     await Promise.resolve()
     expect(f.auth.signedOut).toBe(1)
+  })
+})
+
+describe('appealing a decision', () => {
+  const warning = { kind: 'warning', by: 'A. Clin', at: 1000, text: 'Please review our standards of practice.' }
+
+  it('shows a warning as the notice on Today and offers the appeal', async () => {
+    fake({ replies: { portal_appeal_state: { ok: true, decision: warning, appeal: null } } })
+    await syncPortal()
+    const p = getDb().portal!
+    expect(p.review).toMatchObject({ kind: 'warning', by: 'A. Clin' })
+    expect(remoteTherapistAppeals.decision()?.kind).toBe('warning')
+    expect(remoteTherapistAppeals.latest()).toBeNull()
+  })
+
+  it('shows a suspension to appeal without putting it on Today as a review notice', async () => {
+    fake({ replies: { portal_appeal_state: { ok: true, decision: { ...warning, kind: 'suspended' }, appeal: null } } })
+    await syncPortal()
+    expect(getDb().portal!.review).toBeNull()
+    expect(remoteTherapistAppeals.decision()?.kind).toBe('suspended')
+  })
+
+  it('sends the statement and shows the reviewer’s answer', async () => {
+    const { calls } = fake({ replies: { portal_appeal_state: { ok: true, decision: warning, appeal: { id: 'TA-1', status: 'reduced', response: 'A pause is enough.', openedAt: 5, slaHours: 72 } } } })
+    await syncPortal()
+    const r = await remoteTherapistAppeals.submit('I was quoting the client, not advising them.')
+    expect(r.ok).toBe(true)
+    expect(calls.find((c) => c.name === 'portal_appeal')?.args).toEqual({ p_statement: 'I was quoting the client, not advising them.' })
+    expect(remoteTherapistAppeals.latest()).toMatchObject({ status: 'reduced', response: 'A pause is enough.' })
+  })
+
+  it('shows the server’s reason when an appeal is refused', async () => {
+    fake({ replies: { portal_appeal: { ok: false, code: 'open', error: 'You already have an appeal waiting for a decision.' } } })
+    const r = await remoteTherapistAppeals.submit('A statement that is long enough to send.')
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.code).toBe('open')
   })
 })

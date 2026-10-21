@@ -480,6 +480,8 @@ export interface PortalState {
   payout: { method: string; schedule: 'weekly' | 'monthly' }
   licenceValidTo: number
   reauthUntil: number
+  /** From the server: the decision in force against this therapist and their latest appeal. */
+  appealState?: { decision: { kind: 'warning' | 'paused' | 'suspended'; by: string; at: number; text: string } | null; latest: AdminAppeal | null }
 }
 
 // ---------- admin dashboard ----------

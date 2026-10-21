@@ -72,7 +72,7 @@ export function syncAdmin(): Promise<boolean> {
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
     await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling(), syncStaffHelp()])
     if (d.role === 'moderator' || d.role === 'clinical' || d.role === 'admin') await Promise.all([syncStaffGroups(), syncFlags()])
-    if (d.role === 'clinical' || d.role === 'admin') await Promise.all([syncLinks(), syncApplicants()])
+    if (d.role === 'clinical' || d.role === 'admin') await Promise.all([syncLinks(), syncApplicants(), syncTherapistAppeals()])
     if (d.role === 'admin') await Promise.all([syncInvites(), syncAdminConfig()])
     if (d.role === 'admin' || d.role === 'billing') await syncFeedback()
     return true
@@ -80,6 +80,14 @@ export function syncAdmin(): Promise<boolean> {
     syncing = null
   })
   return syncing
+}
+
+/** Appeals by therapists join the members' appeals, for the people allowed to read them. */
+async function syncTherapistAppeals(): Promise<void> {
+  const { data } = await supabase().rpc('admin_therapist_appeals')
+  const d = data as { ok?: boolean; appeals?: AdminAppeal[] } | null
+  if (!d?.ok || !d.appeals) return
+  update((s) => (s.admin ? { admin: { ...s.admin, appeals: [...s.admin.appeals.filter((x) => !x.therapistId), ...d.appeals!] } } : {}))
 }
 
 async function syncFlags(): Promise<void> {
@@ -341,6 +349,7 @@ export const remoteAdmin = {
   },
   decideAppeal(id: string, outcome: 'upheld' | 'reduced' | 'overturned', explanation: string): Promise<Res> {
     const ap = getDb().admin?.appeals.find((x) => x.id === id)
+    if (ap?.therapistId) return act('admin_decide_therapist_appeal', { p_id: id, p_outcome: outcome, p_explanation: explanation })
     return act('admin_decide_appeal', { p_notice: ap?.noticeId ?? '', p_outcome: outcome, p_explanation: explanation })
   },
   reassignAppeal(): void {},

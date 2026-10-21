@@ -15,7 +15,7 @@ import { remoteFeedback } from '@/backend/remoteFeedback'
 import { appealNotice } from '@/backend/remoteNotices'
 import { remoteAdmin, remoteTeam } from '@/backend/remoteAdmin'
 import { remoteSessions } from '@/backend/remoteTherapists'
-import { remotePortal } from '@/backend/remotePortal'
+import { remotePortal, remoteTherapistAppeals } from '@/backend/remotePortal'
 import { remoteForum, remoteSpaces } from '@/backend/remoteForum'
 import { billing as mockBilling, sessions as mockSessions } from './care'
 import { demo } from './demo'
@@ -29,7 +29,7 @@ import { chat as mockChat, forum as mockForum, match as mockMatch, report as moc
 import { account as mockAccount, tickets as mockTickets } from './support'
 import { spaces as mockSpaces } from './spaces'
 import { team as mockTeam } from './team'
-import { therapistAppeals } from './therapistAppeals'
+import { therapistAppeals as mockTherapistAppeals } from './therapistAppeals'
 
 /**
  * The real backend answers later than the mock, so screens `await` these calls. The type stays the mock's
@@ -52,6 +52,7 @@ const tickets = (REMOTE ? remoteTickets : mockTickets) as typeof mockTickets
 const team = (REMOTE ? remoteTeam : mockTeam) as typeof mockTeam
 const admin = (REMOTE ? remoteAdmin : mockAdmin) as typeof mockAdmin
 const groups = (REMOTE ? remoteGroups : mockGroups) as typeof mockGroups
+const therapistAppeals = (REMOTE ? remoteTherapistAppeals : mockTherapistAppeals) as typeof mockTherapistAppeals
 const report = (REMOTE ? remoteReport : mockReport) as typeof mockReport
 
 const account: typeof mockAccount = REMOTE

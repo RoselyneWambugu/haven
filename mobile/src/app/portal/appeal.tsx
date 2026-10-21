@@ -52,8 +52,8 @@ export default function Appeal() {
             <Button
               testID="appeal-send"
               label="Send appeal"
-              onPress={() => {
-                const r = api.therapistAppeals.submit(text)
+              onPress={async () => {
+                const r = await api.therapistAppeals.submit(text)
                 if (!r.ok) return setError(r.error)
                 setText('')
               }}

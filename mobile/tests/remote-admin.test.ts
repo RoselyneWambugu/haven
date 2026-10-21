@@ -402,3 +402,16 @@ describe('automated flags', () => {
     expect(getDb().admin?.flags).toEqual([flag])
   })
 })
+
+describe('therapist appeals', () => {
+  const tap = { id: 'TA-1', noticeId: null, caseId: '', penName: 'Dr. Amina', decision: 'Suspension: x', decidedBy: 'A. Clin', statement: 'My side', openedAt: 1, slaHours: 72, status: 'open', reviewer: null, therapistId: 't-amina' }
+
+  it('adds therapists’ appeals to the members’ for clinical reviewers, and sends the decision to the right place', async () => {
+    const f = fake({ replies: { admin_state: { ...STATE(), role: 'clinical' }, admin_therapist_appeals: { ok: true, appeals: [tap] } } })
+    await syncAdmin()
+    expect(getDb().admin?.appeals.some((a) => a.id === 'TA-1')).toBe(true)
+    await remoteAdmin.decideAppeal('TA-1', 'reduced', 'A pause is enough for now.')
+    expect(f.calls.find((c) => c.name === 'admin_decide_therapist_appeal')?.args).toEqual({ p_id: 'TA-1', p_outcome: 'reduced', p_explanation: 'A pause is enough for now.' })
+    expect(f.calls.some((c) => c.name === 'admin_decide_appeal')).toBe(false)
+  })
+})
