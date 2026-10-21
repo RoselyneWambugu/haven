@@ -7,6 +7,8 @@ import { Badge, Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
 import { Panel, PortalPage, useWide } from '@/components/Portal'
+import { LicenceRenewal } from '@/components/LicenceRenewal'
+import { REMOTE } from '@/backend/client'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
@@ -112,6 +114,7 @@ export default function Profile() {
           </Text>
         </Panel>
       </View>
+      {REMOTE ? <LicenceRenewal /> : null}
     </PortalPage>
   )
 }

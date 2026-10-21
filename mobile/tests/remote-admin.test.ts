@@ -415,3 +415,14 @@ describe('therapist appeals', () => {
     expect(f.calls.some((c) => c.name === 'admin_decide_appeal')).toBe(false)
   })
 })
+
+describe('licences', () => {
+  it('reads every therapist’s licence for clinical reviewers and sends a renewal decision', async () => {
+    const lic = { id: 't-amina', name: 'Dr. Amina', validTo: 1, number: 'CPB-1', stage: 0, lastReminderAt: 2, renewal: { id: 'r1', number: 'CPB-2', newExpiry: 3 } }
+    const f = fake({ replies: { admin_state: { ...STATE(), role: 'clinical' }, admin_licences: { ok: true, licences: [lic] } } })
+    await syncAdmin()
+    expect(getDb().admin?.licences).toEqual([lic])
+    await remoteAdmin.decideRenewal('r1', true, 'Checked with the register')
+    expect(f.calls.find((c) => c.name === 'admin_decide_renewal')?.args).toEqual({ p_id: 'r1', p_approve: true, p_note: 'Checked with the register' })
+  })
+})

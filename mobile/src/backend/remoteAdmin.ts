@@ -1,6 +1,6 @@
 import { admin as mockAdmin, seed } from '@/api/admin'
 import { team as mockTeam } from '@/api/team'
-import type { AdminFlag, AdminRefund, Applicant, Exposure, RotaWeek, WellbeingCfg, AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
+import type { AdminFlag, AdminLicence, AdminRefund, Applicant, Exposure, RotaWeek, WellbeingCfg, AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
 import { now } from '@/lib/clock'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
@@ -72,7 +72,7 @@ export function syncAdmin(): Promise<boolean> {
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
     await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling(), syncStaffHelp()])
     if (d.role === 'moderator' || d.role === 'clinical' || d.role === 'admin') await Promise.all([syncStaffGroups(), syncFlags()])
-    if (d.role === 'clinical' || d.role === 'admin') await Promise.all([syncLinks(), syncApplicants(), syncTherapistAppeals()])
+    if (d.role === 'clinical' || d.role === 'admin') await Promise.all([syncLinks(), syncApplicants(), syncTherapistAppeals(), syncLicences()])
     if (d.role === 'admin') await Promise.all([syncInvites(), syncAdminConfig()])
     if (d.role === 'admin' || d.role === 'billing') await syncFeedback()
     return true
@@ -88,6 +88,13 @@ async function syncTherapistAppeals(): Promise<void> {
   const d = data as { ok?: boolean; appeals?: AdminAppeal[] } | null
   if (!d?.ok || !d.appeals) return
   update((s) => (s.admin ? { admin: { ...s.admin, appeals: [...s.admin.appeals.filter((x) => !x.therapistId), ...d.appeals!] } } : {}))
+}
+
+async function syncLicences(): Promise<void> {
+  const { data } = await supabase().rpc('admin_licences')
+  const d = data as { ok?: boolean; licences?: AdminLicence[] } | null
+  if (!d?.ok || !d.licences) return
+  update((s) => (s.admin ? { admin: { ...s.admin, licences: d.licences! } } : {}))
 }
 
 async function syncFlags(): Promise<void> {
@@ -353,6 +360,7 @@ export const remoteAdmin = {
     return act('admin_decide_appeal', { p_notice: ap?.noticeId ?? '', p_outcome: outcome, p_explanation: explanation })
   },
   reassignAppeal(): void {},
+  decideRenewal: (id: string, approve: boolean, note: string) => act('admin_decide_renewal', { p_id: id, p_approve: approve, p_note: note }),
 
   exportAudit(): Res<{ csv: string }> {
     const a = getDb().admin

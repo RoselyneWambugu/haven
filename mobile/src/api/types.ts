@@ -481,6 +481,8 @@ export interface PortalState {
   licenceValidTo: number
   reauthUntil: number
   /** From the server: the decision in force against this therapist and their latest appeal. */
+  /** From the server: reminders sent and the latest renewal. */
+  licence?: { stage: 60 | 30 | 7 | 0 | null; number: string; renewal: { status: 'pending' | 'approved' | 'rejected'; number: string; newExpiry: number; note: string | null } | null }
   appealState?: { decision: { kind: 'warning' | 'paused' | 'suspended'; by: string; at: number; text: string } | null; latest: AdminAppeal | null }
 }
 
@@ -540,6 +542,17 @@ export interface AdminUser {
   skips: number
   /** True for the member signed in on this device. Staff actions on them change the real member app. */
   isMember: boolean
+}
+
+export interface AdminLicence {
+  id: string
+  name: string
+  validTo: number
+  number: string
+  /** 60, 30 or 7 days left, 0 once expired, or null while there is more than 60 days. */
+  stage: 60 | 30 | 7 | 0 | null
+  lastReminderAt: number | null
+  renewal: { id: string; number: string; newExpiry: number } | null
 }
 
 export interface AdminAppeal {
@@ -656,6 +669,8 @@ export interface AdminState {
   /** Felt-heard shares worked out by the server, with small groups hidden. Only on the real backend. */
   heardSummary?: { answered: number | null; skipped: number | null; shares: (number | null)[]; positive: number | null }
   therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string }>
+  /** From the server, for clinical reviewers and Admins: every therapist's licence and any renewal waiting. */
+  licences?: AdminLicence[]
 }
 
 export interface HeldPost {

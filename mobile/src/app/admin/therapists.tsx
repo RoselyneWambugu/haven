@@ -37,6 +37,14 @@ export default function Therapists() {
   const sel = THERAPISTS.find((x) => x.id === picked)
   const canAct = !!a && (a.role === 'clinical' || a.role === 'admin')
 
+  const [renewing, setRenewing] = useState<string | null>(null)
+  const [renewNote, setRenewNote] = useState('')
+  const [renewError, setRenewError] = useState<string | null>(null)
+  async function decideRenewal(id: string, approve: boolean) {
+    const r = await remoteAdmin.decideRenewal(id, approve, renewNote)
+    if (!r.ok) return setRenewError(r.error)
+    setRenewing(null)
+  }
   async function act() {
     if (!sel) return
     const r = await (standing[sel.id] ? api.admin.reinstateTherapist(sel.id, reason) : api.admin.suspendTherapist(sel.id, reason))
@@ -75,7 +83,7 @@ export default function Therapists() {
       </Panel>
       <Panel title="Roster" style={{ gap: 0 }} testID="roster">
         {THERAPISTS.map((th) => {
-          const lic = licenceStatus(th.licenceValidTo, t)
+          const lic = licenceStatus(a?.licences?.find((x) => x.id === th.id)?.validTo ?? th.licenceValidTo, t)
           const off = !!standing[th.id]
           const paused = portal?.therapistId === th.id && portal.paused
           return (
@@ -143,6 +151,44 @@ export default function Therapists() {
           )}
         </Panel>
       ) : null}
+      {REMOTE && a?.licences ? (
+        <Panel title="Licence expiry" testID="licences">
+          {a.licences.map((l) => (
+            <View key={l.id} style={{ gap: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text variant="small" style={{ flex: 1 }}>
+                  {l.name}
+                </Text>
+                <Text variant="caption" muted>
+                  valid to {dayLong(l.validTo)}
+                </Text>
+                <Badge tone={l.stage === null ? 'green' : 'sun'} label={l.stage === null ? 'OK' : l.stage === 0 ? 'Expired' : `${l.stage} d stage`} />
+              </View>
+              {l.renewal ? (
+                <View style={{ gap: 6, paddingLeft: 12 }}>
+                  <Text variant="caption" muted>
+                    Renewal sent: licence {l.renewal.number}, new expiry {dayLong(l.renewal.newExpiry)}.
+                  </Text>
+                  {renewing === l.renewal.id ? (
+                    <>
+                      <Field testID="renewal-note" label="What you checked (required)" value={renewNote} onChangeText={(v) => { setRenewNote(v); setRenewError(null) }} error={renewError} />
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <Button testID="renewal-approve" size="sm" label="Approve" onPress={() => decideRenewal(l.renewal!.id, true)} />
+                        <Button testID="renewal-reject" size="sm" variant="danger" label="Reject" onPress={() => decideRenewal(l.renewal!.id, false)} />
+                        <Button size="sm" variant="ghost" label="Close" onPress={() => setRenewing(null)} />
+                      </View>
+                    </>
+                  ) : canAct ? (
+                    <View style={{ flexDirection: 'row' }}>
+                      <Button testID={`renewal-open-${l.id}`} size="sm" variant="quiet" label="Review renewal" onPress={() => { setRenewing(l.renewal!.id); setRenewNote(''); setRenewError(null) }} />
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+          ))}
+        </Panel>
+      ) : (
       <Panel title="Licence expiry">
         {THERAPISTS.slice(0, 4).map((th) => {
           const s = licenceStatus(th.licenceValidTo, t)
@@ -159,6 +205,7 @@ export default function Therapists() {
           )
         })}
       </Panel>
+      )}
     </PortalPage>
   )
 }

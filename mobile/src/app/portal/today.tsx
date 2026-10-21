@@ -37,7 +37,9 @@ export default function Today() {
     <PortalPage testID="portal-today" title={`${hello}, ${first}`} sub="Here is your day.">
       {licence.state !== 'ok' ? (
         <Banner tone="sun" icon="clock" title={licence.state === 'expired' ? 'Your licence has expired' : `Your licence expires in ${licence.days} days`}>
-          {licence.state === 'expired' ? 'You’re hidden from booking until you upload a renewal.' : 'Upload your renewal to stay listed.'}
+          {p.licence?.renewal?.status === 'pending'
+            ? 'Your renewal is with a reviewer.'
+            : licence.state === 'expired' ? 'You’re hidden from booking until a renewal is approved.' : 'Send your renewal from Profile to stay listed.'}
         </Banner>
       ) : null}
       {suspended ? (

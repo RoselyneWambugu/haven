@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { portalRequestOtp, portalVerifyOtp, remotePortal, remoteTherapistAppeals, stopPortalPolling, syncPortal } from '../src/backend/remotePortal'
+import { portalRequestOtp, portalVerifyOtp, remotePortal, remoteTherapistAppeals, stopPortalPolling, submitLicenceRenewal, syncPortal } from '../src/backend/remotePortal'
 import { stopPolling } from '../src/backend/remoteChat'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock, now } from '../src/lib/clock'
@@ -211,5 +211,22 @@ describe('appealing a decision', () => {
     const r = await remoteTherapistAppeals.submit('A statement that is long enough to send.')
     expect(r.ok).toBe(false)
     if (!r.ok) expect(r.code).toBe('open')
+  })
+})
+
+describe('licence renewal', () => {
+  it('keeps the licence stage and the latest renewal, and sends a renewal', async () => {
+    const { calls } = fake({ replies: { portal_licence: { ok: true, stage: 30, number: 'CPB-1', validTo: now() + 20 * 24 * HOUR, reminders: [], renewal: { status: 'rejected', number: 'CPB-2', newExpiry: now() + 400 * 24 * HOUR, note: 'The number doesn’t match the register.' } } } })
+    await syncPortal()
+    expect(getDb().portal!.licence).toMatchObject({ stage: 30, renewal: { status: 'rejected', note: 'The number doesn’t match the register.' } })
+    const r = await submitLicenceRenewal('CPB-3', '2028-03-31')
+    expect(r.ok).toBe(true)
+    expect(calls.find((c) => c.name === 'portal_submit_renewal')?.args).toEqual({ p_number: 'CPB-3', p_expiry: '2028-03-31' })
+  })
+
+  it('shows the server’s reason when a renewal is refused', async () => {
+    fake({ replies: { portal_submit_renewal: { ok: false, code: 'expiry', error: 'The new expiry date must be later than your current one.' } } })
+    const r = await submitLicenceRenewal('CPB-3', '2026-01-01')
+    expect(r.ok).toBe(false)
   })
 })

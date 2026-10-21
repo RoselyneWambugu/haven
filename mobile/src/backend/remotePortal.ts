@@ -35,6 +35,7 @@ function toPortal(d: RemotePortal, prev: PortalState | null): PortalState {
     paused: d.paused,
     review: prev?.review ?? null,
     appealState: prev?.appealState,
+    licence: prev?.licence,
     caps: d.caps,
     availability: d.availability,
     timeOff: d.time_off,
@@ -64,6 +65,22 @@ async function syncAppealState(): Promise<void> {
   update((s) => (s.portal ? { portal: { ...s.portal, appealState: { decision, latest }, review: decision && decision.kind !== 'suspended' ? { kind: decision.kind, text: decision.text, at: decision.at, by: decision.by } : null } } : {}))
 }
 
+async function syncLicence(): Promise<void> {
+  const { data } = await supabase().rpc('portal_licence')
+  const d = data as ({ ok?: boolean; validTo?: number } & NonNullable<PortalState['licence']>) | null
+  if (!d?.ok) return
+  update((s) => (s.portal ? { portal: { ...s.portal, licence: { stage: d.stage, number: d.number, renewal: d.renewal }, licenceValidTo: d.validTo ?? s.portal.licenceValidTo } } : {}))
+}
+
+/** Sends the new licence number and expiry for a reviewer to check. An expired licence stays hidden from booking until it is approved. */
+export async function submitLicenceRenewal(number: string, expiry: string): Promise<Res> {
+  const { data, error } = await supabase().rpc('portal_submit_renewal', { p_number: number, p_expiry: expiry })
+  const d = data as { ok?: boolean; error?: string; code?: string } | null
+  if (error || !d) return { ok: false, error: OFFLINE }
+  await syncLicence()
+  return d.ok ? { ok: true, value: undefined } : { ok: false, error: d.error ?? OFFLINE, code: d.code }
+}
+
 let syncing: Promise<boolean> | null = null
 
 /** Brings the therapist's schedule, inbox, sessions and settings in line with the server. False when this sign-in isn't a therapist. */
@@ -75,7 +92,7 @@ export function syncPortal(): Promise<boolean> {
     if (error || !d) return !!getDb().portal?.signedIn
     if (d.ok !== true || !d.therapist_id) return false
     update((s) => ({ portal: toPortal(d as RemotePortal, s.portal) }))
-    await syncAppealState()
+    await Promise.all([syncAppealState(), syncLicence()])
     return true
   })().finally(() => {
     syncing = null

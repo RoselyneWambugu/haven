@@ -43,7 +43,7 @@ export default function Overview() {
           <Row title="Severity-1 cases unassigned" right={<Text variant="label">{s1Unassigned}</Text>} onPress={() => go('/admin/cases')} />
           <Row title="Cases near SLA breach" right={<Text variant="label">{nearBreach}</Text>} onPress={() => go('/admin/cases')} />
           <Row title="Break-glass requests waiting for approval" right={<Text variant="label">{pendingBg.length}</Text>} />
-          <Row title="Therapist licences expiring (60 days)" right={<Text variant="label">{licence && licence.state !== 'ok' ? 1 : 0}</Text>} onPress={() => go('/admin/therapists')} />
+          <Row title="Therapist licences expiring (60 days)" right={<Text variant="label">{a.licences ? a.licences.filter((l) => l.stage !== null).length : licence && licence.state !== 'ok' ? 1 : 0}</Text>} onPress={() => go('/admin/therapists')} />
           <Row title="Unmatched payments" right={<Text variant="label">{a.unmatchedPayments}</Text>} onPress={() => go('/admin/billing')} last />
         </Panel>
         <Panel title="New members (7 days)" style={{ flex: wide ? 1 : undefined, width: wide ? undefined : '100%' }}>
