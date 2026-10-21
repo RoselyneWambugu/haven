@@ -2,7 +2,7 @@
 
 Everything that has not been built, every placeholder, and every decision still open, gathered in one place from the PRD build notes and the README. It is for a regular review: for each item, choose **Build**, **Defer** or **Drop**, and give it a priority.
 
-Last updated at PRD v0.37 (backend slices 1 to 5, accounts and privacy, peer matching and chat, the forum and support spaces, plans and billing, and the member's side of therapists and sessions, are built on Supabase; the rest of the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
+Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer matching and chat, the forum and support spaces, plans and billing, the member's side of therapists and sessions, and the therapist portal, are built on Supabase; the rest of the mobile app, therapist portal and admin dashboard are built on a mock backend that lives on the device).
 
 **How to read it.** *Source* is the PRD version whose build notes mention it, and a requirement ID where there is one. *Needs* says what blocks it: a decision, a provider, or just build time.
 
@@ -12,7 +12,7 @@ Last updated at PRD v0.37 (backend slices 1 to 5, accounts and privacy, peer mat
 
 | # | Item | Source | Needs |
 |---|---|---|---|
-| S-01 | The rest of the real backend. **Accounts and privacy (v0.33), peer matching and chat (v0.34), and the forum and support spaces (v0.35) are built** (`docs/BACKEND.md`). Still on the device mock: group chats, the therapist portal (the therapist's side of sessions and chats) and admin data | v0.8 | Next slices; decision D6 (encryption and retention) |
+| S-01 | The rest of the real backend. **Accounts and privacy (v0.33), peer matching and chat (v0.34), and the forum and support spaces (v0.35) are built** (`docs/BACKEND.md`). Still on the device mock: group chats, therapist applications and appeals, and admin data | v0.8 | Next slices; decision D6 (encryption and retention) |
 | S-02 | Real SMS one-time codes for sign-up and sign-in (the backend is ready; it uses test numbers with fixed codes until a provider is chosen) | v0.8, D51 | SMS provider; D44 (SMS cost) |
 | S-03 | Real M-Pesa and card payments, refunds, reconciliation. The server side is ready (orders, plan, `confirm_payment` for a provider's webhook); no provider is connected, and payments work only for listed test numbers | v0.8, D51 | Payment provider and an edge function for its webhook; D2, D3 |
 | S-04 | Real push notifications, and SMS and email delivery (NTF-1) | v0.19 | Push, SMS and email providers |
@@ -152,12 +152,17 @@ Last updated at PRD v0.37 (backend slices 1 to 5, accounts and privacy, peer mat
 | Q-15 | Automatic renewal (charging again at the end of a period) and a reminder before it, once a provider is connected | v0.36 |
 | Q-16 | Remove the test-payment list (`private.payment_test_phones`) and the simulated payment before real members are charged | v0.36 |
 | Q-17 | Therapist session payments through the server. **Done at v0.37** (same orders as plans; a provider is still needed) | v0.36 |
-| Q-18 | Therapist accounts and the portal on the server: sign-in, replying in chats and the forum, marking attendance, notes, earnings, editing hours and profile. Until then nobody answers a therapist chat on the real backend | v0.37 |
+| Q-18 | Therapist accounts and the portal on the server. **Done at v0.38** (sign-in by phone, inbox, sessions, notes, hours, time off, forum replies, concerns, payout) | v0.37 |
 | Q-19 | Real therapist onboarding and verification in place of the six sample therapists (`is_demo`) | v0.37 |
-| Q-20 | Time off and "paused" for a therapist, and moving a suspended therapist's clients, on the server | v0.37 |
+| Q-20 | Pause and time off are on the server (v0.38). Still to do: moving a suspended therapist's clients to someone else | v0.37 |
 | Q-21 | Reporting a therapist from a chat when there is no session (M-02) on the server | v0.37 |
 | Q-22 | Late-change charges and refunds for cancelled sessions (the flag is kept; nothing is charged or refunded yet) | v0.37 |
 | Q-23 | Remove the old unused function `private.apply_paid_order` (replaced by `settle_order`) | v0.37 |
+| Q-24 | An admin screen to link a therapist to a phone number and to approve a new therapist, in place of the SQL command | v0.38 |
+| Q-25 | The clinical lead's side of a concern a therapist raises, and the clinical reviewers' queue for session reports (both are stored; nothing reads them) | v0.38 |
+| Q-26 | Enforce "new clients a week" for a therapist (it is stored, not enforced) | v0.38 |
+| Q-27 | Therapist applications, licence upload and checks, and appeals on the server (still mock) | v0.38 |
+| Q-28 | Pay therapists: statements and payouts are worked out in the app from finished sessions; nothing is paid out | v0.38 |
 | Q-05 | Remove demo hooks (`window.__echo`, Demo tools, scripted replies) when a real backend is connected | v0.8 |
 
 ---

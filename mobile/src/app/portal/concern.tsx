@@ -65,8 +65,8 @@ export default function Concern() {
           variant="danger"
           label="Send to clinical lead"
           disabled={danger === null}
-          onPress={() => {
-            api.portal.raiseConcern({ sessionId: session ?? null, danger: danger === true, type, detail })
+          onPress={async () => {
+            await api.portal.raiseConcern({ sessionId: session ?? null, danger: danger === true, type, detail })
             setSent({ danger: danger === true })
           }}
         />

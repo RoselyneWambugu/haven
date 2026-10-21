@@ -36,8 +36,8 @@ export default function Profile() {
   if (!p || !th) return null
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
-  function save() {
-    const r = api.portal.saveProfile({ bio, specialisations: specs, languages: langs, modes, priceKes: p!.profile.priceKes })
+  async function save() {
+    const r = await api.portal.saveProfile({ bio, specialisations: specs, languages: langs, modes, priceKes: p!.profile.priceKes })
     setSaved(r.ok)
     setError(r.ok ? null : r.error)
   }

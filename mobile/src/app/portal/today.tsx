@@ -81,7 +81,7 @@ export default function Today() {
                     </Text>
                   </View>
                   {open ? (
-                    <Button testID={`join-${s.id}`} size="sm" label={s.status === 'in-progress' ? 'Rejoin' : 'Join'} onPress={() => { const r = api.portal.join(s.id); if (r.ok) go(`/portal/session/${s.id}`) }} />
+                    <Button testID={`join-${s.id}`} size="sm" label={s.status === 'in-progress' ? 'Rejoin' : 'Join'} onPress={async () => { const r = await api.portal.join(s.id); if (r.ok) go(`/portal/session/${s.id}`) }} />
                   ) : (
                     <Text variant="caption" muted>
                       {mins < 60 ? `Join in ${Math.max(0, mins - 10)} min` : isSameEatDay(s.start, t) ? 'Later today' : 'Upcoming'}

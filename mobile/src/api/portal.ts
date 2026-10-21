@@ -239,6 +239,8 @@ export const portal = {
     const sum = (list: typeof rows) => (list.length ? list.reduce((n, r) => n + (r.net ?? 0), 0) : 0)
     return { rows, available: sum(rows.filter((r) => r.available)), pending: sum(rows.filter((r) => !r.available)) }
   },
+  /** On the real backend this sends a code to the therapist's phone. The demo shows the code on screen instead. */
+  async reauthStart(): Promise<void> {},
   /** Changing where money goes needs a fresh check (THR-20). The demo code is shown on screen. */
   reauth(code: string): Res {
     if (code !== DEMO_REAUTH_CODE) return { ok: false, error: 'That code doesn’t match.' }

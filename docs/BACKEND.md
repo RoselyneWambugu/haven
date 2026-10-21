@@ -1,6 +1,6 @@
 # Echo backend
 
-Five slices of the real backend are built on the existing Supabase project `haven` (ref `htsfkotheyrfyhqzeiny`, eu-west-1): **accounts and privacy** (slice 1), **peer matching and chat** (slice 2), **the community forum and support spaces** (slice 3), **plans and billing** (slice 4) and **therapists and sessions, the member's side** (slice 5). Group chats, the therapist portal and the admin dashboard still run on the mock on the device.
+Six slices of the real backend are built on the existing Supabase project `haven` (ref `htsfkotheyrfyhqzeiny`, eu-west-1): **accounts and privacy** (slice 1), **peer matching and chat** (slice 2), **the community forum and support spaces** (slice 3), **plans and billing** (slice 4), **therapists and sessions, the member's side** (slice 5) and **the therapist portal** (slice 6). Group chats, the therapist application and appeals, and the admin dashboard still run on the mock on the device.
 
 ## What is built
 
@@ -11,13 +11,15 @@ Five slices of the real backend are built on the existing Supabase project `have
 | Slice 3 migration (run once from the SQL editor, safe to repeat) | `supabase/migrations/20261021000300_forum_and_spaces.sql` |
 | Slice 4 migration (applied) | `supabase/migrations/20261021000400_billing.sql` |
 | Slice 5 migration (applied) | `supabase/migrations/20261021000500_therapists_and_sessions.sql` |
-| Checks that roll back | `supabase/tests/foundation.sql`, `chats.sql`, `forum.sql`, `billing.sql`, `therapists.sql` |
+| Slice 6 migration (applied) | `supabase/migrations/20261021000600_therapist_portal.sql` |
+| Checks that roll back | `supabase/tests/foundation.sql`, `chats.sql`, `forum.sql`, `billing.sql`, `therapists.sql`, `portal.sql` |
 | App connection | `mobile/src/backend/` (`client.ts`, `map.ts`, `remoteAuth.ts`) |
 | Chat and matching connection | `mobile/src/backend/remoteChat.ts` |
 | Forum and spaces connection | `mobile/src/backend/remoteForum.ts` |
 | Billing connection | `mobile/src/backend/remoteBilling.ts` |
 | Therapists and sessions connection | `mobile/src/backend/remoteTherapists.ts` |
-| Tests of the connections with a fake client | `mobile/tests/remote-auth.test.ts`, `remote-chat.test.ts`, `remote-forum.test.ts`, `remote-billing.test.ts`, `remote-therapists.test.ts` |
+| Therapist portal connection | `mobile/src/backend/remotePortal.ts` |
+| Tests of the connections with a fake client | `mobile/tests/remote-auth.test.ts`, `remote-chat.test.ts`, `remote-forum.test.ts`, `remote-billing.test.ts`, `remote-therapists.test.ts`, `remote-portal.test.ts` |
 
 ## How privacy is kept
 
@@ -72,6 +74,20 @@ Five slices of the real backend are built on the existing Supabase project `have
 - **Payment** uses the same orders and test-number path as plans (see Plans and billing). A paid session creates the session, and for a chat session the therapist chat.
 - **Therapist chats** are conversations of kind `therapist`. They last a week from the start, or until a day after the latest booked or finished session, and get an "ends in about a day" note. They stay open after a plan lapses. Blocking and reporting a person are for peer chats; a concern about a therapist goes through `report_session`, which keeps the session details and the last messages, goes to the clinical queue, and keeps the chat for review.
 - **Calls** are not on the server. Joining checks the time window; the call itself is still simulated on the device (backlog S-05).
+
+## The therapist portal (slice 6)
+
+- **Signing in.** A therapist signs in with a phone number and a code, like a member. Echo staff link the number to a therapist record. Until there is an admin screen for it, do it in the SQL editor, after that number has signed in once:
+  `update private.therapists set account_id = (select id from auth.users where phone = '254712345678') where id = 't-amina';`
+  A number that isn't linked is signed out again. A person can be a member or a therapist on one device at a time: signing in to the portal signs the member app out, and the other way round.
+- **What a therapist sees.** `my_portal()` returns their schedule, sessions, inbox, concerns and payout setting in one reply. Clients appear only as a pen name and an avatar. The therapist's own account is never shown to members.
+- **Schedule.** Weekly hours, pausing new clients, time off, and limits (sessions a day and a buffer between sessions) are enforced on the server when members book. Time off tells each member who has a session in it, in their therapist chat. "New clients a week" is stored but not enforced yet.
+- **Sessions.** A therapist can join from 10 minutes before the start, keep private notes that only they can read, and wrap up with attended, late or no-show. A no-show is not paid. Earnings are worked out in the app from finished sessions at the placeholder 15% fee.
+- **Inbox.** A therapist reads and answers their clients' chats. Messages go through the same contact-details filter. A therapist can close a thread or offer a time, which tells the client to book it from Echo.
+- **Forum.** A therapist reads the community without a plan and replies under their own name. Replies can't invite people to book or make contact (checked on the server).
+- **Concerns** a therapist raises about a client are stored for the on-call clinical lead. There is no screen for them yet.
+- **Payout.** Changing it needs a code sent to the therapist's phone, checked on the server: the sign-in must be under five minutes old.
+- **Still on the mock:** applying to join Echo and licence checks, appeals against a suspension or review, and the clinical reviewer's decisions.
 
 ## Setup
 

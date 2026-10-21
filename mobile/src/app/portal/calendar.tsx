@@ -42,11 +42,11 @@ export default function Calendar() {
   if (!p) return null
   const cells = blocksToCells(p.availability)
 
-  function addTimeOff() {
+  async function addTimeOff() {
     const a = parseDay(from)
     const b = parseDay(to || from)
     if (a === null || b === null) return setError('Use the format DD/MM/YYYY.')
-    const r = api.portal.addTimeOff(a, b + 24 * 3600_000)
+    const r = await api.portal.addTimeOff(a, b + 24 * 3600_000)
     if (!r.ok) return setError(r.error)
     setFrom('')
     setTo('')

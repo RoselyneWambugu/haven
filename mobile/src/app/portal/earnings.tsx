@@ -9,6 +9,7 @@ import { Sheet } from '@/components/Sheet'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { DEMO_REAUTH_CODE } from '@/api/portal'
+import { REMOTE } from '@/backend/client'
 import { dayShort } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -79,7 +80,7 @@ export default function Earnings() {
           Paid {p.payout.schedule === 'weekly' ? 'weekly, on Fridays' : 'monthly'}
         </Text>
         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-          <Button testID="change-payout" variant="quiet" label="Change payout" onPress={() => { setSheet(true); setChecked(false); setCode(''); setError(null); setMethod(p.payout.method); setSchedule(p.payout.schedule) }} />
+          <Button testID="change-payout" variant="quiet" label="Change payout" onPress={() => { setSheet(true); setChecked(false); setCode(''); setError(null); setMethod(p.payout.method); setSchedule(p.payout.schedule); void api.portal.reauthStart() }} />
           <Button testID="statement" variant="ghost" label="Download statement" onPress={statement} />
         </View>
       </Panel>
@@ -87,15 +88,17 @@ export default function Earnings() {
         {!checked ? (
           <>
             <Text variant="small">For your security, enter the code we sent to your phone.</Text>
-            <Banner tone="sun" icon="lock" title="Demo code">
-              {DEMO_REAUTH_CODE}
-            </Banner>
+            {REMOTE ? null : (
+              <Banner tone="sun" icon="lock" title="Demo code">
+                {DEMO_REAUTH_CODE}
+              </Banner>
+            )}
             <Field testID="payout-code" label="Code" value={code} onChangeText={setCode} keyboardType="number-pad" maxLength={6} error={error} />
             <Button
               testID="payout-verify"
               label="Verify"
-              onPress={() => {
-                const r = api.portal.reauth(code)
+              onPress={async () => {
+                const r = await api.portal.reauth(code)
                 if (!r.ok) return setError(r.error)
                 setChecked(true)
                 setError(null)
@@ -110,8 +113,8 @@ export default function Earnings() {
             <Button
               testID="payout-save"
               label="Save"
-              onPress={() => {
-                const r = api.portal.changePayout(method.trim(), schedule)
+              onPress={async () => {
+                const r = await api.portal.changePayout(method.trim(), schedule)
                 if (!r.ok) return setError(r.error)
                 setSheet(false)
               }}

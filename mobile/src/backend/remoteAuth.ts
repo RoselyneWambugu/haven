@@ -10,6 +10,7 @@ import { supabase } from './client'
 import { toAccount, type RemoteAccount } from './map'
 import { startPolling, stopPolling } from './remoteChat'
 import { clearTherapistCache } from './remoteTherapists'
+import { restorePortal, stopPortalPolling } from './remotePortal'
 
 const MIN = 60_000
 
@@ -115,7 +116,8 @@ export const remoteAuth = {
       await supabase().auth.signOut()
       return { ok: true, value: { next: 'no-account' } }
     }
-    update({ signedIn: true, locked: false })
+    stopPortalPolling()
+    update((s) => ({ signedIn: true, locked: false, portal: s.portal ? { ...s.portal, signedIn: false } : null }))
     startPolling()
     if (getDb().account?.deletionRequestedAt) {
       await rpc('cancel_account_deletion')
@@ -220,6 +222,7 @@ export const remoteAccountActions = {
 
 /** On start-up: keep the signed-in member's session, or clear what was cached if the session has ended. */
 export async function restoreSession(): Promise<void> {
+  await restorePortal()
   const { data } = await supabase().auth.getSession()
   if (!data.session) {
     if (getDb().signedIn) update({ signedIn: false, account: null })
