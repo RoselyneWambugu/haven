@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api, type BreakGlassRequest, type CaseAction } from '@/api'
+import { REMOTE } from '@/backend/client'
 import { Button } from '@/components/Button'
 import { Radio, Segmented } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -74,8 +75,8 @@ export default function CaseDetail() {
   const clinical = c.queue === 'clinical'
   const act: CaseAction = clinical && !THERAPIST_ACTIONS.some((x) => x.value === action) ? 'dismiss' : action
 
-  function decide() {
-    const r = api.admin.decide(c!.id, act, reason)
+  async function decide() {
+    const r = await api.admin.decide(c!.id, act, reason)
     if (!r.ok) return setError(r.error)
     setError(null)
     setReason('')
@@ -91,7 +92,7 @@ export default function CaseDetail() {
           <Text variant="label" color={sla.breached ? colors.clay : colors.ink}>
             SLA {sla.breached ? `breached ${sla.text}` : `${sla.text} left`}
           </Text>
-          {!c.owner && c.status !== 'closed' ? <Button testID="take-case" size="sm" label="Take this case" onPress={() => { const r = api.admin.claim(c.id); setError(r.ok ? null : r.error) }} /> : <Text variant="caption" muted>{c.owner ? `Owner: ${c.owner}` : 'Closed'}</Text>}
+          {!c.owner && c.status !== 'closed' ? <Button testID="take-case" size="sm" label="Take this case" onPress={async () => { const r = await api.admin.claim(c.id); setError(r.ok ? null : r.error) }} /> : <Text variant="caption" muted>{c.owner ? `Owner: ${c.owner}` : 'Closed'}</Text>}
         </View>
       }
     >
@@ -136,8 +137,8 @@ export default function CaseDetail() {
                     testID={`reveal-${e.id}`}
                     accessibilityRole="button"
                     accessibilityLabel="Reveal message"
-                    onPress={() => {
-                      const r = api.admin.reveal(c.id, e.id)
+                    onPress={async () => {
+                      const r = await api.admin.reveal(c.id, e.id)
                       setError(r.ok ? null : r.error)
                     }}
                     style={{ minHeight: 32, justifyContent: 'center' }}
@@ -191,7 +192,7 @@ export default function CaseDetail() {
         </Panel>
       )}
 
-      {clinical && c.decision?.action === 'pause-therapist' && portal?.review?.kind === 'paused' && portal.therapistId === c.therapistId ? (
+      {clinical && c.decision?.action === 'pause-therapist' && (REMOTE || (portal?.review?.kind === 'paused' && portal.therapistId === c.therapistId)) ? (
         <Panel tone="sun" title="New clients are paused" testID="lift-pause">
           <Text variant="small">The therapist can’t switch this off. Lift it when the review is done.</Text>
           <Field testID="lift-reason" label="Reason (required)" value={liftReason} onChangeText={(v) => { setLiftReason(v); setLiftError(null) }} error={liftError} />
@@ -199,8 +200,8 @@ export default function CaseDetail() {
             testID="lift-submit"
             variant="quiet"
             label="Lift pause"
-            onPress={() => {
-              const r = api.admin.liftTherapistPause(liftReason)
+            onPress={async () => {
+              const r = await api.admin.liftTherapistPause(liftReason, c.therapistId)
               if (!r.ok) return setLiftError(r.error)
               setLiftReason('')
             }}

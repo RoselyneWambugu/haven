@@ -103,7 +103,7 @@ export async function portalVerifyOtp(code: string): Promise<Res> {
   const { error } = await supabase().auth.verifyOtp({ phone: signInPhone, token: code.trim(), type: 'sms' })
   if (error) return { ok: false, error: 'That code doesn’t match, or it has expired.', code: 'wrong' }
   stopPolling()
-  update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [] })
+  update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [], admin: null })
   if (!(await syncPortal())) {
     await supabase().auth.signOut()
     update({ portal: null })

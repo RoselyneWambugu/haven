@@ -636,6 +636,17 @@ export interface AdminState {
   policy: StrikePolicy
   policyChange: { policy: StrikePolicy; requestedBy: string; approvals: string[] } | null
   audit: AuditEntry[]
+  /** Posts waiting for a moderator. Only on the real backend. */
+  held?: HeldPost[]
+}
+
+export interface HeldPost {
+  id: string
+  title: string
+  body: string
+  author: string
+  topic: string
+  at: number
 }
 
 // ---------- editable content and configuration (admin: Resources, Configuration) ----------

@@ -89,6 +89,20 @@ Six slices of the real backend are built on the existing Supabase project `haven
 - **Payout.** Changing it needs a code sent to the therapist's phone, checked on the server: the sign-in must be under five minutes old.
 - **Still on the mock:** applying to join Echo and licence checks, appeals against a suspension or review, and the clinical reviewer's decisions.
 
+## The admin dashboard (slice 7)
+
+Migration `20261021000700_admin.sql`, checks in `supabase/tests/admin.sql`.
+
+- **Staff sign in with their phone**, like everyone else, but only a number linked to a row in `private.staff` gets in. An Admin links a number with SQL for now (insert the staff member's auth account, a name of 3 to 30 characters, and a role: moderator, clinical, billing or admin). A member signed in on the same device is signed out, and the other way round.
+- **Cases** are the member reports and the therapist concerns already stored. `admin_state()` returns what the role may see: moderators see member reports, clinical reviewers and Admins also see therapist concerns, billing sees neither. Content is only returned to staff, and opening a case is written to the audit log.
+- **Rules enforced on the server.** A decision needs a reason. Strikes follow the ladder (warning, restriction, suspension; Severity 1 goes straight to suspension). Only moderators and Admins apply sanctions; clinical reviewers recommend, and escalate. A therapist concern can only be closed with no action, a warning, a pause on new clients, or escalation. Severity-1 cases can be taken by clinical reviewers, Admins and moderators flagged `heavy` (the heavy-queue rota). Revealing a flagged message is limited to 20 a day per person. A closed case can't be decided again.
+- **What a sanction does.** The member gets a notice (`my_notices()`) and their standing changes: a restriction lasts a day and lifts itself (a job every 5 minutes), a suspension pauses the account until a staff member restores it or an appeal succeeds. A reported post is hidden when a sanction is applied.
+- **Appeals.** A member appeals a notice from Account standing. The reviewer must be someone other than the person who decided. Upheld keeps it, reduced takes it one step down, overturned removes it.
+- **Therapists.** Clinical reviewers and Admins suspend (booked sessions are cancelled), reinstate and lift a pause. A pause is applied by deciding a therapist concern.
+- **Held posts.** Posts held for review wait in the Moderation module for a moderator or Admin to approve or remove. If nobody gets to one it goes live after a day (it was 15 seconds before there was a queue).
+- **Audit.** Every action above writes who, when, what, the target and the reason, in the same transaction as the action. Clinical reviewers and Admins read it; Admins export it.
+- **Still on the mock** (the dashboard says so at the top): analytics, resources, configuration, wellbeing and the heavy-queue rota screens, billing and refunds, feedback, group chats, roles with two-person approval, break-glass access to a private profile, AI flags and therapist applications.
+
 ## Setup
 
 1. In the Supabase dashboard open **Authentication → Providers → Phone** and turn it on. Under **Test phone numbers** add the numbers you will try, for example `254712345678=123456`. Test numbers send no text and always accept their fixed code. (A real SMS provider comes later.)
@@ -101,11 +115,11 @@ Paste `supabase/tests/foundation.sql` into the SQL editor (or run it through the
 
 ## What is not built yet
 
-- The rest of the app (therapists and sessions, group chats, billing, staff) still uses the mock. See the backlog (S-01).
+- Group chats and the remaining dashboard modules still use the mock. See the backlog (S-01).
 - Replies from therapists and the therapist's view of a space need therapist accounts (a later slice). Until then only members reply, and the leading therapist of a space is only shown in the app.
-- Moderation of held posts by staff, hiding posts after reports, and pinned posts.
+- Hiding a reported comment (only posts are hidden), and pinned posts.
 - A real payment provider (M-Pesa and card), automatic renewal, refunds and receipts by email. See backlog S-03 and S-08.
-- Therapist chats, the felt-heard rating, real-time delivery (the app polls), a server-side disappearing-message timer (peer chats are gone in 24 hours anyway) and staff review of reports (no screen reads `private.reports` yet).
+- Therapist chats, the felt-heard rating, real-time delivery (the app polls), and a server-side disappearing-message timer (peer chats are gone in 24 hours anyway).
 - Real SMS delivery (S-02). Test numbers only for now.
 - A server-side list of common names for pen names. The app still checks a names list on the device; the server checks only the member's own name.
 - Break-glass staff access to `private.identities` (D27) and the 14-day deletion job: the request is recorded but nothing deletes the account yet.

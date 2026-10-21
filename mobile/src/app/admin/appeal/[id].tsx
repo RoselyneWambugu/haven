@@ -54,8 +54,8 @@ export default function AppealReview() {
           <Button
             testID="appeal-decide"
             label="Send decision"
-            onPress={() => {
-              const r = api.admin.decideAppeal(ap.id, outcome, text)
+            onPress={async () => {
+              const r = await api.admin.decideAppeal(ap.id, outcome, text)
               if (!r.ok) return setError(r.error)
               goBack('/admin/appeals')
             }}

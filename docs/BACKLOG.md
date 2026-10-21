@@ -162,6 +162,11 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-25 | The clinical lead's side of a concern a therapist raises, and the clinical reviewers' queue for session reports (both are stored; nothing reads them) | v0.38 |
 | Q-26 | Enforce "new clients a week" for a therapist (it is stored, not enforced) | v0.38 |
 | Q-27 | Therapist applications, licence upload and checks, and appeals on the server (still mock) | v0.38 |
+| Q-29 | An Admin screen to add and link staff (it is SQL now), and two-person approval for staff and policy changes on the server | v0.39 |
+| Q-30 | Dashboard modules still on the mock: analytics, resources, configuration, wellbeing and rota, billing and refunds, feedback, group chats, AI flags, therapist applications | v0.39 |
+| Q-31 | Break-glass access to a private profile on the server (two people, time-limited, logged) | v0.39 |
+| Q-32 | Hide a reported comment, and tell the reporter the outcome of a report | v0.39 |
+| Q-33 | A break from reviewing (the 20 a day limit is enforced; breaks are not), and heavy-queue rota that rotates by itself | v0.39 |
 | Q-28 | Pay therapists: statements and payouts are worked out in the app from finished sessions; nothing is paid out | v0.38 |
 | Q-05 | Remove demo hooks (`window.__echo`, Demo tools, scripted replies) when a real backend is connected | v0.8 |
 

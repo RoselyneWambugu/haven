@@ -31,9 +31,9 @@ export default function Therapists() {
   const sel = THERAPISTS.find((x) => x.id === picked)
   const canAct = !!a && (a.role === 'clinical' || a.role === 'admin')
 
-  function act() {
+  async function act() {
     if (!sel) return
-    const r = standing[sel.id] ? api.admin.reinstateTherapist(sel.id, reason) : api.admin.suspendTherapist(sel.id, reason)
+    const r = await (standing[sel.id] ? api.admin.reinstateTherapist(sel.id, reason) : api.admin.suspendTherapist(sel.id, reason))
     if (!r.ok) return setError(r.error)
     setError(null)
     setReason('')

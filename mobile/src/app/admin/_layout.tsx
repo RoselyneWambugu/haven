@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { Pressable, View } from 'react-native'
 import { router, Slot, useSegments } from 'expo-router'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { Banner } from '@/components/Surfaces'
 import { Badge } from '@/components/Controls'
 import { DashboardFrame, type NavItem } from '@/components/Frame'
 import { Text } from '@/components/Text'
@@ -58,6 +60,13 @@ export default function AdminLayout() {
 
   return (
     <DashboardFrame brand="echo admin" dark items={items} active={section} user={user} showNav={signedIn}>
+      {REMOTE && signedIn ? (
+        <View style={{ paddingBottom: 12 }}>
+          <Banner tone="sun" icon="lock">
+            Live: cases, users, appeals, therapists, held posts and the audit log. Other modules still show sample data.
+          </Banner>
+        </View>
+      ) : null}
       <Slot />
     </DashboardFrame>
   )

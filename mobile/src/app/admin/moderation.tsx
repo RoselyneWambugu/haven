@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { remoteAdmin } from '@/backend/remoteAdmin'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -30,6 +32,24 @@ export default function Moderation() {
         <Stat value={pct(m.overturnRate)} label="Overturn rate" />
         <Stat value={m.medianMinutes === null ? '—' : `${m.medianMinutes} min`} label="Median review time" />
       </View>
+      {REMOTE ? (
+        <Panel title="Held posts" testID="held-posts">
+          {(a.held ?? []).length === 0 ? <Text variant="small" muted>Nothing is waiting. Posts that need a look appear here, and go live after a day if nobody gets to them.</Text> : null}
+          {(a.held ?? []).map((h) => (
+            <View key={h.id} style={{ gap: 6, paddingVertical: 8 }}>
+              <Text variant="label">{h.title}</Text>
+              <Text variant="small" muted>{h.author} · {h.topic}</Text>
+              <Text variant="small">{h.body}</Text>
+              {a.role === 'moderator' || admin ? (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Button testID={`held-approve-${h.id}`} size="sm" label="Approve" onPress={() => { void remoteAdmin.reviewPost(h.id, true) }} />
+                  <Button testID={`held-remove-${h.id}`} size="sm" variant="ghost" label="Remove" onPress={() => { void remoteAdmin.reviewPost(h.id, false, 'Breaks the guidelines') }} />
+                </View>
+              ) : null}
+            </View>
+          ))}
+        </Panel>
+      ) : null}
       <Panel title="AI flags">
         <View style={{ flexDirection: 'row', paddingBottom: 4 }}>
           {['Flag', 'Category', 'Conf.', 'Model', 'Outcome'].map((h, i) => (

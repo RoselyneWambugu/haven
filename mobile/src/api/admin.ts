@@ -33,7 +33,7 @@ function audit(actor: string, role: AuditEntry['role'], action: string, target: 
   return { id: uid('au'), at: now(), actor, role, action, target, reason }
 }
 
-function seed(): AdminState {
+export function seed(): AdminState {
   const n = now()
   const ev = (...lines: [AdminCase['evidence'][number]['who'], string, boolean?][]) =>
     lines.map(([who, text, reported], i) => ({ id: `e${i}`, who, text, reported }))
@@ -271,7 +271,7 @@ export const admin = {
   },
 
   /** Lifts a clinical pause on new clients. Only Clinical reviewers and Admins, with a reason, and it is logged. */
-  liftTherapistPause(reason: string): Res {
+  liftTherapistPause(reason: string, _therapistId?: string): Res {
     const { role } = me()
     if (role !== 'clinical' && role !== 'admin') return { ok: false, error: 'Only clinical reviewers and Admins lift a pause.', code: 'role' }
     if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }

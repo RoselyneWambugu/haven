@@ -8,6 +8,8 @@ import { REMOTE } from '@/backend/client'
 import { remoteAccountActions, remoteAuth } from '@/backend/remoteAuth'
 import { remoteChat, remoteMatch, remoteReport } from '@/backend/remoteChat'
 import { remoteBilling } from '@/backend/remoteBilling'
+import { appealNotice } from '@/backend/remoteNotices'
+import { remoteAdmin } from '@/backend/remoteAdmin'
 import { remoteSessions } from '@/backend/remoteTherapists'
 import { remotePortal } from '@/backend/remotePortal'
 import { remoteForum, remoteSpaces } from '@/backend/remoteForum'
@@ -16,7 +18,7 @@ import { demo } from './demo'
 import { groups } from './groups'
 import { notify } from './notify'
 import { feedback } from './feedback'
-import { admin } from './admin'
+import { admin as mockAdmin } from './admin'
 import { config, resources, suggestService } from './content'
 import { applyPortalToDirectory, applyStandingToDirectory, portal as mockPortal } from './portal'
 import { chat as mockChat, forum as mockForum, match as mockMatch, report as mockReport } from './social'
@@ -38,6 +40,7 @@ const sessions = (REMOTE ? remoteSessions : mockSessions) as typeof mockSessions
 const billing = (REMOTE ? remoteBilling : mockBilling) as typeof mockBilling
 const forum = (REMOTE ? remoteForum : mockForum) as typeof mockForum
 const spaces = (REMOTE ? remoteSpaces : mockSpaces) as typeof mockSpaces
+const admin = (REMOTE ? remoteAdmin : mockAdmin) as typeof mockAdmin
 const report = (REMOTE ? remoteReport : mockReport) as typeof mockReport
 
 const account: typeof mockAccount = REMOTE
@@ -47,6 +50,7 @@ const account: typeof mockAccount = REMOTE
         mockAccount.signOutDevice(id)
         remoteAccountActions.revokeDevice(id)
       },
+      appeal: appealNotice as unknown as typeof mockAccount.appeal,
       requestDeletion(keepPosts) {
         mockAccount.requestDeletion(keepPosts)
         remoteAccountActions.requestDeletion()
