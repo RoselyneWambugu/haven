@@ -172,7 +172,6 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-41 | Run `supabase/group_chat_cleanup.sql` in the SQL editor so ended group chats are deleted after 24 hours. Also: group chats don't yet send push reminders from the server, and the facilitator can't remove a single message (G-01) | v0.49 |
 | Q-38 | Upload of licence, ID and qualification documents for therapist applications (private storage, reviewers only) | v0.47 |
 | Q-39 | Licence-expiry reminders and a check on the regulator's register; therapist appeals on the server | v0.47 |
-| Q-36 | Notify the member when staff reply to a ticket (the unread mark shows; no push or in-app notification yet) | v0.46 |
 | Q-37 | Let staff see closed tickets and search them; today only open and replied ones are listed | v0.46 |
 | Q-35 | Track installs and directory views for analytics, and history for events before v0.45 | v0.45 |
 | Q-33 | A break from reviewing (the 20 a day limit is enforced; breaks are not), and heavy-queue rota that rotates by itself | v0.39 |

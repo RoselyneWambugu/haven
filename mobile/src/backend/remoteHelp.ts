@@ -1,4 +1,5 @@
 import { resources as mockResources, suggestService as mockSuggest } from '@/api/content'
+import { notify } from '@/api/notify'
 import { tickets as mockTickets } from '@/api/support'
 import type { ArticleCfg, ContentState, CrisisLineCfg, DepartmentCfg, Res, SupportOrgCfg, Ticket } from '@/api/types'
 import { getDb, update } from '@/store/db'
@@ -41,6 +42,11 @@ export async function syncTickets(): Promise<void> {
   const d = await call<HelpReply & { tickets?: Ticket[] }>('my_tickets')
   if (!d.ok || !d.tickets) return
   update({ tickets: d.tickets })
+  // One note per staff reply that is still unread, however often this runs. The note names no one and shows nothing of the reply.
+  for (const t of d.tickets) {
+    const last = [...t.messages].reverse().find((m) => m.from === 'staff')
+    if (t.unread && last) notify.push('message', `t:${t.id}:${last.id}`, 'Help has replied', 'Our team answered your message. Tap to read it.', `/help/ticket/${t.id}`)
+  }
 }
 
 /** Staff see everything, including what is hidden from members, and the tickets for their departments. */

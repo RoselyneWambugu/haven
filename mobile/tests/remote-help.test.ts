@@ -4,6 +4,7 @@ import { setClient } from '../src/backend/client'
 import { remoteResources, remoteSuggestService, remoteTickets, syncHelp, syncStaffHelp, syncTickets } from '../src/backend/remoteHelp'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock, now } from '../src/lib/clock'
+import { DEFAULT_SETTINGS } from '../src/api/auth'
 
 const DEPT = { id: 'billing', title: 'Billing and plans', blurb: 'Payments', icon: 'wallet', owner: 'Billing', slaHours: 24, enabled: true }
 const ART = { id: 'a1', deptId: 'billing', title: 'How do refunds work?', intro: 'We put it right.', steps: ['One step here'], related: [], updatedAt: now(), published: true }
@@ -120,5 +121,25 @@ describe('what staff do', () => {
   it('passes the server’s refusals back', async () => {
     fake({ admin_save_department: { ok: false, code: 'locked', error: 'Safety and reporting can’t be switched off.' } })
     expect(await remoteResources.saveDepartment('safety', { enabled: false })).toMatchObject({ ok: false, code: 'locked' })
+  })
+})
+
+describe('reply notifications', () => {
+  it('notes a staff reply once, however often tickets are read, with no content in it', async () => {
+    update({ ...freshState(), account: { settings: { ...DEFAULT_SETTINGS } } } as never)
+    fake()
+    await syncTickets()
+    await syncTickets()
+    const notes = getDb().notifications.filter((n) => n.key === 't:t1:m2')
+    expect(notes).toHaveLength(1)
+    expect(notes[0].href).toBe('/help/ticket/t1')
+    expect(JSON.stringify(notes[0])).not.toContain('Sorted')
+  })
+
+  it('says nothing for a ticket the member has already read', async () => {
+    update({ ...freshState(), account: { settings: { ...DEFAULT_SETTINGS } } } as never)
+    fake({ my_tickets: { ok: true, tickets: [{ ...TICKET, unread: false }] } })
+    await syncTickets()
+    expect(getDb().notifications).toHaveLength(0)
   })
 })
