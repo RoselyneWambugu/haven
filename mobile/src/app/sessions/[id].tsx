@@ -50,8 +50,8 @@ export default function SessionDetail() {
   const open = booked && canJoin(s.start, s.end, now())
   const free = changeOutcome(s.start, now()) === 'free'
 
-  function join() {
-    const r = api.sessions.join(s!.id)
+  async function join() {
+    const r = await api.sessions.join(s!.id)
     if (!r.ok) return setError(r.error)
     if (s!.mode === 'chat') go('/chats')
     else go(`/call/${s!.id}`)

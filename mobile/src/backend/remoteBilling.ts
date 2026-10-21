@@ -3,6 +3,8 @@ import type { CheckoutItem, PaymentMethod, PaymentResult, PlanId, Res, Subscript
 import { now } from '@/lib/clock'
 import { getDb, update } from '@/store/db'
 import { supabase } from './client'
+import { syncDirectory, syncSessions } from './remoteTherapists'
+import { syncChats } from './remoteChat'
 
 interface RemoteSub { plan_id: PlanId; started_at: string; ends_at: string; auto_renew: boolean; cancelled_at: string | null; method: 'mpesa' | 'card'; receipt_no: string }
 interface RemotePlan { id: PlanId; days: number; price_kes: number | null; enabled: boolean }
@@ -48,9 +50,10 @@ export const remoteBilling = {
   ...mockBilling,
 
   async createCheckout(item: CheckoutItem): Promise<Res<{ title: string; amountKes: number | null }>> {
-    if (item.kind !== 'plan') return mockBilling.createCheckout(item)
     if (!getDb().account) return { ok: false, error: 'Sign in first.' }
-    const r = await rpc('start_checkout', { p_plan: item.planId, p_auto_renew: item.autoRenew })
+    const r = item.kind === 'plan'
+      ? await rpc('start_checkout', { p_plan: item.planId, p_auto_renew: item.autoRenew })
+      : await rpc('start_session_checkout', { p_therapist: item.therapistId, p_mode: item.mode, p_start: new Date(item.start).toISOString() })
     if (!r.ok) return { ok: false, error: r.error, code: r.code }
     const amountKes = (r.amount_kes as number | null) ?? null
     update({ checkout: { id: String(r.order_id), item, amountKes, createdAt: now() } })
@@ -62,15 +65,19 @@ export const remoteBilling = {
     const db = getDb()
     const co = db.checkout
     if (!co) return { ok: false, failure: 'cancelled' }
-    if (co.item.kind !== 'plan') return mockBilling.pay(method)
     const outcome = db.demo.failNextPayment ? 'timeout' : 'success'
     if (db.demo.failNextPayment) update((s) => ({ demo: { ...s.demo, failNextPayment: false } }))
     // The prompt on the phone takes a moment, so the screen waits a little.
     const [r] = await Promise.all([rpc('simulate_payment', { p_order: co.id, p_method: method, p_outcome: outcome }), pause(wait.ms)])
     if (r.ok) {
       update({ checkout: null })
-      await syncPlan()
-      return { ok: true, receiptNo: String(r.receipt_no) }
+      if (co.item.kind === 'plan') await syncPlan()
+      else await Promise.all([syncSessions(), syncChats(), syncDirectory()])
+      return { ok: true, receiptNo: String(r.receipt_no), sessionId: r.session_id ? String(r.session_id) : undefined }
+    }
+    if (r.code === 'taken') {
+      void syncDirectory()
+      return { ok: false, failure: 'taken' }
     }
     if (r.code === 'timeout' || r.code === 'insufficient') return { ok: false, failure: r.code }
     if (r.code === 'unavailable' || r.code === 'network') return { ok: false, failure: 'unavailable' }
@@ -80,7 +87,7 @@ export const remoteBilling = {
   cancelCheckout(): void {
     const co = getDb().checkout
     mockBilling.cancelCheckout()
-    if (co?.item.kind === 'plan') void rpc('cancel_checkout', { p_order: co.id })
+    if (co) void rpc('cancel_checkout', { p_order: co.id })
   },
 
   cancelPlan(): void {

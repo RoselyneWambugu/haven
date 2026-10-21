@@ -34,6 +34,7 @@ const SORTS: { value: DirectorySort; label: string }[] = [
 
 export default function Therapists() {
   const sessions = useDb((s) => s.sessions)
+  useDb((s) => s.directoryVersion)
   const langs = useDb((s) => s.account?.public.languages ?? NONE)
   const money = useMoney()
   const flags = useDb((s) => s.content.flags)

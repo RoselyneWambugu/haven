@@ -46,8 +46,8 @@ export default function SessionChange() {
               testID="cancel-confirm"
               variant="danger"
               label="Cancel session"
-              onPress={() => {
-                const r = api.sessions.cancel(s.id)
+              onPress={async () => {
+                const r = await api.sessions.cancel(s.id)
                 if (!r.ok) return setError(r.error)
                 setDone(r.value.outcome === 'free' ? 'Cancelled. No charge.' : 'Cancelled. The session was charged.')
               }}
@@ -79,8 +79,8 @@ export default function SessionChange() {
           testID="reschedule-confirm"
           label={pick === null ? 'Pick a new time' : 'Move session'}
           disabled={pick === null}
-          onPress={() => {
-            const r = api.sessions.reschedule(s.id, pick!)
+          onPress={async () => {
+            const r = await api.sessions.reschedule(s.id, pick!)
             if (!r.ok) return setError(r.error)
             setDone(r.value.outcome === 'free' ? 'Moved. No charge.' : 'Moved. A late change fee applies.')
           }}

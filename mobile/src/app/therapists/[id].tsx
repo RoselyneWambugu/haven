@@ -26,6 +26,7 @@ export default function TherapistProfile() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const t = THERAPISTS.find((x) => x.id === id)
   const sessions = useDb((s) => s.sessions)
+  useDb((s) => s.directoryVersion)
   const money = useMoney()
   const flags = useDb((s) => s.content.flags)
   const convs = useDb((s) => s.conversations)

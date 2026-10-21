@@ -9,6 +9,7 @@ import { showToast } from '@/store/toast'
 import { supabase } from './client'
 import { toAccount, type RemoteAccount } from './map'
 import { startPolling, stopPolling } from './remoteChat'
+import { clearTherapistCache } from './remoteTherapists'
 
 const MIN = 60_000
 
@@ -165,8 +166,9 @@ export const remoteAuth = {
   signOut(): void {
     auth.signOut()
     stopPolling()
+    clearTherapistCache()
     // What was fetched for this member must not stay on the device.
-    update({ account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null })
+    update({ account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [] })
     void supabase().auth.signOut()
   },
 

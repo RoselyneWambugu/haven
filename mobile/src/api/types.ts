@@ -215,6 +215,8 @@ export interface Therapist {
   gender: 'woman' | 'man'
   availability: AvailabilityBlock[]
   acceptingNew: boolean
+  /** Start times already booked by other members, when the real backend knows them. */
+  takenStarts?: number[]
   /** Set when staff suspend the therapist. They are hidden from the directory and can't be booked. */
   suspended?: boolean
 }
@@ -268,7 +270,7 @@ export type CheckoutItem =
 export interface PaymentResult {
   ok: boolean
   receiptNo?: string
-  failure?: 'timeout' | 'insufficient' | 'cancelled' | 'unavailable'
+  failure?: 'timeout' | 'insufficient' | 'cancelled' | 'unavailable' | 'taken'
   sessionId?: string
 }
 

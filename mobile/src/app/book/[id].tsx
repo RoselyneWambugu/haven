@@ -25,6 +25,7 @@ export default function Book() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const t = THERAPISTS.find((x) => x.id === id)
   const sessions = useDb((s) => s.sessions)
+  useDb((s) => s.directoryVersion)
   const money = useMoney()
   const flags = useDb((s) => s.content.flags)
   const offered = t ? modesFor(t.modes, flags) : []
@@ -36,9 +37,9 @@ export default function Book() {
   const slots = slotsFor(t, sessions, now()).filter((s) => s.modes.includes(mode))
   const days = groupSlotsByDay(slots).slice(0, 7)
 
-  function next() {
+  async function next() {
     if (start === null) return
-    const r = api.billing.createCheckout({ kind: 'session', therapistId: t!.id, mode, start })
+    const r = await api.billing.createCheckout({ kind: 'session', therapistId: t!.id, mode, start })
     if (!r.ok) {
       setStart(null)
       return setError(r.error)

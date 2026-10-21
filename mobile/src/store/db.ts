@@ -61,6 +61,8 @@ export interface DbState {
   retainedGroups: GroupChat[]
   reports: ReportRecord[]
   openConversationId: string | null
+  /** Goes up whenever the therapist directory is refreshed from the server, so screens that list therapists redraw. */
+  directoryVersion: number
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
   /** The therapist portal's own data. Null until someone first signs in to it. */
   portal: PortalState | null
@@ -89,6 +91,7 @@ export function freshState(): DbState {
     otp: null,
     match: { state: 'idle' },
     conversations: [],
+    directoryVersion: 0,
     posts: seedPosts(now()),
     hiddenPostIds: [],
     mutedAuthors: [],

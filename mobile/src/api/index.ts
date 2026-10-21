@@ -8,8 +8,9 @@ import { REMOTE } from '@/backend/client'
 import { remoteAccountActions, remoteAuth } from '@/backend/remoteAuth'
 import { remoteChat, remoteMatch, remoteReport } from '@/backend/remoteChat'
 import { remoteBilling } from '@/backend/remoteBilling'
+import { remoteSessions } from '@/backend/remoteTherapists'
 import { remoteForum, remoteSpaces } from '@/backend/remoteForum'
-import { billing as mockBilling, sessions } from './care'
+import { billing as mockBilling, sessions as mockSessions } from './care'
 import { demo } from './demo'
 import { groups } from './groups'
 import { notify } from './notify'
@@ -31,6 +32,7 @@ const auth = (REMOTE ? remoteAuth : mockAuth) as typeof mockAuth
 
 const match = (REMOTE ? remoteMatch : mockMatch) as typeof mockMatch
 const chat = (REMOTE ? remoteChat : mockChat) as typeof mockChat
+const sessions = (REMOTE ? remoteSessions : mockSessions) as typeof mockSessions
 const billing = (REMOTE ? remoteBilling : mockBilling) as typeof mockBilling
 const forum = (REMOTE ? remoteForum : mockForum) as typeof mockForum
 const spaces = (REMOTE ? remoteSpaces : mockSpaces) as typeof mockSpaces

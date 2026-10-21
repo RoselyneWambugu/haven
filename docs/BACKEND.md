@@ -1,6 +1,6 @@
 # Echo backend
 
-Four slices of the real backend are built on the existing Supabase project `haven` (ref `htsfkotheyrfyhqzeiny`, eu-west-1): **accounts and privacy** (slice 1), **peer matching and chat** (slice 2), **the community forum and support spaces** (slice 3) and **plans and billing** (slice 4). Therapists, sessions, group chats and staff still run on the mock on the device.
+Five slices of the real backend are built on the existing Supabase project `haven` (ref `htsfkotheyrfyhqzeiny`, eu-west-1): **accounts and privacy** (slice 1), **peer matching and chat** (slice 2), **the community forum and support spaces** (slice 3), **plans and billing** (slice 4) and **therapists and sessions, the member's side** (slice 5). Group chats, the therapist portal and the admin dashboard still run on the mock on the device.
 
 ## What is built
 
@@ -10,12 +10,14 @@ Four slices of the real backend are built on the existing Supabase project `have
 | Slice 2 migration (run once from the SQL editor, safe to repeat) | `supabase/migrations/20261021000200_chats_and_matching.sql` |
 | Slice 3 migration (run once from the SQL editor, safe to repeat) | `supabase/migrations/20261021000300_forum_and_spaces.sql` |
 | Slice 4 migration (applied) | `supabase/migrations/20261021000400_billing.sql` |
-| Checks that roll back | `supabase/tests/foundation.sql`, `chats.sql`, `forum.sql`, `billing.sql` |
+| Slice 5 migration (applied) | `supabase/migrations/20261021000500_therapists_and_sessions.sql` |
+| Checks that roll back | `supabase/tests/foundation.sql`, `chats.sql`, `forum.sql`, `billing.sql`, `therapists.sql` |
 | App connection | `mobile/src/backend/` (`client.ts`, `map.ts`, `remoteAuth.ts`) |
 | Chat and matching connection | `mobile/src/backend/remoteChat.ts` |
 | Forum and spaces connection | `mobile/src/backend/remoteForum.ts` |
 | Billing connection | `mobile/src/backend/remoteBilling.ts` |
-| Tests of the connections with a fake client | `mobile/tests/remote-auth.test.ts`, `remote-chat.test.ts`, `remote-forum.test.ts`, `remote-billing.test.ts` |
+| Therapists and sessions connection | `mobile/src/backend/remoteTherapists.ts` |
+| Tests of the connections with a fake client | `mobile/tests/remote-auth.test.ts`, `remote-chat.test.ts`, `remote-forum.test.ts`, `remote-billing.test.ts`, `remote-therapists.test.ts` |
 
 ## How privacy is kept
 
@@ -60,6 +62,16 @@ Four slices of the real backend are built on the existing Supabase project `have
   - `simulate_payment(...)` completes a payment without money, and only for phone numbers in `private.payment_test_phones`. Add a test number like this in the SQL editor: `insert into private.payment_test_phones (phone) values ('+254712345678');`. Everyone else sees "Payments aren't switched on yet." Empty this table before real use.
 - **Renewal is a flag only.** Nothing charges a member again automatically; that needs the provider (M-Pesa has no standing pull payments without extra setup).
 - **Therapist sessions** are still paid through the mock. They come with the therapists slice.
+
+## Therapists and sessions (slice 5, the member's side)
+
+- **Who the therapists are.** The directory holds six sample therapists (`is_demo`) with no account behind them. They stand in for real, verified therapists until therapist onboarding is built. Nobody signs in as a therapist yet, so **nobody answers a therapist chat** and nobody marks attendance. The member's chat, booking and sessions all work; the therapist's side is the next slice.
+- **Directory.** `therapist_directory()` returns each therapist's profile, weekly hours, price, real rating total and count, and the start times already booked by other members (no names). Browsing is free. The rating shows only once there are enough reviews, as before.
+- **Booking.** A time can be booked only if it is inside the therapist's hours, in a session type they offer, at least two hours ahead (or within the hour if the therapist is on now), within 14 days, and clear of their other sessions. The server checks this when the checkout opens and again when the payment lands, so two people can't get the same time. If the time is lost during payment the order fails with "taken". If a provider had already taken money, `confirm_payment` answers `refund: true` so the webhook can refund it.
+- **Rules kept on the server:** a plan is needed to book; one therapist at a time; a free change or cancel until 24 hours before, a late-change flag after; a session can be joined from 10 minutes before until it ends; a session can be finished only after it starts; a session is rated once it has finished, and the comment stays private.
+- **Payment** uses the same orders and test-number path as plans (see Plans and billing). A paid session creates the session, and for a chat session the therapist chat.
+- **Therapist chats** are conversations of kind `therapist`. They last a week from the start, or until a day after the latest booked or finished session, and get an "ends in about a day" note. They stay open after a plan lapses. Blocking and reporting a person are for peer chats; a concern about a therapist goes through `report_session`, which keeps the session details and the last messages, goes to the clinical queue, and keeps the chat for review.
+- **Calls** are not on the server. Joining checks the time window; the call itself is still simulated on the device (backlog S-05).
 
 ## Setup
 

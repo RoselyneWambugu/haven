@@ -26,9 +26,17 @@ export function activeFilterCount(f: DirectoryFilters): number {
 
 /** A stable stand-in for "other clients booked this one". The real backend knows. */
 function takenByOthers(id: string): boolean {
+  // The real backend tells us which times are taken; only the demo makes some up.
+  // (Callers with the real list use `isTaken` below.)
   let h = 0
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
   return h % 5 === 0
+}
+
+/** Whether another member has this time. Uses the real list when there is one. */
+function isTaken(t: Pick<Therapist, 'takenStarts'>, id: string, start: number): boolean {
+  if (t.takenStarts) return t.takenStarts.some((b) => Math.abs(b - start) < SESSION_MINUTES * 60_000)
+  return takenByOthers(id)
 }
 
 const MIN_MS = 60_000
@@ -58,7 +66,7 @@ export function soonSlot(t: Therapist, sessions: Pick<Session, 'therapistId' | '
     if (start + SESSION_MINUTES * MIN_MS > blockEnd) continue
     if (mine.some((b) => Math.abs(b - start) < SESSION_MINUTES * MIN_MS)) continue
     const id = `${t.id}-${start}`
-    if (takenByOthers(id)) continue
+    if (isTaken(t, id, start)) continue
     return { id, start, end: start + SESSION_MINUTES * MIN_MS, modes: block.modes, soon: true }
   }
   return null
@@ -73,7 +81,7 @@ export function availability(t: Therapist, sessions: Pick<Session, 'therapistId'
 
 export function slotsFor(t: Therapist, sessions: Session[], now: number, days = 14): Slot[] {
   const mine = sessions.filter((s) => s.therapistId === t.id && s.status === 'booked').map((s) => s.start)
-  const regular = generateSlots(t.availability, now, days, mine, t.id).filter((s) => !takenByOthers(s.id))
+  const regular = generateSlots(t.availability, now, days, mine, t.id).filter((s) => !isTaken(t, s.id, s.start))
   const soon = soonSlot(t, sessions, now)
   return soon && !regular.some((s) => s.id === soon.id) ? [soon, ...regular] : regular
 }

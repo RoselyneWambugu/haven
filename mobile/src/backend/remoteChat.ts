@@ -9,6 +9,7 @@ import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
 import { syncPlan } from './remoteBilling'
+import { syncDirectory, syncSessions } from './remoteTherapists'
 import { syncForum } from './remoteForum'
 
 /** What the server sends for a peer or a blocked person. */
@@ -17,6 +18,7 @@ interface RemotePeer { id: string; pen_name: string; avatar: Peer['avatar']; lan
 interface RemoteConversation {
   id: string
   kind: 'peer' | 'therapist'
+  therapist_id?: string | null
   peer: RemotePeer | null
   created_at: string
   expires_at: string
@@ -49,7 +51,7 @@ function toConversation(c: RemoteConversation, prev?: Conversation): Conversatio
     id: c.id,
     kind: c.kind,
     peer: c.peer ? toPeer(c.peer) : null,
-    therapistId: null,
+    therapistId: c.therapist_id ?? null,
     messages: c.messages.map((m) => ({ id: m.id, from: m.from, text: m.text, at: ms(m.at) })),
     muted: c.muted,
     archived: c.archived,
@@ -120,12 +122,18 @@ export function startPolling(): void {
     ticks += 1
     // The community changes more slowly than a chat, so it is asked about a third as often.
     if (ticks % 3 === 0) void syncForum()
-    if (ticks % 10 === 0) void syncPlan()
+    if (ticks % 10 === 0) {
+      void syncPlan()
+      void syncSessions()
+    }
+    if (ticks % 20 === 0) void syncDirectory()
     void (getDb().match.state === 'searching' ? checkMatch() : Promise.resolve()).then(syncChats)
   }, POLL_MS)
   void syncChats()
   void syncForum()
   void syncPlan()
+  void syncSessions()
+  void syncDirectory()
 }
 
 export function stopPolling(): void {
@@ -133,6 +141,8 @@ export function stopPolling(): void {
   timer = null
 }
 
+/** Concerns about a therapist keep their own reasons, so they reach Clinical reviewers. */
+const sessionReasonOf = (r: ReportReason): string => (['therapist-conduct', 'therapist-boundaries', 'therapist-privacy'].includes(r) ? r : reasonOf(r))
 const reasonOf = (r: ReportReason): string => (['harassment', 'threats', 'sexual', 'scam', 'self-harm', 'impersonation', 'hate'].includes(r) ? r : 'other')
 
 /** Runs a change on the server and then refreshes. If the server says no, the screen is put right. */
@@ -263,6 +273,11 @@ export const remoteReport = {
       const call = input.target === 'post' ? rpc('report_post', { p_post: input.postId, p_reason: reasonOf(input.reason), p_note: input.note }) : rpc('report_comment', { p_comment: input.targetId, p_reason: reasonOf(input.reason), p_note: input.note })
       void call.then((r) => (r.ok ? undefined : showToast(r.error)))
       notify.push('safety', `report:${input.targetId}:${now()}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')
+      return
+    }
+    if (input.target === 'session' && input.sessionId) {
+      void rpc('report_session', { p_id: input.sessionId, p_reason: sessionReasonOf(input.reason), p_note: input.note }).then((r) => (r.ok ? undefined : showToast(r.error)))
+      notify.push('safety', `report:${input.sessionId}:${now()}`, 'We received your report', 'A clinical reviewer will look at it. You are not named to the therapist.', '/home')
       return
     }
     if (!input.conversationId) return mockReport.submit(input)
