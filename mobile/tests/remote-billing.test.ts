@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { remoteBilling, syncPlan, wait } from '../src/backend/remoteBilling'
+import { loadPayments, remoteBilling, requestRefund, syncPlan, wait } from '../src/backend/remoteBilling'
 import { stopPolling } from '../src/backend/remoteChat'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock } from '../src/lib/clock'
@@ -118,5 +118,25 @@ describe('managing the plan', () => {
     expect(calls.some((c) => c.name === 'cancel_plan')).toBe(true)
     remoteBilling.setAutoRenew(true)
     expect(calls.find((c) => c.name === 'set_auto_renew')?.args).toEqual({ p_on: true })
+  })
+})
+
+describe('payments and refunds', () => {
+  it('lists recent payments, or says it could not', async () => {
+    const pay = { id: 'o1', title: 'Monthly plan', amountKes: 1500, receiptNo: 'T-1', paidAt: 1, refundable: true, refund: null }
+    setClient({ rpc: async () => ({ data: { ok: true, payments: [pay] }, error: null }) } as unknown as SupabaseClient)
+    expect(await loadPayments()).toEqual([pay])
+    setClient({ rpc: async () => ({ data: null, error: { message: 'offline' } }) } as unknown as SupabaseClient)
+    expect(await loadPayments()).toBeNull()
+  })
+
+  it('sends the request and shows the server’s refusal', async () => {
+    const calls = fake()
+    expect((await requestRefund('o1', 'Charged twice by mistake')).ok).toBe(true)
+    expect(calls.find((c) => c.name === 'request_refund')?.args).toEqual({ p_order: 'o1', p_reason: 'Charged twice by mistake' })
+    setClient({ rpc: async () => ({ data: { ok: false, code: 'late', error: 'Refunds can be asked for within 14 days of paying.' }, error: null }) } as unknown as SupabaseClient)
+    const r = await requestRefund('o1', 'Charged twice by mistake')
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.code).toBe('late')
   })
 })

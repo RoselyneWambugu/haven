@@ -46,6 +46,28 @@ export function syncPlan(): Promise<void> {
   return syncing
 }
 
+export interface Payment {
+  id: string
+  title: string
+  amountKes: number | null
+  receiptNo: string | null
+  paidAt: number
+  refundable: boolean
+  refund: { status: 'pending' | 'approved' | 'declined'; at: number } | null
+}
+
+/** The member's recent payments and where any refund request stands. Null when the server can't be reached. */
+export async function loadPayments(): Promise<Payment[] | null> {
+  const r = await rpc('my_payments')
+  return r.ok && Array.isArray(r.payments) ? (r.payments as Payment[]) : null
+}
+
+/** Asks for a refund on a payment made in the last 14 days. Billing staff decide; the member sees the answer on the same screen. */
+export async function requestRefund(orderId: string, reason: string): Promise<Res> {
+  const r = await rpc('request_refund', { p_order: orderId, p_reason: reason })
+  return r.ok ? { ok: true, value: undefined } : { ok: false, error: r.error, code: r.code }
+}
+
 export const remoteBilling = {
   ...mockBilling,
 

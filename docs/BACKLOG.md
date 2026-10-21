@@ -174,7 +174,6 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-39 | Licence-expiry reminders and a check on the regulator's register; therapist appeals on the server | v0.47 |
 | Q-36 | Notify the member when staff reply to a ticket (the unread mark shows; no push or in-app notification yet) | v0.46 |
 | Q-37 | Let staff see closed tickets and search them; today only open and replied ones are listed | v0.46 |
-| Q-34 | A refund request screen in the member app (the server accepts requests; nothing in the app sends one) | v0.45 |
 | Q-35 | Track installs and directory views for analytics, and history for events before v0.45 | v0.45 |
 | Q-33 | A break from reviewing (the 20 a day limit is enforced; breaks are not), and heavy-queue rota that rotates by itself | v0.39 |
 | Q-28 | Pay therapists: statements and payouts are worked out in the app from finished sessions; nothing is paid out | v0.38 |

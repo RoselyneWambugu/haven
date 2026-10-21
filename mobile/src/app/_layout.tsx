@@ -28,7 +28,7 @@ const SIGNED_OUT_OK = new Set(['welcome', 'landing', 'consent', 'register', 'otp
 /** Signed-in people have no reason to be here (they would only land here with the back button). */
 const SIGNED_IN_AWAY = new Set(['welcome', 'landing', 'consent', 'register', 'login', 'under-18'])
 /** A paused account can still reach these (PRD SAF-15, ACC-18). */
-const PAUSED_OK = new Set(['paused', 'urgent', 'help', 'plan', 'plans', 'checkout', 'pay', 'settings', 'standing', 'appeal', 'about'])
+const PAUSED_OK = new Set(['paused', 'urgent', 'help', 'plan', 'plans', 'refund', 'checkout', 'pay', 'settings', 'standing', 'appeal', 'about'])
 
 function Gate() {
   const front = useFront()
