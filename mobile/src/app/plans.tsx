@@ -31,8 +31,8 @@ export default function Plans() {
         <Button
           testID="plans-continue"
           label={`Continue with ${chosen.label.toLowerCase()}`}
-          onPress={() => {
-            const r = api.billing.createCheckout({ kind: 'plan', planId: plan, autoRenew: auto && plan !== 'daily' })
+          onPress={async () => {
+            const r = await api.billing.createCheckout({ kind: 'plan', planId: plan, autoRenew: auto && plan !== 'daily' })
             if (!r.ok) return setError(r.error)
             go('/checkout')
           }}

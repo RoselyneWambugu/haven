@@ -166,7 +166,7 @@ export const remoteAuth = {
     auth.signOut()
     stopPolling()
     // What was fetched for this member must not stay on the device.
-    update({ account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [] })
+    update({ account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null })
     void supabase().auth.signOut()
   },
 

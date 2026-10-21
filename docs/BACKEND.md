@@ -1,6 +1,6 @@
 # Echo backend
 
-Three slices of the real backend are built on the existing Supabase project `haven` (ref `htsfkotheyrfyhqzeiny`, eu-west-1): **accounts and privacy** (slice 1), **peer matching and chat** (slice 2) and **the community forum and support spaces** (slice 3). Therapists, sessions, group chats, billing and staff still run on the mock on the device.
+Four slices of the real backend are built on the existing Supabase project `haven` (ref `htsfkotheyrfyhqzeiny`, eu-west-1): **accounts and privacy** (slice 1), **peer matching and chat** (slice 2), **the community forum and support spaces** (slice 3) and **plans and billing** (slice 4). Therapists, sessions, group chats and staff still run on the mock on the device.
 
 ## What is built
 
@@ -9,11 +9,13 @@ Three slices of the real backend are built on the existing Supabase project `hav
 | Schema, security rules and functions | `supabase/migrations/20261021000100_foundation.sql` (applied) |
 | Slice 2 migration (run once from the SQL editor, safe to repeat) | `supabase/migrations/20261021000200_chats_and_matching.sql` |
 | Slice 3 migration (run once from the SQL editor, safe to repeat) | `supabase/migrations/20261021000300_forum_and_spaces.sql` |
-| Checks that roll back | `supabase/tests/foundation.sql`, `supabase/tests/chats.sql`, `supabase/tests/forum.sql` |
+| Slice 4 migration (applied) | `supabase/migrations/20261021000400_billing.sql` |
+| Checks that roll back | `supabase/tests/foundation.sql`, `chats.sql`, `forum.sql`, `billing.sql` |
 | App connection | `mobile/src/backend/` (`client.ts`, `map.ts`, `remoteAuth.ts`) |
 | Chat and matching connection | `mobile/src/backend/remoteChat.ts` |
 | Forum and spaces connection | `mobile/src/backend/remoteForum.ts` |
-| Tests of the connections with a fake client | `mobile/tests/remote-auth.test.ts`, `mobile/tests/remote-chat.test.ts`, `mobile/tests/remote-forum.test.ts` |
+| Billing connection | `mobile/src/backend/remoteBilling.ts` |
+| Tests of the connections with a fake client | `mobile/tests/remote-auth.test.ts`, `remote-chat.test.ts`, `remote-forum.test.ts`, `remote-billing.test.ts` |
 
 ## How privacy is kept
 
@@ -48,6 +50,17 @@ Three slices of the real backend are built on the existing Supabase project `hav
 - **Removing a post** deletes it and its comments for good. Deleting an account removes everything that member wrote.
 - No starter posts: the real community begins empty. The app asks for the feed every 9 seconds.
 
+## Plans and billing (slice 4)
+
+- **The server now decides who has a plan.** Matching, chat messages, the community and support spaces all check it. A member whose plan has ended can still read their chats (read-only) but nothing else paid. The earlier "plan check on the device only" gap is closed for everything built so far.
+- **Plans** (`private.plans`): daily, monthly and yearly, with the same sample prices the app shows (KES 100, 1,500, 12,000). The real prices are still to be decided; changing them is one update to that table and the app picks it up.
+- **Checkout** creates a pending order. Paying adds to a plan the member already has, so a second purchase starts when the first ends. A new checkout cancels the previous open one. Cancelling a plan stops renewal but keeps what was paid for.
+- **No payment provider is connected.** Two ways in:
+  - `confirm_payment(order, provider_ref, method)` is for the provider's webhook. It can only be called with the service role (from an edge function, later), never by the app, and confirming twice changes nothing.
+  - `simulate_payment(...)` completes a payment without money, and only for phone numbers in `private.payment_test_phones`. Add a test number like this in the SQL editor: `insert into private.payment_test_phones (phone) values ('+254712345678');`. Everyone else sees "Payments aren't switched on yet." Empty this table before real use.
+- **Renewal is a flag only.** Nothing charges a member again automatically; that needs the provider (M-Pesa has no standing pull payments without extra setup).
+- **Therapist sessions** are still paid through the mock. They come with the therapists slice.
+
 ## Setup
 
 1. In the Supabase dashboard open **Authentication → Providers → Phone** and turn it on. Under **Test phone numbers** add the numbers you will try, for example `254712345678=123456`. Test numbers send no text and always accept their fixed code. (A real SMS provider comes later.)
@@ -63,7 +76,7 @@ Paste `supabase/tests/foundation.sql` into the SQL editor (or run it through the
 - The rest of the app (therapists and sessions, group chats, billing, staff) still uses the mock. See the backlog (S-01).
 - Replies from therapists and the therapist's view of a space need therapist accounts (a later slice). Until then only members reply, and the leading therapist of a space is only shown in the app.
 - Moderation of held posts by staff, hiding posts after reports, and pinned posts.
-- Plans are not checked on the server yet (billing is a later slice). `private.has_plan()` is the one place to change; until then the app checks the plan on the device.
+- A real payment provider (M-Pesa and card), automatic renewal, refunds and receipts by email. See backlog S-03 and S-08.
 - Therapist chats, the felt-heard rating, real-time delivery (the app polls), a server-side disappearing-message timer (peer chats are gone in 24 hours anyway) and staff review of reports (no screen reads `private.reports` yet).
 - Real SMS delivery (S-02). Test numbers only for now.
 - A server-side list of common names for pen names. The app still checks a names list on the device; the server checks only the member's own name.

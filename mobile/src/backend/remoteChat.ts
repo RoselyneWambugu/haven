@@ -8,6 +8,7 @@ import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
+import { syncPlan } from './remoteBilling'
 import { syncForum } from './remoteForum'
 
 /** What the server sends for a peer or a blocked person. */
@@ -119,10 +120,12 @@ export function startPolling(): void {
     ticks += 1
     // The community changes more slowly than a chat, so it is asked about a third as often.
     if (ticks % 3 === 0) void syncForum()
+    if (ticks % 10 === 0) void syncPlan()
     void (getDb().match.state === 'searching' ? checkMatch() : Promise.resolve()).then(syncChats)
   }, POLL_MS)
   void syncChats()
   void syncForum()
+  void syncPlan()
 }
 
 export function stopPolling(): void {

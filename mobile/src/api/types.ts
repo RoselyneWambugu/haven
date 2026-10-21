@@ -268,7 +268,7 @@ export type CheckoutItem =
 export interface PaymentResult {
   ok: boolean
   receiptNo?: string
-  failure?: 'timeout' | 'insufficient' | 'cancelled'
+  failure?: 'timeout' | 'insufficient' | 'cancelled' | 'unavailable'
   sessionId?: string
 }
 
