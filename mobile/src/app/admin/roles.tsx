@@ -31,7 +31,8 @@ export default function Roles() {
   const [adding, setAdding] = useState<{ name: string; role: StaffRole; phone: string } | null>(null)
   if (!a) return null
   const admin = a.role === 'admin'
-  const pending = REMOTE ? null : a.pendingStaff
+  const pending = REMOTE ? (a.staffPending ?? null) : a.pendingStaff
+  const sent = (r: { ok: boolean; value?: { proposed: boolean } }) => (r.value?.proposed ? 'Sent for approval by a second Admin.' : 'Done.')
   const result = (r: { ok: boolean; error?: string }, msg?: string) => {
     setError(r.ok ? null : (r.error ?? null))
     setOk(r.ok ? (msg ?? null) : null)
@@ -41,7 +42,7 @@ export default function Roles() {
   return (
     <PortalPage testID="admin-roles" title="Roles and permissions" sub="Who is on the team, what each role may do, and what it can see.">
       <Banner tone="green" icon="lock" title="Everyone signs in with a second factor">
-        {REMOTE ? 'Every action is written to the audit log. Changes to the team take effect at once (approval by a second Admin is not built yet). You can’t change your own account.' : 'This can’t be turned off for any account (RBAC-2). Every action is written to the audit log. Changes to the team need a second Admin to approve.'}
+        {REMOTE ? 'Every action is written to the audit log. Changes to the team need a second Admin to approve (until there is a second Admin). You can’t change your own account.' : 'This can’t be turned off for any account (RBAC-2). Every action is written to the audit log. Changes to the team need a second Admin to approve.'}
       </Banner>
       {error ? <Banner tone="clay">{error}</Banner> : null}
       {ok ? (
@@ -52,9 +53,22 @@ export default function Roles() {
       {pending ? (
         <Panel tone="sun" testID="pending-staff" title="A team change is waiting for a second Admin">
           <Text variant="small">
-            {describeChange(pending.change, a.staff)}. Proposed by {pending.requestedBy}.
+            {'change' in pending ? describeChange(pending.change, a.staff) : pending.summary}. Proposed by {pending.requestedBy}.
           </Text>
-          {admin ? (
+          {REMOTE && 'summary' in pending ? (
+            admin ? (
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {pending.mine ? (
+                  <Button size="sm" variant="ghost" label="Withdraw" onPress={async () => result(await remoteAdmin.withdrawStaffChange(pending.id), 'Withdrawn.')} />
+                ) : (
+                  <>
+                    <Button testID="approve-staff" size="sm" label="Approve change" onPress={async () => result(await remoteAdmin.decideStaffChange(pending.id, true), 'The team change is in effect.')} />
+                    <Button size="sm" variant="ghost" label="Decline" onPress={async () => result(await remoteAdmin.decideStaffChange(pending.id, false), 'Declined.')} />
+                  </>
+                )}
+              </View>
+            ) : null
+          ) : admin ? (
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <Button testID="approve-staff" size="sm" label="Approve change" onPress={() => result(api.team.approveStaff(), 'The team change is in effect. Role changes apply at the person’s next sign-in.')} />
               <Button size="sm" variant="ghost" label="Withdraw" onPress={() => api.team.withdrawStaff()} />
@@ -78,7 +92,7 @@ export default function Roles() {
             {admin ? (
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 <Button testID={`role-${s.name}`} size="sm" variant="quiet" label="Change role" disabled={!!pending} onPress={() => { setError(null); setEditing({ id: s.id, name: s.name, role: s.role }) }} />
-                <Button testID={`active-${s.name}`} size="sm" variant="ghost" label={s.active ? 'Deactivate' : 'Reactivate'} disabled={!!pending} onPress={async () => (REMOTE ? result(await remoteAdmin.setStaff(s.id, { active: !s.active }), 'Done.') : result(api.team.proposeStaff({ kind: 'active', id: s.id, active: !s.active }), 'Sent for approval by a second Admin.'))} />
+                <Button testID={`active-${s.name}`} size="sm" variant="ghost" label={s.active ? 'Deactivate' : 'Reactivate'} disabled={!!pending} onPress={async () => { if (REMOTE) { const r = await remoteAdmin.setStaff(s.id, { active: !s.active }); result(r, sent(r)) } else  result(api.team.proposeStaff({ kind: 'active', id: s.id, active: !s.active }), 'Sent for approval by a second Admin.') }} />
                 {REMOTE && s.role === 'moderator' ? <Button testID={`heavy-${s.name}`} size="sm" variant="ghost" label={a.heavy?.[s.id] ? 'Off heavy queue' : 'On heavy queue'} onPress={async () => result(await remoteAdmin.setStaff(s.id, { heavy: !a.heavy?.[s.id] }), 'Done.')} /> : null}
               </View>
             ) : null}
@@ -180,7 +194,7 @@ export default function Roles() {
               label="Propose change"
               onPress={async () => {
                 const r = REMOTE ? await remoteAdmin.setStaff(editing.id, { role: editing.role }) : api.team.proposeStaff({ kind: 'role', id: editing.id, role: editing.role })
-                result(r, REMOTE ? 'Done.' : 'Sent for approval by a second Admin.')
+                result(r, REMOTE ? sent(r as { ok: boolean; value?: { proposed: boolean } }) : 'Sent for approval by a second Admin.')
                 if (r.ok) setEditing(null)
               }}
             />
@@ -206,12 +220,12 @@ export default function Roles() {
               testID="add-save"
               label="Propose"
               onPress={async () => {
-                let r: { ok: boolean; error?: string }
+                let r: { ok: boolean; error?: string; value?: unknown }
                 if (REMOTE) {
                   const n = normaliseKenyanPhone(adding.phone)
                   r = n ? await remoteAdmin.addStaff(adding.name, adding.role, n) : { ok: false, error: 'Enter a Kenyan mobile number, like 0712 345 678.' }
                 } else r = api.team.proposeStaff({ kind: 'add', name: adding.name, role: adding.role })
-                result(r, REMOTE ? 'Added.' : 'Sent for approval by a second Admin.')
+                result(r, REMOTE ? sent(r as { ok: boolean; value?: { proposed: boolean } }) : 'Sent for approval by a second Admin.')
                 if (r.ok) setAdding(null)
               }}
             />

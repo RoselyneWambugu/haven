@@ -640,6 +640,8 @@ export interface AdminState {
   held?: HeldPost[]
   /** Which therapists have a phone number linked, by therapist id. Only on the real backend. */
   /** People invited by phone who haven't signed in yet, and who is on the heavy-queue rota. Only on the real backend. */
+  /** A team change waiting for a second Admin. Only on the real backend. */
+  staffPending?: { id: string; summary: string; requestedBy: string; mine: boolean; at: number } | null
   staffInvites?: { name: string; role: StaffRole; tail: string; by: string; at: number }[]
   heavy?: Record<string, boolean>
   therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string }>

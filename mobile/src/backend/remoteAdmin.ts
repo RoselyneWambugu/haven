@@ -83,9 +83,9 @@ async function syncLinks(): Promise<void> {
 
 async function syncInvites(): Promise<void> {
   const { data } = await supabase().rpc('admin_staff_invites')
-  const d = data as { ok?: boolean; invites?: NonNullable<AdminState['staffInvites']>; heavy?: Record<string, boolean> } | null
+  const d = data as { ok?: boolean; invites?: NonNullable<AdminState['staffInvites']>; heavy?: Record<string, boolean>; pending?: AdminState['staffPending'] } | null
   if (!d?.ok) return
-  update((s) => (s.admin ? { admin: { ...s.admin, staffInvites: d.invites ?? [], heavy: d.heavy ?? {} } } : {}))
+  update((s) => (s.admin ? { admin: { ...s.admin, staffInvites: d.invites ?? [], heavy: d.heavy ?? {}, staffPending: d.pending ?? null } } : {}))
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
@@ -169,6 +169,13 @@ async function act(fn: string, args: Record<string, unknown>): Promise<Res> {
   return res(r)
 }
 
+/** A team change: it waits for a second Admin unless there is no other Admin to ask. */
+async function proposal(fn: string, args: Record<string, unknown>): Promise<Res<{ proposed: boolean }>> {
+  const r = (await call(fn, args)) as Reply & { proposed?: boolean }
+  await syncAdmin()
+  return r.ok ? { ok: true, value: { proposed: r.proposed === true } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+}
+
 export const remoteAdmin = {
   ...mockAdmin,
 
@@ -202,9 +209,12 @@ export const remoteAdmin = {
   unlinkTherapist: (therapistId: string, reason: string) => act('admin_unlink_therapist', { p_therapist: therapistId, p_reason: reason }),
 
   /** Adds a person to the team by phone number. They become staff when that number signs in. */
-  addStaff: (name: string, role: StaffRole, phone: string) => act('admin_add_staff', { p_name: name, p_role: role, p_phone: phone }),
+  addStaff: (name: string, role: StaffRole, phone: string) => proposal('admin_add_staff', { p_name: name, p_role: role, p_phone: phone }),
   setStaff: (accountId: string, change: { role?: StaffRole; active?: boolean; heavy?: boolean }) =>
-    act('admin_set_staff', { p_account: accountId, p_role: change.role ?? null, p_active: change.active ?? null, p_heavy: change.heavy ?? null }),
+    proposal('admin_set_staff', { p_account: accountId, p_role: change.role ?? null, p_active: change.active ?? null, p_heavy: change.heavy ?? null }),
+  /** A second Admin approves or declines the change that is waiting. */
+  decideStaffChange: (id: string, approve: boolean) => act('admin_decide_staff_change', { p_id: id, p_approve: approve }),
+  withdrawStaffChange: (id: string) => act('admin_withdraw_staff_change', { p_id: id }),
   cancelInvite: (name: string) => act('admin_cancel_invite', { p_name: name }),
 
   users(): AdminUser[] {

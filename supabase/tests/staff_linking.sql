@@ -1,4 +1,4 @@
--- Checks for adding and managing staff from the dashboard. Always rolls back.
+-- Checks for adding and managing staff from the dashboard, while there is only one Admin (so changes apply at once). Always rolls back.
 do $$
 declare
   ids uuid[] := array[gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid()];
@@ -24,11 +24,11 @@ begin
   r := public.admin_add_staff('M. Mod Two', 'moderator', '0712000084');
   if r->>'code' is distinct from 'name' then bad := array_append(bad, 'duplicate name'); end if;
   r := public.admin_add_staff('Existing User', 'billing', '0712000083');
-  if r->>'ok' is distinct from 'true' or (r->>'pending')::boolean then bad := array_append(bad, ('existing user: ' || r::text)); end if;
+  if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('existing user: ' || r::text)); end if;
   r := public.admin_add_staff('Another One', 'billing', '0712000083');
   if r->>'code' is distinct from 'taken' then bad := array_append(bad, ('same number: ' || r::text)); end if;
   r := public.admin_add_staff('Invited Person', 'clinical', '+254 712 000 085');
-  if r->>'ok' is distinct from 'true' or not (r->>'pending')::boolean then bad := array_append(bad, ('invite: ' || r::text)); end if;
+  if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('invite: ' || r::text)); end if;
   r := public.admin_staff_invites();
   if jsonb_array_length(r->'invites') <> 1 or r->'invites'->0->>'tail' <> '085' then bad := array_append(bad, ('invites list: ' || r::text)); end if;
   reset role;
@@ -49,13 +49,13 @@ begin
   if (private.staff_of(ids[2])).account_id is not null then bad := array_append(bad, 'deactivated person still staff'); end if;
   -- Only one active Admin: promoting a second then demoting is allowed, but the last two cannot both go.
   perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  r := public.admin_add_staff('Cancel Me', 'moderator', '0712000086');
+  r := public.admin_cancel_invite('cancel me');
+  if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('cancel invite: ' || r::text)); end if;
   r := public.admin_set_staff(ids[3], 'admin', null, null);
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('promote: ' || r::text)); end if;
   r := public.admin_set_staff(ids[3], 'billing', null, null);
   if r->>'code' is distinct from 'admins' then bad := array_append(bad, ('last-admin floor: ' || r::text)); end if;
-  r := public.admin_add_staff('Cancel Me', 'moderator', '0712000086');
-  r := public.admin_cancel_invite('cancel me');
-  if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('cancel invite: ' || r::text)); end if;
   reset role;
   if not exists (select 1 from private.audit where action = 'Added team member') or not exists (select 1 from private.audit where action = 'Deactivated team member') then bad := array_append(bad, 'audit rows missing'); end if;
   if cardinality(bad) > 0 then raise exception 'FAILED: %', array_to_string(bad, '; '); end if;
