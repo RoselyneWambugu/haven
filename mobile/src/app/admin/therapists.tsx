@@ -7,6 +7,7 @@ import { normaliseKenyanPhone } from '@/lib/identity'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Field } from '@/components/Field'
+import { StaffDocuments } from '@/components/StaffDocuments'
 import { Panel, PortalPage } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -169,6 +170,7 @@ export default function Therapists() {
                   <Text variant="caption" muted>
                     Renewal sent: licence {l.renewal.number}, new expiry {dayLong(l.renewal.newExpiry)}.
                   </Text>
+                  <StaffDocuments owner={{ therapist: l.id }} empty="No certificate was attached." />
                   {renewing === l.renewal.id ? (
                     <>
                       <Field testID="renewal-note" label="What you checked (required)" value={renewNote} onChangeText={(v) => { setRenewNote(v); setRenewError(null) }} error={renewError} />

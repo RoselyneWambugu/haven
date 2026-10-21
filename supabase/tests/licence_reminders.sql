@@ -35,7 +35,8 @@ begin
   reset role;
   if private.slot_ok('t-amina', 'chat', now() + interval '2 days') then bad := array_append(bad, 'expired bookable'); end if;
 
-  -- Renewal rules.
+  -- Renewal rules. (A renewal needs the renewed certificate, so one has been sent.)
+  insert into private.application_documents (account_id, kind, path, name, size) values (ids[3], 'renewal', ids[3]::text || '/r.pdf', 'r.pdf', 100);
   perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
   r := public.portal_submit_renewal('', td + 400);
   if r->>'code' is distinct from 'licence' then bad := array_append(bad, 'empty number'); end if;

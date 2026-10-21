@@ -10,6 +10,7 @@ import { Text } from '@/components/Text'
 import { applicantRequestOtp, applicantVerifyOtp, openPortalAfterApproval, parseExpiry, refreshApplication, submitApplication } from '@/backend/remoteApplication'
 import { supabase } from '@/backend/client'
 import { normaliseKenyanPhone } from '@/lib/identity'
+import { DocumentUpload } from '@/components/DocumentUpload'
 import { useDb } from '@/store/db'
 
 const STEPS = ['Submitted', 'Under review', 'Decision'] as const
@@ -165,9 +166,14 @@ export function RemoteApply() {
         </Text>
         <Field testID="apply-licence" label="Licence number" value={licence} onChangeText={setLicence} />
         <Field testID="apply-expiry" label="Licence expiry (year-month-day)" placeholder="2027-03-31" value={expiry} onChangeText={setExpiry} />
-        <Banner tone="sun" icon="lock">
-          Uploading documents is not available yet. The clinical team checks your licence number with the regulator. Keep your licence, national ID and qualification certificate to hand in case they ask.
-        </Banner>
+        <Panel title="Documents">
+          <Text variant="small" muted>
+            The clinical team checks these with the regulator. Only they can open them. PDF, JPEG or PNG, up to 5 MB each. A licence document is needed before you can be approved.
+          </Text>
+          <DocumentUpload kind="licence" label="Licence or registration certificate" />
+          <DocumentUpload kind="id" label="National ID" />
+          <DocumentUpload kind="qualification" label="Qualification certificate" />
+        </Panel>
         <Check testID="consent-public" checked={consentPublic} label="I understand my name and qualifications will be public on Echo." onPress={() => setConsentPublic((v) => !v)} />
         <Check testID="consent-conduct" checked={consentConduct} label="I accept the Therapist Code of Conduct and the crisis escalation protocol." onPress={() => setConsentConduct((v) => !v)} />
         {error ? <Banner tone="clay">{error}</Banner> : null}

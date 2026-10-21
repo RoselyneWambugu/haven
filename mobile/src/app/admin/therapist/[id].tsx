@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { StaffDocuments } from '@/components/StaffDocuments'
 import { Button } from '@/components/Button'
 import { Check, Segmented } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -30,12 +32,18 @@ export default function VerifyTherapist() {
   const done = t.status !== 'pending'
 
   return (
-    <PortalPage testID="admin-verify" title={`Verify: ${t.name}`} sub="Documents open in a secure preview and are never downloaded.">
+    <PortalPage testID="admin-verify" title={`Verify: ${t.name}`} sub="Documents open in a short-lived secure link. Every time you open one it is logged.">
       <Panel title="Documents">
-        <Text variant="small">Licence · National ID · Qualification certificate</Text>
-        <Text variant="caption" muted>
-          Preview is not available in the demo.
-        </Text>
+        {REMOTE ? (
+          <StaffDocuments owner={{ application: t.id }} empty="The applicant hasn’t sent any files yet." />
+        ) : (
+          <>
+            <Text variant="small">Licence · National ID · Qualification certificate</Text>
+            <Text variant="caption" muted>
+              Preview is not available in the demo.
+            </Text>
+          </>
+        )}
       </Panel>
       <Panel title="Checklist">
         <Check testID="chk-name" checked={checks.name} label="Name matches ID" onPress={() => tick('name')} />

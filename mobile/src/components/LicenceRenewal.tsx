@@ -7,6 +7,7 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { submitLicenceRenewal } from '@/backend/remotePortal'
 import { parseExpiry } from '@/backend/remoteApplication'
+import { DocumentUpload } from '@/components/DocumentUpload'
 import { dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
 
@@ -47,6 +48,7 @@ export function LicenceRenewal() {
           <Text variant="small" muted>
             Send the licence number and new expiry date from your renewed certificate.
           </Text>
+          <DocumentUpload kind="renewal" label="Renewed certificate" hint="PDF, JPEG or PNG, up to 5 MB. Only the clinical team can open it." />
           <Field testID="renew-number" label="Licence number" value={number} onChangeText={(v) => { setNumber(v); setError(null) }} />
           <Field testID="renew-expiry" label="New expiry (year-month-day)" placeholder="2028-03-31" value={expiry} onChangeText={(v) => { setExpiry(v); setError(null) }} error={error} />
           <View style={{ flexDirection: 'row' }}>
