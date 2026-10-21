@@ -79,7 +79,10 @@ export const remoteBilling = {
     if (!r.ok) return { ok: false, error: r.error, code: r.code }
     const amountKes = (r.amount_kes as number | null) ?? null
     update({ checkout: { id: String(r.order_id), item, amountKes, createdAt: now() } })
-    return { ok: true, value: { title: String(r.title), amountKes } }
+    const pct = Number(r.discount_pct ?? 0)
+    // The server has already taken the plan's discount off the price; the title says so, so the lower price isn't a surprise.
+    const title = pct > 0 ? `${String(r.title)} (${pct}% off with your plan)` : String(r.title)
+    return { ok: true, value: { title, amountKes } }
   },
 
   /** Plans are paid for through the server. Until a payment provider is connected, only test numbers can complete a payment. */

@@ -20,7 +20,7 @@ function fake(script: Script = {}) {
     rpc: async (name: string, args?: Record<string, unknown>) => {
       calls.push({ name, args })
       if (name === 'my_plan') return { data: script.plan ?? { ok: true, subscription: null, plans: PLANS }, error: null }
-      if (name === 'start_checkout') return { data: script.checkout ?? { ok: true, order_id: 'o-1', amount_kes: 1800, title: 'Monthly peer plan' }, error: null }
+      if (name === 'start_checkout' || name === 'start_session_checkout') return { data: script.checkout ?? { ok: true, order_id: 'o-1', amount_kes: 1800, title: 'Monthly peer plan' }, error: null }
       if (name === 'simulate_payment') return { data: script.pay ?? { ok: true, receipt_no: 'EC-123456' }, error: null }
       return { data: { ok: true }, error: null }
     },
@@ -138,5 +138,21 @@ describe('payments and refunds', () => {
     const r = await requestRefund('o1', 'Charged twice by mistake')
     expect(r.ok).toBe(false)
     if (!r.ok) expect(r.code).toBe('late')
+  })
+})
+
+describe('the therapy discount', () => {
+  it('shows the discounted price from the server and says where the discount comes from', async () => {
+    update({ ...freshState(), account: { settings: { ...DEFAULT_SETTINGS } } as unknown as Account } as never)
+    fake({ checkout: { ok: true, order_id: 'o-2', amount_kes: 1350, list_kes: 1500, discount_pct: 10, title: 'Session with Dr. Amina Otieno' } })
+    const r = await remoteBilling.createCheckout({ kind: 'session', therapistId: 't-amina', mode: 'chat', start: Date.now() + 86400_000 } as never)
+    expect(r.ok && r.value).toEqual({ title: 'Session with Dr. Amina Otieno (10% off with your plan)', amountKes: 1350 })
+  })
+
+  it('leaves the title alone when there is no discount', async () => {
+    update({ ...freshState(), account: { settings: { ...DEFAULT_SETTINGS } } as unknown as Account } as never)
+    fake({ checkout: { ok: true, order_id: 'o-3', amount_kes: 1500, discount_pct: 0, title: 'Session with Dr. Amina Otieno' } })
+    const r = await remoteBilling.createCheckout({ kind: 'session', therapistId: 't-amina', mode: 'chat', start: Date.now() + 86400_000 } as never)
+    expect(r.ok && r.value.title).toBe('Session with Dr. Amina Otieno')
   })
 })
