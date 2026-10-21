@@ -6,6 +6,7 @@ import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
 import { stopPolling } from './remoteChat'
+import { syncAdminConfig } from './remoteConfig'
 import { syncFeedback } from './remoteFeedback'
 import { syncStaffHelp } from './remoteHelp'
 import { stopPortalPolling } from './remotePortal'
@@ -69,7 +70,7 @@ export function syncAdmin(): Promise<boolean> {
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
     await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling(), syncStaffHelp()])
     if (d.role === 'clinical' || d.role === 'admin') await Promise.all([syncLinks(), syncApplicants()])
-    if (d.role === 'admin') await syncInvites()
+    if (d.role === 'admin') await Promise.all([syncInvites(), syncAdminConfig()])
     if (d.role === 'admin' || d.role === 'billing') await syncFeedback()
     return true
   })().finally(() => {

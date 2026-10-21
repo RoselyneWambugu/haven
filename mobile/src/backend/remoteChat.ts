@@ -8,6 +8,7 @@ import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
+import { syncConfig } from './remoteConfig'
 import { syncHelp, syncTickets } from './remoteHelp'
 import { syncNotices } from './remoteNotices'
 import { syncPlan } from './remoteBilling'
@@ -130,7 +131,10 @@ export function startPolling(): void {
       void syncNotices()
       void syncTickets()
     }
-    if (ticks % 60 === 0) void syncHelp()
+    if (ticks % 60 === 0) {
+      void syncHelp()
+      void syncConfig()
+    }
     if (ticks % 20 === 0) void syncDirectory()
     void (getDb().match.state === 'searching' ? checkMatch() : Promise.resolve()).then(syncChats)
   }, POLL_MS)
@@ -141,6 +145,7 @@ export function startPolling(): void {
   void syncNotices()
   void syncTickets()
   void syncHelp()
+  void syncConfig()
   void syncDirectory()
 }
 

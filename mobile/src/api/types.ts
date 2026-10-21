@@ -733,7 +733,7 @@ export interface ContentState {
   suggestions: ServiceSuggestion[]
   topics: string[]
   plans: PlanCfg[]
-  pendingPlans: { plans: PlanCfg[]; requestedBy: string; approvals: string[] } | null
+  pendingPlans: { plans: PlanCfg[]; requestedBy: string; approvals: string[]; id?: string; mine?: boolean } | null
   matching: MatchingCfg
   flags: FlagsCfg
   limits: LimitsCfg

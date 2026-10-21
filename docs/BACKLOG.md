@@ -166,6 +166,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-30 | Dashboard modules still on the mock: analytics, resources, configuration, wellbeing and rota, billing and refunds, feedback, group chats, AI flags, therapist applications | v0.39 |
 | Q-31 | ~~Break-glass access to a private profile on the server~~ done in v0.44. The member is not told; a notice after the fact is not built | v0.39 |
 | Q-32 | Hide a reported comment, and tell the reporter the outcome of a report | v0.39 |
+| Q-40 | Enforce the grace period after a plan ends, the account-deletion holding period (and a job that deletes), and apply the therapy discount to session prices | v0.48 |
 | Q-38 | Upload of licence, ID and qualification documents for therapist applications (private storage, reviewers only) | v0.47 |
 | Q-39 | Licence-expiry reminders and a check on the regulator's register; therapist appeals on the server | v0.47 |
 | Q-36 | Notify the member when staff reply to a ticket (the unread mark shows; no push or in-app notification yet) | v0.46 |
