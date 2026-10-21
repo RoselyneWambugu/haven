@@ -634,7 +634,7 @@ export interface AdminState {
   flags: AdminFlag[]
   applicants: Applicant[]
   policy: StrikePolicy
-  policyChange: { policy: StrikePolicy; requestedBy: string; approvals: string[] } | null
+  policyChange: { policy: StrikePolicy; requestedBy: string; approvals: string[]; id?: string; mine?: boolean } | null
   audit: AuditEntry[]
   /** Posts waiting for a moderator. Only on the real backend. */
   held?: HeldPost[]

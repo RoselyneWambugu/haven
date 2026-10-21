@@ -61,7 +61,7 @@ export default function CaseDetail() {
   const [bgReason, setBgReason] = useState<BreakGlassRequest['reasonCode']>('imminent-risk')
   const [bgText, setBgText] = useState('')
   const [bgError, setBgError] = useState<string | null>(null)
-  const [profile, setProfile] = useState<ReturnType<typeof api.admin.privateProfile>>(null)
+  const [profile, setProfile] = useState<Awaited<ReturnType<typeof api.admin.privateProfile>>>(null)
   const c = a?.cases.find((x) => x.id === id && canSeeCase(a.role, x))
 
   useEffect(() => {
@@ -226,7 +226,7 @@ export default function CaseDetail() {
                   </Text>
                 </View>
               ) : (
-                <Button testID="bg-view" size="sm" label="View private profile" onPress={() => setProfile(api.admin.privateProfile(req.id))} />
+                <Button testID="bg-view" size="sm" label="View private profile" onPress={async () => setProfile(await api.admin.privateProfile(req.id))} />
               )}
             </>
           )}
@@ -245,8 +245,8 @@ export default function CaseDetail() {
         <Button
           testID="bg-request"
           label="Request approval"
-          onPress={() => {
-            const r = api.admin.requestBreakGlass(c.id, { reasonCode: bgReason, justification: bgText })
+          onPress={async () => {
+            const r = await api.admin.requestBreakGlass(c.id, { reasonCode: bgReason, justification: bgText })
             if (!r.ok) return setBgError(r.error)
             setSheet(false)
             setBgText('')

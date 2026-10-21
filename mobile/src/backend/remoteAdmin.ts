@@ -1,5 +1,5 @@
 import { admin as mockAdmin, seed } from '@/api/admin'
-import type { AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
+import type { AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
 import { now } from '@/lib/clock'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
@@ -64,6 +64,7 @@ export function syncAdmin(): Promise<boolean> {
     if (error || !d) return !!getDb().admin?.signedIn
     if (d.ok !== true || !d.name) return false
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
+    await Promise.all([syncPolicy(), syncBreakGlass()])
     if (d.role === 'clinical' || d.role === 'admin') await syncLinks()
     if (d.role === 'admin') await syncInvites()
     return true
@@ -79,6 +80,20 @@ async function syncLinks(): Promise<void> {
   if (!d?.ok || !d.links) return
   const links = Object.fromEntries(d.links.map((l) => [l.id, { linked: l.linked, pending: l.pending, tail: l.tail }]))
   update((s) => (s.admin ? { admin: { ...s.admin, therapistLinks: links } } : {}))
+}
+
+async function syncPolicy(): Promise<void> {
+  const { data } = await supabase().rpc('admin_policy')
+  const d = data as { ok?: boolean; policy?: AdminState['policy']; pending?: { id: string; policy: AdminState['policy']; requestedBy: string; mine: boolean } | null } | null
+  if (!d?.ok || !d.policy) return
+  update((s) => (s.admin ? { admin: { ...s.admin, policy: d.policy!, policyChange: d.pending ? { policy: d.pending.policy, requestedBy: d.pending.requestedBy, approvals: [], id: d.pending.id, mine: d.pending.mine } : null } } : {}))
+}
+
+async function syncBreakGlass(): Promise<void> {
+  const { data } = await supabase().rpc('admin_break_glass')
+  const d = data as { ok?: boolean; requests?: BreakGlassRequest[] } | null
+  if (!d?.ok || !d.requests) return
+  update((s) => (s.admin ? { admin: { ...s.admin, breakGlass: d.requests! } } : {}))
 }
 
 async function syncInvites(): Promise<void> {
@@ -216,6 +231,35 @@ export const remoteAdmin = {
   decideStaffChange: (id: string, approve: boolean) => act('admin_decide_staff_change', { p_id: id, p_approve: approve }),
   withdrawStaffChange: (id: string) => act('admin_withdraw_staff_change', { p_id: id }),
   cancelInvite: (name: string) => act('admin_cancel_invite', { p_name: name }),
+
+  // --- strike policy, approved by a second Admin ---
+  async proposePolicy(policy: AdminState['policy']): Promise<Res<{ proposed: boolean }>> {
+    const r = (await call('admin_propose_policy', { p_expiry_days: policy.expiryDays, p_restriction_hours: policy.restrictionHours })) as Reply & { proposed?: boolean }
+    await syncAdmin()
+    return r.ok ? { ok: true, value: { proposed: r.proposed === true } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+  approvePolicy: () => act('admin_decide_policy', { p_id: getDb().admin?.policyChange?.id ?? '', p_approve: true }),
+  declinePolicy: () => act('admin_decide_policy', { p_id: getDb().admin?.policyChange?.id ?? '', p_approve: false }),
+  async cancelPolicy(): Promise<void> {
+    await act('admin_withdraw_policy', { p_id: getDb().admin?.policyChange?.id ?? '' })
+  },
+
+  // --- break-glass: a clinical reviewer approves, the requester opens the details for 30 minutes ---
+  async requestBreakGlass(caseId: string, input: { reasonCode: BreakGlassRequest['reasonCode']; justification: string }): Promise<Res<{ id: string }>> {
+    const r = (await call('admin_request_break_glass', { p_case: caseId, p_reason: input.reasonCode, p_justification: input.justification })) as Reply & { id?: string }
+    await syncAdmin()
+    return r.ok ? { ok: true, value: { id: r.id ?? '' } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+  decideBreakGlass: (id: string, approve: boolean) => act('admin_decide_break_glass', { p_id: id, p_approve: approve }),
+  async privateProfile(requestId: string): Promise<{ name: string; phone: string; location: string; minutesLeft: number } | null> {
+    const { data } = await supabase().rpc('admin_private_profile', { p_id: requestId })
+    const d = data as ({ ok?: boolean } & { name?: string; phone?: string; location?: string; minutesLeft?: number }) | null
+    if (!d?.ok) {
+      await syncAdmin()
+      return null
+    }
+    return { name: d.name ?? '', phone: d.phone ?? '', location: d.location ?? '', minutesLeft: d.minutesLeft ?? 0 }
+  },
 
   users(): AdminUser[] {
     return getDb().admin?.users ?? []

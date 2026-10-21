@@ -81,7 +81,7 @@ export default function Moderation() {
           The log shows message references, never message text.
         </Text>
       </Panel>
-      <Panel title="Strike policy (draft)" testID="strike-policy">
+      <Panel title="Strike policy" testID="strike-policy">
         <Text variant="small">S3 → warning · S2 → strike · S1 → immediate suspension.</Text>
         <Text variant="small">
           Expiry <Text variant="small" bold>{a.policy.expiryDays} days</Text> · restriction <Text variant="small" bold>{a.policy.restrictionHours} hours</Text>
@@ -93,8 +93,8 @@ export default function Moderation() {
         ) : null}
         {pc && admin ? (
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button testID="approve-policy" size="sm" label="Approve change" onPress={() => { const r = api.admin.approvePolicy(); setError(r.ok ? null : r.error) }} />
-            <Button size="sm" variant="ghost" label="Withdraw" onPress={() => api.admin.cancelPolicy()} />
+            {REMOTE && pc.mine ? null : <Button testID="approve-policy" size="sm" label="Approve change" onPress={async () => { const r = await api.admin.approvePolicy(); setError(r.ok ? null : r.error) }} />}
+            {REMOTE && !pc.mine ? <Button size="sm" variant="ghost" label="Decline" onPress={async () => { const r = await remoteAdmin.declinePolicy(); setError(r.ok ? null : r.error) }} /> : <Button size="sm" variant="ghost" label="Withdraw" onPress={() => { void api.admin.cancelPolicy() }} />}
           </View>
         ) : null}
         {admin && !pc ? (
@@ -105,13 +105,14 @@ export default function Moderation() {
               testID="propose-policy"
               variant="quiet"
               label="Propose change"
-              onPress={() => {
-                const r = api.admin.proposePolicy({ expiryDays: Number(expiry || a.policy.expiryDays), restrictionHours: Number(hours || a.policy.restrictionHours) })
+              onPress={async () => {
+                const r = await api.admin.proposePolicy({ expiryDays: Number(expiry || a.policy.expiryDays), restrictionHours: Number(hours || a.policy.restrictionHours) })
                 setError(r.ok ? null : r.error)
+                if (r.ok) { setExpiry(''); setHours('') }
               }}
             />
             <Text variant="caption" muted>
-              Changes need two admins to approve (D5).
+              {REMOTE ? 'Changes need a second Admin to approve (D5). With only one Admin they apply at once.' : 'Changes need two admins to approve (D5).'}
             </Text>
           </View>
         ) : null}

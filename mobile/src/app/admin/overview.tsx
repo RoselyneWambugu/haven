@@ -69,8 +69,8 @@ export default function Overview() {
                 Approving reveals name, phone and location for 30 minutes. The member isn’t told, and it’s logged.
               </Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Button testID={`bg-approve-${b.id}`} size="sm" label="Approve" onPress={() => api.admin.decideBreakGlass(b.id, true)} />
-                <Button size="sm" variant="ghost" label="Decline" onPress={() => api.admin.decideBreakGlass(b.id, false)} />
+                <Button testID={`bg-approve-${b.id}`} size="sm" label="Approve" onPress={async () => { await api.admin.decideBreakGlass(b.id, true) }} />
+                <Button size="sm" variant="ghost" label="Decline" onPress={async () => { await api.admin.decideBreakGlass(b.id, false) }} />
               </View>
             </View>
           ))}

@@ -267,6 +267,54 @@ describe('two-person approval', () => {
   })
 })
 
+describe('strike policy and break-glass', () => {
+  it('shows the policy and a waiting change, and proposes, approves, declines and withdraws through the server', async () => {
+    const f = fake({ replies: {
+      admin_state: { ...STATE(), role: 'admin' },
+      admin_policy: { ok: true, policy: { expiryDays: 60, restrictionHours: 12 }, pending: { id: 'p1', policy: { expiryDays: 45, restrictionHours: 6 }, requestedBy: 'A. Two', mine: false } },
+      admin_propose_policy: { ok: true, proposed: true, id: 'p2' },
+    } })
+    await syncAdmin()
+    expect(getDb().admin?.policy).toEqual({ expiryDays: 60, restrictionHours: 12 })
+    expect(getDb().admin?.policyChange).toMatchObject({ id: 'p1', mine: false, requestedBy: 'A. Two', policy: { expiryDays: 45, restrictionHours: 6 } })
+    expect(await remoteAdmin.proposePolicy({ expiryDays: 30, restrictionHours: 2 })).toEqual({ ok: true, value: { proposed: true } })
+    expect(f.calls.find((c) => c.name === 'admin_propose_policy')?.args).toEqual({ p_expiry_days: 30, p_restriction_hours: 2 })
+    await remoteAdmin.approvePolicy()
+    await remoteAdmin.declinePolicy()
+    await remoteAdmin.cancelPolicy()
+    expect(f.calls.filter((c) => ['admin_decide_policy', 'admin_withdraw_policy'].includes(c.name)).map((c) => [c.name, c.args])).toEqual([
+      ['admin_decide_policy', { p_id: 'p1', p_approve: true }],
+      ['admin_decide_policy', { p_id: 'p1', p_approve: false }],
+      ['admin_withdraw_policy', { p_id: 'p1' }],
+    ])
+  })
+
+  it('passes the policy refusal back', async () => {
+    fake({ replies: { admin_propose_policy: { ok: false, code: 'range', error: 'Use 30 to 365 days.' } } })
+    expect(await remoteAdmin.proposePolicy({ expiryDays: 5, restrictionHours: 2 })).toMatchObject({ ok: false, code: 'range' })
+  })
+
+  it('requests, decides and opens a break-glass profile through the server', async () => {
+    const f = fake({ replies: {
+      admin_request_break_glass: { ok: true, id: 'b1' },
+      admin_private_profile: { ok: true, name: 'Target Member', phone: '+254712000116', location: 'Nairobi', minutesLeft: 29 },
+      admin_break_glass: { ok: true, requests: [{ id: 'b1', caseId: 'C-r:abc', target: 'QuietPine', reasonCode: 'imminent-risk', justification: 'A credible threat', requestedBy: 'M', requestedAt: now(), status: 'approved', approvedBy: 'C', expiresAt: now() + 1000 }] },
+    } })
+    expect(await remoteAdmin.requestBreakGlass('C-r:abc', { reasonCode: 'imminent-risk', justification: 'A credible threat to harm someone' })).toEqual({ ok: true, value: { id: 'b1' } })
+    expect(f.calls[0]).toEqual({ name: 'admin_request_break_glass', args: { p_case: 'C-r:abc', p_reason: 'imminent-risk', p_justification: 'A credible threat to harm someone' } })
+    await syncAdmin()
+    expect(getDb().admin?.breakGlass[0]).toMatchObject({ id: 'b1', status: 'approved' })
+    await remoteAdmin.decideBreakGlass('b1', true)
+    expect(f.calls.find((c) => c.name === 'admin_decide_break_glass')?.args).toEqual({ p_id: 'b1', p_approve: true })
+    expect(await remoteAdmin.privateProfile('b1')).toEqual({ name: 'Target Member', phone: '+254712000116', location: 'Nairobi', minutesLeft: 29 })
+  })
+
+  it('returns nothing when the approval has ended', async () => {
+    fake({ replies: { admin_private_profile: { ok: false, code: 'expired', error: 'This approval has ended.' } } })
+    expect(await remoteAdmin.privateProfile('b1')).toBeNull()
+  })
+})
+
 describe('members’ notices', () => {
   it('shows staff decisions in the member app, including the account standing', async () => {
     fake({ replies: {
