@@ -10,6 +10,7 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { DEMO_REAUTH_CODE } from '@/api/portal'
 import { REMOTE } from '@/backend/client'
+import { Withdraw } from '@/components/Withdraw'
 import { dayShort } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -41,11 +42,12 @@ export default function Earnings() {
   }
 
   return (
-    <PortalPage testID="portal-earnings" title="Earnings" sub="Fees and tax are placeholders until they’re decided.">
+    <PortalPage testID="portal-earnings" title="Earnings" sub={REMOTE ? 'After the platform fee. Tax is not worked out here.' : 'Fees and tax are placeholders until they’re decided.'}>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         <Stat value={money(e.available)} label="Available" />
         <Stat value={money(e.pending)} label="Pending (24 hour hold)" />
       </View>
+      {REMOTE ? <Withdraw refreshKey={p.sessions.length} /> : null}
       <Panel title="Sessions">
         <View style={{ flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.line }}>
           {['Date', 'Client', 'Gross', 'Fee', 'Net'].map((h, i) => (

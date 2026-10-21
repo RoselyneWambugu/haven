@@ -9,6 +9,7 @@ import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
 import { Panel, PortalPage, Stepper } from '@/components/Portal'
 import { Sheet } from '@/components/Sheet'
+import { PlatformFee } from '@/components/PlatformFee'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { ALWAYS_ON, FLAGS, HARD_RULES } from '@/lib/content'
@@ -195,6 +196,8 @@ export default function Configuration() {
           </Panel>
         </>
       ) : null}
+
+      {tab === 'limits' && REMOTE ? <PlatformFee canEdit={a?.role === 'admin'} /> : null}
 
       {tab === 'limits' ? (
         <Panel title="Limits" testID="limits">

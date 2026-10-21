@@ -235,7 +235,7 @@ export const portal = {
   earnings(): { rows: (ReturnType<typeof split> & { id: string; at: number; client: string; mode: string; available: boolean })[]; available: number | null; pending: number | null } {
     const p = getDb().portal
     const done = (p?.sessions ?? []).filter((s) => s.status === 'completed' && s.grossKes !== null).sort((a, b) => b.end - a.end)
-    const rows = done.map((s) => ({ id: s.id, at: s.end, client: s.clientName, mode: s.mode, available: isAvailable(s.end, now()), ...split(s.grossKes) }))
+    const rows = done.map((s) => ({ id: s.id, at: s.end, client: s.clientName, mode: s.mode, available: isAvailable(s.end, now()), ...split(s.grossKes, s.feeKes) }))
     const sum = (list: typeof rows) => (list.length ? list.reduce((n, r) => n + (r.net ?? 0), 0) : 0)
     return { rows, available: sum(rows.filter((r) => r.available)), pending: sum(rows.filter((r) => !r.available)) }
   },

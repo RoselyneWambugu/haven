@@ -83,9 +83,10 @@ export function detectSolicitation(text: string): boolean {
 export const PLACEHOLDER_FEE_PCT = 0.15
 export const HOLD_HOURS = 24
 
-export function split(gross: number | null): { gross: number | null; fee: number | null; net: number | null } {
+/** The fee fixed on a session when it was completed (the server's), or the placeholder rate in the demo. */
+export function split(gross: number | null, fixedFee?: number | null): { gross: number | null; fee: number | null; net: number | null } {
   if (gross === null) return { gross: null, fee: null, net: null }
-  const fee = Math.round(gross * PLACEHOLDER_FEE_PCT)
+  const fee = fixedFee ?? Math.round(gross * PLACEHOLDER_FEE_PCT)
   return { gross, fee, net: gross - fee }
 }
 

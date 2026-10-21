@@ -434,6 +434,8 @@ export interface PortalSession {
   note: string
   followUp: number | null
   grossKes: number | null
+  /** The platform fee fixed on the session when it was completed. Only on the real backend. */
+  feeKes?: number | null
 }
 
 export interface PortalThread {

@@ -6,6 +6,8 @@ import { Badge } from '@/components/Controls'
 import { Panel, PortalPage, Stat } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
+import { REMOTE } from '@/backend/client'
+import { StaffPayouts } from '@/components/StaffPayouts'
 import { useDb } from '@/store/db'
 
 /** Billing staff see the pen name and the payment reference. A full name appears only when needed to resolve a dispute, and that view is logged (ADM-12). */
@@ -48,6 +50,7 @@ export default function Billing() {
           </View>
         ))}
       </Panel>
+      {REMOTE ? <StaffPayouts /> : null}
     </PortalPage>
   )
 }
