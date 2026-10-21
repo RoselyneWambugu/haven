@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { adminRequestOtp, adminVerifyOtp, remoteAdmin, stopAdminPolling, syncAdmin } from '../src/backend/remoteAdmin'
+import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin, remoteAdmin, stopAdminPolling, syncAdmin } from '../src/backend/remoteAdmin'
 import { appealNotice, syncNotices } from '../src/backend/remoteNotices'
 import { stopPolling } from '../src/backend/remoteChat'
 import { freshState, getDb, update } from '../src/store/db'
@@ -83,6 +83,39 @@ describe('staff sign-in', () => {
     const r = await adminVerifyOtp('000000')
     expect(r.ok).toBe(false)
     expect(getDb().admin).toBeNull()
+  })
+})
+
+describe('the first Admin', () => {
+  it('keeps the sign-in open for setup when nobody is an Admin yet', async () => {
+    const f = fake({ replies: { staff_me: { ok: false, code: 'not-staff', error: 'no' }, admin_state: { ok: false, code: 'not-staff' }, setup_open: { ok: true, open: true } } })
+    await adminRequestOtp('+254712000091')
+    const r = await adminVerifyOtp('123456')
+    expect(r).toMatchObject({ ok: false, code: 'setup' })
+    expect(f.auth.signedOut).toBe(0)
+  })
+
+  it('signs out when setup is closed and the number isn’t staff', async () => {
+    const f = fake({ replies: { staff_me: { ok: false, code: 'not-staff', error: 'no' }, admin_state: { ok: false, code: 'not-staff' }, setup_open: { ok: true, open: false } } })
+    await adminRequestOtp('+254712000091')
+    expect(await adminVerifyOtp('123456')).toMatchObject({ ok: false, code: 'not-staff' })
+    expect(f.auth.signedOut).toBe(1)
+  })
+
+  it('claims with the code and opens the dashboard', async () => {
+    const f = fake({ replies: { admin_state: { ...STATE(), role: 'admin' } } })
+    const r = await claimFirstAdmin('First Admin', '4D22-70D4-F963-4863')
+    expect(r.ok).toBe(true)
+    expect(f.calls[0]).toEqual({ name: 'claim_first_admin', args: { p_name: 'First Admin', p_code: '4D22-70D4-F963-4863' } })
+    expect(getDb().admin?.signedIn).toBe(true)
+  })
+
+  it('shows a wrong code and stays signed in, but signs out once setup locks', async () => {
+    const f = fake({ replies: { claim_first_admin: { ok: false, code: 'code', error: 'That setup code doesn’t match.' } } })
+    expect(await claimFirstAdmin('First Admin', 'x')).toMatchObject({ ok: false, code: 'code' })
+    expect(f.auth.signedOut).toBe(0)
+    fake({ replies: { claim_first_admin: { ok: false, code: 'locked', error: 'Too many wrong codes.' } } })
+    await claimFirstAdmin('First Admin', 'x')
   })
 })
 

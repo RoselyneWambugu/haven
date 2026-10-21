@@ -3,7 +3,7 @@ import { View } from 'react-native'
 import { router } from 'expo-router'
 import { api } from '@/api'
 import { REMOTE } from '@/backend/client'
-import { adminRequestOtp, adminVerifyOtp } from '@/backend/remoteAdmin'
+import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin } from '@/backend/remoteAdmin'
 import { normaliseKenyanPhone } from '@/lib/identity'
 import { DEMO_MFA, STAFF } from '@/api/admin'
 import { useDb } from '@/store/db'
@@ -23,6 +23,9 @@ export default function AdminSignIn() {
   const [phone, setPhone] = useState('')
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [setup, setSetup] = useState(false)
+  const [setupName, setSetupName] = useState('')
+  const [setupCode, setSetupCode] = useState('')
   const roster = useDb((s) => s.admin?.staff) ?? STAFF.map((s, i) => ({ id: `st${i}`, ...s, active: true, lastSignInAt: null }))
   const role = roster.find((s) => s.name === name)?.role ?? 'moderator'
 
@@ -47,8 +50,41 @@ export default function AdminSignIn() {
     setBusy(true)
     const r = await adminVerifyOtp(code)
     setBusy(false)
+    if (!r.ok && r.code === 'setup') { setError(null); return setSetup(true) }
     if (!r.ok) return setError(r.error)
     router.replace('/admin/overview' as never)
+  }
+
+  async function claim() {
+    setBusy(true)
+    const r = await claimFirstAdmin(setupName, setupCode)
+    setBusy(false)
+    if (!r.ok) {
+      if (r.code === 'closed' || r.code === 'locked') { setSetup(false); setSent(false); setCode('') }
+      return setError(r.error)
+    }
+    router.replace('/admin/overview' as never)
+  }
+
+  if (REMOTE && setup) {
+    return (
+      <View testID="admin-sign-in" style={{ flex: 1, alignItems: 'center', padding: 24, paddingTop: 40 }}>
+        <View style={{ width: '100%', maxWidth: 480, gap: 16 }}>
+          <Text variant="display">Set up Echo</Text>
+          <Text variant="body" muted>
+            There are no Admins yet. Enter your name and the one-time setup code to become the first Admin.
+          </Text>
+          <Panel title="First Admin">
+            <Field testID="setup-name" label="Your name" value={setupName} onChangeText={(v) => { setSetupName(v); setError(null) }} />
+            <Field testID="setup-code" label="Setup code" placeholder="XXXX-XXXX-XXXX-XXXX" value={setupCode} onChangeText={(v) => { setSetupCode(v); setError(null) }} autoCapitalize="characters" error={error} />
+            <Button testID="setup-go" label="Become the first Admin" disabled={busy} onPress={claim} />
+          </Panel>
+          <Banner tone="green" icon="lock">
+            The code works once. After this, Admins add everyone else from the Roles module.
+          </Banner>
+        </View>
+      </View>
+    )
   }
 
   if (REMOTE) {

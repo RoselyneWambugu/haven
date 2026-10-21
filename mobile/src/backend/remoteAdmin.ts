@@ -123,10 +123,30 @@ export async function adminVerifyOtp(code: string): Promise<Res> {
   update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [], portal: null })
   const me = await call('staff_me')
   if (!me.ok || !(await syncAdmin())) {
+    // No Admin exists yet: keep the sign-in so this person can finish setup with the one-time code.
+    if (me.code === 'not-staff' && (await setupOpen())) return { ok: false, error: 'Setup is open. Enter your name and the setup code.', code: 'setup' }
     await supabase().auth.signOut()
     update({ admin: null })
     return { ok: false, error: 'This number isn’t linked to a staff account. Ask an Admin to link it.', code: 'not-staff' }
   }
+  startAdminPolling()
+  return { ok: true, value: undefined }
+}
+
+async function setupOpen(): Promise<boolean> {
+  const { data } = await supabase().rpc('setup_open')
+  return (data as { open?: boolean } | null)?.open === true
+}
+
+/** The first Admin: while nobody is an Admin, the one-time setup code makes the person signed in one. */
+export async function claimFirstAdmin(name: string, code: string): Promise<Res> {
+  const r = await call('claim_first_admin', { p_name: name, p_code: code })
+  if (!r.ok) {
+    if (r.code === 'closed' || r.code === 'locked') await supabase().auth.signOut()
+    return res(r)
+  }
+  await call('staff_me')
+  if (!(await syncAdmin())) return { ok: false, error: OFFLINE }
   startAdminPolling()
   return { ok: true, value: undefined }
 }
