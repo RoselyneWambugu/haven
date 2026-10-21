@@ -333,7 +333,7 @@ describe('wellbeing and the rota', () => {
     await remoteTeam.handOn('C-r:abc')
     remoteTeam.askForSupport()
     await Promise.resolve()
-    const sent = f.calls.filter((c) => c.name !== 'admin_state' && !c.name.startsWith('admin_policy') && c.name !== 'admin_break_glass' && c.name !== 'admin_wellbeing' && c.name !== 'admin_billing' && c.name !== 'admin_help' && c.name !== 'admin_groups')
+    const sent = f.calls.filter((c) => c.name !== 'admin_state' && !c.name.startsWith('admin_policy') && c.name !== 'admin_break_glass' && c.name !== 'admin_wellbeing' && c.name !== 'admin_billing' && c.name !== 'admin_help' && c.name !== 'admin_groups' && c.name !== 'admin_flags')
     expect(sent.map((c) => [c.name, c.args])).toEqual([
       ['admin_set_wellbeing', { p_daily: 10, p_every: 4, p_minutes: 5 }],
       ['admin_start_break', {}],
@@ -388,5 +388,17 @@ describe('members’ notices', () => {
     expect(f.calls).toHaveLength(0)
     expect((await appealNotice('n1', 'I was joking and it was misread')).ok).toBe(true)
     expect(f.calls[0]).toEqual({ name: 'appeal_notice', args: { p_notice: 'n1', p_text: 'I was joking and it was misread' } })
+  })
+})
+
+describe('automated flags', () => {
+  it('shows the server’s flag log in place of the demo flags, and keeps it when the server can’t be reached', async () => {
+    const flag = { id: 'F-7001', category: 'Harassment', confidence: 0.72, model: 'rules-v1', outcome: 'open', reviewMinutes: null }
+    fake({ replies: { admin_flags: { ok: true, flags: [flag] } } })
+    await syncAdmin()
+    expect(getDb().admin?.flags).toEqual([flag])
+    fake({ replies: { admin_flags: null } })
+    await syncAdmin()
+    expect(getDb().admin?.flags).toEqual([flag])
   })
 })

@@ -1,6 +1,6 @@
 import { admin as mockAdmin, seed } from '@/api/admin'
 import { team as mockTeam } from '@/api/team'
-import type { AdminRefund, Applicant, Exposure, RotaWeek, WellbeingCfg, AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
+import type { AdminFlag, AdminRefund, Applicant, Exposure, RotaWeek, WellbeingCfg, AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
 import { now } from '@/lib/clock'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
@@ -51,6 +51,7 @@ function toState(d: RemoteAdmin, prev: AdminState | null): AdminState {
     cases: d.cases.map(({ openedAtIso: _iso, ...c }) => c),
     users: d.users,
     appeals: d.appeals,
+    flags: prev ? base.flags : [],
     audit: d.audit,
     held: d.held,
     revealed: d.revealed.map((k) => `${d.name}|${k}`),
@@ -70,7 +71,7 @@ export function syncAdmin(): Promise<boolean> {
     if (d.ok !== true || !d.name) return false
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
     await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling(), syncStaffHelp()])
-    if (d.role === 'moderator' || d.role === 'clinical' || d.role === 'admin') await syncStaffGroups()
+    if (d.role === 'moderator' || d.role === 'clinical' || d.role === 'admin') await Promise.all([syncStaffGroups(), syncFlags()])
     if (d.role === 'clinical' || d.role === 'admin') await Promise.all([syncLinks(), syncApplicants()])
     if (d.role === 'admin') await Promise.all([syncInvites(), syncAdminConfig()])
     if (d.role === 'admin' || d.role === 'billing') await syncFeedback()
@@ -79,6 +80,13 @@ export function syncAdmin(): Promise<boolean> {
     syncing = null
   })
   return syncing
+}
+
+async function syncFlags(): Promise<void> {
+  const { data } = await supabase().rpc('admin_flags')
+  const d = data as { ok?: boolean; flags?: AdminFlag[] } | null
+  if (!d?.ok || !d.flags) return
+  update((s) => (s.admin ? { admin: { ...s.admin, flags: d.flags! } } : {}))
 }
 
 async function syncLinks(): Promise<void> {

@@ -75,7 +75,7 @@ export default function Analytics() {
     >
       {live ? (
         <Banner tone="green" icon="check" title="Live data">
-          Counted from real use, with groups under {MIN_CELL} hidden. Installs and directory views are not tracked yet, so they show as zero. The AI-flag figures in Safety are still sample data.
+          Counted from real use, with groups under {MIN_CELL} hidden. Installs and directory views are not tracked yet, so they show as zero.
         </Banner>
       ) : (
         <Banner tone="sun" icon="clock" title="Sample data">
