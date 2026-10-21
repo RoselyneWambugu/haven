@@ -214,9 +214,9 @@ language plpgsql immutable set search_path = ''
 as $$
 declare parts text[] := '{}'; list text;
 begin
-  if 'phone' = any (p_reasons) then parts := parts || 'phone numbers'; end if;
-  if p_reasons && array['link', 'handle', 'email'] then parts := parts || 'links and contact details'; end if;
-  if 'address' = any (p_reasons) then parts := parts || 'addresses'; end if;
+  if 'phone' = any (p_reasons) then parts := array_append(parts, 'phone numbers'); end if;
+  if p_reasons && array['link', 'handle', 'email'] then parts := array_append(parts, 'links and contact details'); end if;
+  if 'address' = any (p_reasons) then parts := array_append(parts, 'addresses'); end if;
   list := case when cardinality(parts) = 0 then 'contact details' else array_to_string(parts, ', ') end;
   return upper(left(list, 1)) || substr(list, 2) || ' can’t be shared here. It keeps everyone anonymous.';
 end;
