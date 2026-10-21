@@ -85,8 +85,8 @@ export default function Chat() {
   const closed = conv.ended || readOnly
   const distress = detectDistress(text).level
 
-  function send() {
-    const r = api.chat.send(conv!.id, text)
+  async function send() {
+    const r = await api.chat.send(conv!.id, text)
     if (!r.ok) {
       if (r.code !== 'empty') setError(r.error)
       return

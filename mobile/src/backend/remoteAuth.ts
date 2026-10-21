@@ -8,6 +8,7 @@ import { emptyRegistration, getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
 import { toAccount, type RemoteAccount } from './map'
+import { startPolling, stopPolling } from './remoteChat'
 
 const MIN = 60_000
 
@@ -114,6 +115,7 @@ export const remoteAuth = {
       return { ok: true, value: { next: 'no-account' } }
     }
     update({ signedIn: true, locked: false })
+    startPolling()
     if (getDb().account?.deletionRequestedAt) {
       await rpc('cancel_account_deletion')
       await loadAccount()
@@ -150,6 +152,7 @@ export const remoteAuth = {
     await loadAccount()
     markCurrent(t.ok ? String(t.device_id) : null)
     update({ signedIn: true, locked: false, reg: null, otp: null })
+    startPolling()
     return { ok: true, value: undefined }
   },
 
@@ -161,7 +164,9 @@ export const remoteAuth = {
 
   signOut(): void {
     auth.signOut()
-    update({ account: null })
+    stopPolling()
+    // What was fetched for this member must not stay on the device.
+    update({ account: null, conversations: [], match: { state: 'idle' } })
     void supabase().auth.signOut()
   },
 

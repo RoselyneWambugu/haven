@@ -27,8 +27,9 @@ export default function Match() {
 
   useEffect(() => {
     if (state.state === 'idle') {
-      const r = api.match.start()
-      if (!r.ok) setError({ text: r.error, code: r.code })
+      void Promise.resolve(api.match.start()).then((r) => {
+        if (!r.ok) setError({ text: r.error, code: r.code })
+      })
     }
     // Only on arrival.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -104,10 +105,10 @@ export default function Match() {
           <Button
             testID="match-resume"
             label="Turn matching back on"
-            onPress={() => {
+            onPress={async () => {
               api.match.setOpenToChats(true)
               setError(null)
-              const r = api.match.start()
+              const r = await api.match.start()
               if (!r.ok) setError({ text: r.error, code: r.code })
             }}
           />

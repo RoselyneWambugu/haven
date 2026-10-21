@@ -6,6 +6,7 @@
 import { auth as mockAuth } from './auth'
 import { REMOTE } from '@/backend/client'
 import { remoteAccountActions, remoteAuth } from '@/backend/remoteAuth'
+import { remoteChat, remoteMatch, remoteReport } from '@/backend/remoteChat'
 import { billing, sessions } from './care'
 import { demo } from './demo'
 import { groups } from './groups'
@@ -14,7 +15,7 @@ import { feedback } from './feedback'
 import { admin } from './admin'
 import { config, resources, suggestService } from './content'
 import { applyPortalToDirectory, applyStandingToDirectory, portal } from './portal'
-import { chat, forum, match, report } from './social'
+import { chat as mockChat, forum, match as mockMatch, report as mockReport } from './social'
 import { account as mockAccount, tickets } from './support'
 import { spaces } from './spaces'
 import { team } from './team'
@@ -25,6 +26,10 @@ import { therapistAppeals } from './therapistAppeals'
  * because an `await` of an immediate answer is harmless, and the tests read the mock's answers directly.
  */
 const auth = (REMOTE ? remoteAuth : mockAuth) as typeof mockAuth
+
+const match = (REMOTE ? remoteMatch : mockMatch) as typeof mockMatch
+const chat = (REMOTE ? remoteChat : mockChat) as typeof mockChat
+const report = (REMOTE ? remoteReport : mockReport) as typeof mockReport
 
 const account: typeof mockAccount = REMOTE
   ? {
