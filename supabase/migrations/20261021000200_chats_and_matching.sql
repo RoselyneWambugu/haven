@@ -173,29 +173,29 @@ begin
     end if;
     cur := ''; spelled := false;
   end loop;
-  if phone then reasons := reasons || 'phone'; end if;
+  if phone then reasons := array_append(reasons, 'phone'); end if;
 
   -- Links.
   if t ~ '(https?://|ftp://|www\.)'
      or t ~ ('[a-z0-9][a-z0-9-]{1,61}' || dot || '(' || strong || ')\y')
      or t ~ ('[a-z0-9][a-z0-9-]{1,61}' || dot || '(' || weak || ')(?=[/:?#])')
      or t ~ '\y(wa\.me|t\.me|bit\.ly|tinyurl\.com|linktr\.ee|youtu\.be)\y' then
-    reasons := reasons || 'link';
+    reasons := array_append(reasons, 'link');
   end if;
 
   -- Email addresses, including "name at gmail dot com".
   if t ~ '[a-z0-9._%+-]+\s*(@|\(at\)|\[at\])\s*[a-z0-9-]+\s*(\.|\(dot\)|\[dot\]|\s+dot\s+)\s*[a-z]{2,}'
      or t ~ '\y[a-z0-9._-]{3,}\s+at\s+(gmail|yahoo|outlook|hotmail|icloud|proton|protonmail)\y' then
-    reasons := reasons || 'email';
+    reasons := array_append(reasons, 'email');
   end if;
 
   -- Social handles and "add me on <platform>".
   if t ~ '(^|\s)@[a-z0-9_.]{3,}' then
-    reasons := reasons || 'handle';
+    reasons := array_append(reasons, 'handle');
   elsif t ~ ('\y(' || platforms || ')\y') then
     foreach s in array regexp_split_to_array(t, '[.!?\n]+') loop
       if s ~ ('\y(' || platforms || ')\y') and s ~ ('(^|[^a-z])(' || verbs || ')([^a-z]|$)') then
-        reasons := reasons || 'handle';
+        reasons := array_append(reasons, 'handle');
         exit;
       end if;
     end loop;
@@ -203,7 +203,7 @@ begin
 
   -- Addresses and landmarks.
   foreach s in array addr loop
-    if t ~ s then reasons := reasons || 'address'; exit; end if;
+    if t ~ s then reasons := array_append(reasons, 'address'); exit; end if;
   end loop;
   return reasons;
 end;
