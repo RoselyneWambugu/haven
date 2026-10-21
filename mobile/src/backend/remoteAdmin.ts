@@ -1,11 +1,12 @@
 import { admin as mockAdmin, seed } from '@/api/admin'
 import { team as mockTeam } from '@/api/team'
-import type { AdminRefund, Exposure, RotaWeek, WellbeingCfg, AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
+import type { AdminRefund, Applicant, Exposure, RotaWeek, WellbeingCfg, AdminAppeal, AdminCase, AdminState, AdminUser, AuditEntry, BreakGlassRequest, CaseAction, HeldPost, Res, StaffAccount, StaffRole } from '@/api/types'
 import { now } from '@/lib/clock'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
 import { stopPolling } from './remoteChat'
+import { syncFeedback } from './remoteFeedback'
 import { syncStaffHelp } from './remoteHelp'
 import { stopPortalPolling } from './remotePortal'
 
@@ -67,8 +68,9 @@ export function syncAdmin(): Promise<boolean> {
     if (d.ok !== true || !d.name) return false
     update((s) => ({ admin: toState(d as RemoteAdmin, s.admin ?? null) }))
     await Promise.all([syncPolicy(), syncBreakGlass(), syncWellbeing(), syncBilling(), syncStaffHelp()])
-    if (d.role === 'clinical' || d.role === 'admin') await syncLinks()
+    if (d.role === 'clinical' || d.role === 'admin') await Promise.all([syncLinks(), syncApplicants()])
     if (d.role === 'admin') await syncInvites()
+    if (d.role === 'admin' || d.role === 'billing') await syncFeedback()
     return true
   })().finally(() => {
     syncing = null
@@ -103,6 +105,13 @@ async function syncBilling(): Promise<void> {
   const d = data as { ok?: boolean; refunds?: AdminRefund[]; unmatched?: number; failed?: number } | null
   if (!d?.ok) return
   update((s) => (s.admin ? { admin: { ...s.admin, refunds: d.refunds ?? [], unmatchedPayments: d.unmatched ?? 0, failedPayments: d.failed ?? 0 } } : {}))
+}
+
+async function syncApplicants(): Promise<void> {
+  const { data } = await supabase().rpc('admin_applicants')
+  const d = data as { ok?: boolean; applicants?: Applicant[] } | null
+  if (!d?.ok || !d.applicants) return
+  update((s) => (s.admin ? { admin: { ...s.admin, applicants: d.applicants! } } : {}))
 }
 
 async function syncBreakGlass(): Promise<void> {
@@ -304,6 +313,11 @@ export const remoteAdmin = {
     return { name: d.name ?? '', phone: d.phone ?? '', location: d.location ?? '', minutesLeft: d.minutesLeft ?? 0 }
   },
 
+  applicants(): Applicant[] {
+    return getDb().admin?.applicants ?? []
+  },
+  verify: (id: string, decision: 'approved' | 'info' | 'rejected', message: string, checklist: Applicant['checklist']) =>
+    act('admin_verify_applicant', { p_id: id, p_decision: decision, p_message: message, p_checklist: checklist }),
   decideRefund: (id: string, approve: boolean) => act('admin_decide_refund', { p_id: id, p_approve: approve }),
 
   users(): AdminUser[] {

@@ -9,6 +9,7 @@ import { remoteAccountActions, remoteAuth } from '@/backend/remoteAuth'
 import { remoteChat, remoteMatch, remoteReport } from '@/backend/remoteChat'
 import { remoteBilling } from '@/backend/remoteBilling'
 import { remoteResources, remoteSuggestService, remoteTickets } from '@/backend/remoteHelp'
+import { remoteFeedback } from '@/backend/remoteFeedback'
 import { appealNotice } from '@/backend/remoteNotices'
 import { remoteAdmin, remoteTeam } from '@/backend/remoteAdmin'
 import { remoteSessions } from '@/backend/remoteTherapists'
@@ -18,7 +19,7 @@ import { billing as mockBilling, sessions as mockSessions } from './care'
 import { demo } from './demo'
 import { groups } from './groups'
 import { notify } from './notify'
-import { feedback } from './feedback'
+import { feedback as mockFeedback } from './feedback'
 import { admin as mockAdmin } from './admin'
 import { config, resources as mockResources, suggestService as mockSuggestService } from './content'
 import { applyPortalToDirectory, applyStandingToDirectory, portal as mockPortal } from './portal'
@@ -43,6 +44,7 @@ const forum = (REMOTE ? remoteForum : mockForum) as typeof mockForum
 const spaces = (REMOTE ? remoteSpaces : mockSpaces) as typeof mockSpaces
 const resources = (REMOTE ? remoteResources : mockResources) as typeof mockResources
 const suggestService = (REMOTE ? remoteSuggestService : mockSuggestService) as typeof mockSuggestService
+const feedback = (REMOTE ? remoteFeedback : mockFeedback) as typeof mockFeedback
 const tickets = (REMOTE ? remoteTickets : mockTickets) as typeof mockTickets
 const team = (REMOTE ? remoteTeam : mockTeam) as typeof mockTeam
 const admin = (REMOTE ? remoteAdmin : mockAdmin) as typeof mockAdmin

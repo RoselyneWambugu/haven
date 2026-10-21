@@ -8,12 +8,19 @@ import { Field } from '@/components/Field'
 import { Panel } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
+import { REMOTE } from '@/backend/client'
+import { RemoteApply } from '@/components/RemoteApply'
 import { useDb } from '@/store/db'
 
 const STEPS = ['Submitted', 'Under review', 'Decision'] as const
 
 /** Application and verification (PRD THR-1, THR-2). Documents are for reviewers only. The profile is public, and consent says so. */
 export default function Apply() {
+  if (REMOTE) return <RemoteApply />
+  return <MockApply />
+}
+
+function MockApply() {
   const app = useDb((s) => s.portal?.application ?? 'none')
   const [docs, setDocs] = useState<string[]>([])
   const [consentPublic, setConsentPublic] = useState(false)

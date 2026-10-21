@@ -58,8 +58,8 @@ export default function VerifyTherapist() {
             <Button
               testID="verify-submit"
               label="Submit decision"
-              onPress={() => {
-                const r = api.admin.verify(t.id, decision, message, checks)
+              onPress={async () => {
+                const r = await api.admin.verify(t.id, decision, message, checks)
                 if (!r.ok) return setError(r.error)
                 goBack('/admin/therapists')
               }}

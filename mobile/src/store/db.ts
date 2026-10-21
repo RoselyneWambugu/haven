@@ -35,6 +35,8 @@ export interface OtpState {
 
 export interface DbState {
   account: Account | null
+  /** A therapist's own application, on the real backend. */
+  application: { status: 'none' | 'pending' | 'info' | 'approved' | 'rejected'; message: string; name: string } | null
   /** Persisted in secure storage: whether a person is signed in on this device. */
   signedIn: boolean
   locked: boolean
@@ -109,6 +111,7 @@ export function freshState(): DbState {
     openConversationId: null,
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },
     portal: null,
+    application: null,
     admin: null,
     content: defaultContent(),
   }

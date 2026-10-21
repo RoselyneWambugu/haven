@@ -649,6 +649,8 @@ export interface AdminState {
   /** Live analytics from the server. Only on the real backend. */
   analytics?: { days: import('@/lib/analytics').Day[]; cohorts: import('@/lib/analytics').Cohort[]; who: import('@/lib/analytics').Breakdown; reviewMinutes: number[] }
   failedPayments?: number
+  /** Felt-heard shares worked out by the server, with small groups hidden. Only on the real backend. */
+  heardSummary?: { answered: number | null; skipped: number | null; shares: (number | null)[]; positive: number | null }
   therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string }>
 }
 
