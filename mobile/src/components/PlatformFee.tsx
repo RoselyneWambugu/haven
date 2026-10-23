@@ -4,12 +4,13 @@ import { Button } from '@/components/Button'
 import { Panel, Stepper } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { decideFee, loadFee, proposeFee, withdrawFee, type FeeState } from '@/backend/remoteFees'
+import { decideFee, loadFee, proposeFee, setMinPayout, withdrawFee, type FeeState } from '@/backend/remoteFees'
 
 /** The share of each completed session that stays with Echo. A change needs a second Admin; sessions already completed keep the fee they had. */
 export function PlatformFee({ canEdit }: { canEdit: boolean }) {
   const [fee, setFee] = useState<FeeState | null>(null)
   const [pct, setPct] = useState<number | null>(null)
+  const [min, setMin] = useState<number | null>(null)
   const [msg, setMsg] = useState<{ tone: 'green' | 'clay'; text: string } | null>(null)
 
   const load = useCallback(async () => {
@@ -17,6 +18,7 @@ export function PlatformFee({ canEdit }: { canEdit: boolean }) {
     if (f) {
       setFee(f)
       setPct((p) => p ?? f.pct)
+      setMin((m) => m ?? f.minPayoutKes)
     }
   }, [])
   useEffect(() => {
@@ -63,6 +65,15 @@ export function PlatformFee({ canEdit }: { canEdit: boolean }) {
             <Button testID="fee-propose" size="sm" label="Propose this fee" disabled={(pct ?? fee.pct) === fee.pct} onPress={() => run(proposeFee(pct ?? fee.pct), 'Sent for a second Admin to approve.')} />
           </View>
         </>
+      ) : null}
+      <Text variant="small" muted>
+        Therapists can't withdraw less than this at once. Zero means no minimum.
+      </Text>
+      <Stepper label="Smallest withdrawal (KES)" value={min ?? fee.minPayoutKes} min={0} max={100000} step={100} onChange={setMin} />
+      {canEdit ? (
+        <View style={{ flexDirection: 'row' }}>
+          <Button testID="min-payout-save" size="sm" label="Save smallest withdrawal" disabled={(min ?? fee.minPayoutKes) === fee.minPayoutKes} onPress={() => run(setMinPayout(min ?? fee.minPayoutKes), 'Saved.')} />
+        </View>
       ) : null}
     </Panel>
   )

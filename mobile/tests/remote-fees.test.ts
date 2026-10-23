@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { decideFee, loadEarnings, loadFee, loadStaffPayouts, markPayoutPaid, proposeFee, requestPayout } from '../src/backend/remoteFees'
+import { decideFee, loadEarnings, loadFee, loadStaffPayouts, markPayoutPaid, proposeFee, requestPayout, setMinPayout } from '../src/backend/remoteFees'
 import { split } from '../src/lib/portal'
 
 function fake(replies: Record<string, unknown> = {}) {
@@ -50,7 +50,7 @@ describe('the therapist', () => {
 describe('staff', () => {
   it('reads the fee and a change waiting, proposes, and decides', async () => {
     const calls = fake({ admin_fee: { ok: true, pct: 15, pending: { id: 'c1', pct: 20, requestedBy: 'A. Admin', mine: false } }, admin_propose_fee: { ok: true, proposed: true } })
-    expect(await loadFee()).toEqual({ pct: 15, pending: { id: 'c1', pct: 20, requestedBy: 'A. Admin', mine: false } })
+    expect(await loadFee()).toEqual({ pct: 15, minPayoutKes: 0, pending: { id: 'c1', pct: 20, requestedBy: 'A. Admin', mine: false } })
     const p = await proposeFee(20)
     expect(p.ok && p.value.applied).toBe(false)
     await decideFee('c1', true)
@@ -68,5 +68,28 @@ describe('staff', () => {
     fake({ admin_mark_payout_paid: { ok: false, code: 'reference', error: 'Add the M-Pesa or bank reference for the payment.' } })
     const r = await markPayoutPaid('P-1', 'x')
     expect(r.ok).toBe(false)
+  })
+})
+
+describe('claw-back and the smallest withdrawal', () => {
+  it('reads what is owed back and the minimum, and saves a new minimum', async () => {
+    const calls = fake({ portal_earnings: { ok: true, feePct: 15, minPayoutKes: 500, owedBackKes: 850, availableNet: 0, availableSessions: 0, pendingNet: 0, payouts: [] } })
+    const e = await loadEarnings()
+    expect(e?.owedBackKes).toBe(850)
+    expect(e?.minPayoutKes).toBe(500)
+    await setMinPayout(1000)
+    expect(calls.find((c) => c.name === 'admin_set_min_payout')?.args).toEqual({ p_kes: 1000 })
+  })
+
+  it('shows the minimum in the fee state', async () => {
+    fake({ admin_fee: { ok: true, pct: 15, minPayoutKes: 500, pending: null } })
+    expect((await loadFee())?.minPayoutKes).toBe(500)
+  })
+
+  it('shows the server’s reason when a withdrawal is below the minimum', async () => {
+    fake({ portal_request_payout: { ok: false, code: 'minimum', error: 'The smallest withdrawal is KES 1000. You have KES 850 available.' } })
+    const r = await requestPayout()
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.code).toBe('minimum')
   })
 })

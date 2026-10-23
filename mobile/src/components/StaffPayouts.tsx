@@ -51,7 +51,7 @@ export function StaffPayouts() {
           {p.status === 'paid' && p.reference ? <Text variant="caption" muted>Reference {p.reference}</Text> : null}
           {open === p.id ? (
             <View style={{ gap: 8 }}>
-              <Text variant="caption" muted>Gross {money(p.grossKes)}, platform fee {money(p.feeKes)}, net {money(p.netKes)}.</Text>
+              <Text variant="caption" muted>Gross {money(p.grossKes)}, platform fee {money(p.feeKes)}{p.adjustmentKes ? `, refunded sessions taken off ${money(p.adjustmentKes)}` : ''}, net {money(p.netKes)}.</Text>
               <Field testID="payout-ref" label="M-Pesa or bank reference" value={ref} onChangeText={(v) => { setRef(v); setError(null) }} error={error} />
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Button testID="payout-confirm" size="sm" label="Mark paid" onPress={() => pay(p.id)} />

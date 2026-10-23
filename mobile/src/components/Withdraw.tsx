@@ -44,12 +44,14 @@ export function Withdraw({ refreshKey }: { refreshKey?: unknown }) {
         </Text>
         <Button testID="withdraw-send" size="sm" label="Withdraw" disabled={busy || e.availableNet <= 0} onPress={withdraw} />
       </View>
+      {e.owedBackKes > 0 ? <Banner tone="sun" icon="wallet" title={`${money(e.owedBackKes)} is being taken off`}>A session you were paid for was refunded to the member. It comes off your next withdrawal.</Banner> : null}
+      {e.minPayoutKes > 0 ? <Text variant="caption" muted>The smallest withdrawal is {money(e.minPayoutKes)}.</Text> : null}
       {e.pendingNet > 0 ? <Text variant="caption" muted>{money(e.pendingNet)} more clears within 24 hours.</Text> : null}
       {msg ? <Banner tone={msg.tone}>{msg.text}</Banner> : null}
       {e.payouts.map((p) => (
         <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <Text variant="small" style={{ flex: 1, minWidth: 180 }}>
-            {p.id} · {money(p.netKes)} · asked {dayShort(p.requestedAt)}{p.reference ? ` · ref ${p.reference}` : ''}
+            {p.id} · {money(p.netKes)}{p.adjustmentKes ? ` (after ${money(p.adjustmentKes)} taken off for a refund)` : ''} · asked {dayShort(p.requestedAt)}{p.reference ? ` · ref ${p.reference}` : ''}
           </Text>
           <Badge tone={p.status === 'paid' ? 'green' : 'plain'} label={p.status === 'paid' ? 'Paid' : 'With billing'} />
         </View>

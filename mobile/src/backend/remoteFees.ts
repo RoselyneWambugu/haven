@@ -11,9 +11,9 @@ async function call<T extends Reply = Reply>(fn: string, args?: Record<string, u
 }
 const res = (r: Reply): Res => (r.ok ? { ok: true, value: undefined } : { ok: false, error: r.error ?? OFFLINE, code: r.code })
 
-export interface Payout { id: string; netKes: number; grossKes: number; feeKes: number; sessions: number; method: string; status: 'requested' | 'paid'; requestedAt: number; paidAt?: number | null; reference?: string | null }
-export interface Earnings { feePct: number; availableNet: number; availableSessions: number; pendingNet: number; payouts: Payout[] }
-export interface FeeState { pct: number; pending: { id: string; pct: number; requestedBy: string; mine: boolean } | null }
+export interface Payout { id: string; netKes: number; grossKes: number; feeKes: number; adjustmentKes?: number; sessions: number; method: string; status: 'requested' | 'paid'; requestedAt: number; paidAt?: number | null; reference?: string | null }
+export interface Earnings { feePct: number; minPayoutKes: number; owedBackKes: number; availableNet: number; availableSessions: number; pendingNet: number; payouts: Payout[] }
+export interface FeeState { pct: number; minPayoutKes: number; pending: { id: string; pct: number; requestedBy: string; mine: boolean } | null }
 export interface StaffPayout extends Payout { therapist: string; paidBy?: string | null }
 
 // ---------- the therapist ----------
@@ -34,13 +34,14 @@ export async function requestPayout(): Promise<Res<{ netKes: number }>> {
 
 export async function loadFee(): Promise<FeeState | null> {
   const d = await call<Reply & Partial<FeeState>>('admin_fee')
-  return d.ok && d.pct !== undefined ? { pct: d.pct, pending: d.pending ?? null } : null
+  return d.ok && d.pct !== undefined ? { pct: d.pct, minPayoutKes: d.minPayoutKes ?? 0, pending: d.pending ?? null } : null
 }
 
 export async function proposeFee(pct: number): Promise<Res<{ applied: boolean }>> {
   const r = await call<Reply & { applied?: boolean }>('admin_propose_fee', { p_pct: pct })
   return r.ok ? { ok: true, value: { applied: r.applied === true } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
 }
+export const setMinPayout = async (kes: number): Promise<Res> => res(await call('admin_set_min_payout', { p_kes: kes }))
 export const decideFee = async (id: string, approve: boolean): Promise<Res> => res(await call('admin_decide_fee', { p_id: id, p_approve: approve }))
 export const withdrawFee = async (id: string): Promise<Res> => res(await call('admin_withdraw_fee', { p_id: id }))
 
