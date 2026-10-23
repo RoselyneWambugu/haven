@@ -177,7 +177,6 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-35 | Track installs and directory views for analytics, and history for events before v0.45 | v0.45 |
 | Q-33 | A break from reviewing (the 20 a day limit is enforced; breaks are not), and heavy-queue rota that rotates by itself | v0.39 |
 | Q-28 | Pay therapists: statements and payouts are worked out in the app from finished sessions; nothing is paid out | v0.38 |
-| Q-05 | Remove demo hooks (`window.__echo`, Demo tools, scripted replies) when a real backend is connected | v0.8 |
 
 ---
 

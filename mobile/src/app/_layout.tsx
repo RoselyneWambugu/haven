@@ -120,8 +120,8 @@ export default function RootLayout() {
   useAppLock()
 
   useEffect(() => {
-    // The backend is a mock, so on the web build the browser tests can drive it directly.
-    if (Platform.OS === 'web') (globalThis as { __echo?: typeof api }).__echo = api
+    // With the mock backend the browser tests can drive it directly. The real service is never exposed this way.
+    if (Platform.OS === 'web' && !REMOTE) (globalThis as { __echo?: typeof api }).__echo = api
     loadDb().then(() => (REMOTE ? restoreSession().catch(() => undefined) : undefined)).then(() => {
       resumeBackground()
       setReady(true)

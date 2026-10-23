@@ -1,5 +1,7 @@
 import { View } from 'react-native'
+import { Redirect } from 'expo-router'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
 import { Button } from '@/components/Button'
 import { ToggleRow } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
@@ -11,6 +13,7 @@ import { useDb } from '@/store/db'
 /** Switches for reviewers. They show states that normally take days or need real staff. Not part of the product. */
 export default function Demo() {
   const d = useDb((s) => s.demo)
+  if (REMOTE) return <Redirect href="/" />
   const act = (fn: () => void) => () => fn()
   return (
     <Screen testID="demo" header={<TopBar back title="Demo tools" />}>
