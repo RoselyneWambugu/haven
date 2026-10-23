@@ -3,6 +3,7 @@ import { FlatList, KeyboardAvoidingView, Platform, Pressable, TextInput, View } 
 import { useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge, Check } from '@/components/Controls'
@@ -101,6 +102,15 @@ export default function GroupChatScreen() {
               </>
             ) : !plan ? (
               <PlanGate what="Group chats" testID="group-gate" />
+            ) : REMOTE && g.waitlisted ? (
+              <>
+                <Banner tone="green" icon="clock" title="You’re on the waiting list">
+                  If a place opens before it starts, you’re put in and told.
+                </Banner>
+                <Button testID="group-waitlist-leave" variant="ghost" label="Leave the waiting list" onPress={() => { void api.groups.waitlistLeave(g.id) }} />
+              </>
+            ) : REMOTE && seatsLeft(g) <= 0 && (st === 'upcoming' || st === 'lobby') ? (
+              <Button testID="group-waitlist" label="Join the waiting list" onPress={async () => { const r = await api.groups.waitlistJoin(g.id); setError(r.ok ? null : r.error) }} />
             ) : (
               <Button testID="group-register" label="Sign up" disabled={!canRegister(g, t)} onPress={async () => { const r = await api.groups.register(g.id); setError(r.ok ? null : r.error) }} />
             )}

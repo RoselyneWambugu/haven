@@ -396,6 +396,8 @@ export interface GroupChat {
   removed?: { name: string; reason: string; by: string; at: number }[]
   /** Pen names of the people signed up. Staff get this from the server, which knows who is in the room. */
   roster?: string[]
+  /** On the waiting list for a full room. Real backend only. */
+  waitlisted?: boolean
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'

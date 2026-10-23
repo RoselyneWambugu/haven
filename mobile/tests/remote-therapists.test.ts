@@ -7,7 +7,7 @@ import { remoteSessions, syncDirectory, syncSessions } from '../src/backend/remo
 import { THERAPISTS } from '../src/data/seed'
 import { slotsFor, soonSlot } from '../src/lib/directory'
 import { freshState, getDb, update } from '../src/store/db'
-import { resetClock, now } from '../src/lib/clock'
+import { advanceClock, resetClock, now } from '../src/lib/clock'
 import { DEFAULT_SETTINGS } from '../src/api/auth'
 import type { Account } from '../src/api/types'
 
@@ -89,6 +89,9 @@ describe('the directory', () => {
   })
 
   it('offers a session that starts within the hour when the therapist is on now', async () => {
+    // The therapist is on from 00:00 to 23:00, so run this at noon East Africa Time whatever the real time is.
+    const d = new Date(now() + 3 * 3600_000)
+    advanceClock((12 * 60 - (d.getUTCHours() * 60 + d.getUTCMinutes()) + 1440) % 1440)
     fake()
     await syncDirectory()
     const soon = soonSlot(THERAPISTS[0], [], now())

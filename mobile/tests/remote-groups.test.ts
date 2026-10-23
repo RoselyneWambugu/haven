@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { facilitatorSend, loadFacilitatorRooms, remoteGroups, syncGroups, syncStaffGroups } from '../src/backend/remoteGroups'
+import { facilitatorRemove, facilitatorSend, loadFacilitatorRooms, remoteGroups, syncGroups, syncStaffGroups } from '../src/backend/remoteGroups'
 import type { GroupChat } from '../src/api/types'
 import { participants } from '../src/lib/groupChat'
 import { freshState, getDb, update } from '../src/store/db'
@@ -107,5 +107,38 @@ describe('what a facilitator does', () => {
     expect((await loadFacilitatorRooms())?.[0].id).toBe('g1')
     expect((await facilitatorSend('g1', 'Welcome')).ok).toBe(true)
     expect(calls.find((c) => c.name === 'portal_group_send')?.args).toEqual({ p_id: 'g1', p_text: 'Welcome' })
+  })
+})
+
+describe('waiting list, editing and removing a line', () => {
+  it('joins and leaves the waiting list through the server', async () => {
+    const calls = fake({ group_waitlist_join: { ok: false, code: 'open', error: 'There is a place free. Sign up instead.' } })
+    const r = await remoteGroups.waitlistJoin('gc-grief-20261028')
+    expect(r.ok).toBe(false)
+    await remoteGroups.waitlistLeave('gc-grief-20261028')
+    expect(calls.map((c) => c.name)).toContain('group_waitlist_leave')
+  })
+
+  it('tells a member when a place opens up for them, and when a room they are in moves', async () => {
+    update({ groupChats: [room({ waitlisted: true }), room({ id: 'gc-other', registered: true })] })
+    fake({ group_list: { ok: true, groups: [room({ registered: true, waitlisted: false }), room({ id: 'gc-other', registered: true, startsAt: Date.now() + 2 * 86_400_000 })] } })
+    await syncGroups()
+    const keys = getDb().notifications.map((n) => n.key)
+    expect(keys).toContain('g:gc-grief-20261028:promoted')
+    expect(keys.some((k) => k.startsWith('g:gc-other:moved'))).toBe(true)
+  })
+
+  it('sends an edit with the new time as an ISO date', async () => {
+    const calls = fake({ admin_groups: { ok: true, groups: [room()] } })
+    const r = await remoteGroups.edit('gc-grief-20261028', { topic: 'A topic long enough', blurb: 'A description that is long enough', facilitatorId: 't-amina', startsAt: Date.UTC(2026, 10, 3, 11), durationMin: 45, capacity: 10 })
+    expect(r.ok).toBe(true)
+    expect(calls.find((c) => c.name === 'admin_edit_group')?.args).toMatchObject({ p_id: 'gc-grief-20261028', p_starts: '2026-11-03T11:00:00.000Z', p_duration: 45, p_capacity: 10 })
+  })
+
+  it('removes a line as a facilitator or as staff', async () => {
+    const calls = fake()
+    expect((await facilitatorRemove('g1', 'm1')).ok).toBe(true)
+    expect((await remoteGroups.removeMessage('g1', 'm1', 'Unkind to another member')).ok).toBe(true)
+    expect(calls.map((c) => c.name)).toEqual(['portal_group_remove_message', 'admin_remove_group_message'])
   })
 })

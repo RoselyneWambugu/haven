@@ -81,6 +81,8 @@ await step('composer', async () => {
   await shot('25-my-posts-pending')
 })
 await step('replies-arrive-and-notify', async () => {
+  // Quiet hours (22:00 to 07:00 East Africa Time) hold notifications back, so switch them off to make this flow the same at any time of day.
+  await page.evaluate(() => window.__echo.auth.setSettings({ quietHours: false }))
   // The post goes live after about 15 s, a peer replies about 20 s later and a therapist about 25 s after that.
   await page.waitForFunction(() => JSON.parse(localStorage.getItem('echo.demo.v1') || '{}').notifications?.filter((n) => n.title === 'New reply to your post').length === 2, null, { timeout: 90000 })
   await page.goto('http://localhost:8097/notifications')

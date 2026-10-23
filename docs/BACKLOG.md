@@ -73,10 +73,8 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 
 | # | Item | Source |
 |---|---|---|
-| G-01 | Facilitator controls inside a live group chat: removing a message or a person from the leader's own screen. (Moderators can already remove a person, v0.32; removing a single message is not built) | v0.31 |
-| G-02 | Editing a scheduled group chat (today: cancel and reschedule) | v0.31 |
+| G-01 | A screen for staff to pick and remove a single line from a group chat (a facilitator can already remove lines from the portal) | v0.63 |
 | G-03 | Repeating weekly series | v0.29 |
-| G-04 | A waiting list when a group chat is full | v0.29 |
 | G-05 | A staff list of who signed up (only the count shows) | v0.31 |
 | G-06 | A script beyond the leader's welcome for staff-scheduled chats (a real service has real people) | v0.31 |
 | G-07 | Group chats for sensitive spaces such as domestic violence | v0.29 |

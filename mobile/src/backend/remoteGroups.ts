@@ -23,6 +23,12 @@ function noteChanges(before: GroupChat[], after: GroupChat[]): void {
     if (g.cancelled && g.registered !== false && was && !was.cancelled && was.registered) {
       notify.push('session', `g:${g.id}:cancelled`, 'Your group chat was cancelled', `${g.topic} won’t go ahead. We’re sorry. There will be another soon.`, `/group-chats/${g.id}`)
     }
+    if (g.registered && was && !was.registered && was.waitlisted) {
+      notify.push('session', `g:${g.id}:promoted`, 'A place opened up', `You’re in for ${g.topic}. We’ll remind you before it starts.`, `/group-chats/${g.id}`)
+    }
+    if (g.registered && was?.registered && g.startsAt !== was.startsAt) {
+      notify.push('session', `g:${g.id}:moved:${g.startsAt}`, 'A group chat moved', `${g.topic} has a new time. Open it to see when.`, `/group-chats/${g.id}`)
+    }
     if (g.removed?.length && was && !was.removed?.length) {
       notify.push('safety', `g:${g.id}:removed`, 'You were removed from a group chat', `A moderator removed you from “${g.topic}” because it broke the group’s rules. You can still use the rest of Echo.`, `/group-chats/${g.id}`)
     }
@@ -67,12 +73,16 @@ export interface FacilitatorRoom {
   capacity: number
   status: 'upcoming' | 'lobby' | 'open' | 'ended'
   registered: number
-  messages: { id: string; name: string; text: string; at: number; mine: boolean }[]
+  messages: { id: string; name: string; text: string; at: number; mine: boolean; removable?: boolean }[]
 }
 
 export async function loadFacilitatorRooms(): Promise<FacilitatorRoom[] | null> {
   const d = await call<Reply & { groups?: FacilitatorRoom[] }>('portal_groups')
   return d.ok && d.groups ? d.groups : null
+}
+
+export async function facilitatorRemove(id: string, messageId: string): Promise<Res> {
+  return res(await call('portal_group_remove_message', { p_group: id, p_message: messageId }))
 }
 
 export async function facilitatorSend(id: string, text: string): Promise<Res> {
@@ -115,6 +125,24 @@ export const remoteGroups = {
     })
     await syncStaffGroups()
     return r.ok ? { ok: true, value: { id: r.id ?? '' } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+  async edit(id: string, input: NewGroupInput): Promise<Res> {
+    const r = await call('admin_edit_group', { p_id: id, p_topic: input.topic, p_blurb: input.blurb, p_starts: new Date(input.startsAt).toISOString(), p_duration: input.durationMin, p_capacity: input.capacity })
+    await syncStaffGroups()
+    return res(r)
+  },
+  async waitlistJoin(id: string): Promise<Res> {
+    const r = await call('group_waitlist_join', { p_id: id })
+    await syncGroups()
+    return res(r)
+  },
+  async waitlistLeave(id: string): Promise<void> {
+    await call('group_waitlist_leave', { p_id: id })
+    await syncGroups()
+  },
+  async removeMessage(id: string, messageId: string, reason: string): Promise<Res> {
+    const r = await call('admin_remove_group_message', { p_group: id, p_message: messageId, p_reason: reason })
+    return res(r)
   },
   async cancel(id: string, reason: string): Promise<Res> {
     const r = await call('admin_cancel_group', { p_id: id, p_reason: reason })

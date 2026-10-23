@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { EditGroup } from '@/components/EditGroup'
 import { View } from 'react-native'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
@@ -41,6 +42,7 @@ export default function Groups() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState<string | null>(null)
+  const [editing, setEditing] = useState<string | null>(null)
   const [why, setWhy] = useState('')
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
@@ -115,7 +117,8 @@ export default function Groups() {
               </View>
             </View>
           ) : (
-            <View style={{ flexDirection: 'row' }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {st === 'upcoming' ? <Button testID={`edit-open-${g.id}`} variant="quiet" size="sm" label="Edit" onPress={() => setEditing(g.id)} /> : null}
               <Button testID={`cancel-${g.id}`} variant="quiet" size="sm" label="Cancel" onPress={() => { setCancelling(g.id); setWhy(''); setCancelError(null) }} />
             </View>
           )
@@ -131,6 +134,7 @@ export default function Groups() {
         <Stat value={String(groups.filter((g) => status(g, t) === 'open').length)} label="Open now" />
         <Stat value={String(groups.reduce((n, g) => n + reported(g.id), 0))} label="Message reports" tone={groups.some((g) => reported(g.id)) ? 'sun' : undefined} />
       </View>
+      {editing && groups.find((x) => x.id === editing) ? <EditGroup group={groups.find((x) => x.id === editing)!} onDone={() => setEditing(null)} /> : null}
       <Panel title="Scheduled" style={{ gap: 0 }}>
         {upcoming.length ? upcoming.map(row) : <Text variant="small" muted>Nothing scheduled.</Text>}
       </Panel>

@@ -138,6 +138,32 @@ export const groups = {
     return { ok: true, value: { id } }
   },
 
+  /** Edit a room before it opens. Clinical reviewers and Admins. */
+  edit(id: string, input: NewGroupInput): Res {
+    const a = getDb().admin
+    if (!a || !a.signedIn || !canManageGroups(a.role)) return { ok: false, error: 'Only clinical reviewers and Admins edit group chats.', code: 'role' }
+    const g = getDb().groupChats.find((x) => x.id === id)
+    if (!g) return { ok: false, error: 'That group chat isn’t here.' }
+    if (status(g, now()) !== 'upcoming') return { ok: false, error: 'A room can be edited only before it opens.', code: 'started' }
+    const th = THERAPISTS.find((x) => x.id === g.facilitatorId)
+    const err = validateNewGroup({ ...input, facilitatorId: g.facilitatorId }, now(), getDb().groupChats.filter((x) => x.id !== id), !!th && !th.suspended)
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    if (input.capacity < g.takenOthers + (g.registered ? 1 : 0)) return { ok: false, error: 'People are already signed up, so it needs more places.', code: 'invalid' }
+    setGroup(id, (x) => ({ ...x, topic: input.topic.trim(), blurb: input.blurb.trim(), startsAt: input.startsAt, durationMin: input.durationMin, capacity: input.capacity }))
+    log('Edited group chat', input.topic.trim(), '')
+    return { ok: true, value: undefined }
+  },
+
+  /** The waiting list and removing a single message are on the live service only. */
+  waitlistJoin(_id: string): Res {
+    return { ok: false, error: 'The waiting list is only on the live service.', code: 'unavailable' }
+  },
+  waitlistLeave(_id: string): void {},
+  removeMessage(id: string, messageId: string, _reason: string): Res {
+    setGroup(id, (x) => ({ ...x, messages: x.messages.filter((m) => m.id !== messageId) }))
+    return { ok: true, value: undefined }
+  },
+
   /** Cancels a group chat before it starts. Anyone signed up is told. */
   cancel(id: string, reason: string): Res {
     const a = getDb().admin

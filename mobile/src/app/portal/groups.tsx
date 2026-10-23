@@ -6,7 +6,7 @@ import { Field } from '@/components/Field'
 import { Panel, PortalPage } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { facilitatorSend, loadFacilitatorRooms, type FacilitatorRoom } from '@/backend/remoteGroups'
+import { facilitatorRemove, facilitatorSend, loadFacilitatorRooms, type FacilitatorRoom } from '@/backend/remoteGroups'
 import { REMOTE } from '@/backend/client'
 import { whenLabel } from '@/lib/groupChat'
 import { now } from '@/lib/clock'
@@ -55,9 +55,14 @@ export default function PortalGroups() {
               {whenLabel(g.startsAt, now())} · {g.durationMin} min · {g.registered} of {g.capacity} signed up
             </Text>
             {g.messages.slice(-30).map((m) => (
-              <Text key={m.id} variant="small" style={{ opacity: m.name === 'Echo' ? 0.6 : 1 }}>
-                <Text variant="small" bold>{m.mine ? 'You' : m.name}</Text> <Text variant="caption" muted>{clock(m.at)}</Text>{'  '}{m.text}
-              </Text>
+              <View key={m.id} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                <Text variant="small" style={{ flex: 1, opacity: m.name === 'Echo' ? 0.6 : 1 }}>
+                  <Text variant="small" bold>{m.mine ? 'You' : m.name}</Text> <Text variant="caption" muted>{clock(m.at)}</Text>{'  '}{m.text}
+                </Text>
+                {live && !m.mine && m.name !== 'Echo' ? (
+                  <Button testID={`room-hide-${m.id}`} size="sm" variant="dangerGhost" label="Remove" onPress={async () => { const r = await facilitatorRemove(g.id, m.id); setError(r.ok ? null : r.error); void load() }} />
+                ) : null}
+              </View>
             ))}
             {live ? (
               <View style={{ gap: 8 }}>
