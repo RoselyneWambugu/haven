@@ -7,6 +7,7 @@ import { Panel, PortalPage, Stat } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { REMOTE } from '@/backend/client'
+import { PaymentEvents, SmsQueuePanel } from '@/components/PaymentOps'
 import { StaffPayouts } from '@/components/StaffPayouts'
 import { useDb } from '@/store/db'
 
@@ -50,7 +51,9 @@ export default function Billing() {
           </View>
         ))}
       </Panel>
+      {REMOTE ? <PaymentEvents /> : null}
       {REMOTE ? <StaffPayouts /> : null}
+      {REMOTE ? <SmsQueuePanel /> : null}
     </PortalPage>
   )
 }

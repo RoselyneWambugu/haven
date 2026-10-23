@@ -170,8 +170,8 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-43 | Send licence reminders by SMS or email, not only in the portal (needs a provider); renewal with an uploaded certificate | v0.52 |
 | Q-41 | Run `supabase/group_chat_cleanup.sql` in the SQL editor so ended group chats are deleted after 24 hours. Also: group chats don't yet send push reminders from the server, and the facilitator can't remove a single message (G-01) | v0.49 |
 | Q-44 | Run `supabase/account_deletion_cleanup.sql` in the SQL editor so requested deletions happen. Decide: keep a member's posts without their name when they choose to; how long payment records must be kept; whether the therapy discount comes out of Echo's share or the therapist's | v0.55 |
-| Q-48 | Push notifications to a locked phone (an Expo push token per device, sent by the server); delivery receipts for SMS; a staff view of the SMS queue; add the Africa's Talking secrets and test in the sandbox before launch | v0.59 |
-| Q-47 | Pay therapist payouts through M-Pesa B2C; card payments; a staff screen for payment events and for refunding a payment whose time was taken; add the M-Pesa secrets and test in the sandbox before launch | v0.58 |
+| Q-48 | Push notifications to a locked phone (an Expo push token per device, sent by the server); delivery receipts for SMS; add the Africa's Talking secrets and test in the sandbox before launch | v0.59 |
+| Q-47 | Pay therapist payouts through M-Pesa B2C; card payments; add the M-Pesa secrets and test in the sandbox before launch | v0.58 |
 | Q-46 | Pay therapists through a payment provider instead of by hand; claw back a payout when a paid-out session is refunded; tax on earnings; a minimum withdrawal; a different fee for some therapists (D3) | v0.57 |
 | Q-45 | How long verification documents are kept, and deleting them after that; virus scanning of uploads; letting a person remove a file they sent | v0.56 |
 | Q-39 | Licence-expiry reminders and a check on the regulator's register; therapist appeals on the server | v0.47 |
