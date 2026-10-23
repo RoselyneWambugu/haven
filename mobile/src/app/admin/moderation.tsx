@@ -6,6 +6,7 @@ import { remoteAdmin } from '@/backend/remoteAdmin'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Field } from '@/components/Field'
+import { FlagRulesPanel } from '@/components/FlagRules'
 import { Panel, PortalPage, Stat } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -81,6 +82,7 @@ export default function Moderation() {
           The log shows message references, never message text.
         </Text>
       </Panel>
+      {REMOTE ? <FlagRulesPanel canEdit={a.role === 'clinical' || a.role === 'admin'} /> : null}
       <Panel title="Strike policy" testID="strike-policy">
         <Text variant="small">S3 → warning · S2 → strike · S1 → immediate suspension.</Text>
         <Text variant="small">

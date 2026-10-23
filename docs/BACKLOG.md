@@ -164,7 +164,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-30 | Dashboard modules still on the mock: analytics, resources, configuration, wellbeing and rota, billing and refunds, feedback, group chats, AI flags, therapist applications | v0.39 |
 | Q-31 | ~~Break-glass access to a private profile on the server~~ done in v0.44. The member is not told; a notice after the fact is not built | v0.39 |
 | Q-32 | Hide a reported comment, and tell the reporter the outcome of a report | v0.39 |
-| Q-42 | Replace the pattern rules with a real model (decision needed on consent for sensitive text and where it runs; PRD SAF-8 forbids sending text outside); a screen to manage rules and keywords; log contact-filter blocks as flags | v0.50 |
+| Q-42 | Replace the pattern rules with a real model (decision needed on consent for sensitive text and where it runs; PRD SAF-8 forbids sending text outside) | v0.50 |
 | Q-43 | Send licence reminders by SMS or email, not only in the portal (needs a provider); renewal with an uploaded certificate | v0.52 |
 | Q-41 | Run `supabase/group_chat_cleanup.sql` in the SQL editor so ended group chats are deleted after 24 hours. Also: group chats don't yet send push reminders from the server, and the facilitator can't remove a single message (G-01) | v0.49 |
 | Q-44 | Run `supabase/account_deletion_cleanup.sql` in the SQL editor so requested deletions happen. Decide: keep a member's posts without their name when they choose to; how long payment records must be kept; whether the therapy discount comes out of Echo's share or the therapist's | v0.55 |
