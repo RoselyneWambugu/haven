@@ -1,6 +1,8 @@
 import { View } from 'react-native'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
 import { Button } from '@/components/Button'
+import { LaunchChecklist } from '@/components/LaunchChecklist'
 import { Panel, PortalPage, Stat, useWide } from '@/components/Portal'
 import { Banner, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -57,6 +59,7 @@ export default function Overview() {
           </Text>
         </Panel>
       </View>
+      {REMOTE && a.role === 'admin' ? <LaunchChecklist /> : null}
       {pendingBg.length && a.role === 'clinical' ? (
         <Panel title="Break-glass approvals" tone="sun" testID="bg-approvals">
           {pendingBg.map((b) => (
