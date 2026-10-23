@@ -23,6 +23,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lockAfterSeconds: 60,
   hidePenNameOnLock: true,
   quickExit: true,
+  smsReminders: false,
   disappearingDefault: 'ask',
 }
 

@@ -5,6 +5,7 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { View } from 'react-native'
 import { lockScreen } from '@/lib/notifications'
+import { REMOTE } from '@/backend/client'
 import { colors } from '@/theme'
 import { useDb } from '@/store/db'
 
@@ -17,6 +18,7 @@ export default function Notifications() {
       <Text variant="title">Notifications</Text>
       <ToggleRow label="New messages" on={s.notifyMessages} onChange={(v) => set({ notifyMessages: v })} />
       <ToggleRow label="Session reminders" sub="One hour and ten minutes before" on={s.notifySessions} onChange={(v) => set({ notifySessions: v })} />
+      {REMOTE ? <ToggleRow testID="sms-reminders" label="Text reminders" sub="One text an hour before a session. It says nothing about who it is with. Standard SMS rates may apply." on={s.smsReminders} onChange={(v) => set({ smsReminders: v })} /> : null}
       <ToggleRow label="Community replies" on={s.notifyForum} onChange={(v) => set({ notifyForum: v })} />
       <ToggleRow label="Plan and payment" on={s.notifyPlan} onChange={(v) => set({ notifyPlan: v })} />
       <ToggleRow label="Quiet hours" sub="No notifications from 10pm to 7am" on={s.quietHours} onChange={(v) => set({ quietHours: v })} />

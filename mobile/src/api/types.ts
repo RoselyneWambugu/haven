@@ -90,6 +90,8 @@ export interface Settings {
   lockAfterSeconds: number
   hidePenNameOnLock: boolean
   quickExit: boolean
+  /** Text a short reminder an hour before a session. Off until the member turns it on. Real backend only. */
+  smsReminders: boolean
   disappearingDefault: 'ask' | 'on' | 'off'
 }
 
