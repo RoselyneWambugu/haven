@@ -156,3 +156,79 @@ describe('the therapy discount', () => {
     expect(r.ok && r.value.title).toBe('Session with Dr. Amina Otieno')
   })
 })
+
+describe('paying with M-Pesa', () => {
+  function live(opts: { start?: unknown; check?: unknown; statuses?: Record<string, unknown>[] }) {
+    const calls: { name: string; args?: Record<string, unknown> }[] = []
+    const fns: { action: string }[] = []
+    const queue = [...(opts.statuses ?? [])]
+    setClient({
+      functions: {
+        invoke: async (_n: string, o: { body: { action: string } }) => {
+          fns.push({ action: o.body.action })
+          return { data: o.body.action === 'start' ? opts.start ?? { ok: true, state: 'pending' } : opts.check ?? { ok: true, state: 'pending' }, error: null }
+        },
+      },
+      rpc: async (name: string, args?: Record<string, unknown>) => {
+        calls.push({ name, args })
+        if (name === 'order_status') return { data: { ok: true, ...(queue.length > 1 ? queue.shift() : queue[0] ?? { status: 'pending' }) }, error: null }
+        if (name === 'my_plan') return { data: { ok: true, subscription: null, plans: PLANS }, error: null }
+        return { data: { ok: true }, error: null }
+      },
+    } as unknown as SupabaseClient)
+    return { calls, fns }
+  }
+  const setup = () => {
+    update({ ...freshState(), account: { settings: { ...DEFAULT_SETTINGS } } as unknown as Account, checkout: { id: 'o-1', item: { kind: 'plan', planId: 'monthly', autoRenew: true }, amountKes: 1800, createdAt: Date.now() } } as never)
+    wait.ms = 0
+    wait.pollMs = 0
+    wait.maxMs = 2000
+  }
+
+  it('waits for the prompt to be answered, then gives the receipt', async () => {
+    setup()
+    const f = live({ statuses: [{ status: 'pending' }, { status: 'paid', receipt_no: 'EC-777777' }] })
+    const r = await remoteBilling.pay('mpesa')
+    expect(r).toEqual({ ok: true, receiptNo: 'EC-777777', sessionId: undefined })
+    expect(f.fns[0].action).toBe('start')
+    expect(f.calls.some((c) => c.name === 'simulate_payment')).toBe(false)
+    expect(getDb().checkout).toBeNull()
+  })
+
+  it('says so when there is not enough money, or the prompt is cancelled', async () => {
+    setup()
+    live({ statuses: [{ status: 'failed', failure: 'insufficient' }] })
+    expect(await remoteBilling.pay('mpesa')).toEqual({ ok: false, failure: 'insufficient' })
+    setup()
+    live({ statuses: [{ status: 'failed', failure: 'cancelled' }] })
+    expect(await remoteBilling.pay('mpesa')).toEqual({ ok: false, failure: 'cancelled' })
+  })
+
+  it('falls back to the test payment when M-Pesa is not set up on the server', async () => {
+    setup()
+    const f = live({ start: { ok: false, code: 'unavailable' } })
+    await remoteBilling.pay('mpesa')
+    expect(f.calls.some((c) => c.name === 'simulate_payment')).toBe(true)
+  })
+
+  it('does not wait for ever', async () => {
+    setup()
+    wait.maxMs = 30
+    live({ statuses: [{ status: 'pending' }] })
+    expect(await remoteBilling.pay('mpesa')).toEqual({ ok: false, failure: 'timeout' })
+  })
+
+  it('reports a time taken while paying from the direct check', async () => {
+    setup()
+    live({ statuses: [{ status: 'pending' }], check: { ok: true, state: 'failed', failure: 'taken' } })
+    expect(await remoteBilling.pay('mpesa')).toEqual({ ok: false, failure: 'taken' })
+  })
+
+  it('uses the test payment for card', async () => {
+    setup()
+    const f = live({})
+    await remoteBilling.pay('card')
+    expect(f.fns).toHaveLength(0)
+    expect(f.calls.some((c) => c.name === 'simulate_payment')).toBe(true)
+  })
+})

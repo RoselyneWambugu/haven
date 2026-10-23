@@ -13,7 +13,7 @@ type Reply = { ok: true; [k: string]: unknown } | { ok: false; code: string; err
 const OFFLINE = 'We couldn’t reach Echo. Check your connection and try again.'
 const ms = (iso: string): number => new Date(iso).getTime()
 /** How long the screen waits for the prompt on the phone. Tests set it to 0. */
-export const wait = { ms: 1500 }
+export const wait = { ms: 1500, pollMs: 3000, maxMs: 120_000 }
 const pause = (t: number) => new Promise<void>((r) => setTimeout(r, t))
 
 async function rpc(name: string, args?: Record<string, unknown>): Promise<Reply> {
@@ -25,6 +25,44 @@ async function rpc(name: string, args?: Record<string, unknown>): Promise<Reply>
 const toSubscription = (s: RemoteSub): Subscription => ({
   planId: s.plan_id, startedAt: ms(s.started_at), endsAt: ms(s.ends_at), autoRenew: s.auto_renew, cancelledAt: s.cancelled_at ? ms(s.cancelled_at) : null, method: s.method, receiptNo: s.receipt_no,
 })
+
+type Pushed = { ok?: boolean; code?: string; state?: string; failure?: string }
+
+/** Asks the server to send the M-Pesa prompt and waits for the result. Null when M-Pesa isn't set up, so the caller can use the test payment. */
+async function payWithMpesa(orderId: string): Promise<PaymentResult | null> {
+  const invoke = async (action: 'start' | 'check'): Promise<{ data: Pushed | null; error: unknown }> => {
+    try {
+      const r = await supabase().functions.invoke('mpesa-pay', { body: { order_id: orderId, action } })
+      return { data: r.data as Pushed | null, error: r.error }
+    } catch {
+      return { data: null, error: true }
+    }
+  }
+  const started = await invoke('start')
+  const s = started.data
+  if (started.error || !s) return null
+  if (s.code === 'unavailable') return null
+  if (!s.ok) return { ok: false, failure: 'unavailable' }
+  const deadline = Date.now() + wait.maxMs
+  let polls = 0
+  while (Date.now() < deadline) {
+    await pause(wait.pollMs)
+    polls += 1
+    // The callback from Safaricom usually settles it. Every few checks, ask Safaricom directly in case the callback never came.
+    if (polls % 4 === 0) {
+      const c = (await invoke('check')).data
+      if (c?.state === 'failed') return { ok: false, failure: c.failure === 'taken' ? 'taken' : c.failure === 'insufficient' ? 'insufficient' : c.failure === 'cancelled' ? 'cancelled' : 'timeout' }
+    }
+    const r = await rpc('order_status', { p_order: orderId })
+    if (!r.ok) continue
+    if (r.status === 'paid') return { ok: true, receiptNo: String(r.receipt_no ?? ''), sessionId: r.session_id ? String(r.session_id) : undefined }
+    if (r.status === 'failed' || r.status === 'cancelled') {
+      const f = String(r.failure ?? '')
+      return { ok: false, failure: f === 'insufficient' ? 'insufficient' : f === 'cancelled' ? 'cancelled' : 'timeout' }
+    }
+  }
+  return { ok: false, failure: 'timeout' }
+}
 
 let syncing: Promise<void> | null = null
 
@@ -85,11 +123,25 @@ export const remoteBilling = {
     return { ok: true, value: { title, amountKes } }
   },
 
-  /** Plans are paid for through the server. Until a payment provider is connected, only test numbers can complete a payment. */
+  /**
+   * M-Pesa goes through Safaricom: the server asks for the prompt on the member's phone, and this waits for the answer.
+   * When M-Pesa isn't set up on the server (or for card), only test numbers can complete a payment.
+   */
   async pay(method: PaymentMethod): Promise<PaymentResult> {
     const db = getDb()
     const co = db.checkout
     if (!co) return { ok: false, failure: 'cancelled' }
+    if (method === 'mpesa') {
+      const live = await payWithMpesa(co.id)
+      if (live) {
+        if (live.ok) {
+          update({ checkout: null })
+          if (co.item.kind === 'plan') await syncPlan()
+          else await Promise.all([syncSessions(), syncChats(), syncDirectory()])
+        } else if (live.failure === 'taken') void syncDirectory()
+        return live
+      }
+    }
     const outcome = db.demo.failNextPayment ? 'timeout' : 'success'
     if (db.demo.failNextPayment) update((s) => ({ demo: { ...s.demo, failNextPayment: false } }))
     // The prompt on the phone takes a moment, so the screen waits a little.
