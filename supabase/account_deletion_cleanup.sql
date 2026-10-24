@@ -5,8 +5,8 @@
 -- cancels the request. After the holding period this job deletes the account, and with it everything that belongs to it: profile,
 -- chats and messages, sessions, posts and comments, orders and receipts. Staff and therapist accounts are never deleted this way.
 --
--- Open decisions (see docs/BACKLOG.md): whether posts the member chose to keep should stay under no name, and how long payment records
--- must be kept for accounting. Today everything goes with the account.
+-- Decided: posts and comments go with the account too, including replies under the member's own posts. Nothing is kept under no name.
+-- Open decision (see docs/BACKLOG.md): how long payment records must be kept for accounting. Today they go with the account.
 
 create or replace function private.sweep_accounts() returns void
 language plpgsql set search_path = ''

@@ -167,7 +167,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-42 | Replace the pattern rules with a real model (decision needed on consent for sensitive text and where it runs; PRD SAF-8 forbids sending text outside) | v0.50 |
 | Q-43 | Send licence reminders by SMS or email, not only in the portal (needs a provider); renewal with an uploaded certificate | v0.52 |
 | Q-41 | Run `supabase/group_chat_cleanup.sql` in the SQL editor so ended group chats are deleted after 24 hours. Also: group chats don't yet send push reminders from the server, and the facilitator can't remove a single message (G-01) | v0.49 |
-| Q-44 | Run `supabase/account_deletion_cleanup.sql` in the SQL editor so requested deletions happen. Decide: keep a member's posts without their name when they choose to; how long payment records must be kept; whether the therapy discount comes out of Echo's share or the therapist's | v0.55 |
+| Q-44 | Run `supabase/account_deletion_cleanup.sql` in the SQL editor so requested deletions happen. Decide: how long payment records must be kept; whether the therapy discount comes out of Echo's share or the therapist's | v0.55 |
 | Q-48 | Push notifications to a locked phone (an Expo push token per device, sent by the server); delivery receipts for SMS; add the Africa's Talking secrets and test in the sandbox before launch | v0.59 |
 | Q-47 | Pay therapist payouts through M-Pesa B2C; card payments; add the M-Pesa secrets and test in the sandbox before launch | v0.58 |
 | Q-46 | Pay therapists through a payment provider instead of by hand; tax on earnings; a different fee for some therapists (D3) | v0.57 |
