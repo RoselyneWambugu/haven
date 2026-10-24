@@ -2,7 +2,7 @@
 
 The member app for Echo, an anonymous peer-support and therapy platform for Kenya. Built with React Native and Expo (TypeScript), so it runs in Expo Go on a phone and in a browser.
 
-The backend is a **mock** that lives on the device by default. Accounts and sign-in can run on a real Supabase backend instead: copy `.env.example` to `.env` and follow `docs/BACKEND.md`. Everything a screen needs goes through `src/api`, so a real service can replace it without changing screens. Nothing here talks to a server, sends a real SMS, or takes a real payment.
+The backend is a **mock** that lives on the device by default, so the app runs with nothing set up and nothing here talks to a server, sends a real SMS, or takes a real payment. Set `EXPO_PUBLIC_BACKEND=supabase` (copy `.env.example` to `.env`) and the same screens run on the real Supabase backend: accounts, chats, the community, billing and M-Pesa, therapists and sessions, the therapist portal, the staff dashboard and its modules, group chats, SMS and payouts. `docs/BACKEND.md` has the setup and `docs/LAUNCH.md` is the runbook for going live. Everything a screen needs goes through `src/api`, which picks the mock or the real service, so screens do not change.
 
 ## Run it
 
@@ -29,7 +29,7 @@ Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `a
 ## Trying the app
 
 1. Register with any adult date of birth. The one-time code is shown on screen in demo mode.
-2. Open **Me, then Demo tools** to grant a plan, end it, fail the next payment, add a notice, show a new-device alert, move the clock forward, or show sample prices.
+2. With the mock backend, open **Me, then Demo tools** to grant a plan, end it, fail the next payment, add a notice, show a new-device alert, move the clock forward, or show sample prices.
 3. Prices are an open decision (PRD D2, D3), so they show as `KES ___` until **Show sample prices** is on.
 
 ## How it is organised
@@ -115,10 +115,10 @@ The Echo logo is a glowing lotus with a heart. It is drawn as shapes in `src/dat
 The full list of what is not built, every placeholder and every open decision is in [`docs/BACKLOG.md`](../docs/BACKLOG.md), for regular review. In short:
 
 - **Placeholders for open decisions.** Crisis numbers and support organisations are marked as unverified (D29). Prices are blank (D2, D3). See `src/data/config.ts` and the PRD section on decisions.
-- **Calls, payments, SMS, push and email are simulated.** They need providers that have not been chosen (D51). The backend is a mock that lives on the device.
+- **Calls, card payments, push and email are simulated.** M-Pesa payments and SMS are built for the real backend, and need your Daraja and Africa's Talking secrets in the Supabase dashboard. Card payments, payouts to therapists by B2C and push notifications are not built.
 - **Analytics runs on generated sample data**, except the AI-flag and appeal figures.
 - **The app is in English only.** Kiswahili is still a language members can say they speak, for matching.
 
 ## Web build note
 
-On web, the mock API is exposed as `globalThis.__echo` so browser tests can drive it. This is a demo hook and goes away when a real backend is connected.
+With the mock backend on web, the API is exposed as `globalThis.__echo` so browser tests can drive it. With `EXPO_PUBLIC_BACKEND=supabase` that hook is not set, and the Demo tools row and screen are hidden.
