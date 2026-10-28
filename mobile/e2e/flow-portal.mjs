@@ -23,6 +23,9 @@ await step('sign-in', async () => {
   await shot('60-sign-in')
   await tid('portal-demo-sign-in').click()
   await tid('portal-today').waitFor()
+  const sb = await tid('sidebar').boundingBox()
+  const main = await tid('portal-today').boundingBox()
+  if (!sb || !main || sb.x + sb.width > main.x + 1 || sb.height < 400) throw new Error('the navigation should be a sidebar on the left')
   await shot('61-today')
 })
 await step('join-live-notes', async () => {

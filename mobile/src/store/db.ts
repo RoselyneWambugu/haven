@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, FeedbackItem, ForumPost, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
+import type { Account, Conversation, Device, FeedbackItem, ForumPost, GroupChat, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
 import { LIVE } from '@/data/config'
 import { defaultContent } from '@/data/content'
 import { seedPosts } from '@/data/seed'
@@ -35,6 +35,8 @@ export interface OtpState {
 
 export interface DbState {
   account: Account | null
+  /** A therapist's own application, on the real backend. */
+  application: { status: 'none' | 'pending' | 'info' | 'approved' | 'rejected'; message: string; name: string } | null
   /** Persisted in secure storage: whether a person is signed in on this device. */
   signedIn: boolean
   locked: boolean
@@ -52,8 +54,17 @@ export interface DbState {
   tickets: Ticket[]
   feedback: FeedbackItem[]
   notifications: AppNote[]
+  /** Support spaces the member has joined. */
+  spaces: string[]
+  /** Chats that ran out of time while reported. Kept for the safety review and never shown to the member. */
+  retained: Conversation[]
+  /** Timed group chats: upcoming, open and recently ended. */
+  groupChats: GroupChat[]
+  retainedGroups: GroupChat[]
   reports: ReportRecord[]
   openConversationId: string | null
+  /** Goes up whenever the therapist directory is refreshed from the server, so screens that list therapists redraw. */
+  directoryVersion: number
   demo: { failNextPayment: boolean; showPrices: boolean; alertDevice: Device | null }
   /** The therapist portal's own data. Null until someone first signs in to it. */
   portal: PortalState | null
@@ -82,6 +93,7 @@ export function freshState(): DbState {
     otp: null,
     match: { state: 'idle' },
     conversations: [],
+    directoryVersion: 0,
     posts: seedPosts(now()),
     hiddenPostIds: [],
     mutedAuthors: [],
@@ -91,10 +103,15 @@ export function freshState(): DbState {
     tickets: [],
     feedback: [],
     notifications: [],
+    spaces: [],
+    retained: [],
+    groupChats: [],
+    retainedGroups: [],
     reports: [],
     openConversationId: null,
     demo: { failNextPayment: false, showPrices: false, alertDevice: null },
     portal: null,
+    application: null,
     admin: null,
     content: defaultContent(),
   }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api, type BreakGlassRequest, type CaseAction } from '@/api'
+import { REMOTE } from '@/backend/client'
 import { Button } from '@/components/Button'
 import { Radio, Segmented } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -10,7 +11,7 @@ import { Sheet } from '@/components/Sheet'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { breakSuggested, onBreak } from '@/lib/wellbeing'
-import { BREAK_GLASS_MINUTES, minutesLeft, REVEALS, slaLabel } from '@/lib/admin'
+import { BREAK_GLASS_MINUTES, canSeeCase, minutesLeft, REVEALS, slaLabel } from '@/lib/admin'
 import { dayAndClock } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
@@ -23,6 +24,18 @@ const ACTIONS: { value: CaseAction; label: string }[] = [
   { value: 'suspend', label: 'Suspend' },
   { value: 'escalate', label: 'Escalate' },
 ]
+const THERAPIST_ACTIONS: { value: CaseAction; label: string }[] = [
+  { value: 'dismiss', label: 'No action' },
+  { value: 'warn-therapist', label: 'Warn' },
+  { value: 'pause-therapist', label: 'Pause new clients' },
+  { value: 'escalate', label: 'Escalate' },
+]
+const THERAPIST_HINT: Partial<Record<CaseAction, string>> = {
+  dismiss: 'No breach found. The member is told generically.',
+  'warn-therapist': 'The therapist is warned and told it is not a suspension. The member is told we took action.',
+  'pause-therapist': 'New clients are paused until a clinical reviewer lifts it. Existing clients are not affected.',
+  escalate: 'Hands the case to the clinical lead.',
+}
 const REASONS: { value: BreakGlassRequest['reasonCode']; label: string }[] = [
   { value: 'imminent-risk', label: 'Imminent risk to life' },
   { value: 'legal', label: 'Legal request (attach reference)' },
@@ -39,14 +52,17 @@ export default function CaseDetail() {
   const t = useNow()
   const wide = useWide()
   const [action, setAction] = useState<CaseAction>('strike')
+  const portal = useDb((st) => st.portal)
+  const [liftReason, setLiftReason] = useState('')
+  const [liftError, setLiftError] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [sheet, setSheet] = useState(false)
   const [bgReason, setBgReason] = useState<BreakGlassRequest['reasonCode']>('imminent-risk')
   const [bgText, setBgText] = useState('')
   const [bgError, setBgError] = useState<string | null>(null)
-  const [profile, setProfile] = useState<ReturnType<typeof api.admin.privateProfile>>(null)
-  const c = a?.cases.find((x) => x.id === id)
+  const [profile, setProfile] = useState<Awaited<ReturnType<typeof api.admin.privateProfile>>>(null)
+  const c = a?.cases.find((x) => x.id === id && canSeeCase(a.role, x))
 
   useEffect(() => {
     if (id) api.admin.view(id)
@@ -56,8 +72,11 @@ export default function CaseDetail() {
   const exp = a.exposure[a.staffName]
   const req = a.breakGlass.find((b) => b.caseId === c.id && (b.status === 'pending' || (b.status === 'approved' && (b.expiresAt ?? 0) > t)))
 
-  function decide() {
-    const r = api.admin.decide(c!.id, action, reason)
+  const clinical = c.queue === 'clinical'
+  const act: CaseAction = clinical && !THERAPIST_ACTIONS.some((x) => x.value === action) ? 'dismiss' : action
+
+  async function decide() {
+    const r = await api.admin.decide(c!.id, act, reason)
     if (!r.ok) return setError(r.error)
     setError(null)
     setReason('')
@@ -73,7 +92,7 @@ export default function CaseDetail() {
           <Text variant="label" color={sla.breached ? colors.clay : colors.ink}>
             SLA {sla.breached ? `breached ${sla.text}` : `${sla.text} left`}
           </Text>
-          {!c.owner && c.status !== 'closed' ? <Button testID="take-case" size="sm" label="Take this case" onPress={() => { const r = api.admin.claim(c.id); setError(r.ok ? null : r.error) }} /> : <Text variant="caption" muted>{c.owner ? `Owner: ${c.owner}` : 'Closed'}</Text>}
+          {!c.owner && c.status !== 'closed' ? <Button testID="take-case" size="sm" label="Take this case" onPress={async () => { const r = await api.admin.claim(c.id); setError(r.ok ? null : r.error) }} /> : <Text variant="caption" muted>{c.owner ? `Owner: ${c.owner}` : 'Closed'}</Text>}
         </View>
       }
     >
@@ -91,7 +110,7 @@ export default function CaseDetail() {
       ) : null}
       {c.owner === a.staffName && c.status !== 'closed' ? (
         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-          <Button testID="hand-on" size="sm" variant="quiet" label="Hand this case on" onPress={() => { const r = api.team.handOn(c.id); setError(r.ok ? null : r.error) }} />
+          <Button testID="hand-on" size="sm" variant="quiet" label="Hand this case on" onPress={async () => { const r = await api.team.handOn(c.id); setError(r.ok ? null : r.error) }} />
           <Button size="sm" variant="ghost" label="Take a break" onPress={() => api.team.startBreak()} />
         </View>
       ) : null}
@@ -118,8 +137,8 @@ export default function CaseDetail() {
                     testID={`reveal-${e.id}`}
                     accessibilityRole="button"
                     accessibilityLabel="Reveal message"
-                    onPress={() => {
-                      const r = api.admin.reveal(c.id, e.id)
+                    onPress={async () => {
+                      const r = await api.admin.reveal(c.id, e.id)
                       setError(r.ok ? null : r.error)
                     }}
                     style={{ minHeight: 32, justifyContent: 'center' }}
@@ -161,17 +180,34 @@ export default function CaseDetail() {
         </Banner>
       ) : (
         <Panel title="Decision" testID="decision">
-          <Segmented value={action} onChange={setAction} options={ACTIONS} />
+          <Segmented value={act} onChange={setAction} options={clinical ? THERAPIST_ACTIONS : ACTIONS} />
           <Text variant="caption" muted>
-            {action === 'escalate' ? 'Sends the case to a clinical reviewer.' : action === 'strike' ? 'The sanction follows the strike ladder.' : action === 'dismiss' ? 'No violation found. The reporter is told generically.' : 'The member is told the rule and how to appeal.'}
+            {clinical ? THERAPIST_HINT[act] : action === 'escalate' ? 'Sends the case to a clinical reviewer.' : action === 'strike' ? 'The sanction follows the strike ladder.' : action === 'dismiss' ? 'No violation found. The reporter is told generically.' : 'The member is told the rule and how to appeal.'}
           </Text>
           <Field testID="decision-reason" label="Reason (required)" value={reason} onChangeText={(v) => { setReason(v); setError(null) }} multiline minHeight={80} />
           <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
             <Button testID="submit-decision" label="Submit decision" onPress={decide} />
-            <Button testID="open-break-glass" variant="dangerGhost" label="Request private profile (break-glass)" onPress={() => { setSheet(true); setBgError(null) }} />
+            {clinical ? null : <Button testID="open-break-glass" variant="dangerGhost" label="Request private profile (break-glass)" onPress={() => { setSheet(true); setBgError(null) }} />}
           </View>
         </Panel>
       )}
+
+      {clinical && c.decision?.action === 'pause-therapist' && (REMOTE || (portal?.review?.kind === 'paused' && portal.therapistId === c.therapistId)) ? (
+        <Panel tone="sun" title="New clients are paused" testID="lift-pause">
+          <Text variant="small">The therapist can’t switch this off. Lift it when the review is done.</Text>
+          <Field testID="lift-reason" label="Reason (required)" value={liftReason} onChangeText={(v) => { setLiftReason(v); setLiftError(null) }} error={liftError} />
+          <Button
+            testID="lift-submit"
+            variant="quiet"
+            label="Lift pause"
+            onPress={async () => {
+              const r = await api.admin.liftTherapistPause(liftReason, c.therapistId)
+              if (!r.ok) return setLiftError(r.error)
+              setLiftReason('')
+            }}
+          />
+        </Panel>
+      ) : null}
 
       {req ? (
         <Panel tone="sun" title="Private profile" testID="bg-status">
@@ -190,7 +226,7 @@ export default function CaseDetail() {
                   </Text>
                 </View>
               ) : (
-                <Button testID="bg-view" size="sm" label="View private profile" onPress={() => setProfile(api.admin.privateProfile(req.id))} />
+                <Button testID="bg-view" size="sm" label="View private profile" onPress={async () => setProfile(await api.admin.privateProfile(req.id))} />
               )}
             </>
           )}
@@ -209,8 +245,8 @@ export default function CaseDetail() {
         <Button
           testID="bg-request"
           label="Request approval"
-          onPress={() => {
-            const r = api.admin.requestBreakGlass(c.id, { reasonCode: bgReason, justification: bgText })
+          onPress={async () => {
+            const r = await api.admin.requestBreakGlass(c.id, { reasonCode: bgReason, justification: bgText })
             if (!r.ok) return setBgError(r.error)
             setSheet(false)
             setBgText('')

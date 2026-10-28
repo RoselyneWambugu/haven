@@ -4,19 +4,20 @@ import { Portrait } from '@/components/Art'
 import { Badge, Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
+import { usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
 import { Button } from '@/components/Button'
-import { Card, EmptyState } from '@/components/Surfaces'
+import { Banner, Card, EmptyState } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
-import { now } from '@/lib/clock'
 import { activeFilterCount, filterTherapists, NO_FILTERS, type DirectoryFilters, type DirectorySort } from '@/lib/directory'
 import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
 import { liveStars, ratingLabel, summarise } from '@/lib/ratings'
 import { useDb } from '@/store/db'
+import { useNow } from '@/store/useNow'
 import { useMoney } from '@/store/useMoney'
 import { colors } from '@/theme'
 
@@ -33,13 +34,16 @@ const SORTS: { value: DirectorySort; label: string }[] = [
 
 export default function Therapists() {
   const sessions = useDb((s) => s.sessions)
+  useDb((s) => s.directoryVersion)
   const langs = useDb((s) => s.account?.public.languages ?? NONE)
   const money = useMoney()
   const flags = useDb((s) => s.content.flags)
   const [filters, setFilters] = useState<DirectoryFilters>(NO_FILTERS)
   const [sort, setSort] = useState<DirectorySort>('next')
   const [open, setOpen] = useState(false)
-  const rows = filterTherapists(THERAPISTS, sessions, filters, now(), sort, langs)
+  const clockNow = useNow(30_000)
+  const plan = usePlan()
+  const rows = filterTherapists(THERAPISTS, sessions, filters, clockNow, sort, langs)
   const count = activeFilterCount(filters)
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
@@ -52,7 +56,16 @@ export default function Therapists() {
       <Text variant="small" muted>
         Every therapist is licensed and checked by our team. Sessions are 45 minutes, by chat, voice or video.
       </Text>
+      {!plan ? (
+        <Banner testID="book-needs-plan" tone="sun" icon="lock" title="Booking needs a plan">
+          You can look at every therapist. A plan lets you book.
+        </Banner>
+      ) : null}
       <Field testID="dir-search" label="Search" hideLabel placeholder="Search by name or topic" value={filters.query} onChangeText={(query) => setFilters({ ...filters, query })} />
+      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+        <Chip testID="dir-now" label="Available now" icon="clock" selected={filters.when === 'now'} onPress={() => setFilters({ ...filters, when: filters.when === 'now' ? 'any' : 'now' })} />
+        <Chip testID="dir-hour" label="Within the hour" selected={filters.when === 'hour'} onPress={() => setFilters({ ...filters, when: filters.when === 'hour' ? 'any' : 'hour' })} />
+      </View>
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
         <Chip testID="dir-filters" label={count ? `Filters (${count})` : 'Filters'} icon="tool" selected={count > 0} onPress={() => setOpen(true)} />
         {SORTS.map((s) => (
@@ -83,8 +96,8 @@ export default function Therapists() {
               </View>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-              <Text variant="small" bold color={slots.length ? colors.mossDeep : colors.muted}>
-                {nextAvailableLabel(slots, now()) ?? 'No times in the next 2 weeks'}
+              <Text testID={`avail-${t.id}`} variant="small" bold color={slots.length ? colors.mossDeep : colors.muted}>
+                {nextAvailableLabel(slots, clockNow) ?? 'No times in the next 2 weeks'}
               </Text>
               <Text variant="small">{money(t.priceKes)}</Text>
             </View>
@@ -125,7 +138,7 @@ export default function Therapists() {
           Available
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {([['any', 'Any time'], ['today', 'Today'], ['week', 'This week']] as const).map(([v, l]) => (
+          {([['any', 'Any time'], ['now', 'Now'], ['hour', 'Within the hour'], ['today', 'Today'], ['week', 'This week']] as const).map(([v, l]) => (
             <Chip key={v} label={l} selected={filters.when === v} onPress={() => setFilters({ ...filters, when: v })} />
           ))}
         </View>

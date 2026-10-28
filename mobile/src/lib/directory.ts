@@ -1,14 +1,14 @@
 import { liveStars, summarise } from './ratings'
 import type { Therapist, Session } from '@/api/types'
-import { generateSlots, type Mode, type Slot } from './booking'
-import { isSameEatDay, startOfEatDay } from './time'
+import { generateSlots, SESSION_MINUTES, type Mode, type Slot } from './booking'
+import { eat, fromEat, isSameEatDay, startOfEatDay } from './time'
 
 export interface DirectoryFilters {
   query: string
   specialisation: string | null
   languages: string[]
   modes: Mode[]
-  when: 'any' | 'today' | 'week'
+  when: 'any' | 'now' | 'hour' | 'today' | 'week'
   gender: 'any' | 'woman' | 'man'
   maxPriceKes: number | null
 }
@@ -26,14 +26,64 @@ export function activeFilterCount(f: DirectoryFilters): number {
 
 /** A stable stand-in for "other clients booked this one". The real backend knows. */
 function takenByOthers(id: string): boolean {
+  // The real backend tells us which times are taken; only the demo makes some up.
+  // (Callers with the real list use `isTaken` below.)
   let h = 0
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
   return h % 5 === 0
 }
 
+/** Whether another member has this time. Uses the real list when there is one. */
+function isTaken(t: Pick<Therapist, 'takenStarts'>, id: string, start: number): boolean {
+  if (t.takenStarts) return t.takenStarts.some((b) => Math.abs(b - start) < SESSION_MINUTES * 60_000)
+  return takenByOthers(id)
+}
+
+const MIN_MS = 60_000
+/** "On now" means a session could start within this long. */
+export const NOW_WITHIN_MIN = 15
+export const HOUR_WITHIN_MIN = 60
+
+const toMinutes = (hhmm: string): number => {
+  const [h, m] = hhmm.split(':').map(Number)
+  return h * 60 + m
+}
+
+/**
+ * The soonest session a therapist could give from right now, if they are on now or start within the hour: inside a
+ * block of their weekly availability with a full session left, rounded up to the next quarter hour. Null otherwise.
+ */
+export function soonSlot(t: Therapist, sessions: Pick<Session, 'therapistId' | 'status' | 'start'>[], now: number): Slot | null {
+  if (!t.acceptingNew || t.suspended) return null
+  const p = eat(now)
+  const mine = sessions.filter((s) => s.therapistId === t.id && s.status === 'booked').map((s) => s.start)
+  for (const block of t.availability.filter((b) => b.dow === p.dow)) {
+    const blockStart = fromEat(p.year, p.month, p.day, 0, toMinutes(block.start))
+    const blockEnd = fromEat(p.year, p.month, p.day, 0, toMinutes(block.end))
+    const quarter = 15 * MIN_MS
+    const start = Math.max(Math.ceil(now / quarter) * quarter, blockStart)
+    if (start - now > HOUR_WITHIN_MIN * MIN_MS) continue
+    if (start + SESSION_MINUTES * MIN_MS > blockEnd) continue
+    if (mine.some((b) => Math.abs(b - start) < SESSION_MINUTES * MIN_MS)) continue
+    const id = `${t.id}-${start}`
+    if (isTaken(t, id, start)) continue
+    return { id, start, end: start + SESSION_MINUTES * MIN_MS, modes: block.modes, soon: true }
+  }
+  return null
+}
+
+/** "now", "hour" (starts within the hour) or "later". */
+export function availability(t: Therapist, sessions: Pick<Session, 'therapistId' | 'status' | 'start'>[], now: number): { state: 'now' | 'hour' | 'later'; slot: Slot | null } {
+  const slot = soonSlot(t, sessions, now)
+  if (!slot) return { state: 'later', slot: null }
+  return { state: slot.start - now <= NOW_WITHIN_MIN * MIN_MS ? 'now' : 'hour', slot }
+}
+
 export function slotsFor(t: Therapist, sessions: Session[], now: number, days = 14): Slot[] {
   const mine = sessions.filter((s) => s.therapistId === t.id && s.status === 'booked').map((s) => s.start)
-  return generateSlots(t.availability, now, days, mine, t.id).filter((s) => !takenByOthers(s.id))
+  const regular = generateSlots(t.availability, now, days, mine, t.id).filter((s) => !isTaken(t, s.id, s.start))
+  const soon = soonSlot(t, sessions, now)
+  return soon && !regular.some((s) => s.id === soon.id) ? [soon, ...regular] : regular
 }
 
 export interface DirectoryRow {
@@ -50,7 +100,7 @@ export function filterTherapists(
   memberLanguages: string[] = [],
 ): DirectoryRow[] {
   const q = filters.query.trim().toLowerCase()
-  let rows = therapists.map((t) => ({ therapist: t, slots: slotsFor(t, sessions, now) }))
+  let rows = therapists.filter((t) => !t.suspended).map((t) => ({ therapist: t, slots: slotsFor(t, sessions, now) }))
   rows = rows.filter(({ therapist: t, slots }) => {
     if (q && !`${t.name} ${t.title} ${t.specialisations.join(' ')} ${t.languages.join(' ')}`.toLowerCase().includes(q)) return false
     if (filters.specialisation && !t.specialisations.includes(filters.specialisation)) return false
@@ -58,6 +108,8 @@ export function filterTherapists(
     if (filters.modes.length && !filters.modes.every((m) => t.modes.includes(m))) return false
     if (filters.gender !== 'any' && t.gender !== filters.gender) return false
     if (filters.maxPriceKes !== null && (t.priceKes ?? 0) > filters.maxPriceKes) return false
+    if (filters.when === 'now' && availability(t, sessions, now).state !== 'now') return false
+    if (filters.when === 'hour' && availability(t, sessions, now).state === 'later') return false
     if (filters.when === 'today' && !slots.some((s) => isSameEatDay(s.start, now))) return false
     if (filters.when === 'week' && !slots.some((s) => s.start < startOfEatDay(now) + 7 * 24 * 3600_000)) return false
     return true

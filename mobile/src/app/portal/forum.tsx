@@ -56,8 +56,8 @@ export default function PortalForum() {
                   <Button
                     testID="fpost-send"
                     label="Reply as therapist"
-                    onPress={() => {
-                      const r = api.portal.forumReply(p.id, text)
+                    onPress={async () => {
+                      const r = await api.portal.forumReply(p.id, text)
                       if (!r.ok) return setError(r.error)
                       setText('')
                       setReplying(null)

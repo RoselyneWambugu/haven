@@ -4,7 +4,7 @@ import { Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Panel, PortalPage } from '@/components/Portal'
 import { Text } from '@/components/Text'
-import { filterCases, minutesLeft, slaLabel, sortCases, type CaseFilter } from '@/lib/admin'
+import { filterCases, minutesLeft, slaLabel, sortCases, visibleCases, type CaseFilter } from '@/lib/admin'
 import { go } from '@/lib/nav'
 import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
@@ -22,9 +22,10 @@ export default function Cases() {
   const [filter, setFilter] = useState<CaseFilter>('all')
   const [query, setQuery] = useState('')
   if (!a) return null
-  const open = a.cases.filter((c) => c.status !== 'closed')
-  const count = (f: CaseFilter) => filterCases(a.cases, f, a.staffName).length
-  const rows = sortCases(filterCases(a.cases, filter, a.staffName, query), t)
+  const mine = visibleCases(a.cases, a.role)
+  const open = mine.filter((c) => c.status !== 'closed')
+  const count = (f: CaseFilter) => filterCases(mine, f, a.staffName).length
+  const rows = sortCases(filterCases(mine, filter, a.staffName, query), t)
   const FILTERS: { key: CaseFilter; label: string }[] = [
     { key: 'all', label: `All ${open.length}` },
     { key: 'S1', label: `S1 ${count('S1')}` },

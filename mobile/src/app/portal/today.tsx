@@ -20,6 +20,7 @@ const MODE = { chat: 'Chat', voice: 'Voice', video: 'Video' } as const
 /** The working home: what is next, who needs a reply, and what needs attention. Nothing is ranked or scored (THR-15). */
 export default function Today() {
   const p = useDb((s) => s.portal)
+  const suspended = useDb((s) => !!(s.portal && s.admin?.therapistStanding?.[s.portal.therapistId]))
   const wide = useWide()
   if (!p) return null
   const th = THERAPISTS.find((t) => t.id === p.therapistId)!
@@ -36,10 +37,24 @@ export default function Today() {
     <PortalPage testID="portal-today" title={`${hello}, ${first}`} sub="Here is your day.">
       {licence.state !== 'ok' ? (
         <Banner tone="sun" icon="clock" title={licence.state === 'expired' ? 'Your licence has expired' : `Your licence expires in ${licence.days} days`}>
-          {licence.state === 'expired' ? 'You’re hidden from booking until you upload a renewal.' : 'Upload your renewal to stay listed.'}
+          {p.licence?.renewal?.status === 'pending'
+            ? 'Your renewal is with a reviewer.'
+            : licence.state === 'expired' ? 'You’re hidden from booking until a renewal is approved.' : 'Send your renewal from Profile to stay listed.'}
         </Banner>
       ) : null}
-      {p.paused ? (
+      {suspended ? (
+        <Banner testID="suspended-notice" tone="clay" icon="lock" title="Your account is suspended">
+          You are not shown to members and can’t take new bookings. A clinical reviewer will be in touch.
+          <Button testID="appeal-link" size="sm" variant="quiet" label="Appeal this decision" onPress={() => go('/portal/appeal')} />
+        </Banner>
+      ) : null}
+      {p.review ? (
+        <Banner testID="review-notice" tone="sun" icon="shield" title={p.review.kind === 'paused' ? 'Paused by a clinical review' : 'A clinical reviewer has written to you'}>
+          {p.review.text}
+          <Button testID="appeal-link-review" size="sm" variant="quiet" label="Appeal this decision" onPress={() => go('/portal/appeal')} />
+        </Banner>
+      ) : null}
+      {p.paused && p.review?.kind !== 'paused' ? (
         <Banner tone="sun" icon="lock" title="New clients are paused">
           Existing clients are unaffected. You can turn this off in Calendar.
         </Banner>
@@ -68,7 +83,7 @@ export default function Today() {
                     </Text>
                   </View>
                   {open ? (
-                    <Button testID={`join-${s.id}`} size="sm" label={s.status === 'in-progress' ? 'Rejoin' : 'Join'} onPress={() => { const r = api.portal.join(s.id); if (r.ok) go(`/portal/session/${s.id}`) }} />
+                    <Button testID={`join-${s.id}`} size="sm" label={s.status === 'in-progress' ? 'Rejoin' : 'Join'} onPress={async () => { const r = await api.portal.join(s.id); if (r.ok) go(`/portal/session/${s.id}`) }} />
                   ) : (
                     <Text variant="caption" muted>
                       {mins < 60 ? `Join in ${Math.max(0, mins - 10)} min` : isSameEatDay(s.start, t) ? 'Later today' : 'Upcoming'}

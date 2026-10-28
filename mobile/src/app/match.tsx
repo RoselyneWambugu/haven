@@ -3,6 +3,7 @@ import { View } from 'react-native'
 import { api } from '@/api'
 import { Avatar, Ripple } from '@/components/Art'
 import { Button } from '@/components/Button'
+import { Dice } from '@/components/Dice'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -26,8 +27,9 @@ export default function Match() {
 
   useEffect(() => {
     if (state.state === 'idle') {
-      const r = api.match.start()
-      if (!r.ok) setError({ text: r.error, code: r.code })
+      void Promise.resolve(api.match.start()).then((r) => {
+        if (!r.ok) setError({ text: r.error, code: r.code })
+      })
     }
     // Only on arrival.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +66,8 @@ export default function Match() {
           </>
         }
       >
-        <View style={{ alignItems: 'center', gap: 10, paddingTop: 24 }}>
+        <View style={{ alignItems: 'center', gap: 10, paddingTop: 8 }}>
+          <Dice rolling={false} size={52} />
           <Text variant="small" muted>
             You’re matched with
           </Text>
@@ -96,15 +99,16 @@ export default function Match() {
         <Banner tone="sun" icon="lock">
           {text}
         </Banner>
-        {code === 'needs-plan' || (needsPlan && state.state !== 'paused') ? <Button testID="match-see-plans" label="See plans" onPress={() => go('/plans')} /> : null}
-        {code === 'paused-matching' || state.state === 'paused' || !open ? (
+        {code === 'chat-limit' ? <Button testID="match-go-chats" label="Go to my chats" onPress={() => goBack('/chats')} /> : null}
+        {code === 'needs-plan' || (needsPlan && state.state !== 'paused' && code !== 'chat-limit') ? <Button testID="match-see-plans" label="See plans" onPress={() => go('/plans')} /> : null}
+        {code !== 'chat-limit' && (code === 'paused-matching' || state.state === 'paused' || !open) ? (
           <Button
             testID="match-resume"
             label="Turn matching back on"
-            onPress={() => {
+            onPress={async () => {
               api.match.setOpenToChats(true)
               setError(null)
-              const r = api.match.start()
+              const r = await api.match.start()
               if (!r.ok) setError({ text: r.error, code: r.code })
             }}
           />
@@ -136,13 +140,12 @@ export default function Match() {
     >
       <View style={{ height: 240, alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
         <Ripple size={190} color={colors.lichenDeep} />
-        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.moss, alignItems: 'center', justifyContent: 'center' }}>
-          <Text variant="h2" color={colors.paper}>
-            e
-          </Text>
-        </View>
+        <Dice rolling />
       </View>
       <Text variant="title" align="center">
+        Rolling the dice
+      </Text>
+      <Text variant="h3" align="center" muted>
         Finding someone for you
       </Text>
       <Text variant="body" muted align="center">

@@ -60,8 +60,8 @@ export default function Standing() {
         <Button
           testID="appeal-send"
           label="Send appeal"
-          onPress={() => {
-            const r = api.account.appeal(appealFor!, text)
+          onPress={async () => {
+            const r = await api.account.appeal(appealFor!, text)
             if (!r.ok) return setError(r.error)
             setAppealFor(null)
           }}

@@ -6,6 +6,9 @@ import { Badge } from '@/components/Controls'
 import { Panel, PortalPage, Stat } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
+import { REMOTE } from '@/backend/client'
+import { PaymentEvents, SmsQueuePanel } from '@/components/PaymentOps'
+import { StaffPayouts } from '@/components/StaffPayouts'
 import { useDb } from '@/store/db'
 
 /** Billing staff see the pen name and the payment reference. A full name appears only when needed to resolve a dispute, and that view is logged (ADM-12). */
@@ -18,7 +21,7 @@ export default function Billing() {
     <PortalPage testID="admin-billing" title="Billing" sub="Refund policy is still an open decision (D2). Amounts are not shown.">
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         <Stat value="—" label="Revenue (month)" />
-        <Stat value="—" label="Failed payments" />
+        <Stat value={a.failedPayments === undefined ? '—' : String(a.failedPayments)} label="Failed payments" />
         <Stat value={String(pending.length)} label="Refunds pending" tone={pending.length ? 'sun' : undefined} />
         <Stat value={String(a.unmatchedPayments)} label="Unmatched payments" tone={a.unmatchedPayments ? 'sun' : undefined} />
       </View>
@@ -39,8 +42,8 @@ export default function Billing() {
             </Text>
             {r.status === 'pending' ? (
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Button testID={`approve-${r.id}`} size="sm" label="Approve" onPress={() => { const x = api.admin.decideRefund(r.id, true); setError(x.ok ? null : x.error) }} />
-                <Button testID={`decline-${r.id}`} size="sm" variant="ghost" label="Decline" onPress={() => { const x = api.admin.decideRefund(r.id, false); setError(x.ok ? null : x.error) }} />
+                <Button testID={`approve-${r.id}`} size="sm" label="Approve" onPress={async () => { const x = await api.admin.decideRefund(r.id, true); setError(x.ok ? null : x.error) }} />
+                <Button testID={`decline-${r.id}`} size="sm" variant="ghost" label="Decline" onPress={async () => { const x = await api.admin.decideRefund(r.id, false); setError(x.ok ? null : x.error) }} />
               </View>
             ) : (
               <Badge tone="plain" label={`${r.status === 'approved' ? 'Approved' : 'Declined'} by ${r.decidedBy}`} />
@@ -48,6 +51,9 @@ export default function Billing() {
           </View>
         ))}
       </Panel>
+      {REMOTE ? <PaymentEvents /> : null}
+      {REMOTE ? <StaffPayouts /> : null}
+      {REMOTE ? <SmsQueuePanel /> : null}
     </PortalPage>
   )
 }

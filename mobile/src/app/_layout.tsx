@@ -14,6 +14,8 @@ import { AtkinsonHyperlegibleNext_700Bold } from '@expo-google-fonts/atkinson-hy
 import { api, resumeBackground } from '@/api'
 import { SecurityAlert } from '@/components/SecurityAlert'
 import { ToastHost } from '@/components/ToastHost'
+import { REMOTE } from '@/backend/client'
+import { restoreSession } from '@/backend/remoteAuth'
 import { getDb, loadDb, useDb } from '@/store/db'
 import { useFront } from '@/store/useFront'
 import { useNow } from '@/store/useNow'
@@ -26,7 +28,7 @@ const SIGNED_OUT_OK = new Set(['welcome', 'landing', 'consent', 'register', 'otp
 /** Signed-in people have no reason to be here (they would only land here with the back button). */
 const SIGNED_IN_AWAY = new Set(['welcome', 'landing', 'consent', 'register', 'login', 'under-18'])
 /** A paused account can still reach these (PRD SAF-15, ACC-18). */
-const PAUSED_OK = new Set(['paused', 'urgent', 'help', 'plan', 'plans', 'checkout', 'pay', 'settings', 'standing', 'appeal', 'about'])
+const PAUSED_OK = new Set(['paused', 'urgent', 'help', 'plan', 'plans', 'refund', 'checkout', 'pay', 'settings', 'standing', 'appeal', 'about'])
 
 function Gate() {
   const front = useFront()
@@ -94,7 +96,12 @@ function Notifier() {
   const signedIn = useDb((s) => s.signedIn)
   const t = useNow()
   useEffect(() => {
-    if (signedIn) api.notify.sync()
+    if (signedIn) {
+      api.chat.sweep()
+      api.groups.ensure()
+      api.groups.tick()
+      api.notify.sync()
+    }
   }, [signedIn, t])
   return null
 }
@@ -113,9 +120,9 @@ export default function RootLayout() {
   useAppLock()
 
   useEffect(() => {
-    // The backend is a mock, so on the web build the browser tests can drive it directly.
-    if (Platform.OS === 'web') (globalThis as { __echo?: typeof api }).__echo = api
-    loadDb().then(() => {
+    // With the mock backend the browser tests can drive it directly. The real service is never exposed this way.
+    if (Platform.OS === 'web' && !REMOTE) (globalThis as { __echo?: typeof api }).__echo = api
+    loadDb().then(() => (REMOTE ? restoreSession().catch(() => undefined) : undefined)).then(() => {
       resumeBackground()
       setReady(true)
     })

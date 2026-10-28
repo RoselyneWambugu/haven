@@ -33,9 +33,9 @@ export default function Inbox() {
     setOpenId(id)
     setError(null)
   }
-  function send() {
+  async function send() {
     if (!selected) return
-    const r = api.portal.send(selected.id, text)
+    const r = await api.portal.send(selected.id, text)
     if (!r.ok) return setError(r.error)
     setText('')
     setError(null)

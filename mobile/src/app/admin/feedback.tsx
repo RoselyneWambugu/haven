@@ -1,5 +1,6 @@
 import { View } from 'react-native'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Panel, PortalPage, Stat } from '@/components/Portal'
@@ -14,7 +15,7 @@ export default function Feedback() {
   const notes = useDb((s) => s.feedback)
   const convs = useDb((s) => s.conversations)
   if (!a) return null
-  const heard = summariseHeard(convs)
+  const heard = REMOTE && a.heardSummary ? a.heardSummary : summariseHeard(convs)
   const rows = triage(notes)
   const unread = notes.filter((n) => !n.reviewedBy).length
   const kindLabel = (k: string) => KINDS.find((x) => x.value === k)?.label ?? k

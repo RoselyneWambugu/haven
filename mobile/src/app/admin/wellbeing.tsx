@@ -62,7 +62,7 @@ export default function Wellbeing() {
           {onBreak(e, t) ? (
             <Button testID="end-break" size="sm" variant="ghost" label="End my break" onPress={() => api.team.endBreak()} />
           ) : (
-            <Button testID="start-break" size="sm" label={`Take a ${a.wellbeing.breakMinutes} minute break`} onPress={() => result(api.team.startBreak(), 'Break started. Revealing is paused.')} />
+            <Button testID="start-break" size="sm" label={`Take a ${a.wellbeing.breakMinutes} minute break`} onPress={async () => result(await api.team.startBreak(), 'Break started. Revealing is paused.')} />
           )}
         </View>
         <Text variant="caption" muted>
@@ -87,7 +87,7 @@ export default function Wellbeing() {
                     testID={`rota-pick-${m}`}
                     label={m}
                     selected={r.heavy.includes(m)}
-                    onPress={() => result(api.team.setRota(r.weekStart, r.heavy.includes(m) ? r.heavy.filter((h) => h !== m) : [...r.heavy, m]), 'Rota updated.')}
+                    onPress={async () => result(await api.team.setRota(r.weekStart, r.heavy.includes(m) ? r.heavy.filter((h) => h !== m) : [...r.heavy, m]), 'Rota updated.')}
                   />
                 ))}
               </View>
@@ -112,7 +112,7 @@ export default function Wellbeing() {
             <Stepper label="Reveals allowed each day" value={cfg.dailyLimit} min={5} max={100} step={5} onChange={(n) => setCfg({ ...cfg, dailyLimit: n })} />
             <Stepper label="Suggest a break after this many reveals" value={cfg.breakEvery} min={2} max={50} onChange={(n) => setCfg({ ...cfg, breakEvery: n })} />
             <Stepper label="Break length (minutes)" value={cfg.breakMinutes} min={1} max={60} step={5} onChange={(n) => setCfg({ ...cfg, breakMinutes: n })} />
-            <Button testID="save-wellbeing" label="Save limits" onPress={() => result(api.team.setWellbeing(cfg), 'Limits updated for everyone.')} />
+            <Button testID="save-wellbeing" label="Save limits" onPress={async () => result(await api.team.setWellbeing(cfg), 'Limits updated for everyone.')} />
             <Text variant="caption" muted>
               These are placeholders until the limits are set with moderator-welfare advice (D27).
             </Text>

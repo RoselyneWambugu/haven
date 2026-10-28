@@ -49,8 +49,8 @@ export default function Resources() {
 
   const visibleTickets = tickets.filter((x) => ownsDepartment(role, c.departments.find((d) => d.id === x.deptId)) && (filter === 'all' || x.status === filter))
 
-  function saveArticle() {
-    const r = api.resources.saveArticle({ id: article!.id, title: article!.title, intro: article!.intro, steps: splitSteps(article!.steps), deptId: article!.deptId })
+  async function saveArticle() {
+    const r = await api.resources.saveArticle({ id: article!.id, title: article!.title, intro: article!.intro, steps: splitSteps(article!.steps), deptId: article!.deptId })
     if (!r.ok) return setAError(r.error)
     setArticle(null)
   }
@@ -127,7 +127,7 @@ export default function Resources() {
                     </View>
                     {can ? (
                       <>
-                        <Button testID={`pub-${x.id}`} size="sm" variant="ghost" label={x.published ? 'Hide' : 'Publish'} onPress={() => { const r = api.resources.setPublished(x.id, !x.published); setError(r.ok ? null : r.error) }} />
+                        <Button testID={`pub-${x.id}`} size="sm" variant="ghost" label={x.published ? 'Hide' : 'Publish'} onPress={async () => { const r = await api.resources.setPublished(x.id, !x.published); setError(r.ok ? null : r.error) }} />
                         <Button testID={`edit-${x.id}`} size="sm" variant="quiet" label="Edit" onPress={() => { setAError(null); setArticle({ id: x.id, title: x.title, deptId: x.deptId, intro: x.intro, steps: x.steps.map((s, i) => `${i + 1}. ${s}`).join('\n') }) }} />
                       </>
                     ) : null}
@@ -156,8 +156,8 @@ export default function Resources() {
                 <Button size="sm" variant="ghost" label="Up" accessibilityHint={`Move ${d.title} up`} onPress={() => api.resources.moveDepartment(d.id, -1)} />
                 <Button size="sm" variant="ghost" label="Down" accessibilityHint={`Move ${d.title} down`} onPress={() => api.resources.moveDepartment(d.id, 1)} />
               </View>
-              <Stepper label="Reply within (hours)" value={d.slaHours} min={1} max={168} step={4} onChange={(n) => { const r = api.resources.saveDepartment(d.id, { slaHours: n }); setError(r.ok ? null : r.error) }} />
-              <ToggleRow testID={`dept-on-${d.id}`} label="Show to members" on={d.enabled} onChange={(on) => { const r = api.resources.saveDepartment(d.id, { enabled: on }); setError(r.ok ? null : r.error) }} />
+              <Stepper label="Reply within (hours)" value={d.slaHours} min={1} max={168} step={4} onChange={async (n) => { const r = await api.resources.saveDepartment(d.id, { slaHours: n }); setError(r.ok ? null : r.error) }} />
+              <ToggleRow testID={`dept-on-${d.id}`} label="Show to members" on={d.enabled} onChange={async (on) => { const r = await api.resources.saveDepartment(d.id, { enabled: on }); setError(r.ok ? null : r.error) }} />
             </View>
           ))}
         </Panel>
@@ -193,7 +193,7 @@ export default function Resources() {
             ))}
             <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
               <Button testID="add-line" size="sm" variant="quiet" icon="plus" label="Add a line" onPress={() => { setDError(null); setLine({ name: '', phone: '', hours: '', languages: '' }) }} />
-              <Button testID="mark-verified" size="sm" label="Mark all numbers as checked" onPress={() => { const r = api.resources.markVerified(); setDError(r.ok ? null : r.error) }} />
+              <Button testID="mark-verified" size="sm" label="Mark all numbers as checked" onPress={async () => { const r = await api.resources.markVerified(); setDError(r.ok ? null : r.error) }} />
             </View>
           </Panel>
           <Panel title="Support directory">
@@ -274,8 +274,8 @@ export default function Resources() {
             <Button
               testID="line-save"
               label="Save"
-              onPress={() => {
-                const r = api.resources.saveCrisisLine(line)
+              onPress={async () => {
+                const r = await api.resources.saveCrisisLine(line)
                 if (!r.ok) return setDError(r.error)
                 setLine(null)
                 setDError(null)
@@ -306,8 +306,8 @@ export default function Resources() {
             {dError ? <Banner tone="clay">{dError}</Banner> : null}
             <Button
               label="Save"
-              onPress={() => {
-                const r = api.resources.saveOrg(org)
+              onPress={async () => {
+                const r = await api.resources.saveOrg(org)
                 if (!r.ok) return setDError(r.error)
                 setOrg(null)
                 setDError(null)

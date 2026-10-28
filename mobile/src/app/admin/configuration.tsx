@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { api, type PlanCfg } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { remoteConfig } from '@/backend/remoteConfig'
 import { Button } from '@/components/Button'
 import { Badge, Chip, ToggleRow } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
 import { Panel, PortalPage, Stepper } from '@/components/Portal'
 import { Sheet } from '@/components/Sheet'
+import { PlatformFee } from '@/components/PlatformFee'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { ALWAYS_ON, FLAGS, HARD_RULES } from '@/lib/content'
@@ -71,8 +74,8 @@ export default function Configuration() {
             <Panel tone="sun" testID="pending-plans" title="A plan change is waiting for a second admin">
               <Text variant="small">Proposed by {c.pendingPlans.requestedBy}.</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Button testID="approve-plans" size="sm" label="Approve change" onPress={() => { const r = api.config.approvePlans(); result(r, 'The plan change is live.') }} />
-                <Button size="sm" variant="ghost" label="Withdraw" onPress={() => api.config.withdrawPlans()} />
+                <Button testID="approve-plans" size="sm" label="Approve change" onPress={async () => { const r = await api.config.approvePlans(); result(r, 'The plan change is live.') }} />
+                {REMOTE && !c.pendingPlans.mine ? <Button size="sm" variant="ghost" label="Decline" onPress={async () => result(await remoteConfig.declinePlans(), 'Declined.')} /> : <Button size="sm" variant="ghost" label="Withdraw" onPress={() => api.config.withdrawPlans()} />}
               </View>
             </Panel>
           ) : null}
@@ -91,7 +94,6 @@ export default function Configuration() {
                 keyboardType="number-pad"
               />
               <ToggleRow label="Disappearing chats" on={p.entitlements.disappearing} onChange={(v) => setPlan(p.id, { entitlements: { ...p.entitlements, disappearing: v } })} />
-              <Stepper label="Discount on therapy sessions (%)" value={p.entitlements.therapistDiscountPct} min={0} max={50} step={5} onChange={(n) => setPlan(p.id, { entitlements: { ...p.entitlements, therapistDiscountPct: n } })} />
             </Panel>
           ))}
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -99,9 +101,9 @@ export default function Configuration() {
               testID="propose-plans"
               label="Propose change"
               disabled={!draft || !!c.pendingPlans}
-              onPress={() => {
-                const r = api.config.proposePlans(draft!)
-                result(r, 'Sent for approval by a second admin.')
+              onPress={async () => {
+                const r = await api.config.proposePlans(draft!)
+                result(r, (r as { value?: { proposed?: boolean } }).value?.proposed === false ? 'Done.' : 'Sent for approval by a second admin.')
                 if (r.ok) setDraft(null)
               }}
             />
@@ -121,7 +123,7 @@ export default function Configuration() {
                 {t}
               </Text>
               <Button size="sm" variant="quiet" label="Rename" onPress={() => { setError(null); setRename({ from: t, to: t }) }} />
-              <Button size="sm" variant="ghost" label="Retire" onPress={() => result(api.config.retireTopic(t), `Retired ${t}.`)} />
+              <Button size="sm" variant="ghost" label="Retire" onPress={async () => result(await api.config.retireTopic(t), `Retired ${t}.`)} />
             </View>
           ))}
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
@@ -131,8 +133,8 @@ export default function Configuration() {
             <Button
               testID="add-topic"
               label="Add"
-              onPress={() => {
-                const r = api.config.addTopic(topic)
+              onPress={async () => {
+                const r = await api.config.addTopic(topic)
                 result(r, `Added ${topic.trim()}.`)
                 if (r.ok) setTopic('')
               }}
@@ -170,7 +172,7 @@ export default function Configuration() {
               Topics only choose between people who already share an age range and a language. They never decide who is eligible (D17).
             </Text>
             <Stepper label="Days before the same two people can be matched again" value={match.rematchCooldownDays} min={0} max={365} step={7} onChange={(n) => setMatch({ ...match, rematchCooldownDays: n })} />
-            <Button testID="save-matching" label="Save matching" onPress={() => result(api.config.setMatching(match), 'Matching updated.')} />
+            <Button testID="save-matching" label="Save matching" onPress={async () => result(await api.config.setMatching(match), 'Matching updated.')} />
           </Panel>
         </>
       ) : null}
@@ -179,7 +181,7 @@ export default function Configuration() {
         <>
           <Panel title="Feature flags" testID="flags">
             {FLAGS.map((f) => (
-              <ToggleRow key={f.key} testID={`flag-${f.key}`} label={f.label} sub={f.sub} on={c.flags[f.key]} onChange={(v) => result(api.config.setFlag(f.key, v), `${f.label} is ${v ? 'on' : 'off'}.`)} />
+              <ToggleRow key={f.key} testID={`flag-${f.key}`} label={f.label} sub={f.sub} on={c.flags[f.key]} onChange={async (v) => result(await api.config.setFlag(f.key, v), `${f.label} is ${v ? 'on' : 'off'}.`)} />
             ))}
           </Panel>
           <Panel title="Never switched off" tone="lichen">
@@ -194,12 +196,14 @@ export default function Configuration() {
         </>
       ) : null}
 
+      {tab === 'limits' && REMOTE ? <PlatformFee canEdit={a?.role === 'admin'} /> : null}
+
       {tab === 'limits' ? (
         <Panel title="Limits" testID="limits">
           <Stepper label="Days chats stay read-only after a plan ends (D26)" value={limits.graceDays} min={0} max={60} onChange={(n) => setLimits({ ...limits, graceDays: n })} />
           <Stepper label="Days between pen-name changes (D36)" value={limits.penNameChangeDays} min={1} max={365} step={5} onChange={(n) => setLimits({ ...limits, penNameChangeDays: n })} />
           <Stepper label="Days an account is held after a deletion request (D34)" value={limits.deletionHoldDays} min={1} max={60} onChange={(n) => setLimits({ ...limits, deletionHoldDays: n })} />
-          <Button testID="save-limits" label="Save limits" onPress={() => result(api.config.setLimits(limits), 'Limits updated for everyone.')} />
+          <Button testID="save-limits" label="Save limits" onPress={async () => result(await api.config.setLimits(limits), 'Limits updated for everyone.')} />
         </Panel>
       ) : null}
 
@@ -210,8 +214,8 @@ export default function Configuration() {
             <Button
               testID="rename-save"
               label="Rename"
-              onPress={() => {
-                const r = api.config.renameTopic(rename.from, rename.to)
+              onPress={async () => {
+                const r = await api.config.renameTopic(rename.from, rename.to)
                 result(r, `Renamed to ${rename.to.trim()}.`)
                 if (r.ok) setRename(null)
               }}

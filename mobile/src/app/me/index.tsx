@@ -1,3 +1,4 @@
+import { REMOTE } from '@/backend/client'
 import { View } from 'react-native'
 import { api } from '@/api'
 import { Avatar } from '@/components/Art'
@@ -46,7 +47,7 @@ export default function Me() {
         />
         <Row testID="me-settings" icon="tool" title="Settings" onPress={() => go('/settings')} />
         <Row icon="help" title="Help" onPress={() => go('/help')} />
-        <Row icon="rocket" title="Demo tools" sub="For reviewers" onPress={() => go('/demo')} />
+        {!REMOTE ? <Row icon="rocket" title="Demo tools" sub="For reviewers" onPress={() => go('/demo')} /> : null}
         <Row icon="external" title="About Echo" onPress={() => go('/about')} />
         <Row
           testID="sign-out"

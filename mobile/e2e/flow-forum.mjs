@@ -33,6 +33,16 @@ await step('register', async () => {
   await tid('finish').click()
   await tid('home').waitFor()
 })
+await step('the-community-needs-a-plan', async () => {
+  await tid('tab-forum').click()
+  await tid('forum').waitFor()
+  await tid('plan-gate').waitFor()
+  await shot('19-community-locked')
+  if (await tid('forum-new').count()) throw new Error('posting should be locked')
+  await page.evaluate(() => window.__echo.demo.grantPlan('monthly'))
+  await page.waitForTimeout(300)
+  await tid('plan-gate').waitFor({ state: 'detached' })
+})
 await step('feed', async () => {
   await tid('tab-forum').click()
   await tid('forum').waitFor()
@@ -69,6 +79,18 @@ await step('composer', async () => {
   await tid('post-anyway').click()
   await tid('my-posts').waitFor()
   await shot('25-my-posts-pending')
+})
+await step('replies-arrive-and-notify', async () => {
+  // Quiet hours (22:00 to 07:00 East Africa Time) hold notifications back, so switch them off to make this flow the same at any time of day.
+  await page.evaluate(() => window.__echo.auth.setSettings({ quietHours: false }))
+  // The post goes live after about 15 s, a peer replies about 20 s later and a therapist about 25 s after that.
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('echo.demo.v1') || '{}').notifications?.filter((n) => n.title === 'New reply to your post').length === 2, null, { timeout: 90000 })
+  await page.goto('http://localhost:8097/notifications')
+  await tid('notification-centre').waitFor()
+  await page.getByText('New reply to your post').first().click()
+  await tid('post-detail').waitFor()
+  await page.getByText('General information, not treatment or advice for you.').waitFor()
+  await shot('26-post-with-replies')
 })
 await browser.close()
 server.close()

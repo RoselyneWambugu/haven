@@ -63,7 +63,7 @@ export function TopBar({
         ) : null}
         {logo ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <LogoMark color={dark ? colors.paper : colors.fern} />
+            <LogoMark size={40} />
             <Text variant="h2" color={fg}>
               echo
             </Text>
@@ -142,7 +142,13 @@ export function Screen({
 
 interface TabBarProps {
   state: { index: number; routes: { key: string; name: string }[] }
-  navigateToTab: (routeKey: string) => void
+  /** Newer navigation versions pass this. */
+  navigateToTab?: (routeKey: string) => void
+  /** Older ones (Expo SDK 57) pass the navigation helpers instead. */
+  navigation?: {
+    emit: (e: { type: 'tabPress'; target: string; canPreventDefault: true }) => { defaultPrevented: boolean }
+    navigate: (name: string) => void
+  }
 }
 
 const TABS: Record<string, { label: string; icon: 'home' | 'chats' | 'forum' | 'heart' | 'help' }> = {
@@ -153,7 +159,12 @@ const TABS: Record<string, { label: string; icon: 'home' | 'chats' | 'forum' | '
   help: { label: 'Help', icon: 'help' },
 }
 
-export function TabBar({ state, navigateToTab }: TabBarProps) {
+export function TabBar({ state, navigateToTab, navigation }: TabBarProps) {
+  const pressTab = (r: { key: string; name: string }) => {
+    if (navigateToTab) return navigateToTab(r.key)
+    const e = navigation?.emit({ type: 'tabPress', target: r.key, canPreventDefault: true })
+    if (!e?.defaultPrevented) navigation?.navigate(r.name)
+  }
   const t = useT()
   const insets = useSafeAreaInsets()
   const unreadChats = useDb((s) => s.conversations.reduce((n, c) => n + (c.archived ? 0 : c.unread), 0))
@@ -175,7 +186,7 @@ export function TabBar({ state, navigateToTab }: TabBarProps) {
               accessibilityRole="tab"
               accessibilityLabel={label}
               accessibilityState={{ selected: on }}
-              onPress={() => navigateToTab(r.key)}
+              onPress={() => pressTab(r)}
               style={styles.tab}
             >
               <View style={[styles.iconPill, on ? { backgroundColor: colors.lichen } : null]}>

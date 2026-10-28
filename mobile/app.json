@@ -16,7 +16,7 @@
     "android": {
       "package": "ke.echo.app",
       "adaptiveIcon": {
-        "backgroundColor": "#1C372A",
+        "backgroundColor": "#1B3F3B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -32,7 +32,7 @@
       "name": "Echo",
       "shortName": "Echo",
       "backgroundColor": "#F5F6EA",
-      "themeColor": "#F5F6EA",
+      "themeColor": "#1B3F3B",
       "description": "A space to speak. Someone to listen."
     },
     "plugins": [
@@ -40,7 +40,7 @@
       "expo-secure-store",
       "expo-font",
       ["expo-local-authentication", { "faceIDPermission": "Echo uses Face ID to keep your conversations private." }],
-      ["expo-splash-screen", { "backgroundColor": "#F5F6EA", "image": "./assets/splash-icon.png", "imageWidth": 160 }]
+      ["expo-splash-screen", { "backgroundColor": "#1B3F3B", "image": "./assets/splash-icon.png", "imageWidth": 160 }]
     ]
   }
 }

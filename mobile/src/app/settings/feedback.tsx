@@ -18,8 +18,8 @@ export default function Feedback() {
   const [withDevice, setWithDevice] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  function send() {
-    const r = api.feedback.send(kind, text, withDevice)
+  async function send() {
+    const r = await api.feedback.send(kind, text, withDevice)
     if (!r.ok) return setError(r.error)
     goBack('/settings')
   }

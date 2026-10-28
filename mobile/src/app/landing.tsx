@@ -56,7 +56,7 @@ export default function Landing() {
       {/* Top bar */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, paddingHorizontal: pad, paddingVertical: 18 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <LogoMark size={30} />
+          <LogoMark size={48} />
           <Text variant="h3">Echo</Text>
         </View>
         <View style={{ flex: 1 }} />

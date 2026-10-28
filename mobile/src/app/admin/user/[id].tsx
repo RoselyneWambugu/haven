@@ -99,8 +99,8 @@ export default function UserDetail() {
           testID="user-act-confirm"
           variant={act === 'restore' ? 'primary' : 'danger'}
           label="Confirm"
-          onPress={() => {
-            const r = api.admin.userAction(u.id, act!, reason)
+          onPress={async () => {
+            const r = await api.admin.userAction(u.id, act!, reason)
             if (!r.ok) return setError(r.error)
             setAct(null)
           }}

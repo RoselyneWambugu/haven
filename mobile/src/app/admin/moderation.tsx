@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { remoteAdmin } from '@/backend/remoteAdmin'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Field } from '@/components/Field'
+import { FlagRulesPanel } from '@/components/FlagRules'
 import { Panel, PortalPage, Stat } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -30,6 +33,24 @@ export default function Moderation() {
         <Stat value={pct(m.overturnRate)} label="Overturn rate" />
         <Stat value={m.medianMinutes === null ? '—' : `${m.medianMinutes} min`} label="Median review time" />
       </View>
+      {REMOTE ? (
+        <Panel title="Held posts" testID="held-posts">
+          {(a.held ?? []).length === 0 ? <Text variant="small" muted>Nothing is waiting. Posts that need a look appear here, and go live after a day if nobody gets to them.</Text> : null}
+          {(a.held ?? []).map((h) => (
+            <View key={h.id} style={{ gap: 6, paddingVertical: 8 }}>
+              <Text variant="label">{h.title}</Text>
+              <Text variant="small" muted>{h.author} · {h.topic}</Text>
+              <Text variant="small">{h.body}</Text>
+              {a.role === 'moderator' || admin ? (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Button testID={`held-approve-${h.id}`} size="sm" label="Approve" onPress={() => { void remoteAdmin.reviewPost(h.id, true) }} />
+                  <Button testID={`held-remove-${h.id}`} size="sm" variant="ghost" label="Remove" onPress={() => { void remoteAdmin.reviewPost(h.id, false, 'Breaks the guidelines') }} />
+                </View>
+              ) : null}
+            </View>
+          ))}
+        </Panel>
+      ) : null}
       <Panel title="AI flags">
         <View style={{ flexDirection: 'row', paddingBottom: 4 }}>
           {['Flag', 'Category', 'Conf.', 'Model', 'Outcome'].map((h, i) => (
@@ -61,7 +82,8 @@ export default function Moderation() {
           The log shows message references, never message text.
         </Text>
       </Panel>
-      <Panel title="Strike policy (draft)" testID="strike-policy">
+      {REMOTE ? <FlagRulesPanel canEdit={a.role === 'clinical' || a.role === 'admin'} /> : null}
+      <Panel title="Strike policy" testID="strike-policy">
         <Text variant="small">S3 → warning · S2 → strike · S1 → immediate suspension.</Text>
         <Text variant="small">
           Expiry <Text variant="small" bold>{a.policy.expiryDays} days</Text> · restriction <Text variant="small" bold>{a.policy.restrictionHours} hours</Text>
@@ -73,8 +95,8 @@ export default function Moderation() {
         ) : null}
         {pc && admin ? (
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button testID="approve-policy" size="sm" label="Approve change" onPress={() => { const r = api.admin.approvePolicy(); setError(r.ok ? null : r.error) }} />
-            <Button size="sm" variant="ghost" label="Withdraw" onPress={() => api.admin.cancelPolicy()} />
+            {REMOTE && pc.mine ? null : <Button testID="approve-policy" size="sm" label="Approve change" onPress={async () => { const r = await api.admin.approvePolicy(); setError(r.ok ? null : r.error) }} />}
+            {REMOTE && !pc.mine ? <Button size="sm" variant="ghost" label="Decline" onPress={async () => { const r = await remoteAdmin.declinePolicy(); setError(r.ok ? null : r.error) }} /> : <Button size="sm" variant="ghost" label="Withdraw" onPress={() => { void api.admin.cancelPolicy() }} />}
           </View>
         ) : null}
         {admin && !pc ? (
@@ -85,13 +107,14 @@ export default function Moderation() {
               testID="propose-policy"
               variant="quiet"
               label="Propose change"
-              onPress={() => {
-                const r = api.admin.proposePolicy({ expiryDays: Number(expiry || a.policy.expiryDays), restrictionHours: Number(hours || a.policy.restrictionHours) })
+              onPress={async () => {
+                const r = await api.admin.proposePolicy({ expiryDays: Number(expiry || a.policy.expiryDays), restrictionHours: Number(hours || a.policy.restrictionHours) })
                 setError(r.ok ? null : r.error)
+                if (r.ok) { setExpiry(''); setHours('') }
               }}
             />
             <Text variant="caption" muted>
-              Changes need two admins to approve (D5).
+              {REMOTE ? 'Changes need a second Admin to approve (D5). With only one Admin they apply at once.' : 'Changes need two admins to approve (D5).'}
             </Text>
           </View>
         ) : null}

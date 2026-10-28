@@ -57,6 +57,18 @@ function patch(fn: (p: PortalState) => Partial<PortalState>) {
 }
 
 /** What members see in the directory follows what the therapist publishes. A real backend would do this itself. */
+/** Whether staff have suspended this therapist. */
+export const isSuspended = (therapistId: string): boolean => !!getDb().admin?.therapistStanding?.[therapistId]
+
+/** Hides suspended therapists from the directory and stops bookings with them. */
+export function applyStandingToDirectory(): void {
+  for (const t of THERAPISTS) {
+    const off = isSuspended(t.id)
+    t.suspended = off
+    if (off) t.acceptingNew = false
+  }
+}
+
 export function applyPortalToDirectory(): void {
   const p = getDb().portal
   if (!p) return
@@ -65,7 +77,7 @@ export function applyPortalToDirectory(): void {
   const blocked = p.timeOff
   Object.assign(t, {
     bio: p.profile.bio, specialisations: p.profile.specialisations, languages: p.profile.languages, modes: p.profile.modes,
-    priceKes: p.profile.priceKes, availability: p.availability, acceptingNew: !p.paused && blocked.every((b) => !(b.start <= now() && now() < b.end)),
+    priceKes: p.profile.priceKes, availability: p.availability, acceptingNew: !p.paused && !isSuspended(p.therapistId) && blocked.every((b) => !(b.start <= now() && now() < b.end)),
   })
 }
 
@@ -102,9 +114,12 @@ export const portal = {
     patch(() => ({ availability: cellsToBlocks(cells) }))
     applyPortalToDirectory()
   },
-  setPaused(paused: boolean): void {
+  /** A pause set by a clinical review can't be switched off here. A clinical reviewer lifts it. */
+  setPaused(paused: boolean): Res {
+    if (!paused && getDb().portal?.review?.kind === 'paused') return { ok: false, error: 'This pause was set by a clinical review. A clinical reviewer will lift it.', code: 'review' }
     patch(() => ({ paused }))
     applyPortalToDirectory()
+    return { ok: true, value: undefined }
   },
   setCaps(caps: Partial<PortalState['caps']>): void {
     patch((p) => ({ caps: { ...p.caps, ...caps } }))
@@ -220,10 +235,12 @@ export const portal = {
   earnings(): { rows: (ReturnType<typeof split> & { id: string; at: number; client: string; mode: string; available: boolean })[]; available: number | null; pending: number | null } {
     const p = getDb().portal
     const done = (p?.sessions ?? []).filter((s) => s.status === 'completed' && s.grossKes !== null).sort((a, b) => b.end - a.end)
-    const rows = done.map((s) => ({ id: s.id, at: s.end, client: s.clientName, mode: s.mode, available: isAvailable(s.end, now()), ...split(s.grossKes) }))
+    const rows = done.map((s) => ({ id: s.id, at: s.end, client: s.clientName, mode: s.mode, available: isAvailable(s.end, now()), ...split(s.grossKes, s.feeKes) }))
     const sum = (list: typeof rows) => (list.length ? list.reduce((n, r) => n + (r.net ?? 0), 0) : 0)
     return { rows, available: sum(rows.filter((r) => r.available)), pending: sum(rows.filter((r) => !r.available)) }
   },
+  /** On the real backend this sends a code to the therapist's phone. The demo shows the code on screen instead. */
+  async reauthStart(): Promise<void> {},
   /** Changing where money goes needs a fresh check (THR-20). The demo code is shown on screen. */
   reauth(code: string): Res {
     if (code !== DEMO_REAUTH_CODE) return { ok: false, error: 'That code doesn’t match.' }

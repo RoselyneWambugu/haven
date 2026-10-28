@@ -61,6 +61,7 @@ describe('what staff change shows up for members', () => {
   })
 
   it('refuses a video booking when video is switched off', () => {
+    api.demo.grantPlan('monthly')
     const t = THERAPISTS.find((x) => x.modes.includes('video'))!
     const slot = slotsFor(t, [], now()).find((s) => s.modes.includes('video'))!
     expect(api.billing.createCheckout({ kind: 'session', therapistId: t.id, mode: 'video', start: slot.start }).ok).toBe(true)

@@ -52,6 +52,7 @@ await step('member-setup', async () => {
   await tid('pen-continue').click()
   await tid('finish').click()
   await tid('home').waitFor()
+  await page.evaluate(() => window.__echo.demo.grantPlan('monthly'))
   await page.evaluate(() => window.__echo.demo.showPrices(true))
   const r = await page.evaluate(() => window.__echo.tickets.create({ deptId: 'billing', subject: 'Charged twice', text: 'I was charged twice for my monthly plan' }))
   ticketId = r.value.ticket.id

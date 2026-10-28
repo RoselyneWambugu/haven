@@ -26,14 +26,14 @@ export default function AppealReview() {
   const conflict = ap.decidedBy === a.staffName
 
   return (
-    <PortalPage testID="admin-appeal" title={`Appeal ${ap.id.length > 10 ? '(member)' : ap.id}`} sub={`${ap.penName} · SLA ${ap.slaHours} h`}>
+    <PortalPage testID="admin-appeal" title={`Appeal ${ap.therapistId ? '(therapist)' : ap.id.length > 10 ? '(member)' : ap.id}`} sub={`${ap.penName} · SLA ${ap.slaHours} h`}>
       <Panel title="Original decision">
         <Text variant="small">{ap.decision}</Text>
         <Text variant="caption" muted>
           Decided by {ap.decidedBy}
         </Text>
       </Panel>
-      <Panel title="Member’s statement" tone="lichen">
+      <Panel title={ap.therapistId ? 'Therapist’s statement' : 'Member’s statement'} tone="lichen">
         <Text variant="body" italic>
           “{ap.statement || 'No statement.'}”
         </Text>
@@ -49,13 +49,13 @@ export default function AppealReview() {
         </Banner>
       ) : (
         <Panel title="Outcome">
-          <Segmented value={outcome} onChange={setOutcome} options={[{ value: 'upheld', label: 'Uphold' }, { value: 'reduced', label: 'Reduce' }, { value: 'overturned', label: 'Overturn and restore' }]} />
-          <Field testID="appeal-explanation" label="Explanation to the member" value={text} onChangeText={(v) => { setText(v); setError(null) }} multiline minHeight={100} error={error} />
+          <Segmented value={outcome} onChange={setOutcome} options={[{ value: 'upheld', label: 'Uphold' }, { value: 'reduced', label: ap.therapistId ? 'Reduce one step' : 'Reduce' }, { value: 'overturned', label: 'Overturn and restore' }]} />
+          <Field testID="appeal-explanation" label={ap.therapistId ? 'Explanation to the therapist' : 'Explanation to the member'} value={text} onChangeText={(v) => { setText(v); setError(null) }} multiline minHeight={100} error={error} />
           <Button
             testID="appeal-decide"
             label="Send decision"
-            onPress={() => {
-              const r = api.admin.decideAppeal(ap.id, outcome, text)
+            onPress={async () => {
+              const r = await api.admin.decideAppeal(ap.id, outcome, text)
               if (!r.ok) return setError(r.error)
               goBack('/admin/appeals')
             }}

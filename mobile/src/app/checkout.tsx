@@ -124,7 +124,7 @@ export default function Checkout() {
         }
       >
         <Banner tone="clay" icon="clock" title="Payment didn’t go through">
-          {result?.failure === 'insufficient' ? 'Your M-Pesa balance was too low.' : 'We didn’t get a response from M-Pesa in time.'} You haven’t been charged.
+          {result?.failure === 'insufficient' ? 'Your M-Pesa balance was too low.' : result?.failure === 'unavailable' ? 'Payments aren’t switched on yet.' : result?.failure === 'taken' ? 'Someone booked that time while you were paying.' : 'We didn’t get a response from M-Pesa in time.'} You haven’t been charged.
         </Banner>
         <Text variant="body">You can try again, or check that your phone has network and enough balance.</Text>
       </Screen>

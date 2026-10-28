@@ -43,3 +43,25 @@ export function commentSnapshot(post: Pick<ForumPost, 'title' | 'comments'>, com
 export function priorReports(reports: { targetId: string; at: number }[], targetId: string, before: number): number {
   return reports.filter((r) => r.targetId === targetId && r.at < before).length
 }
+
+/**
+ * A concern about a therapist session. Calls are not recorded, so the case holds the member's own words and the
+ * session details, plus the last messages of the chat with that therapist if there is one.
+ */
+export function sessionSnapshot(info: { therapist: string; mode: string; when: string }, note: string, thread: Message[] = []): EvidenceLine[] {
+  const chat = chatSnapshot(thread)
+  const head: EvidenceLine[] = [
+    { id: 'h0', who: 'reporter', text: clip(`Session with ${info.therapist} by ${info.mode}, ${info.when}. Calls are not recorded.`) },
+    ...(note.trim() ? [{ id: 'h1', who: 'reporter' as const, text: clip(note.trim()) }] : []),
+  ]
+  return [...head, ...chat.map((l, i) => ({ ...l, id: `e${i}` }))]
+}
+
+/** A reported message in a group chat, with the messages around it. The conversation is kept even when the room is deleted. */
+export function groupSnapshot(messages: { id: string; name: string; text: string; mine?: boolean; system?: boolean }[], targetId: string): EvidenceLine[] {
+  const spoken = messages.filter((m) => !m.system)
+  const at = spoken.findIndex((m) => m.id === targetId)
+  const from = Math.max(0, at - CONTEXT_MESSAGES + 1)
+  const window = at < 0 ? spoken.slice(-CONTEXT_MESSAGES) : spoken.slice(from, at + 1 + 2)
+  return window.map((m, i) => ({ id: `e${i}`, who: m.mine ? 'reporter' : 'reported', text: clip(`${m.name}: ${m.text}`), reported: m.id === targetId }))
+}

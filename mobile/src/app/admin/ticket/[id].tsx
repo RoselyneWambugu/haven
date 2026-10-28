@@ -65,8 +65,8 @@ export default function TicketThread() {
             <Button
               testID="staff-send"
               label="Send reply"
-              onPress={() => {
-                const r = api.resources.replyTicket(t.id, text)
+              onPress={async () => {
+                const r = await api.resources.replyTicket(t.id, text)
                 if (!r.ok) return setError(r.error)
                 setText('')
               }}

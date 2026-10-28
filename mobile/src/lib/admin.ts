@@ -4,7 +4,7 @@ import type { AdminCase, Severity, StaffRole } from '@/api/types'
 // Roles and modules (PRD §3.2, §6.11). Each role sees only its own modules.
 // ---------------------------------------------------------------------------
 
-export type Module = 'overview' | 'cases' | 'users' | 'appeals' | 'therapists' | 'billing' | 'moderation' | 'analytics' | 'resources' | 'configuration' | 'roles' | 'wellbeing' | 'feedback' | 'audit'
+export type Module = 'overview' | 'cases' | 'users' | 'appeals' | 'therapists' | 'billing' | 'moderation' | 'analytics' | 'resources' | 'configuration' | 'roles' | 'wellbeing' | 'feedback' | 'groups' | 'audit'
 
 export const MODULES: { key: Module; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -17,6 +17,7 @@ export const MODULES: { key: Module; label: string }[] = [
   { key: 'analytics', label: 'Analytics' },
   { key: 'resources', label: 'Resources' },
   { key: 'feedback', label: 'Feedback' },
+  { key: 'groups', label: 'Group chats' },
   { key: 'configuration', label: 'Config' },
   { key: 'roles', label: 'Roles' },
   { key: 'wellbeing', label: 'Wellbeing' },
@@ -24,10 +25,10 @@ export const MODULES: { key: Module; label: string }[] = [
 ]
 
 const ACCESS: Record<StaffRole, Module[]> = {
-  moderator: ['overview', 'cases', 'users', 'moderation', 'appeals', 'analytics', 'resources', 'wellbeing'],
-  clinical: ['overview', 'cases', 'appeals', 'therapists', 'analytics', 'resources', 'wellbeing', 'audit'],
+  moderator: ['overview', 'cases', 'users', 'moderation', 'appeals', 'analytics', 'resources', 'wellbeing', 'groups'],
+  clinical: ['overview', 'cases', 'appeals', 'therapists', 'analytics', 'resources', 'wellbeing', 'groups', 'audit'],
   billing: ['overview', 'users', 'billing', 'analytics', 'resources', 'feedback'],
-  admin: ['overview', 'cases', 'users', 'moderation', 'appeals', 'therapists', 'billing', 'analytics', 'resources', 'feedback', 'configuration', 'roles', 'wellbeing', 'audit'],
+  admin: ['overview', 'cases', 'users', 'moderation', 'appeals', 'therapists', 'billing', 'analytics', 'resources', 'feedback', 'groups', 'configuration', 'roles', 'wellbeing', 'audit'],
 }
 
 export const canAccess = (role: StaffRole, module: Module): boolean => ACCESS[role].includes(module)
@@ -119,3 +120,13 @@ export function nextSanction(strikesNow: number, severity: Severity): 'warning' 
   if (strikesNow === 1) return 'restriction'
   return 'suspension'
 }
+
+/** Therapist concerns are for Clinical reviewers and Admins. Moderators do not see them (PRD §3.2: therapists are a clinical matter). */
+export const canSeeCase = (role: StaffRole, c: Pick<AdminCase, 'queue'>): boolean => c.queue !== 'clinical' || role === 'clinical' || role === 'admin'
+export const visibleCases = <T extends Pick<AdminCase, 'queue'>>(cases: T[], role: StaffRole): T[] => cases.filter((c) => canSeeCase(role, c))
+
+/** Clinical reviewers and Admins schedule and cancel group chats. */
+export const canManageGroups = (role: StaffRole): boolean => role === 'clinical' || role === 'admin'
+
+/** Moderators, clinical reviewers and Admins can remove a person from a group chat that is open. Cancelling or scheduling one is for clinical reviewers and Admins only. */
+export const canModerateGroups = (role: StaffRole): boolean => role === 'moderator' || role === 'clinical' || role === 'admin'

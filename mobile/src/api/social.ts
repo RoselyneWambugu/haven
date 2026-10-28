@@ -6,9 +6,15 @@ import { canChat, planState } from '@/lib/plan'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { hasPlan, requirePlan } from './access'
 import { notify } from './notify'
-import { peerReply, therapistThreadReply } from './bot'
-import { chatSnapshot, commentSnapshot, postSnapshot, priorReports } from '@/lib/snapshot'
+import { peerReply, postReply, therapistThreadReply } from './bot'
+import { MAX_PEER_CHATS, openPeerChats } from '@/lib/limits'
+import { sweep, timeLeft, warnBeforeMs } from '@/lib/chatLife'
+import { chatSnapshot, commentSnapshot, groupSnapshot, postSnapshot, priorReports, sessionSnapshot } from '@/lib/snapshot'
+import { dayAndClock } from '@/lib/time'
+import { spaceById } from '@/data/spaces'
+import { needsCheck } from '@/lib/spaces'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
 
 const SEC = 1000
@@ -66,6 +72,10 @@ function pickPeer(): Peer | null {
 function resolveMatch() {
   const db = getDb()
   if (db.match.state !== 'searching') return
+  if (openPeerChats(db.conversations, db.sessions, now()) >= MAX_PEER_CHATS) {
+    update({ match: { state: 'idle' } })
+    return
+  }
   const peer = pickPeer()
   if (!peer) {
     later('match', 6 * SEC, resolveMatch) // keep looking
@@ -73,7 +83,7 @@ function resolveMatch() {
   }
   const conv: Conversation = {
     id: uid('c'), kind: 'peer', peer, therapistId: null,
-    messages: [msg('system', `You’re matched with ${peer.penName}. Say hello when you’re ready.`)],
+    messages: [msg('system', `You’re matched with ${peer.penName}. Say hello when you’re ready.`), msg('system', 'Chats end and are deleted 24 hours after they start, unless one is reported.')],
     muted: false, archived: false, ended: false, disappearing: 'off', unread: 1, createdAt: now(), lastAt: now(),
   }
   update((s) => ({ conversations: [conv, ...s.conversations], match: { state: 'found', conversationId: conv.id } }))
@@ -88,6 +98,7 @@ export const match = {
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (!canChat(planState(db.subscription, now()))) return { ok: false, error: 'Peer chat needs an active plan.', code: 'needs-plan' }
     if (!a.public.openToChats) return { ok: false, error: 'Matching is paused. Turn on “Open to new chats” first.', code: 'paused-matching' }
+    if (openPeerChats(db.conversations, db.sessions, now()) >= MAX_PEER_CHATS) return { ok: false, error: `You have ${MAX_PEER_CHATS} chats open, which is the most at one time. End one, or wait for one to expire, to meet someone new.`, code: 'chat-limit' }
     update({ match: { state: 'searching', startedAt: now() } })
     later('match', 4 * SEC, resolveMatch)
     return { ok: true, value: undefined }
@@ -125,6 +136,26 @@ export const match = {
 // ---------------------------------------------------------------------------
 
 export const chat = {
+  /**
+   * Ends and deletes chats that are 24 hours old, and adds an "ending soon" note an hour before. A reported chat is moved
+   * out of the member's view and kept for the safety review. Safe to call often.
+   */
+  sweep(): void {
+    const db = getDb()
+    const t = now()
+    const reported = new Set(db.reports.flatMap((r) => (r.conversationId ? [r.conversationId] : [])))
+    const { keep, retain, drop } = sweep(db.conversations, db.sessions, reported, t)
+    const warn = keep.filter((c) => !c.warned && !c.ended && timeLeft(c, db.sessions, t) <= warnBeforeMs(c))
+    if (!drop.length && !retain.length && !warn.length) return
+    const gone = new Set([...drop, ...retain].map((c) => c.id))
+    update((s) => ({
+      conversations: keep.map((c) => (warn.some((w) => w.id === c.id) ? { ...c, warned: true, messages: [...c.messages, msg('system', c.kind === 'therapist' ? 'This chat ends in about a day and will then be deleted.' : 'This chat ends in about an hour and will then be deleted.')] } : c)),
+      retained: [...s.retained, ...retain.filter((r) => !s.retained.some((x) => x.id === r.id))],
+      openConversationId: s.openConversationId && gone.has(s.openConversationId) ? null : s.openConversationId,
+      match: s.match.state === 'found' && gone.has(s.match.conversationId) ? { state: 'idle' } : s.match,
+    }))
+  },
+
   open(id: string): void {
     update({ openConversationId: id })
     setConv(id, (c) => ({ ...c, unread: 0 }))
@@ -220,14 +251,28 @@ export const report = {
    * Keeps what was reported as it is right now (SAF-3). Pass `conversationId` for a chat, or `postId` for a post or comment.
    * The snapshot stays with the report even if the content is later edited, deleted or set to disappear.
    */
-  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string; conversationId?: string; postId?: string }): void {
+  submit(input: { target: ReportTarget; targetId: string; reason: ReportReason; note: string; conversationId?: string; postId?: string; sessionId?: string; groupChatId?: string }): void {
     const db = getDb()
     const at = now()
     const conv = input.conversationId ? db.conversations.find((c) => c.id === input.conversationId) : undefined
     const post = input.postId ? db.posts.find((p) => p.id === input.postId) : undefined
+    const group = input.groupChatId ? db.groupChats.find((g) => g.id === input.groupChatId) : undefined
+    const sess = input.sessionId ? db.sessions.find((x) => x.id === input.sessionId) : undefined
     let snapshot: EvidenceLine[] | undefined
     let reportedName: string | undefined
-    if (conv) {
+    let queue: ReportRecord['queue']
+    let therapistId: string | undefined
+    if (group) {
+      snapshot = groupSnapshot(group.messages, input.targetId)
+      reportedName = group.messages.find((m) => m.id === input.targetId)?.name
+    } else if (sess) {
+      const th = THERAPISTS.find((x) => x.id === sess.therapistId)
+      const thread = db.conversations.find((c) => c.kind === 'therapist' && c.therapistId === sess.therapistId)
+      snapshot = sessionSnapshot({ therapist: th?.name ?? 'a therapist', mode: sess.mode, when: dayAndClock(sess.start) }, input.note, thread?.messages)
+      reportedName = th?.name
+      queue = 'clinical'
+      therapistId = sess.therapistId
+    } else if (conv) {
       snapshot = chatSnapshot(conv.messages)
       reportedName = conv.peer?.penName
     } else if (post && input.target === 'comment') {
@@ -239,7 +284,7 @@ export const report = {
     }
     const record: ReportRecord = {
       id: uid('r'), target: input.target, targetId: input.targetId, reason: input.reason, note: input.note, at,
-      reportedName, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
+      reportedName, queue, therapistId, conversationId: input.conversationId, groupChatId: input.groupChatId, snapshot: snapshot?.length ? snapshot : undefined, priorReports: priorReports(db.reports, input.targetId, at),
     }
     update((s) => ({ reports: [...s.reports, record] }))
     notify.push('safety', `report:${record.id}`, 'We received your report', 'A person on our team will review it. You are not named to the other person.', '/home')
@@ -256,19 +301,43 @@ function setPost(id: string, fn: (p: ForumPost) => ForumPost) {
   update((s) => ({ posts: s.posts.map((p) => (p.id === id ? fn(p) : p)) }))
 }
 
+/** A peer and then a verified therapist reply to a member's own post, a little while after it is live. */
+function scheduleReplies(id: string, wait = 1) {
+  later(`reply-peer-${id}`, 20 * SEC * wait, () => addReply(id, 'peer'))
+  later(`reply-th-${id}`, 45 * SEC * wait, () => addReply(id, 'therapist'))
+}
+
+function addReply(id: string, kind: 'peer' | 'therapist') {
+  const db = getDb()
+  const p = db.posts.find((x) => x.id === id)
+  if (!p || !p.mine || p.status !== 'published' || !db.content.flags.forum) return
+  if (p.comments.some((c) => (kind === 'therapist' ? !!c.therapistId : !c.mine && !c.therapistId))) return
+  const { text, peer } = postReply(kind, p.title, p.body)
+  const th = THERAPISTS.find((x) => x.id === spaceById(p.space)?.facilitatorId) ?? THERAPISTS[0]
+  const c: ForumComment = {
+    id: uid('cm'), authorName: kind === 'therapist' ? th.name : peer.name, authorAvatar: kind === 'therapist' ? 'leaf' : peer.avatar,
+    therapistId: kind === 'therapist' ? th.id : null, therapistName: kind === 'therapist' ? th.name : null, text, at: now(), hiddenReason: null, mine: false,
+  }
+  setPost(id, (x) => ({ ...x, comments: [...x.comments, c] }))
+  notify.push('forum', `reply:${c.id}`, 'New reply to your post', `${c.authorName} replied to “${p.title}”.`, `/forum/${id}`)
+}
+
 function publishPending(id: string) {
   const p = getDb().posts.find((x) => x.id === id)
   if (!p || p.status !== 'pending') return
   setPost(id, (x) => ({ ...x, status: 'published' }))
   showToast('Your post is now live.')
   notify.push('forum', `post:${id}`, 'Your post is now live', p.title, `/forum/${id}`)
+  scheduleReplies(id)
 }
 
 export const forum = {
-  create(input: { topic: string; title: string; body: string }): Res<{ post: ForumPost; pending: boolean }> {
+  create(input: { topic: string; title: string; body: string; space?: string }): Res<{ post: ForumPost; pending: boolean }> {
     const db = getDb()
     const a = db.account
     if (!a) return { ok: false, error: 'Sign in first.' }
+    const gate = requirePlan('The community')
+    if (gate) return gate as Res<{ post: ForumPost; pending: boolean }>
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
     if (!db.content.flags.forum) return { ok: false, error: 'Posting is paused for now. You can still read the community.', code: 'forum-off' }
     const title = input.title.trim()
@@ -277,14 +346,18 @@ export const forum = {
     if (body.length < 10) return { ok: false, error: 'Write a little more. A few sentences is plenty.', code: 'body' }
     const check = detectBlockedContent(`${title}\n${body}`)
     if (check.blocked) return { ok: false, error: explainBlock(check.reasons), code: 'blocked' }
-    const pending = !a.hasPostedBefore
+    const space = input.space ? spaceById(input.space) : undefined
+    if (input.space && !space) return { ok: false, error: 'That space isn’t here.', code: 'space' }
+    if (space && !db.spaces.includes(space.id)) return { ok: false, error: 'Join this space to post in it.', code: 'not-joined' }
+    const pending = needsCheck(space, !!a.hasPostedBefore)
     const post: ForumPost = {
-      id: uid('post'), authorName: a.public.penName, authorAvatar: a.public.avatar, authorKey: 'me', topic: input.topic, title, body,
+      id: uid('post'), authorName: a.public.penName, authorAvatar: a.public.avatar, authorKey: 'me', topic: space ? space.name : input.topic, space: space?.id, title, body,
       createdAt: now(), supports: 0, supportedByMe: false, comments: [], status: pending ? 'pending' : 'published', mine: true,
     }
     update((s) => ({ posts: [post, ...s.posts] }))
     updateAccount((x) => ({ ...x, hasPostedBefore: true }))
     if (pending) later(`pub-${post.id}`, 15 * SEC, () => publishPending(post.id))
+    else scheduleReplies(post.id)
     return { ok: true, value: { post, pending } }
   },
 
@@ -306,6 +379,8 @@ export const forum = {
     const a = getDb().account
     const post = getDb().posts.find((p) => p.id === postId)
     if (!a || !post) return { ok: false, error: 'That post is gone.' }
+    const gate = requirePlan('The community')
+    if (gate) return gate as Res<{ comment: ForumComment }>
     if (!getDb().content.flags.forum) return { ok: false, error: 'Comments are paused for now.', code: 'forum-off' }
     if (post.status !== 'published') return { ok: false, error: 'You can comment once the post is live.', code: 'pending' }
     if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
@@ -322,6 +397,7 @@ export const forum = {
   },
 
   toggleSupport(id: string): void {
+    if (!hasPlan()) return void showToast('The community needs an active plan.')
     setPost(id, (p) => ({ ...p, supportedByMe: !p.supportedByMe, supports: p.supports + (p.supportedByMe ? -1 : 1) }))
   },
 
@@ -336,7 +412,10 @@ export const forum = {
   },
 
   resume(): void {
-    for (const p of getDb().posts) if (p.status === 'pending') later(`pub-${p.id}`, 4 * SEC, () => publishPending(p.id))
+    for (const p of getDb().posts) {
+      if (p.status === 'pending') later(`pub-${p.id}`, 4 * SEC, () => publishPending(p.id))
+      else if (p.mine && p.status === 'published' && now() - p.createdAt < 10 * MIN) scheduleReplies(p.id, 0.2)
+    }
   },
 }
 

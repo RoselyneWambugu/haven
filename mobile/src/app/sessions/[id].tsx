@@ -3,6 +3,9 @@ import { Pressable, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
+import { Check } from '@/components/Controls'
+import { Field } from '@/components/Field'
+import { Sheet } from '@/components/Sheet'
 import { Icon } from '@/components/Icon'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
@@ -14,7 +17,14 @@ import { go, goBack } from '@/lib/nav'
 import { clock, dayAndClock, dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
+import type { ReportReason } from '@/api'
 import { colors } from '@/theme'
+
+const CONCERNS: { value: ReportReason; label: string }[] = [
+  { value: 'therapist-conduct', label: 'Unprofessional or disrespectful' },
+  { value: 'therapist-boundaries', label: 'Crossed a personal or sexual boundary' },
+  { value: 'therapist-privacy', label: 'Shared or asked for private details' },
+]
 
 export default function SessionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -23,6 +33,10 @@ export default function SessionDetail() {
   const [error, setError] = useState<string | null>(null)
   const [stars, setStars] = useState(0)
   const [rated, setRated] = useState(false)
+  const [concern, setConcern] = useState(false)
+  const [why, setWhy] = useState<ReportReason>('therapist-conduct')
+  const [note, setNote] = useState('')
+  const [sent, setSent] = useState(false)
   const t = s ? THERAPISTS.find((x) => x.id === s.therapistId) : null
   if (!s || !t) {
     return (
@@ -36,8 +50,8 @@ export default function SessionDetail() {
   const open = booked && canJoin(s.start, s.end, now())
   const free = changeOutcome(s.start, now()) === 'free'
 
-  function join() {
-    const r = api.sessions.join(s!.id)
+  async function join() {
+    const r = await api.sessions.join(s!.id)
     if (!r.ok) return setError(r.error)
     if (s!.mode === 'chat') go('/chats')
     else go(`/call/${s!.id}`)
@@ -102,6 +116,34 @@ export default function SessionDetail() {
       <Text variant="caption" muted>
         {dayAndClock(s.createdAt)} booked
       </Text>
+      {s.status === 'completed' ? (
+        sent ? (
+          <Banner tone="green" icon="shield" title="We received your concern">
+            A clinical reviewer will look at it. The therapist is not told who raised it.
+          </Banner>
+        ) : (
+          <Button testID="session-concern" variant="ghost" label="Report a concern about this session" onPress={() => setConcern(true)} />
+        )
+      ) : null}
+      <Sheet visible={concern} onClose={() => setConcern(false)} title="Report a concern" testID="concern-sheet">
+        <Text variant="small" muted>
+          A clinical reviewer reads every concern. Calls are not recorded, so please say what happened in your own words.
+        </Text>
+        {CONCERNS.map((c) => (
+          <Check key={c.value} testID={`concern-${c.value}`} checked={why === c.value} label={c.label} onPress={() => setWhy(c.value)} />
+        ))}
+        <Field testID="concern-note" label="What happened" value={note} onChangeText={setNote} multiline minHeight={100} maxLength={1000} />
+        <Button
+          testID="concern-send"
+          label="Send concern"
+          disabled={note.trim().length < 10}
+          onPress={() => {
+            api.report.submit({ target: 'session', targetId: s.id, reason: why, note, sessionId: s.id })
+            setConcern(false)
+            setSent(true)
+          }}
+        />
+      </Sheet>
     </Screen>
   )
 }

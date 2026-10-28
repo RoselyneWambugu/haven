@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { View } from 'react-native'
 import { router } from 'expo-router'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
+import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin } from '@/backend/remoteAdmin'
+import { normaliseKenyanPhone } from '@/lib/identity'
 import { DEMO_MFA, STAFF } from '@/api/admin'
 import { useDb } from '@/store/db'
 import { Button } from '@/components/Button'
@@ -17,6 +20,12 @@ export default function AdminSignIn() {
   const [name, setName] = useState('T. Njeri')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [phone, setPhone] = useState('')
+  const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [setup, setSetup] = useState(false)
+  const [setupName, setSetupName] = useState('')
+  const [setupCode, setSetupCode] = useState('')
   const roster = useDb((s) => s.admin?.staff) ?? STAFF.map((s, i) => ({ id: `st${i}`, ...s, active: true, lastSignInAt: null }))
   const role = roster.find((s) => s.name === name)?.role ?? 'moderator'
 
@@ -24,6 +33,89 @@ export default function AdminSignIn() {
     const r = api.admin.signIn(name, code)
     if (!r.ok) return setError(r.error)
     router.replace('/admin/overview' as never)
+  }
+
+  async function send() {
+    const n = normaliseKenyanPhone(phone)
+    if (!n) return setError('Enter a Kenyan mobile number, like 0712 345 678.')
+    setBusy(true)
+    const r = await adminRequestOtp(n)
+    setBusy(false)
+    if (!r.ok) return setError(r.error)
+    setError(null)
+    setSent(true)
+  }
+
+  async function verify() {
+    setBusy(true)
+    const r = await adminVerifyOtp(code)
+    setBusy(false)
+    if (!r.ok && r.code === 'setup') { setError(null); return setSetup(true) }
+    if (!r.ok) return setError(r.error)
+    router.replace('/admin/overview' as never)
+  }
+
+  async function claim() {
+    setBusy(true)
+    const r = await claimFirstAdmin(setupName, setupCode)
+    setBusy(false)
+    if (!r.ok) {
+      if (r.code === 'closed' || r.code === 'locked') { setSetup(false); setSent(false); setCode('') }
+      return setError(r.error)
+    }
+    router.replace('/admin/overview' as never)
+  }
+
+  if (REMOTE && setup) {
+    return (
+      <View testID="admin-sign-in" style={{ flex: 1, alignItems: 'center', padding: 24, paddingTop: 40 }}>
+        <View style={{ width: '100%', maxWidth: 480, gap: 16 }}>
+          <Text variant="display">Set up Echo</Text>
+          <Text variant="body" muted>
+            There are no Admins yet. Enter your name and the one-time setup code to become the first Admin.
+          </Text>
+          <Panel title="First Admin">
+            <Field testID="setup-name" label="Your name" value={setupName} onChangeText={(v) => { setSetupName(v); setError(null) }} />
+            <Field testID="setup-code" label="Setup code" placeholder="XXXX-XXXX-XXXX-XXXX" value={setupCode} onChangeText={(v) => { setSetupCode(v); setError(null) }} autoCapitalize="characters" error={error} />
+            <Button testID="setup-go" label="Become the first Admin" disabled={busy} onPress={claim} />
+          </Panel>
+          <Banner tone="green" icon="lock">
+            The code works once. After this, Admins add everyone else from the Roles module.
+          </Banner>
+        </View>
+      </View>
+    )
+  }
+
+  if (REMOTE) {
+    return (
+      <View testID="admin-sign-in" style={{ flex: 1, alignItems: 'center', padding: 24, paddingTop: 40 }}>
+        <View style={{ width: '100%', maxWidth: 480, gap: 16 }}>
+          <Text variant="display">Staff sign-in</Text>
+          <Text variant="body" muted>
+            Internal use only. Everything you do here is logged.
+          </Text>
+          <Panel title="Sign in with your phone">
+            {sent ? (
+              <>
+                <Field testID="admin-code" label="Code" value={code} onChangeText={(v) => { setCode(v.replace(/\D/g, '').slice(0, 6)); setError(null) }} keyboardType="number-pad" maxLength={6} error={error} />
+                <Button testID="admin-verify" label="Sign in" disabled={busy || code.length < 6} onPress={verify} />
+                <Button variant="ghost" label="Use a different number" onPress={() => { setSent(false); setCode(''); setError(null) }} />
+              </>
+            ) : (
+              <>
+                <Field testID="admin-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={(v) => { setPhone(v); setError(null) }} keyboardType="phone-pad" error={error} />
+                <Button testID="admin-send-code" label="Send code" disabled={busy} onPress={send} />
+              </>
+            )}
+          </Panel>
+          <Banner tone="green" icon="lock">
+            Only a number an Admin has linked to a staff account can open the dashboard.
+          </Banner>
+          <Button variant="ghost" label="Back to the member app" onPress={() => router.replace('/welcome' as never)} />
+        </View>
+      </View>
+    )
   }
 
   return (

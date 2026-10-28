@@ -6,7 +6,7 @@ import { showToast } from '@/store/toast'
 import type { DemoControls, Notice, PlanId, StandingState } from './types'
 
 /** Switches for reviewers. They let you see states that normally take days or need real staff. */
-export const demo: DemoControls & { showPrices(on: boolean): void; addNotice(): void } = {
+export const demo: DemoControls & { showPrices(on: boolean): void; addNotice(): void; startNextGroupChat(): void } = {
   grantPlan(planId: PlanId) {
     const plan = getDb().content.plans.find((p) => p.id === planId)!
     const t = now()
@@ -36,6 +36,14 @@ export const demo: DemoControls & { showPrices(on: boolean): void; addNotice(): 
   },
   showPrices(on: boolean) {
     update((s) => ({ demo: { ...s.demo, showPrices: on } }))
+  },
+  /** Signs you up for the next group chat and starts it now, so you can see the room. */
+  startNextGroupChat() {
+    const t = now()
+    const next = getDb().groupChats.filter((g) => g.startsAt + g.durationMin * 60_000 > t).sort((a, b) => a.startsAt - b.startsAt)[0]
+    if (!next) return showToast('Demo: there is no group chat to start.')
+    update((s) => ({ groupChats: s.groupChats.map((g) => (g.id === next.id ? { ...g, registered: true, startsAt: t - 20_000 } : g)) }))
+    showToast('Demo: the next group chat is open. Find it under Chats.')
   },
   addNotice() {
     const n: Notice = {

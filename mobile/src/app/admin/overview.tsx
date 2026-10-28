@@ -1,11 +1,13 @@
 import { View } from 'react-native'
 import { api } from '@/api'
+import { REMOTE } from '@/backend/client'
 import { Button } from '@/components/Button'
+import { LaunchChecklist } from '@/components/LaunchChecklist'
 import { Panel, PortalPage, Stat, useWide } from '@/components/Portal'
 import { Banner, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { licenceStatus } from '@/lib/portal'
-import { minutesLeft } from '@/lib/admin'
+import { minutesLeft, visibleCases } from '@/lib/admin'
 import { go } from '@/lib/nav'
 import { clock } from '@/lib/time'
 import { useDb } from '@/store/db'
@@ -19,7 +21,7 @@ export default function Overview() {
   const t = useNow()
   const wide = useWide()
   if (!a) return null
-  const open = a.cases.filter((c) => c.status !== 'closed')
+  const open = visibleCases(a.cases, a.role).filter((c) => c.status !== 'closed')
   const s1Unassigned = open.filter((c) => c.severity === 'S1' && !c.owner).length
   const nearBreach = open.filter((c) => minutesLeft(c, t) <= 30).length
   const overSla = open.filter((c) => minutesLeft(c, t) <= 0).length
@@ -43,7 +45,7 @@ export default function Overview() {
           <Row title="Severity-1 cases unassigned" right={<Text variant="label">{s1Unassigned}</Text>} onPress={() => go('/admin/cases')} />
           <Row title="Cases near SLA breach" right={<Text variant="label">{nearBreach}</Text>} onPress={() => go('/admin/cases')} />
           <Row title="Break-glass requests waiting for approval" right={<Text variant="label">{pendingBg.length}</Text>} />
-          <Row title="Therapist licences expiring (60 days)" right={<Text variant="label">{licence && licence.state !== 'ok' ? 1 : 0}</Text>} onPress={() => go('/admin/therapists')} />
+          <Row title="Therapist licences expiring (60 days)" right={<Text variant="label">{a.licences ? a.licences.filter((l) => l.stage !== null).length : licence && licence.state !== 'ok' ? 1 : 0}</Text>} onPress={() => go('/admin/therapists')} />
           <Row title="Unmatched payments" right={<Text variant="label">{a.unmatchedPayments}</Text>} onPress={() => go('/admin/billing')} last />
         </Panel>
         <Panel title="New members (7 days)" style={{ flex: wide ? 1 : undefined, width: wide ? undefined : '100%' }}>
@@ -57,6 +59,7 @@ export default function Overview() {
           </Text>
         </Panel>
       </View>
+      {REMOTE && a.role === 'admin' ? <LaunchChecklist /> : null}
       {pendingBg.length && a.role === 'clinical' ? (
         <Panel title="Break-glass approvals" tone="sun" testID="bg-approvals">
           {pendingBg.map((b) => (
@@ -69,8 +72,8 @@ export default function Overview() {
                 Approving reveals name, phone and location for 30 minutes. The member isn’t told, and it’s logged.
               </Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Button testID={`bg-approve-${b.id}`} size="sm" label="Approve" onPress={() => api.admin.decideBreakGlass(b.id, true)} />
-                <Button size="sm" variant="ghost" label="Decline" onPress={() => api.admin.decideBreakGlass(b.id, false)} />
+                <Button testID={`bg-approve-${b.id}`} size="sm" label="Approve" onPress={async () => { await api.admin.decideBreakGlass(b.id, true) }} />
+                <Button size="sm" variant="ghost" label="Decline" onPress={async () => { await api.admin.decideBreakGlass(b.id, false) }} />
               </View>
             </View>
           ))}

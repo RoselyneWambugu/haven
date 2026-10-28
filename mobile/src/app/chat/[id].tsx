@@ -14,6 +14,8 @@ import { Banner, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
+import { leftLabel, timeLeft } from '@/lib/chatLife'
+import { useNow } from '@/store/useNow'
 import { FACES, shouldAskHeard } from '@/lib/feedback'
 import { go, goBack } from '@/lib/nav'
 import { canChat, planState } from '@/lib/plan'
@@ -40,6 +42,8 @@ export default function Chat() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const conv = useDb((s) => s.conversations.find((c) => c.id === id))
   const sub = useDb((s) => s.subscription)
+  const allSessions = useDb((s) => s.sessions)
+  const clockNow = useNow(30_000)
   const disappearingOn = useDb((s) => s.content.flags.disappearing)
   const insets = useSafeAreaInsets()
   const [text, setText] = useState('')
@@ -81,8 +85,8 @@ export default function Chat() {
   const closed = conv.ended || readOnly
   const distress = detectDistress(text).level
 
-  function send() {
-    const r = api.chat.send(conv!.id, text)
+  async function send() {
+    const r = await api.chat.send(conv!.id, text)
     if (!r.ok) {
       if (r.code !== 'empty') setError(r.error)
       return
@@ -111,6 +115,9 @@ export default function Chat() {
             </Text>
             <Text variant="caption" muted>
               {conv.disappearing === 'on' ? 'Disappearing messages on' : therapist ? therapist.title : conv.peer ? conv.peer.languages.join(', ') : ''}
+            </Text>
+            <Text testID="chat-ends-in" variant="caption" muted>
+              Ends and is deleted in {leftLabel(timeLeft(conv, allSessions, clockNow))}
             </Text>
           </View>
         </View>

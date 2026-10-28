@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Pressable, TextInput, View, type TextInputInstance } from 'react-native'
+import { Pressable, TextInput, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
@@ -22,15 +22,15 @@ export default function Otp() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [left, setLeft] = useState(30)
-  const input = useRef<TextInputInstance>(null)
+  const input = useRef<TextInput>(null)
 
   useEffect(() => {
     const t = setInterval(() => setLeft((n) => Math.max(0, n - 1)), 1000)
     return () => clearInterval(t)
   }, [])
 
-  function verify(value: string) {
-    const r = api.auth.verifyOtp(value)
+  async function verify(value: string) {
+    const r = await api.auth.verifyOtp(value)
     if (!r.ok) {
       setError(r.error)
       if (r.code === 'wrong') setCode('')
@@ -45,8 +45,8 @@ export default function Otp() {
     }
   }
 
-  function resend() {
-    const r = purpose === 'login' ? api.auth.requestOtp('login', otp?.phone ?? '') : api.auth.requestOtp(purpose)
+  async function resend() {
+    const r = await (purpose === 'login' ? api.auth.requestOtp('login', otp?.phone ?? '') : api.auth.requestOtp(purpose))
     if (!r.ok) return setError(r.error)
     setError(null)
     setCode('')
@@ -70,7 +70,7 @@ export default function Otp() {
         We sent a text message to {phone || 'your phone'}.
       </Text>
 
-      {otp ? (
+      {otp?.code ? (
         <Banner tone="sun" title="Demo mode" testID="demo-code">
           No text message is sent in this demo. Your code is <Text variant="small" bold>{otp.code}</Text>.
         </Banner>

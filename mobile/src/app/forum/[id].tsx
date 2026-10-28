@@ -7,6 +7,7 @@ import { Button } from '@/components/Button'
 import { Badge, Check } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
+import { PlanGate, usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
 import { Banner, Card, Divider, Row } from '@/components/Surfaces'
@@ -34,6 +35,7 @@ export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const post = useDb((s) => s.posts.find((p) => p.id === id))
   const forumOn = useDb((s) => s.content.flags.forum)
+  const plan = usePlan()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [menu, setMenu] = useState(false)
@@ -53,11 +55,18 @@ export default function PostDetail() {
     )
   }
 
+  if (!plan) {
+    return (
+      <Screen testID="post-locked" header={<TopBar back />}>
+        <PlanGate what="The community" />
+      </Screen>
+    )
+  }
   const canEdit = post.mine && now() - post.createdAt <= EDIT_MS
   const draftBlock = detectBlockedContent(text)
 
-  function sendComment() {
-    const r = api.forum.comment(post!.id, text)
+  async function sendComment() {
+    const r = await api.forum.comment(post!.id, text)
     if (!r.ok) return setError(r.error)
     setText('')
     setError(null)
@@ -229,8 +238,8 @@ export default function PostDetail() {
         {eError ? <Banner tone="clay">{eError}</Banner> : null}
         <Button
           label="Save changes"
-          onPress={() => {
-            const r = api.forum.edit(post.id, { title: eTitle, body: eBody })
+          onPress={async () => {
+            const r = await api.forum.edit(post.id, { title: eTitle, body: eBody })
             if (!r.ok) return setEError(r.error)
             setEditing(false)
           }}

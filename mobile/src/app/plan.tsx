@@ -10,6 +10,7 @@ import { now } from '@/lib/clock'
 import { go } from '@/lib/nav'
 import { graceEndsAt, planState } from '@/lib/plan'
 import { dayLong } from '@/lib/time'
+import { REMOTE } from '@/backend/client'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
 
@@ -28,6 +29,7 @@ export default function MyPlan() {
         <Text variant="body" muted>
           A plan covers peer chat. Urgent help, the help centre and reading the community are always free.
         </Text>
+        {REMOTE ? <Button testID="plan-refund" variant="quiet" label="Payments and refunds" onPress={() => go('/refund')} /> : null}
       </Screen>
     )
   }
@@ -58,6 +60,7 @@ export default function MyPlan() {
       {state !== 'lapsed' && sub.planId !== 'daily' ? <ToggleRow testID="plan-renew" on={sub.autoRenew} onChange={(v) => api.billing.setAutoRenew(v)} label="Renew automatically" /> : null}
       {state === 'lapsed' ? <Button label="Renew" onPress={() => go('/plans')} /> : <Button variant="quiet" label="Change or extend plan" onPress={() => go('/plans')} />}
       {state === 'active' && sub.autoRenew ? <Button testID="plan-cancel" variant="dangerGhost" label="Cancel plan" onPress={() => setConfirm(true)} /> : null}
+      {REMOTE ? <Button testID="plan-refund" variant="quiet" label="Payments and refunds" onPress={() => go('/refund')} /> : null}
       <Sheet visible={confirm} onClose={() => setConfirm(false)} title="Cancel your plan?">
         <Text variant="small">You keep full access until {dayLong(sub.endsAt)}. After that, chats become read-only. You won’t be charged again.</Text>
         <Button testID="plan-cancel-confirm" variant="danger" label="Cancel plan" onPress={() => { api.billing.cancelPlan(); setConfirm(false) }} />

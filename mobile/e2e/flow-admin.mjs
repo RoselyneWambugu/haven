@@ -67,6 +67,9 @@ await step('sign-in-needs-mfa', async () => {
   await tid('mfa-code').fill('135790')
   await tid('admin-sign-in-go').click()
   await tid('admin-overview').waitFor()
+  const sb = await tid('sidebar').boundingBox()
+  const main = await tid('admin-overview').boundingBox()
+  if (!sb || !main || sb.x + sb.width > main.x + 1 || sb.height < 400) throw new Error('the navigation should be a sidebar on the left')
   await shot('81-overview')
 })
 await step('case-queue', async () => {

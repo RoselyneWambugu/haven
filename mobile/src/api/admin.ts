@@ -3,9 +3,13 @@ import { can } from '@/lib/roles'
 import { atLimit, canTakeCase, DEFAULT_WELLBEING, emptyExposure, mondayStart, nextRota, onBreak, WEEK, weekOf } from '@/lib/wellbeing'
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
-import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess } from '@/lib/admin'
+import { BREAK_GLASS_MINUTES, canApprove, canExportAudit, nextSanction, policyApproved, validateBreakGlass, type Module, canAccess, canSeeCase } from '@/lib/admin'
 import { getDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
+import { afterAppeal, canSeeAppeal, currentDecision } from '@/lib/therapistAppeal'
+import { notify } from './notify'
+import { applyPortalToDirectory, applyStandingToDirectory } from './portal'
+import { THERAPISTS } from '@/data/seed'
 import { account } from './support'
 import type {
   AdminAppeal, AdminCase, AdminState, AdminUser, Applicant, AuditEntry, BreakGlassRequest, CaseAction, Notice, ReportReason, Res, Severity, StaffRole,
@@ -29,7 +33,7 @@ function audit(actor: string, role: AuditEntry['role'], action: string, target: 
   return { id: uid('au'), at: now(), actor, role, action, target, reason }
 }
 
-function seed(): AdminState {
+export function seed(): AdminState {
   const n = now()
   const ev = (...lines: [AdminCase['evidence'][number]['who'], string, boolean?][]) =>
     lines.map(([who, text, reported], i) => ({ id: `e${i}`, who, text, reported }))
@@ -112,9 +116,9 @@ export function log(action: string, target: string, reason = '') {
   patch((a) => ({ audit: [audit(name, role, action, target, reason), ...a.audit] }))
 }
 
-const SEV_BY_REASON: Record<ReportReason, Severity> = { 'self-harm': 'S1', threats: 'S1', sexual: 'S2', hate: 'S2', harassment: 'S2', scam: 'S2', impersonation: 'S3', other: 'S3' }
+const SEV_BY_REASON: Record<ReportReason, Severity> = { 'self-harm': 'S1', threats: 'S1', sexual: 'S2', hate: 'S2', harassment: 'S2', scam: 'S2', impersonation: 'S3', other: 'S3', 'therapist-conduct': 'S2', 'therapist-boundaries': 'S1', 'therapist-privacy': 'S2' }
 const SLA: Record<Severity, number> = { S1: 60, S2: 240, S3: 720 }
-const REASON_LABEL: Record<ReportReason, string> = { 'self-harm': 'Self-harm concern', threats: 'Threat', sexual: 'Sexual content', hate: 'Hate speech', harassment: 'Harassment', scam: 'Scam or solicitation', impersonation: 'Impersonation', other: 'Other' }
+const REASON_LABEL: Record<ReportReason, string> = { 'self-harm': 'Self-harm concern', threats: 'Threat', sexual: 'Sexual content', hate: 'Hate speech', harassment: 'Harassment', scam: 'Scam or solicitation', impersonation: 'Impersonation', other: 'Other', 'therapist-conduct': 'Therapist conduct', 'therapist-boundaries': 'Therapist boundaries', 'therapist-privacy': 'Therapist privacy' }
 
 /** Applies a sanction to the member signed in on this device, so staff decisions are visible in the member app. */
 function sanctionMember(kind: Notice['kind'], rule: string) {
@@ -126,6 +130,50 @@ function sanctionMember(kind: Notice['kind'], rule: string) {
     }
     return { ...acct, notices: [notice, ...acct.notices], standing: kind === 'suspension' ? 'paused' : kind === 'restriction' ? 'restricted' : acct.standing }
   })
+}
+
+
+const THERAPIST_WARNING = 'A clinical reviewer has looked at a concern raised about a session and asked you to review our standards of practice. This is a warning, not a suspension.'
+const THERAPIST_PAUSED = 'New clients are paused while a clinical reviewer looks at a concern raised about a session. Your existing clients are not affected. A clinical reviewer will lift the pause.'
+
+/** What a clinical decision on a therapist concern changes: the therapist's portal, and a plain update to the member who raised it. */
+function applyTherapistOutcome(c: AdminCase, action: CaseAction): void {
+  const db = getDb()
+  if (action === 'warn-therapist' || action === 'pause-therapist') {
+    const p = db.portal
+    if (p && c.therapistId && p.therapistId === c.therapistId) {
+      const paused = action === 'pause-therapist'
+      update((s) => (s.portal ? { portal: { ...s.portal, paused: paused ? true : s.portal.paused, review: { kind: paused ? 'paused' : 'warning', text: paused ? THERAPIST_PAUSED : THERAPIST_WARNING, at: now(), by: me().name } } } : {}))
+      applyPortalToDirectory()
+    }
+  }
+  if (action === 'escalate' || !c.id.startsWith('C-r')) return
+  notify.push('safety', `concern:${c.id}`, 'An update on your concern', action === 'dismiss' ? 'A clinical reviewer looked at it and did not find a breach of our standards. You can raise a concern again if something else happens.' : 'A clinical reviewer looked at it and took action. We can’t share details about another person. Thank you for telling us.', '/home')
+}
+
+/** An appeal by a therapist changes what is in force against them: nothing, one step down, or nothing at all. */
+function applyTherapistAppeal(ap: AdminAppeal, outcome: 'upheld' | 'reduced' | 'overturned', explanation: string, reviewer: string): void {
+  const a = getDb().admin!
+  const id = ap.therapistId!
+  const decision = currentDecision(getDb().portal?.therapistId === id ? getDb().portal?.review : null, a.therapistStanding?.[id])
+  if (decision) {
+    const keep = afterAppeal(decision.kind, outcome)
+    if (!keep.suspended && a.therapistStanding?.[id]) {
+      patch((x) => {
+        const { [id]: _gone, ...rest } = x.therapistStanding ?? {}
+        return { therapistStanding: rest }
+      })
+    }
+    update((s) => {
+      if (!s.portal || s.portal.therapistId !== id) return {}
+      const review = keep.review ? { kind: keep.review, text: keep.review === 'paused' ? THERAPIST_PAUSED : THERAPIST_WARNING, at: now(), by: reviewer } : null
+      const paused = keep.review === 'paused' ? true : decision.kind === 'warning' ? s.portal.paused : false
+      return { portal: { ...s.portal, review, paused } }
+    })
+    applyStandingToDirectory()
+    applyPortalToDirectory()
+  }
+  patch((x) => ({ appeals: x.appeals.map((q) => (q.id === ap.id ? { ...q, status: outcome, reviewer, response: explanation } : q)) }))
 }
 
 export const admin = {
@@ -158,7 +206,7 @@ export const admin = {
       const sev = SEV_BY_REASON[reason]
       return {
         id: `C-${r.id}`, severity: sev, source: 'user-report', type: REASON_LABEL[reason], slaMinutes: SLA[sev], openedAt: r.at, owner: null, status: 'new', reporter: mine,
-        reported: r.reportedName ?? (r.target === 'member' ? 'Reported member' : `Reported ${r.target}`), snapshotAt: r.at, ai: null, strikes: 0, priorReports: r.priorReports ?? 0, decision: null, escalated: false,
+        reported: r.reportedName ?? (r.target === 'member' ? 'Reported member' : `Reported ${r.target}`), snapshotAt: r.at, ai: null, strikes: 0, priorReports: r.priorReports ?? 0, queue: r.queue, therapistId: r.therapistId, decision: null, escalated: false,
         evidence: r.snapshot?.length ? r.snapshot : [{ id: 'e0', who: 'reported', text: r.note || 'No content was captured for this report.', reported: true }],
       }
     })
@@ -169,7 +217,7 @@ export const admin = {
     const { name, role } = me()
     const a = getDb().admin!
     const c = a.cases.find((x) => x.id === id)
-    if (!c) return { ok: false, error: 'Case not found.' }
+    if (!c || !canSeeCase(role, c)) return { ok: false, error: 'Case not found.' }
     if (!canTakeCase(c, { name, role }, weekOf(a.rota, now())?.heavy ?? [])) return { ok: false, error: 'Severity-1 and crisis cases are worked by the moderators on this week’s heavy-queue rota. Ask someone on the rota, or a clinical reviewer.', code: 'rota' }
     patch((a) => ({ cases: a.cases.map((c) => (c.id === id ? { ...c, owner: name, status: c.status === 'new' ? 'in-review' : c.status } : c)) }))
     log('Took case', id)
@@ -177,12 +225,16 @@ export const admin = {
   },
   /** Opening a case is itself logged, because it exposes content (PRV-1). */
   view(id: string): void {
+    const c = getDb().admin?.cases.find((x) => x.id === id)
+    if (!c || !canSeeCase(me().role, c)) return
     log('Viewed case content', id, 'Review')
   },
   reveal(caseId: string, lineId: string): Res {
     const a = getDb().admin!
     const { name } = me()
     const key = `${name}|${caseId}:${lineId}`
+    const rc = a.cases.find((x) => x.id === caseId)
+    if (!rc || !canSeeCase(me().role, rc)) return { ok: false, error: 'Case not found.' }
     if (a.revealed.includes(key)) return { ok: true, value: undefined }
     const e = a.exposure[name] ?? emptyExposure()
     if (onBreak(e, now())) return { ok: false, error: 'You’re on a break. Revealing opens again when it ends.', code: 'break' }
@@ -195,9 +247,12 @@ export const admin = {
   decide(caseId: string, action: CaseAction, reason: string): Res {
     const a = getDb().admin!
     const c = a.cases.find((x) => x.id === caseId)
-    if (!c) return { ok: false, error: 'Case not found.' }
+    if (!c || !canSeeCase(me().role, c)) return { ok: false, error: 'Case not found.' }
     if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
     const { name, role } = me()
+    const clinicalActions: CaseAction[] = ['dismiss', 'warn-therapist', 'pause-therapist', 'escalate']
+    if (c.queue === 'clinical' && !clinicalActions.includes(action)) return { ok: false, error: 'A therapist concern is closed with no action, a warning, a pause on new clients, or escalation.', code: 'action' }
+    if (c.queue !== 'clinical' && (action === 'warn-therapist' || action === 'pause-therapist')) return { ok: false, error: 'That action is only for therapist concerns.', code: 'action' }
     if ((action === 'strike' || action === 'restrict' || action === 'suspend') && !can(role, 'suspendRestore')) return { ok: false, error: 'Your role recommends a sanction. Escalate the case so a moderator or Admin can apply it.', code: 'role' }
     const memberName = getDb().account?.public.penName
     const targetIsMember = !!memberName && c.reported === memberName
@@ -210,7 +265,60 @@ export const admin = {
           : q,
       ),
     }))
+    if (c.queue === 'clinical') applyTherapistOutcome(c, action)
     log(action === 'dismiss' ? 'Dismissed case' : action === 'escalate' ? 'Escalated case' : `Decided: ${action}`, caseId, reason.trim())
+    return { ok: true, value: undefined }
+  },
+
+  /** Lifts a clinical pause on new clients. Only Clinical reviewers and Admins, with a reason, and it is logged. */
+  liftTherapistPause(reason: string, _therapistId?: string): Res {
+    const { role } = me()
+    if (role !== 'clinical' && role !== 'admin') return { ok: false, error: 'Only clinical reviewers and Admins lift a pause.', code: 'role' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    const p = getDb().portal
+    if (!p || p.review?.kind !== 'paused') return { ok: false, error: 'There is no pause to lift.' }
+    update((s) => (s.portal ? { portal: { ...s.portal, paused: false, review: null } } : {}))
+    applyPortalToDirectory()
+    log('Lifted therapist pause', p.therapistId, reason.trim())
+    return { ok: true, value: undefined }
+  },
+
+  /**
+   * Suspends a therapist: they leave the directory, can't be booked, and their booked sessions are cancelled with no charge
+   * (the member is told). Clinical reviewers and Admins, with a reason, logged.
+   */
+  suspendTherapist(therapistId: string, reason: string): Res {
+    if (!can(me().role, 'verifyTherapists')) return { ok: false, error: 'Only clinical reviewers and Admins suspend therapists.', code: 'role' }
+    const th = THERAPISTS.find((x) => x.id === therapistId)
+    if (!th) return { ok: false, error: 'Therapist not found.' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    const a = getDb().admin!
+    if (a.therapistStanding?.[therapistId]) return { ok: false, error: 'Already suspended.' }
+    const { name } = me()
+    patch((x) => ({ therapistStanding: { ...(x.therapistStanding ?? {}), [therapistId]: { reason: reason.trim(), by: name, at: now() } } }))
+    const t = now()
+    const hit = getDb().sessions.filter((s) => s.therapistId === therapistId && s.status === 'booked' && s.start > t)
+    if (hit.length) {
+      update((s) => ({ sessions: s.sessions.map((x) => (hit.some((h) => h.id === x.id) ? { ...x, status: 'cancelled' as const, lateChargeApplied: false } : x)) }))
+      for (const s of hit) notify.push('session', `suspended:${s.id}`, 'Your session can’t go ahead', `${th.name} is not available. It is cancelled and you won’t be charged. You can book someone else.`, `/sessions/${s.id}`)
+    }
+    applyStandingToDirectory()
+    log('Suspended therapist', th.name, reason.trim())
+    return { ok: true, value: undefined }
+  },
+  reinstateTherapist(therapistId: string, reason: string): Res {
+    if (!can(me().role, 'verifyTherapists')) return { ok: false, error: 'Only clinical reviewers and Admins reinstate therapists.', code: 'role' }
+    const th = THERAPISTS.find((x) => x.id === therapistId)
+    const a = getDb().admin!
+    if (!th || !a.therapistStanding?.[therapistId]) return { ok: false, error: 'This therapist is not suspended.' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    patch((x) => {
+      const { [therapistId]: _gone, ...rest } = x.therapistStanding ?? {}
+      return { therapistStanding: rest }
+    })
+    applyStandingToDirectory()
+    applyPortalToDirectory()
+    log('Reinstated therapist', th.name, reason.trim())
     return { ok: true, value: undefined }
   },
 
@@ -306,7 +414,7 @@ export const admin = {
         id: `A-${n.id}`, noticeId: n.id, caseId: 'C-member', penName: db.account!.public.penName, decision: `${n.kind}: ${n.rule}`, decidedBy: 'T. Njeri', statement: n.appealText ?? '', openedAt: n.at,
         slaHours: 24, status: n.appeal === 'pending' ? 'open' : (n.appeal as AdminAppeal['status']), reviewer: n.appeal === 'pending' ? null : 'A. Mwangi',
       }))
-    return [...fromMember, ...a.appeals]
+    return [...fromMember, ...a.appeals].filter((x) => canSeeAppeal(a.role, x))
   },
   decideAppeal(id: string, outcome: 'upheld' | 'reduced' | 'overturned', explanation: string): Res {
     const ap = this.appeals().find((x) => x.id === id)
@@ -315,7 +423,9 @@ export const admin = {
     if (ap.status !== 'open') return { ok: false, error: 'This appeal has already been decided.' }
     if (ap.decidedBy === name) return { ok: false, error: 'You made the original decision. An appeal must be reviewed by someone else.', code: 'same-reviewer' }
     if (explanation.trim().length < 10) return { ok: false, error: 'Explain the outcome to the member.', code: 'explanation' }
-    if (ap.noticeId) {
+    if (ap.therapistId) {
+      applyTherapistAppeal(ap, outcome, explanation.trim(), name)
+    } else if (ap.noticeId) {
       updateAccount((acct) => ({
         ...acct,
         notices: acct.notices.map((n) => (n.id === ap.noticeId ? { ...n, appeal: outcome } : n)),

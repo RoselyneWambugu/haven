@@ -4,12 +4,14 @@ import { Portrait } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Icon } from '@/components/Icon'
+import { usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
 import { now } from '@/lib/clock'
+import { canBookTherapist } from '@/lib/limits'
 import { slotsFor } from '@/lib/directory'
 import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
@@ -24,8 +26,10 @@ export default function TherapistProfile() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const t = THERAPISTS.find((x) => x.id === id)
   const sessions = useDb((s) => s.sessions)
+  useDb((s) => s.directoryVersion)
   const money = useMoney()
   const flags = useDb((s) => s.content.flags)
+  const convs = useDb((s) => s.conversations)
   if (!t) {
     return (
       <Screen header={<TopBar back />} testID="therapist-gone">
@@ -34,11 +38,13 @@ export default function TherapistProfile() {
     )
   }
   const slots = slotsFor(t, sessions, now())
+  const free = canBookTherapist(convs, sessions, t.id, now())
+  const plan = usePlan()
   return (
     <Screen
       testID="therapist-profile"
       header={<TopBar back />}
-      footer={<Button testID="book" label={t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!t.acceptingNew} onPress={() => go(`/book/${t.id}`)} />}
+      footer={<Button testID="book" label={t.suspended ? 'Not available' : !plan ? 'Get a plan to book' : !free ? 'You already have a therapist' : t.acceptingNew ? 'Book a session' : 'Not taking new clients'} disabled={!plan ? false : !t.acceptingNew || !!t.suspended || !free} onPress={() => (plan ? go(`/book/${t.id}`) : go('/plans'))} />}
     >
       <View style={{ flexDirection: 'row', gap: 14 }}>
         <Portrait tone={t.tone} width={92} height={110} />
@@ -55,6 +61,11 @@ export default function TherapistProfile() {
           </View>
         </View>
       </View>
+      {!free ? (
+        <Banner testID="one-therapist" tone="sun" icon="lock" title="You already have a therapist">
+          You can work with one therapist at a time. Once your sessions with them are done and their chat has ended, you can choose someone else.
+        </Banner>
+      ) : null}
       <Banner tone="green" icon="shield" title="Licence checked">
         {t.licenceBody}, no. {t.licenceNumber}. Valid to {dayLong(t.licenceValidTo)}.
       </Banner>

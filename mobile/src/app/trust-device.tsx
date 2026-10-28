@@ -24,8 +24,8 @@ export default function TrustDevice() {
         <Button
           testID="trust-continue"
           label="Continue"
-          onPress={() => {
-            api.auth.trustDevice(own, Platform.OS)
+          onPress={async () => {
+            await api.auth.trustDevice(own, Platform.OS)
             resetTo('/home')
           }}
         />

@@ -21,6 +21,11 @@ function register(opts: { dob?: string } = {}) {
   expect(api.auth.completeRegistration('web').ok).toBe(true)
 }
 
+const registerPaid = () => {
+  register()
+  api.demo.grantPlan('monthly')
+}
+
 beforeEach(() => {
   vi.useFakeTimers()
   reset()
@@ -184,7 +189,7 @@ describe('matching and chat', () => {
 
 describe('forum', () => {
   it('holds a first post for review, then publishes it', () => {
-    register()
+    registerPaid()
     const r = api.forum.create({ topic: 'Anxiety', title: 'Hard week', body: 'I have been feeling overwhelmed and cannot sleep.' })
     expect(r).toMatchObject({ ok: true, value: { pending: true } })
     expect(getDb().posts[0].status).toBe('pending')
@@ -195,12 +200,12 @@ describe('forum', () => {
     expect(second).toMatchObject({ ok: true, value: { pending: false } })
   })
   it('refuses posts and comments with contact details', () => {
-    register()
+    registerPaid()
     expect(api.forum.create({ topic: 'Grief', title: 'Help', body: 'Please call me on 0712345678 to talk about it.' })).toMatchObject({ ok: false, code: 'blocked' })
     expect(api.forum.comment('f1', 'see www.example.com')).toMatchObject({ ok: false, code: 'blocked' })
   })
   it('lets people add support once, and take it back', () => {
-    register()
+    registerPaid()
     const before = getDb().posts.find((p) => p.id === 'f1')!.supports
     api.forum.toggleSupport('f1')
     expect(getDb().posts.find((p) => p.id === 'f1')!.supports).toBe(before + 1)
@@ -208,7 +213,7 @@ describe('forum', () => {
     expect(getDb().posts.find((p) => p.id === 'f1')!.supports).toBe(before)
   })
   it('allows editing only inside 15 minutes', () => {
-    register()
+    registerPaid()
     const r = api.forum.create({ topic: 'Anxiety', title: 'Hard week', body: 'I have been feeling overwhelmed and cannot sleep.' })
     if (!r.ok) throw new Error('create')
     expect(api.forum.edit(r.value.post.id, { title: 'Hard week, update', body: 'I have been feeling a little better now.' }).ok).toBe(true)
@@ -232,7 +237,7 @@ describe('payments, sessions and plans', () => {
     expect(getDb().subscription?.planId).toBe('monthly')
   })
   it('books a therapist session and offers a free change until 24 hours before', async () => {
-    register()
+    registerPaid()
     // find a real slot for Dr. Amina
     const { THERAPISTS } = await import('../src/data/seed')
     const { slotsFor } = await import('../src/lib/directory')

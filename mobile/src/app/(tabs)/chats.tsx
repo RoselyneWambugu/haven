@@ -11,6 +11,10 @@ import { Banner, Card, EmptyState, Row, SectionLabel } from '@/components/Surfac
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
+import { seatsLeft, status, whenLabel } from '@/lib/groupChat'
+import { Badge } from '@/components/Controls'
+import { useNow } from '@/store/useNow'
+import { leftLabel, timeLeft } from '@/lib/chatLife'
 import { go } from '@/lib/nav'
 import { planState, canChat } from '@/lib/plan'
 import { relative } from '@/lib/time'
@@ -28,6 +32,9 @@ export default function Chats() {
   const conversations = useDb((s) => s.conversations)
   const sub = useDb((s) => s.subscription)
   const match = useDb((s) => s.match)
+  const allSessions = useDb((s) => s.sessions)
+  const groupChats = useDb((s) => s.groupChats)
+  const clockNow = useNow(15_000)
   const [menu, setMenu] = useState<Conversation | null>(null)
   const [showArchived, setShowArchived] = useState(false)
 
@@ -37,6 +44,27 @@ export default function Chats() {
   const therapists = active.filter((c) => c.kind === 'therapist')
   const peers = active.filter((c) => c.kind === 'peer')
   const archived = sorted.filter((c) => c.archived)
+
+  const happening = groupChats.filter((g) => g.registered && ['lobby', 'open'].includes(status(g, clockNow)))
+  const upcoming = groupChats.filter((g) => status(g, clockNow) === 'upcoming' || (!g.registered && status(g, clockNow) === 'lobby')).slice(0, 6)
+
+  function groupCard(g: (typeof groupChats)[number]) {
+    const st = status(g, clockNow)
+    const th = THERAPISTS.find((t) => t.id === g.facilitatorId)
+    return (
+      <Card key={g.id} testID={`group-${g.id}`} onPress={() => go(`/group-chats/${g.id}`)} accessibilityLabel={`${g.topic}, ${whenLabel(g.startsAt, clockNow)}`} style={{ marginBottom: 10 }}>
+        <Text variant="h3">{g.topic}</Text>
+        <Text variant="small" muted style={{ marginTop: 2 }}>
+          {st === 'open' ? 'Open now' : whenLabel(g.startsAt, clockNow)}
+          {th ? ` · led by ${th.name}` : ''}
+        </Text>
+        <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+          {g.registered ? <Badge icon="check" label={st === 'open' ? 'Go in' : 'Signed up'} /> : null}
+          <Badge label={seatsLeft(g) > 0 ? `${seatsLeft(g)} places left` : 'Full'} tone="plain" />
+        </View>
+      </Card>
+    )
+  }
 
   function line(c: Conversation) {
     const th = c.therapistId ? THERAPISTS.find((t) => t.id === c.therapistId) : null
@@ -59,6 +87,7 @@ export default function Chats() {
             </Text>
             {c.muted ? <Icon name="mute" size={14} color={colors.muted} /> : null}
             {c.ended ? <Text variant="caption" muted>Ended</Text> : null}
+            {!c.ended ? <Text variant="caption" muted>· {leftLabel(timeLeft(c, allSessions, now()))} left</Text> : null}
           </View>
           <Text variant="small" muted numberOfLines={1} bold={c.unread > 0}>
             {preview(c)}
@@ -94,6 +123,12 @@ export default function Chats() {
         </Card>
       ) : null}
 
+      {happening.length ? (
+        <View testID="groups-now">
+          <SectionLabel>Happening now</SectionLabel>
+          {happening.map(groupCard)}
+        </View>
+      ) : null}
       {therapists.length ? (
         <View>
           <SectionLabel>Therapists</SectionLabel>
@@ -106,6 +141,13 @@ export default function Chats() {
           {peers.map(line)}
         </View>
       ) : null}
+      <View testID="groups-upcoming">
+        <SectionLabel>Upcoming group chats</SectionLabel>
+        <Text variant="small" muted style={{ marginBottom: 8 }}>
+          Timed chats on one topic, led by a verified therapist. Sign up and the room opens at the start time.
+        </Text>
+        {upcoming.length ? upcoming.map(groupCard) : <Text variant="small" muted>Nothing scheduled right now.</Text>}
+      </View>
       {!active.length ? (
         <EmptyState icon="chats" title="No chats yet" body="Find someone who speaks your language and is in a similar age range, or book a therapist.">
           <Button testID="chats-find" label="Find someone to talk to" onPress={() => go('/match')} />

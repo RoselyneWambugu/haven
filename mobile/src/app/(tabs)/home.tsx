@@ -41,7 +41,7 @@ export default function Home() {
   const therapist = next ? THERAPISTS.find((t) => t.id === next.therapistId) : null
   const live = conversations.filter((c) => !c.archived && !c.ended)
   const unread = live.reduce((n, c) => n + c.unread, 0)
-  const highlight = posts.filter((p) => p.status === 'published' && !p.mine).sort((a, b) => b.supports - a.supports)[0]
+  const highlight = plan === 'none' || plan === 'lapsed' ? undefined : posts.filter((p) => p.status === 'published' && !p.mine && !p.space).sort((a, b) => b.supports - a.supports)[0]
   const moodOn = useDb((s) => s.content.flags.moodCheckin)
   const mood = account?.mood && now() - account.mood.at < 24 * 3600_000 ? account.mood.value : null
 

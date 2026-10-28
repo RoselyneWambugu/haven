@@ -42,11 +42,11 @@ export default function Calendar() {
   if (!p) return null
   const cells = blocksToCells(p.availability)
 
-  function addTimeOff() {
+  async function addTimeOff() {
     const a = parseDay(from)
     const b = parseDay(to || from)
     if (a === null || b === null) return setError('Use the format DD/MM/YYYY.')
-    const r = api.portal.addTimeOff(a, b + 24 * 3600_000)
+    const r = await api.portal.addTimeOff(a, b + 24 * 3600_000)
     if (!r.ok) return setError(r.error)
     setFrom('')
     setTo('')
@@ -99,7 +99,7 @@ export default function Calendar() {
         </Panel>
         <View style={{ flex: wide ? 1 : undefined, width: wide ? undefined : '100%', gap: 18 }}>
           <Panel title="Capacity">
-            <ToggleRow testID="pause-new" label="Pause new clients" sub="Existing clients are unaffected" on={p.paused} onChange={(v) => api.portal.setPaused(v)} />
+            <ToggleRow testID="pause-new" label="Pause new clients" sub={p.review?.kind === 'paused' ? 'Set by a clinical review. A clinical reviewer lifts it.' : 'Existing clients are unaffected'} on={p.paused} onChange={(v) => api.portal.setPaused(v)} />
             <Stepper label="Max sessions a day" value={p.caps.perDay} min={1} max={10} onChange={(v) => api.portal.setCaps({ perDay: v })} />
             <Stepper label="Buffer between sessions (min)" value={p.caps.bufferMin} min={0} max={60} step={5} onChange={(v) => api.portal.setCaps({ bufferMin: v })} />
             <Stepper label="Max new clients a week" value={p.caps.newPerWeek} min={0} max={15} onChange={(v) => api.portal.setCaps({ newPerWeek: v })} />

@@ -23,6 +23,8 @@ export interface Slot {
   start: number
   end: number
   modes: Mode[]
+  /** An immediate slot: the therapist is on now, or starts within the hour. It skips the usual booking lead time. */
+  soon?: boolean
 }
 
 export function freeChangeDeadline(start: number): number {
@@ -81,6 +83,7 @@ export function generateSlots(
 export function nextAvailableLabel(slots: Slot[], now: number): string | null {
   const s = slots[0]
   if (!s) return null
+  if (s.soon) return s.start - now <= 15 * MIN ? 'Available now' : `Available in ${Math.max(1, Math.round((s.start - now) / MIN))} min`
   if (isSameEatDay(s.start, now)) return `Next: today ${clock(s.start)}`
   if (isSameEatDay(s.start, now + 24 * HOUR)) return `Next: tomorrow ${clock(s.start)}`
   return `Next: ${clock(s.start)} on ${eat(s.start).day}/${eat(s.start).month + 1}`

@@ -39,8 +39,8 @@ export default function WrapUp() {
         <Button
           testID="wrap-save"
           label="Save and close"
-          onPress={() => {
-            api.portal.wrapUp(s.id, { attendance, note, followUp: follow ? suggested : null })
+          onPress={async () => {
+            await api.portal.wrapUp(s.id, { attendance, note, followUp: follow ? suggested : null })
             resetTo('/portal/sessions')
           }}
         />

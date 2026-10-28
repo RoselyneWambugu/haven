@@ -41,3 +41,31 @@ export const STAFF_REPLIES: Record<string, string> = {
 
 export const CRISIS_STAFF_REPLY =
   'We’re really glad you wrote. A trained member of our team has seen your message and will reply shortly. If you are in danger right now, please call emergency services or use Urgent help in the app.'
+
+// ---------------------------------------------------------------------------
+// Replies to a member's community post. A real service has real people; the demo has these.
+// None give advice, none invite contact, and a hard post is met with urgent help rather than tips.
+// ---------------------------------------------------------------------------
+
+export const PEER_POST_REPLIES = [
+  'Thank you for sharing this. I’m sorry it has been such a hard time, and I’m glad you wrote it down.',
+  'I’ve been somewhere close to this. You’re not alone in it.',
+  'That sounds heavy. Reading this, I hope you can be gentle with yourself today.',
+  'Thank you for being open. A lot of us here know that feeling.',
+]
+export const PEER_HEAVY_REPLY = 'Thank you for trusting us with this. You’re not alone, and the Urgent help button at the top is free and open any time.'
+export const THERAPIST_POST_REPLY = 'Thank you for sharing this. Feeling this way after a hard time is common, and it can help to be with people you trust. This is general information, not advice for you.'
+export const REPLY_PEERS: { name: string; avatar: 'moon' | 'leaf' | 'wave' | 'star' | 'pine' | 'sun' | 'fern' | 'drop' }[] = [
+  { name: 'WarmLantern', avatar: 'sun' },
+  { name: 'SoftCurrent', avatar: 'wave' },
+  { name: 'EveningFern', avatar: 'fern' },
+]
+
+let r = 0
+export function postReply(kind: 'peer' | 'therapist', title: string, body: string): { text: string; peer: (typeof REPLY_PEERS)[number] } {
+  r += 1
+  const peer = REPLY_PEERS[r % REPLY_PEERS.length]
+  if (kind === 'therapist') return { text: THERAPIST_POST_REPLY, peer }
+  const heavy = detectDistress(`${title}\n${body}`).level !== 'none'
+  return { text: heavy ? PEER_HEAVY_REPLY : PEER_POST_REPLIES[r % PEER_POST_REPLIES.length], peer }
+}

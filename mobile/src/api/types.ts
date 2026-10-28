@@ -90,6 +90,8 @@ export interface Settings {
   lockAfterSeconds: number
   hidePenNameOnLock: boolean
   quickExit: boolean
+  /** Text a short reminder an hour before a session. Off until the member turns it on. Real backend only. */
+  smsReminders: boolean
   disappearingDefault: 'ask' | 'on' | 'off'
 }
 
@@ -137,6 +139,8 @@ export interface Conversation {
   lastAt: number
   /** The member's private "Did you feel heard?" answer, or 'skipped'. Never shown to the other person (FDB-1). */
   heard?: { score: number; comment: string } | 'skipped'
+  /** Set once the "ending soon" note has been added. */
+  warned?: boolean
 }
 
 export type FeedbackKind = 'idea' | 'bug' | 'other'
@@ -187,6 +191,8 @@ export interface ForumPost {
   status: 'published' | 'pending' | 'hidden'
   mine: boolean
   authorKey: string
+  /** The support space this post belongs to. Space posts stay out of the general community feed. */
+  space?: string
 }
 
 // ---------- therapists and sessions ----------
@@ -211,6 +217,10 @@ export interface Therapist {
   gender: 'woman' | 'man'
   availability: AvailabilityBlock[]
   acceptingNew: boolean
+  /** Start times already booked by other members, when the real backend knows them. */
+  takenStarts?: number[]
+  /** Set when staff suspend the therapist. They are hidden from the directory and can't be booked. */
+  suspended?: boolean
 }
 
 export type SessionStatus = 'booked' | 'completed' | 'cancelled' | 'missed'
@@ -262,7 +272,7 @@ export type CheckoutItem =
 export interface PaymentResult {
   ok: boolean
   receiptNo?: string
-  failure?: 'timeout' | 'insufficient' | 'cancelled'
+  failure?: 'timeout' | 'insufficient' | 'cancelled' | 'unavailable' | 'taken'
   sessionId?: string
 }
 
@@ -301,6 +311,8 @@ export interface Ticket {
   messages: TicketMessage[]
   createdAt: number
   routedToCrisis: boolean
+  /** Staff see the pen name of the member who wrote in. Only on the real backend. */
+  penName?: string
 }
 
 export interface CrisisLine {
@@ -335,10 +347,62 @@ export interface ReportRecord {
   reportedName?: string
   snapshot?: EvidenceLine[]
   priorReports?: number
+  /** Concerns about a therapist go to the clinical queue. */
+  queue?: 'clinical'
+  therapistId?: string
+  /** The chat that was reported, so it is kept past 24 hours. */
+  conversationId?: string
+  /** The group chat that was reported, so it is kept past 24 hours. */
+  groupChatId?: string
+}
+
+// ---------- timed group chats ----------
+
+export interface GroupMessage {
+  id: string
+  name: string
+  avatar: AvatarKind
+  text: string
+  at: number
+  mine?: boolean
+  facilitator?: boolean
+  /** A note from Echo, such as the closing line. */
+  system?: boolean
+}
+
+/** A facilitated group chat at a set time, on one topic, with a limited number of places. */
+export interface GroupChat {
+  id: string
+  topic: string
+  blurb: string
+  facilitatorId: string
+  startsAt: number
+  durationMin: number
+  capacity: number
+  /** Places already taken by other people (a stand-in; the real service knows). */
+  takenOthers: number
+  registered: boolean
+  messages: GroupMessage[]
+  /** How many scripted lines have been posted, so each is posted once. */
+  posted: number
+  /** Set when the closing note has been posted. */
+  closed?: boolean
+  warned?: boolean
+  /** Set when staff cancel it before it starts. */
+  cancelled?: { reason: string; by: string; at: number }
+  /** The staff member who scheduled it, when it was not one of the standing topics. */
+  createdBy?: string
+  /** People a moderator removed from the room. Their messages are hidden and they cannot write or sign up again. */
+  removed?: { name: string; reason: string; by: string; at: number }[]
+  /** Pen names of the people signed up. Staff get this from the server, which knows who is in the room. */
+  roster?: string[]
+  /** On the waiting list for a full room. Real backend only. */
+  waitlisted?: boolean
 }
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'
-export type ReportReason = 'harassment' | 'threats' | 'sexual' | 'scam' | 'self-harm' | 'impersonation' | 'hate' | 'other'
+/** The last three are concerns about a therapist, and go to Clinical reviewers. */
+export type ReportReason = 'harassment' | 'threats' | 'sexual' | 'scam' | 'self-harm' | 'impersonation' | 'hate' | 'other' | 'therapist-conduct' | 'therapist-boundaries' | 'therapist-privacy'
 
 // ---------- results ----------
 
@@ -374,6 +438,8 @@ export interface PortalSession {
   note: string
   followUp: number | null
   grossKes: number | null
+  /** The platform fee fixed on the session when it was completed. Only on the real backend. */
+  feeKes?: number | null
 }
 
 export interface PortalThread {
@@ -408,6 +474,8 @@ export interface PortalState {
   therapistId: string
   application: 'none' | 'submitted' | 'more-info' | 'approved'
   paused: boolean
+  /** Set by a clinical review of a concern about this therapist. A pause set this way is lifted only by a clinical reviewer. */
+  review?: { kind: 'warning' | 'paused'; text: string; at: number; by?: string } | null
   caps: { perDay: number; bufferMin: number; newPerWeek: number }
   availability: AvailabilityBlock[]
   timeOff: { id: string; start: number; end: number }[]
@@ -418,6 +486,10 @@ export interface PortalState {
   payout: { method: string; schedule: 'weekly' | 'monthly' }
   licenceValidTo: number
   reauthUntil: number
+  /** From the server: the decision in force against this therapist and their latest appeal. */
+  /** From the server: reminders sent and the latest renewal. */
+  licence?: { stage: 60 | 30 | 7 | 0 | null; number: string; renewal: { status: 'pending' | 'approved' | 'rejected'; number: string; newExpiry: number; note: string | null } | null }
+  appealState?: { decision: { kind: 'warning' | 'paused' | 'suspended'; by: string; at: number; text: string } | null; latest: AdminAppeal | null }
 }
 
 // ---------- admin dashboard ----------
@@ -426,7 +498,7 @@ export type StaffRole = 'moderator' | 'clinical' | 'billing' | 'admin'
 export type Severity = 'S1' | 'S2' | 'S3'
 export type CaseStatus = 'new' | 'in-review' | 'waiting' | 'closed'
 export type CaseSource = 'user-report' | 'ai-flag' | 'crisis-flag' | 'appeal'
-export type CaseAction = 'dismiss' | 'strike' | 'restrict' | 'suspend' | 'escalate'
+export type CaseAction = 'dismiss' | 'strike' | 'restrict' | 'suspend' | 'escalate' | 'warn-therapist' | 'pause-therapist'
 
 export interface EvidenceLine {
   id: string
@@ -452,6 +524,10 @@ export interface AdminCase {
   ai: { category: string; confidence: number; model: string } | null
   strikes: number
   priorReports: number
+  /** Which team works it. Therapist concerns are for Clinical reviewers; the rest are for moderators. */
+  queue?: 'clinical'
+  /** For a therapist concern: which therapist it is about. */
+  therapistId?: string
   decision: { action: CaseAction; reason: string; by: string; at: number } | null
   escalated: boolean
 }
@@ -474,6 +550,17 @@ export interface AdminUser {
   isMember: boolean
 }
 
+export interface AdminLicence {
+  id: string
+  name: string
+  validTo: number
+  number: string
+  /** 60, 30 or 7 days left, 0 once expired, or null while there is more than 60 days. */
+  stage: 60 | 30 | 7 | 0 | null
+  lastReminderAt: number | null
+  renewal: { id: string; number: string; newExpiry: number } | null
+}
+
 export interface AdminAppeal {
   id: string
   noticeId: string | null
@@ -486,6 +573,10 @@ export interface AdminAppeal {
   slaHours: number
   status: 'open' | 'upheld' | 'reduced' | 'overturned'
   reviewer: string | null
+  /** Set when a therapist is appealing a clinical decision about them. */
+  therapistId?: string
+  /** The reviewer's explanation, shown to a therapist. Members see theirs on the notice. */
+  response?: string
 }
 
 export interface BreakGlassRequest {
@@ -555,6 +646,8 @@ export interface AdminState {
   staff: StaffAccount[]
   pendingStaff: { change: StaffChange; requestedBy: string } | null
   wellbeing: WellbeingCfg
+  /** Therapists staff have suspended, by therapist id. */
+  therapistStanding?: Record<string, { reason: string; by: string; at: number }>
   /** Who works the heavy queue (Severity-1 and crisis cases) each week. */
   rota: RotaWeek[]
   cases: AdminCase[]
@@ -566,8 +659,33 @@ export interface AdminState {
   flags: AdminFlag[]
   applicants: Applicant[]
   policy: StrikePolicy
-  policyChange: { policy: StrikePolicy; requestedBy: string; approvals: string[] } | null
+  policyChange: { policy: StrikePolicy; requestedBy: string; approvals: string[]; id?: string; mine?: boolean } | null
   audit: AuditEntry[]
+  /** Posts waiting for a moderator. Only on the real backend. */
+  held?: HeldPost[]
+  /** Which therapists have a phone number linked, by therapist id. Only on the real backend. */
+  /** People invited by phone who haven't signed in yet, and who is on the heavy-queue rota. Only on the real backend. */
+  /** A team change waiting for a second Admin. Only on the real backend. */
+  staffPending?: { id: string; summary: string; requestedBy: string; mine: boolean; at: number } | null
+  staffInvites?: { name: string; role: StaffRole; tail: string; by: string; at: number }[]
+  heavy?: Record<string, boolean>
+  /** Live analytics from the server. Only on the real backend. */
+  analytics?: { days: import('@/lib/analytics').Day[]; cohorts: import('@/lib/analytics').Cohort[]; who: import('@/lib/analytics').Breakdown; reviewMinutes: number[] }
+  failedPayments?: number
+  /** Felt-heard shares worked out by the server, with small groups hidden. Only on the real backend. */
+  heardSummary?: { answered: number | null; skipped: number | null; shares: (number | null)[]; positive: number | null }
+  therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string }>
+  /** From the server, for clinical reviewers and Admins: every therapist's licence and any renewal waiting. */
+  licences?: AdminLicence[]
+}
+
+export interface HeldPost {
+  id: string
+  title: string
+  body: string
+  author: string
+  topic: string
+  at: number
 }
 
 // ---------- editable content and configuration (admin: Resources, Configuration) ----------
@@ -640,7 +758,7 @@ export interface ContentState {
   suggestions: ServiceSuggestion[]
   topics: string[]
   plans: PlanCfg[]
-  pendingPlans: { plans: PlanCfg[]; requestedBy: string; approvals: string[] } | null
+  pendingPlans: { plans: PlanCfg[]; requestedBy: string; approvals: string[]; id?: string; mine?: boolean } | null
   matching: MatchingCfg
   flags: FlagsCfg
   limits: LimitsCfg
