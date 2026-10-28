@@ -63,7 +63,8 @@ export default function Landing() {
         {wide ? (
           <>
             <NavLink testID="nav-terms" label="Terms and privacy" onPress={() => go('/about')} />
-            <NavLink testID="nav-therapist" label="For therapists" onPress={() => go('/portal/sign-in')} />
+            <NavLink testID="nav-therapist" label="Therapist sign in" onPress={() => go('/portal')} />
+            <NavLink testID="nav-apply" label="Apply to join" onPress={() => go('/portal/apply')} />
           </>
         ) : null}
         <Button testID="landing-signin" label="Sign in" size="sm" variant="ghost" onPress={() => go('/login')} />
@@ -203,7 +204,7 @@ export default function Landing() {
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
           <Button testID="footer-urgent" label="Talk to someone now" variant="light" size="sm" onPress={() => go('/urgent')} />
-          <Pressable testID="therapist-link" accessibilityRole="link" accessibilityLabel="I’m a therapist" onPress={() => go('/portal/sign-in')} style={{ minHeight: 44, justifyContent: 'center' }}>
+          <Pressable testID="therapist-link" accessibilityRole="link" accessibilityLabel="I’m a therapist" onPress={() => go('/portal')} style={{ minHeight: 44, justifyContent: 'center' }}>
             <Text variant="small" color={colors.paper} style={{ textDecorationLine: 'underline' }}>
               I’m a therapist
             </Text>

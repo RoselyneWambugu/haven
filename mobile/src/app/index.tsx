@@ -3,12 +3,11 @@ import { Platform } from 'react-native'
 import { useDb } from '@/store/db'
 import { useFront } from '@/store/useFront'
 
-/** Set EXPO_PUBLIC_WEB_FRONT=portal on the hosted web app so it opens on the therapist dashboard. Members use the phone app. */
-const WEB_OPENS_PORTAL = Platform.OS === 'web' && process.env.EXPO_PUBLIC_WEB_FRONT === 'portal'
-
+/** A signed-in therapist on the web opens on their dashboard. Everyone else opens the landing page (or the welcome screen on a phone). */
 export default function Index() {
   const signedIn = useDb((s) => s.signedIn)
+  const therapistIn = useDb((s) => s.portal?.signedIn ?? false)
   const front = useFront()
-  if (WEB_OPENS_PORTAL) return <Redirect href={'/portal' as never} />
+  if (Platform.OS === 'web' && therapistIn) return <Redirect href={'/portal/today' as never} />
   return <Redirect href={signedIn ? '/home' : front} />
 }

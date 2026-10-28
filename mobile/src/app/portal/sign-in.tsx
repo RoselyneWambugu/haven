@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { View } from 'react-native'
-import { router } from 'expo-router'
+import { Platform, View } from 'react-native'
+import { Redirect, router } from 'expo-router'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -17,6 +17,7 @@ import { useDb } from '@/store/db'
 /** Therapists sign in separately from members. On the real backend that is a phone number and a code; the demo signs in as one seeded therapist. */
 export default function PortalSignIn() {
   const app = useDb((s) => s.portal?.application ?? 'none')
+  const signedIn = useDb((s) => s.portal?.signedIn ?? false)
   const demo = THERAPISTS.find((t) => t.id === 't-amina') ?? THERAPISTS[0]
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
@@ -43,6 +44,7 @@ export default function PortalSignIn() {
     router.replace('/portal/today' as never)
   }
 
+  if (signedIn) return <Redirect href={'/portal/today' as never} />
   return (
     <View testID="portal-sign-in" style={{ flex: 1, alignItems: 'center', padding: 24, paddingTop: 48 }}>
       <View style={{ width: '100%', maxWidth: 460, gap: 18 }}>
@@ -85,7 +87,8 @@ export default function PortalSignIn() {
           </Panel>
         )}
         <Button testID="portal-apply" variant="quiet" label={app === 'none' ? 'Apply to join Echo' : 'See my application'} onPress={() => go('/portal/apply')} />
-        <Button variant="ghost" label="Back to the member app" onPress={() => router.replace('/welcome' as never)} />
+        <Button testID="portal-home" variant="ghost" label="About Echo" onPress={() => router.replace((Platform.OS === 'web' ? '/landing' : '/welcome') as never)} />
+        <Button testID="portal-staff" variant="ghost" label="Echo staff sign-in" onPress={() => go('/admin/sign-in')} />
       </View>
     </View>
   )
