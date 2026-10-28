@@ -38,3 +38,7 @@ Sign up, pay, match, chat, book, report, raise a help ticket, request a refund, 
 - **A crisis line is wrong.** Edit it in Resources straight away. The checklist's 90 day check resets until someone presses **Mark as checked** again.
 - **A staff account is lost or compromised.** Another Admin deactivates it under Roles (a second Admin approves). Break-glass access and every file opened are in the audit log.
 - **Database rollback.** Every migration is in `supabase/migrations/`; the rollback tests in `supabase/tests/` run inside a transaction and change nothing. Restore from a backup rather than editing live data.
+
+## Verification documents: 12-month retention
+
+Verification documents (therapist applications and licence renewals) are kept for 12 months after the decision on them, then deleted. The `document-retention` edge function is deployed and the logic lives in `supabase/document_retention_cleanup.sql`. Run that file once in the SQL editor (it deletes data, so it is kept apart); it schedules a daily job. Documents are never removed while an application is pending or waiting for information. It uses the same `sms_drain_token` vault secret and `SMS_DRAIN_TOKEN` function secret as the SMS sender, so nothing new to enter.
