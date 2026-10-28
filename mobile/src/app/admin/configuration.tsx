@@ -94,7 +94,6 @@ export default function Configuration() {
                 keyboardType="number-pad"
               />
               <ToggleRow label="Disappearing chats" on={p.entitlements.disappearing} onChange={(v) => setPlan(p.id, { entitlements: { ...p.entitlements, disappearing: v } })} />
-              <Stepper label="Discount on therapy sessions (%)" value={p.entitlements.therapistDiscountPct} min={0} max={50} step={5} onChange={(n) => setPlan(p.id, { entitlements: { ...p.entitlements, therapistDiscountPct: n } })} />
             </Panel>
           ))}
           <View style={{ flexDirection: 'row', gap: 8 }}>

@@ -152,4 +152,4 @@ export const PLANS: PlanDef[] = [
 ]
 
 export const ALWAYS_FREE = ['Urgent help and crisis lines', 'Help centre and support tickets', 'Block, report and your data', 'The community, to read and post']
-export const PLAN_INCLUDES = ['Automatic matching and unlimited peer chat', 'Disappearing chats', 'Posting and commenting in the community', 'Discount on therapy sessions']
+export const PLAN_INCLUDES = ['Automatic matching and unlimited peer chat', 'Disappearing chats', 'Posting and commenting in the community']

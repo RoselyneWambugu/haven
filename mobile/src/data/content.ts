@@ -9,7 +9,7 @@ const SLA: Record<string, number> = { safety: 4, billing: 24, therapists: 24, te
 
 /** The starting content and configuration. Everything here can be changed by staff without a release. */
 export function defaultContent(): ContentState {
-  const plans: PlanCfg[] = PLANS.map((p) => ({ ...p, enabled: true, entitlements: { disappearing: true, therapistDiscountPct: 10 } }))
+  const plans: PlanCfg[] = PLANS.map((p) => ({ ...p, enabled: true, entitlements: { disappearing: true, therapistDiscountPct: 0 } }))
   return {
     departments: DEPARTMENTS.map((d) => ({ ...d, owner: OWNER[d.id] ?? 'Support', slaHours: SLA[d.id] ?? 24, enabled: true })),
     articles: ARTICLES.map((a) => ({ ...a, published: true })),

@@ -35,7 +35,7 @@ export function PlatformFee({ canEdit }: { canEdit: boolean }) {
   return (
     <Panel title="Platform fee" testID="platform-fee">
       <Text variant="small" muted>
-        Taken from each completed session’s price and fixed on the session when it is completed. A plan’s therapy discount comes out of Echo’s share, not the therapist’s. A refunded session carries no fee.
+        Taken from each completed session’s price and fixed on the session when it is completed. One percentage applies to every therapist, and no plan discounts therapy, so members pay the price the therapist lists. A refunded session carries no fee.
       </Text>
       <Text variant="body">
         Now <Text variant="body" bold>{fee.pct}%</Text>
