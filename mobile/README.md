@@ -6,7 +6,7 @@ The backend is a **mock** that lives on the device by default, so the app runs w
 
 ## Run it
 
-The app is on **Expo SDK 57**, so it opens in the current Expo Go from the app stores. Check the version in Expo Go before you scan: if yours is for a different SDK, it will say the project is incompatible.
+The app is on **Expo SDK 58**, so it opens in an Expo Go that supports SDK 58 (update Expo Go from the app store if yours is older). Check the version in Expo Go before you scan: if yours is for a different SDK, it will say the project is incompatible.
 
 ```sh
 npm install
