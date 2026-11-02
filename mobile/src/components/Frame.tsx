@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, View } from 'react-native'
+import { Platform, Pressable, ScrollView, View } from 'react-native'
+import { go } from '@/lib/nav'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from '@/theme'
 import { LogoMark } from './Art'
@@ -21,7 +22,7 @@ export interface NavItem {
  * Pages without navigation (sign-in, a live session) get the header only.
  */
 export function DashboardFrame({
-  brand, tagline, dark, items, active, user, showNav, children,
+  brand, tagline, dark, items, active, user, showNav, children, homeHref,
 }: {
   brand: string
   tagline?: string
@@ -32,6 +33,8 @@ export function DashboardFrame({
   user?: React.ReactNode
   showNav: boolean
   children: React.ReactNode
+  /** Where the logo takes you. Defaults to the public front page: the landing page on the web, the welcome screen on a phone. */
+  homeHref?: string
 }) {
   const insets = useSafeAreaInsets()
   const wide = useWide()
@@ -39,8 +42,9 @@ export function DashboardFrame({
   const muted = dark ? colors.lichen : colors.muted
   const bar = dark ? colors.fern : colors.milk
 
+  const home = homeHref ?? (Platform.OS === 'web' ? '/landing' : '/welcome')
   const logo = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+    <Pressable testID="frame-home" accessibilityRole="link" accessibilityLabel={`${brand}, back to the home page`} onPress={() => go(home)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}>
       <LogoMark size={40} />
       <View>
         <Text variant="h3" color={fg}>
@@ -52,7 +56,7 @@ export function DashboardFrame({
           </Text>
         ) : null}
       </View>
-    </View>
+    </Pressable>
   )
 
   if (showNav && wide) {
