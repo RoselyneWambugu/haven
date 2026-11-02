@@ -135,7 +135,6 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | # | Item | Source |
 |---|---|---|
 | Q-01 | Test on real phones and in Expo Go beyond a first look: keyboard, scroll, low-end Android, performance | v0.27 |
-| Q-02 | The app runs on Expo SDK 57 so it opens in the store Expo Go; move back to SDK 58 when the store version supports it | v0.27 |
 | Q-03 | Accessibility review with real users (screen reader, large text, reduced motion) | all |
 | Q-04 | Security review before any real data: the mock backend, device storage and demo hooks are not safe for real use | v0.8 |
 | Q-06 | Server list of common names for pen names (the server checks only the member's own name; the app has a names list) | v0.33 |

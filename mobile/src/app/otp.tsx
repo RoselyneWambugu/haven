@@ -22,7 +22,7 @@ export default function Otp() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [left, setLeft] = useState(30)
-  const input = useRef<TextInput>(null)
+  const input = useRef<React.ComponentRef<typeof TextInput>>(null)
 
   useEffect(() => {
     const t = setInterval(() => setLeft((n) => Math.max(0, n - 1)), 1000)
