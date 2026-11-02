@@ -844,12 +844,12 @@ This section lists areas that **must be reviewed by qualified legal counsel** be
 | v0.25 | The therapist portal and the admin dashboard use a left sidebar for navigation on wide windows |
 | v0.26 | A member's own post now gets a peer reply and a verified therapist's general reply, and each sends a notification (FRM, SET-4) |
 | v0.27 | The app moves from Expo SDK 58 to SDK 57 so it opens in the store version of Expo Go |
-| v0.65 | The app moves back up to Expo SDK 58 (React Native 0.88, React 19.3) |
 | v0.28 | Adds support spaces: groups for one issue each, led by a verified therapist, built on the community forum. Live group chat stays out of scope |
 | v0.29 | Adds timed group chats, chats that end and are deleted after 24 hours, limits of five open peer chats and one therapist at a time, a rolling-dice matching animation, and therapist availability now or within the hour |
 | v0.30 | The Echo logo: a glowing lotus with a heart at its centre, used as the app icon, splash, header mark and web favicon |
 | v0.31 | Adds the admin Group chats module: staff schedule and cancel timed group chats |
 | v0.64 | Flag rules screen: add, change, switch off and test rules; contact-filter blocks counted (never the words) |
+| v0.65 | The app moves back up to Expo SDK 58 (React Native 0.88, React 19.3) |
 | v0.63 | Group chat extras: remove a single line (kept for review), edit a room before it opens, waiting list with automatic promotion |
 | v0.62 | Payouts: a refund after payout is taken off the next withdrawal; optional smallest withdrawal set by an Admin |
 | v0.61 | Billing: payments to reconcile, resolved with a note and logged, and the text message queue with retry |
