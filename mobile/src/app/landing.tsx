@@ -6,6 +6,7 @@ import { Icon, type IconName } from '@/components/Icon'
 import { useWide } from '@/components/Portal'
 import { Text } from '@/components/Text'
 import { go } from '@/lib/nav'
+import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { colors, radius } from '@/theme'
 
 const SERVICES: { icon: IconName; title: string; body: string }[] = [
@@ -65,7 +66,7 @@ export default function Landing() {
             <NavLink testID="nav-therapist" label="Therapist sign in" onPress={() => go('/portal')} />
           </>
         ) : null}
-        <Button testID="landing-signin" label="Sign in" size="sm" variant="ghost" onPress={() => go('/login')} />
+        {MEMBERS_ON_WEB ? <Button testID="landing-signin" label="Sign in" size="sm" variant="ghost" onPress={() => go('/login')} /> : <Button testID="landing-staff" label="Staff sign in" size="sm" variant="ghost" onPress={() => go('/admin/sign-in')} />}
       </View>
 
       {/* Hero */}
@@ -80,10 +81,19 @@ export default function Landing() {
           <Text variant="body" muted style={{ maxWidth: 460 }}>
             Talk anonymously with people who understand, or with a verified therapist, at your own pace. Echo is made for people in Kenya.
           </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
-            <Button testID="landing-start" label="Get started" onPress={() => go('/consent')} />
-            <Button testID="landing-have-account" label="I already have an account" variant="ghost" onPress={() => go('/login')} />
-          </View>
+          {MEMBERS_ON_WEB ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
+              <Button testID="landing-start" label="Get started" onPress={() => go('/consent')} />
+              <Button testID="landing-have-account" label="I already have an account" variant="ghost" onPress={() => go('/login')} />
+            </View>
+          ) : (
+            <View testID="landing-app-note" style={{ marginTop: 4, padding: 14, borderRadius: radius.md, backgroundColor: colors.lichen, maxWidth: 460 }}>
+              <Text variant="label">Get the Echo mobile app</Text>
+              <Text variant="small" muted>
+                Members sign up and log in on the app. This website is for therapists and Echo staff.
+              </Text>
+            </View>
+          )}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 4 }}>
             {['Anonymous', 'Compassionate', 'Always one tap from help'].map((t) => (
               <View key={t} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -168,7 +178,7 @@ export default function Landing() {
             <View testID="checkin-reply" style={{ gap: 10 }}>
               <Text variant="small">{MOOD_LINE[mood]}</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                <Button label="Talk to someone" size="sm" onPress={() => go('/consent')} />
+                <Button label="Talk to someone" size="sm" onPress={() => go(MEMBERS_ON_WEB ? '/consent' : '/mobile-app')} />
                 {mood <= 2 ? <Button label="Urgent help" size="sm" variant="urgent" onPress={() => go('/urgent')} /> : null}
               </View>
             </View>

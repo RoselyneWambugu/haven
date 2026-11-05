@@ -17,6 +17,7 @@ import { ToastHost } from '@/components/ToastHost'
 import { REMOTE } from '@/backend/client'
 import { restoreSession } from '@/backend/remoteAuth'
 import { getDb, loadDb, useDb } from '@/store/db'
+import { MEMBERS_ON_WEB, WEB_PAGES } from '@/lib/webMembers'
 import { useFront } from '@/store/useFront'
 import { useNow } from '@/store/useNow'
 import { colors, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
@@ -44,6 +45,11 @@ function Gate() {
   useEffect(() => {
     if (!nav?.key) return
     // The therapist portal and the admin dashboard each have their own sign-in and guard.
+    // On the live website members have no screens: anything that is not for therapists, staff or the public goes to the landing page.
+    if (!MEMBERS_ON_WEB && first !== '' && first !== 'index' && !WEB_PAGES.has(first)) {
+      router.replace('/landing' as never)
+      return
+    }
     if (first === 'portal' || first === 'admin') return
     if (first === 'settings' && proIn && !signedIn) return
     if (!signedIn) {

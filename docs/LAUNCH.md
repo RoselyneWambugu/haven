@@ -55,3 +55,7 @@ Built. Setup is in `docs/EMAIL_PASSWORD.md`: the Email provider and minimum pass
 ## Therapists and staff by email
 
 Link a therapist by email under **Therapists**, and add staff by email under **Roles** (an Admin, with a second Admin to approve). The first Admin can use Google at the staff page with the one-time setup code. Ask staff to turn on 2-step verification on their Google account; avoid email-and-password-only for Admins.
+
+## The website is for therapists and staff only
+
+On the live website (`EXPO_PUBLIC_BACKEND=supabase`, in a browser) members cannot sign up or log in: the landing page shows a note that Echo for members is the mobile app, the top bar offers Therapist sign in and Staff sign in, and any member address (login, register, chat and so on) goes back to the landing page. A member who finishes an emailed link in a browser (confirming an email, resetting a password) is signed out of the browser and told to open the app. Urgent help, Terms and privacy, and the help centre stay public. The demo build (no backend set) keeps the member screens so it can be tried in a browser.

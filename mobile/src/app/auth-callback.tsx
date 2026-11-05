@@ -23,7 +23,7 @@ export default function AuthCallback() {
         // A therapist or staff sign-in that did not match goes back to where it started; a bad email link goes to ask for a new one.
         return router.replace((r.code === 'link' ? '/forgot-password' : r.code === 'not-therapist' ? '/portal/sign-in' : r.code === 'not-staff' ? '/admin/sign-in' : r.code === 'setup' ? '/admin/sign-in?setup=1' : '/') as never)
       }
-      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', linked: '/settings/sign-in-methods', portal: '/portal/today', admin: '/admin/overview', redirecting: '/' }[r.value.next]
+      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', linked: '/settings/sign-in-methods', portal: '/portal/today', 'mobile-app': '/mobile-app?done=email', admin: '/admin/overview', redirecting: '/' }[r.value.next]
       router.replace(to as never)
     })()
   }, [])

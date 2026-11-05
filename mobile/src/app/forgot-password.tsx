@@ -8,6 +8,7 @@ import { Screen, TopBar } from '@/components/Layout'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { replace } from '@/lib/nav'
+import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { colors } from '@/theme'
 
 /**
@@ -50,11 +51,11 @@ export default function ForgotPassword() {
             Enter the email you signed up with. We’ll send a link to choose a new password.
           </Text>
           <Field testID="forgot-email" label="Email" placeholder="you@example.com" value={email} onChangeText={(v) => { setEmail(v); setError(null) }} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" error={error} />
-          <Pressable accessibilityRole="button" onPress={() => replace('/login')} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}>
+          {MEMBERS_ON_WEB ? <Pressable accessibilityRole="button" onPress={() => replace('/login')} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}>
             <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
               I signed up with my phone number
             </Text>
-          </Pressable>
+          </Pressable> : null}
         </>
       )}
     </Screen>

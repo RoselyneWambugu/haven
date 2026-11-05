@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
+import { Redirect, useLocalSearchParams } from 'expo-router'
+import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -19,6 +20,8 @@ export default function LoginEmail() {
   // Therapists and staff come here from their own sign-in pages; the address then says who is signing in.
   const { for: who } = useLocalSearchParams<{ for?: string }>()
   const purpose = who === 'portal' || who === 'admin' ? who : 'login'
+  // Members use the mobile app, so on the live website these pages are only for therapists and staff.
+  if (!MEMBERS_ON_WEB && who !== 'portal' && who !== 'admin') return <Redirect href="/mobile-app" />
 
   async function submit() {
     setBusy(true)
