@@ -11,7 +11,7 @@ import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { canManageGroups, canModerateGroups } from '@/lib/admin'
 import { now } from '@/lib/clock'
-import { endsAt, LIMITS, participants, seatsLeft, status, whenLabel } from '@/lib/groupChat'
+import { clinicalTerms, endsAt, LIMITS, participants, seatsLeft, status, whenLabel } from '@/lib/groupChat'
 import { startOfEatDay } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
@@ -193,6 +193,12 @@ export default function Groups() {
       {allowed ? (
         <Panel title="Schedule a group chat" testID="schedule">
           <Field testID="g-topic" label="Topic" value={topic} onChangeText={(v) => { setTopic(v); setError(null); setDone(null) }} maxLength={LIMITS.maxTopic} />
+          <Text variant="small" muted>
+            Write it the way a member would say it, like “Surviving grief when everyone has moved on”. Avoid diagnoses and clinical words in the title.
+          </Text>
+          {clinicalTerms(topic).length ? (
+            <Banner tone="sun" icon="pencil">“{clinicalTerms(topic).join('”, “')}” sounds clinical. Try plainer words for the title.</Banner>
+          ) : null}
           <Field testID="g-blurb" label="What it is about" value={blurb} onChangeText={(v) => { setBlurb(v); setError(null); setDone(null) }} multiline minHeight={80} maxLength={LIMITS.maxBlurb} />
           <Text variant="small" muted>
             Led by

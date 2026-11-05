@@ -71,6 +71,15 @@ export interface NewGroupInput {
 
 export const LIMITS = { minTopic: 8, maxTopic: 90, minBlurb: 20, maxBlurb: 300, minDuration: 30, maxDuration: 90, minCapacity: 4, maxCapacity: 20, minLeadMinutes: 60 }
 
+/** Words that make a room's title read like a clinic. Titles say what the hour feels like; the description can be more exact. Kept in step with the server's check. */
+export const CLINICAL_TERMS = ['disorder', 'disorders', 'ptsd', 'cbt', 'dbt', 'therapy', 'treatment', 'symptom', 'symptoms', 'diagnosis', 'diagnosed', 'clinical', 'psychiatric', 'pathology', 'adhd', 'ocd', 'bipolar', 'schizophrenia', 'cognitive', 'behavioural', 'behavioral', 'intervention', 'patients']
+
+/** The clinical words in a title, so the form can ask for plainer ones. */
+export function clinicalTerms(title: string): string[] {
+  const words = title.toLowerCase().match(/[a-z]+/g) ?? []
+  return [...new Set(words.filter((w) => CLINICAL_TERMS.includes(w)))]
+}
+
 /** Whether two sessions run at the same time. */
 export const overlaps = (a: Pick<GroupChat, 'startsAt' | 'durationMin'>, b: Pick<GroupChat, 'startsAt' | 'durationMin'>): boolean => a.startsAt < endsAt(b) && b.startsAt < endsAt(a)
 
@@ -79,6 +88,8 @@ export function validateNewGroup(i: NewGroupInput, now: number, others: Pick<Gro
   const topic = i.topic.trim()
   if (topic.length < LIMITS.minTopic) return `Give it a topic of at least ${LIMITS.minTopic} characters.`
   if (topic.length > LIMITS.maxTopic) return `Keep the topic under ${LIMITS.maxTopic} characters.`
+  const clinical = clinicalTerms(topic)
+  if (clinical.length) return `Use plainer words in the title (“${clinical.join('”, “')}” sounds clinical). Say what the hour feels like; the description can be more exact.`
   const blurb = i.blurb.trim()
   if (blurb.length < LIMITS.minBlurb) return `Say what it is about in at least ${LIMITS.minBlurb} characters.`
   if (blurb.length > LIMITS.maxBlurb) return `Keep the description under ${LIMITS.maxBlurb} characters.`

@@ -4,12 +4,12 @@ import { DEMO_MFA } from '../src/api/admin'
 import { THERAPISTS } from '../src/data/seed'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
 import { canAccess, canManageGroups } from '../src/lib/admin'
-import { LIMITS, status, validateNewGroup, type NewGroupInput } from '../src/lib/groupChat'
+import { clinicalTerms, LIMITS, status, validateNewGroup, type NewGroupInput } from '../src/lib/groupChat'
 import { freshState, getDb, update } from '../src/store/db'
 
 const MIN = 60_000
 const H = 3600_000
-const good = (over: Partial<NewGroupInput> = {}): NewGroupInput => ({ topic: 'Coping with a new diagnosis', blurb: 'A gentle hour for people who have just had a diagnosis and want to talk.', facilitatorId: THERAPISTS[1].id, startsAt: 10 * H, durationMin: 60, capacity: 10, ...over })
+const good = (over: Partial<NewGroupInput> = {}): NewGroupInput => ({ topic: 'Finding your feet after a hard news', blurb: 'A gentle hour for people who have just had a diagnosis and want to talk.', facilitatorId: THERAPISTS[1].id, startsAt: 10 * H, durationMin: 60, capacity: 10, ...over })
 
 describe('checking a new group chat', () => {
   const t = 0
@@ -18,6 +18,9 @@ describe('checking a new group chat', () => {
   })
   it('asks for a real topic and description', () => {
     expect(validateNewGroup(good({ topic: 'short' }), t, [], true)).toMatch(/topic/)
+    expect(validateNewGroup(good({ topic: 'Group therapy for PTSD and anxiety disorder' }), t, [], true)).toMatch(/plainer words/)
+    expect(clinicalTerms('Surviving grief when everyone has moved on')).toEqual([])
+    expect(clinicalTerms('CBT and Cognitive work')).toEqual(['cbt', 'cognitive'])
     expect(validateNewGroup(good({ blurb: 'too short' }), t, [], true)).toMatch(/description|about/)
     expect(validateNewGroup(good({ topic: 'x'.repeat(LIMITS.maxTopic + 1) }), t, [], true)).toMatch(/under/)
   })
@@ -71,7 +74,7 @@ describe('scheduling and cancelling', () => {
     expect(r.ok).toBe(true)
     if (!r.ok) return
     const g = getDb().groupChats.find((x) => x.id === r.value.id)!
-    expect(g).toMatchObject({ topic: 'Coping with a new diagnosis', createdBy: 'Dr. K. Mwende', registered: false })
+    expect(g).toMatchObject({ topic: 'Finding your feet after a hard news', createdBy: 'Dr. K. Mwende', registered: false })
     expect(getDb().admin!.audit[0]).toMatchObject({ action: 'Scheduled group chat' })
     expect(api.groups.register(g.id).ok).toBe(true)
   })
