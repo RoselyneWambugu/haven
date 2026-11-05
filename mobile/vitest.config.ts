@@ -15,6 +15,7 @@ export default defineConfig({
       'expo-secure-store': p('./tests/stubs/secure-store.ts'),
       'expo-linking': p('./tests/stubs/expo-linking.ts'),
       'expo-web-browser': p('./tests/stubs/expo-web-browser.ts'),
+      'expo-notifications': p('./tests/stubs/expo-notifications.ts'),
     },
   },
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },

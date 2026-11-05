@@ -41,6 +41,7 @@ export default function Demo() {
       </View>
       <Text variant="h3">Time</Text>
       <View style={{ gap: 8 }}>
+        <Button testID="demo-before-session" variant="quiet" label="Jump to 8 minutes before my next session" onPress={act(() => api.demo.jumpToBeforeNextSession(8))} />
         <Button variant="quiet" label="Move forward 10 minutes" onPress={act(() => api.demo.advanceClock(10))} />
         <Button variant="quiet" label="Move forward 1 hour" onPress={act(() => api.demo.advanceClock(60))} />
         <Button variant="quiet" label="Move forward 1 day" onPress={act(() => api.demo.advanceClock(1440))} />

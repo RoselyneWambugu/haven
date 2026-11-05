@@ -40,7 +40,8 @@
       "expo-secure-store",
       "expo-font",
       ["expo-local-authentication", { "faceIDPermission": "Echo uses Face ID to keep your conversations private." }],
-      ["expo-splash-screen", { "backgroundColor": "#102F27", "image": "./assets/splash-icon.png", "imageWidth": 160 }]
+      ["expo-splash-screen", { "backgroundColor": "#102F27", "image": "./assets/splash-icon.png", "imageWidth": 160 }],
+      ["expo-notifications", { "color": "#185844", "defaultChannel": "sessions" }]
     ]
   }
 }

@@ -91,6 +91,16 @@ The Community tab opens **Support spaces**: groups for one issue each (domestic 
 
 A bell at the top of each tab opens the notification centre, a stand-in for push. It lists new messages, replies to your community post (a peer and a verified therapist reply a short while after it goes live), session reminders (an hour and ten minutes before), plan reminders, account notices and receipts for reports. Safety and account notices can't be switched off. Quiet hours (10pm to 7am) hold other notes until morning, and more than five an hour are kept in the list but not counted as new. Settings has a lock-screen preview for the privacy options. Nothing is really pushed, texted or emailed yet.
 
+## Session alarms
+
+Every booked session, group chat you signed up for, and (in the therapist portal) client session has an alarm, in two parts:
+- **When Echo is closed:** the phone is given an alert for an hour before and ten minutes before the start (`expo-notifications`, scheduled on the device, so it needs no server and fires even if Echo is closed). The app asks the phone for permission the first time there is something to alert about; **Settings, Notifications, Session alarms** turns it on or off and shows when the phone has blocked it. On Android it uses a loud, vibrating "Session alarms" channel.
+- **When Echo is open:** from ten minutes before the start until ten minutes after, a card sits across the top of every screen with the time left, a **Join** button and **Dismiss**, a short vibration and the alarm sound. It stays out of the way on a call or live session.
+- **Privacy:** if "Hide message text" is on (the default), the alert says only "Something is starting in 10 minutes. Open Echo.", with no therapist name or topic.
+- **Quiet hours do not hold alarms back**: a session is not something to sleep through. They follow the "Session alarms" switch.
+- **In a browser** the card works while the page is open, and a hidden tab is alerted if the browser has been allowed to; a closed web page cannot be alarmed. Members use the phone app, so this mostly matters for therapists on the portal.
+- In the demo, **Me, Demo tools, Jump to 8 minutes before my next session** shows the card.
+
 ## Feedback
 
 When a peer chat ends after both people have written, the chat asks *Did you feel heard?* with five faces and an optional comment. It is asked once, can be skipped, and is private to the member. **Settings, then Send feedback** sends an idea or a bug report, with the app details optional. Support / Billing and Admin read the notes in the **Feedback** module, which shows no name or account and lets staff mark a note as read (logged). The felt-heard results appear only as shares once at least 10 people have answered, and members' comments are never shown.

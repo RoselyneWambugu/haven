@@ -6,7 +6,7 @@ import { showToast } from '@/store/toast'
 import type { DemoControls, Notice, PlanId, StandingState } from './types'
 
 /** Switches for reviewers. They let you see states that normally take days or need real staff. */
-export const demo: DemoControls & { showPrices(on: boolean): void; addNotice(): void; startNextGroupChat(): void } = {
+export const demo: DemoControls & { showPrices(on: boolean): void; addNotice(): void; startNextGroupChat(): void; jumpToBeforeNextSession(minutes: number): void } = {
   grantPlan(planId: PlanId) {
     const plan = getDb().content.plans.find((p) => p.id === planId)!
     const t = now()
@@ -33,6 +33,16 @@ export const demo: DemoControls & { showPrices(on: boolean): void; addNotice(): 
     advanceClock(minutes)
     update((s) => ({ ...s }))
     showToast(`Demo: time moved forward ${minutes >= 60 ? `${Math.round(minutes / 60)} h` : `${minutes} min`}.`)
+  },
+  /** Moves the clock to a few minutes before your next booked session, so you can see the session alarm. */
+  jumpToBeforeNextSession(minutes: number) {
+    const t = now()
+    const next = getDb().sessions.filter((x) => x.status === 'booked' && x.end > t).sort((a, b) => a.start - b.start)[0]
+    if (!next) return showToast('Demo: there is no booked session.')
+    const delta = next.start - minutes * 60_000 - t
+    if (delta > 0) advanceClock(delta / 60_000)
+    update((s) => ({ ...s }))
+    showToast(`Demo: it is now ${minutes} minutes before your session.`)
   },
   showPrices(on: boolean) {
     update((s) => ({ demo: { ...s.demo, showPrices: on } }))
