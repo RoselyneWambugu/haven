@@ -182,11 +182,35 @@ describe('actions', () => {
   })
 })
 
+describe('linking therapists and staff by email', () => {
+  it('shows how a therapist is linked, and links by email', async () => {
+    const f = fake({ replies: { admin_state: { ...STATE(), role: 'clinical' }, admin_therapist_links: { ok: true, links: [{ id: 't-amina', linked: false, pending: true, tail: '', via: 'email', hint: 'am…@example.com' }] } } })
+    await syncAdmin()
+    expect(getDb().admin?.therapistLinks?.['t-amina']).toEqual({ linked: false, pending: true, tail: '', via: 'email', hint: 'am…@example.com' })
+    await remoteAdmin.linkTherapistEmail('t-amina', 'amina@example.com')
+    expect(f.calls.find((c) => c.name === 'admin_link_therapist_email')?.args).toEqual({ p_therapist: 't-amina', p_email: 'amina@example.com' })
+  })
+
+  it('adds staff by email through the same proposal, and lists email invitations with the phone ones', async () => {
+    const f = fake({ replies: {
+      admin_state: { ...STATE(), role: 'admin' },
+      admin_staff_invites: { ok: true, invites: [{ tail: '061', name: 'P. Phone', role: 'billing', by: 'A', at: 1 }], heavy: {}, pending: null },
+      admin_staff_email_invites: { ok: true, invites: [{ hint: 'mo…@example.com', name: 'E. Email', role: 'moderator', by: 'A', at: 2 }] },
+    } })
+    await syncAdmin()
+    expect(getDb().admin?.staffInvites?.map((i) => [i.name, i.hint ?? '', i.tail])).toEqual([['P. Phone', '', '061'], ['E. Email', 'mo…@example.com', '']])
+    await remoteAdmin.addStaffEmail('E. Email', 'moderator', 'mod@example.com')
+    expect(f.calls.find((c) => c.name === 'admin_add_staff_email')?.args).toEqual({ p_name: 'E. Email', p_role: 'moderator', p_email: 'mod@example.com' })
+    await remoteAdmin.cancelInvite('E. Email')
+    expect(f.calls.some((c) => c.name === 'admin_cancel_invite')).toBe(true)
+  })
+})
+
 describe('linking therapists', () => {
   it('links and unlinks a number, and shows which therapists are linked', async () => {
     const f = fake({ replies: { admin_state: { ...STATE(), role: 'clinical' }, admin_therapist_links: { ok: true, links: [{ id: 't-amina', linked: true, pending: false, tail: '072' }, { id: 't-james', linked: false, pending: true, tail: '073' }] } } })
     await syncAdmin()
-    expect(getDb().admin?.therapistLinks?.['t-amina']).toEqual({ linked: true, pending: false, tail: '072' })
+    expect(getDb().admin?.therapistLinks?.['t-amina']).toEqual({ linked: true, pending: false, tail: '072', via: 'phone', hint: '' })
     expect(getDb().admin?.therapistLinks?.['t-james']?.pending).toBe(true)
     await remoteAdmin.linkTherapist('t-amina', '+254712000072')
     expect(f.calls.find((c) => c.name === 'admin_link_therapist')?.args).toEqual({ p_therapist: 't-amina', p_phone: '+254712000072' })
