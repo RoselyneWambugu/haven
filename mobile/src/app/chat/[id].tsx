@@ -135,7 +135,7 @@ export default function Chat() {
             </Text>
           ) : (
             <View style={{ alignSelf: item.from === 'me' ? 'flex-end' : 'flex-start', maxWidth: '82%' }}>
-              <View style={{ backgroundColor: item.from === 'me' ? colors.moss : colors.milk, borderWidth: item.from === 'me' ? 0 : 1, borderColor: colors.line, borderRadius: 20, borderBottomRightRadius: item.from === 'me' ? 6 : 20, borderBottomLeftRadius: item.from === 'me' ? 20 : 6, paddingHorizontal: 14, paddingVertical: 10 }}>
+              <View style={{ backgroundColor: item.from === 'me' ? colors.chocolate : colors.milk, borderWidth: item.from === 'me' ? 0 : 1, borderColor: colors.line, borderRadius: 20, borderBottomRightRadius: item.from === 'me' ? 6 : 20, borderBottomLeftRadius: item.from === 'me' ? 20 : 6, paddingHorizontal: 14, paddingVertical: 10 }}>
                 <Text variant="body" color={item.from === 'me' ? colors.white : colors.ink}>
                   {item.text}
                 </Text>

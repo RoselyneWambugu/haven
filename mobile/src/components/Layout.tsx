@@ -189,12 +189,12 @@ export function TabBar({ state, navigateToTab, navigation }: TabBarProps) {
               onPress={() => pressTab(r)}
               style={styles.tab}
             >
-              <View style={[styles.iconPill, on ? { backgroundColor: colors.lichen } : null]}>
-                <Icon name={meta.icon} size={22} color={on ? colors.mossDeep : colors.muted} />
+              <View style={[styles.iconPill, on ? { backgroundColor: colors.latte } : null]}>
+                <Icon name={meta.icon} size={22} color={on ? colors.chocolate : colors.muted} />
                 {badge > 0 ? <View style={styles.badge} /> : null}
                 {r.name === 'therapists' && sub > 0 && !on ? <View style={styles.badge} /> : null}
               </View>
-              <Text variant="caption" bold={on} color={on ? colors.mossDeep : colors.muted} numberOfLines={1}>
+              <Text variant="caption" bold={on} color={on ? colors.cocoa : colors.muted} numberOfLines={1}>
                 {label}
               </Text>
             </Pressable>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -10 },
   footer: { paddingHorizontal: 18, paddingTop: 10, gap: 10, borderTopWidth: 1, borderTopColor: colors.line },
   dockWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingHorizontal: 14, maxWidth: MAX_WIDTH, alignSelf: 'center', width: '100%' },
-  dock: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', backgroundColor: colors.milk, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderColor: colors.line, shadowColor: colors.fern, shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
+  dock: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', backgroundColor: colors.milk, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderColor: colors.line, shadowColor: colors.cocoa, shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
   tab: { flex: 1, alignItems: 'center', gap: 2, minHeight: 52 },
   iconPill: { paddingHorizontal: 14, paddingVertical: 4, borderRadius: 999 },
   badge: { position: 'absolute', top: 2, right: 8, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.sun },

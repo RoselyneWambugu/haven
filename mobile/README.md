@@ -97,7 +97,7 @@ When a peer chat ends after both people have written, the chat asks *Did you fee
 
 ## Colour
 
-The palette is **ivory** `#F2EBDD` (page), **sage** `#78947F`, **emerald** `#185844` (brand and buttons), **forest** `#102F27` (dark panels and the strongest text) and **antique gold** `#B08A4F` (accents only; gold is too light for text on ivory). Urgent help and errors keep a clay red. All of it is in `src/theme.ts`, so changing a value there changes the whole app. `e2e/gallery.mjs` takes screenshots of the landing page and the main screens for review.
+The palette is **ivory** `#F2EBDD` (page), **sage** `#78947F`, **emerald** `#185844` (brand and buttons), **forest** `#102F27` (dark panels and the strongest text) and **antique gold** `#B08A4F` (accents only; gold is too light for text on ivory). A **chocolate brown** family warms the member app: cocoa `#3B2419` (dark cards and toasts), chocolate `#5C3A28` (your chat bubbles, selected tab), mocha `#8B5E43` and latte `#EADBC4` (soft fills), and text is a dark chocolate. Urgent help and errors keep a clay red. All of it is in `src/theme.ts`, so changing a value there changes the whole app. `e2e/gallery.mjs` takes screenshots of the landing page and the main screens for review.
 
 ## The logo
 

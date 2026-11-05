@@ -83,11 +83,11 @@ export default function Home() {
       ) : null}
 
       {plan === 'none' || plan === 'lapsed' ? (
-        <Card tone="fern" testID="home-plan-card">
+        <Card tone="cocoa" testID="home-plan-card">
           <Text variant="h3" color={colors.paper}>
             {plan === 'lapsed' ? 'Your plan has ended' : 'Start with a plan'}
           </Text>
-          <Text variant="small" color={colors.lichen} style={{ marginTop: 4, marginBottom: 12 }}>
+          <Text variant="small" color={colors.latte} style={{ marginTop: 4, marginBottom: 12 }}>
             {plan === 'lapsed' ? 'Your chats are read-only until you renew.' : 'A plan lets you chat with peers. Therapist sessions are booked and paid separately.'}
           </Text>
           <Button testID="home-see-plans" label={plan === 'lapsed' ? 'Renew' : 'See plans'} variant="light" onPress={() => go('/plans')} />

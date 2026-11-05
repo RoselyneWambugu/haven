@@ -6,11 +6,11 @@ import { Text } from './Text'
 export type ButtonVariant = 'primary' | 'ghost' | 'quiet' | 'deep' | 'urgent' | 'light' | 'lightGhost' | 'danger' | 'dangerGhost'
 
 const BG: Record<ButtonVariant, string> = {
-  primary: colors.moss, ghost: 'transparent', quiet: colors.lichen, deep: colors.fern, urgent: colors.clay, light: colors.paper,
+  primary: colors.moss, ghost: 'transparent', quiet: colors.latte, deep: colors.cocoa, urgent: colors.clay, light: colors.paper,
   lightGhost: 'transparent', danger: colors.clay, dangerGhost: 'transparent',
 }
 const FG: Record<ButtonVariant, string> = {
-  primary: colors.white, ghost: colors.mossDeep, quiet: colors.mossDeep, deep: colors.white, urgent: colors.white, light: colors.fern,
+  primary: colors.white, ghost: colors.mossDeep, quiet: colors.cocoa, deep: colors.white, urgent: colors.white, light: colors.cocoa,
   lightGhost: colors.paper, danger: colors.white, dangerGhost: colors.clay,
 }
 const BORDER: Partial<Record<ButtonVariant, string>> = { ghost: colors.moss, lightGhost: 'rgba(242,235,221,0.5)', dangerGhost: colors.clay }
