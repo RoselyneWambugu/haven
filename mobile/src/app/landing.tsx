@@ -62,13 +62,10 @@ export default function Landing() {
         <View style={{ flex: 1 }} />
         {wide ? (
           <>
-            <NavLink testID="nav-terms" label="Terms and privacy" onPress={() => go('/about')} />
             <NavLink testID="nav-therapist" label="Therapist sign in" onPress={() => go('/portal')} />
-            <NavLink testID="nav-apply" label="Apply to join" onPress={() => go('/portal/apply')} />
           </>
         ) : null}
         <Button testID="landing-signin" label="Sign in" size="sm" variant="ghost" onPress={() => go('/login')} />
-        <Button testID="landing-urgent" label="Urgent help" size="sm" variant="urgent" icon="phone" onPress={() => go('/urgent')} />
       </View>
 
       {/* Hero */}
@@ -207,6 +204,11 @@ export default function Landing() {
           <Pressable testID="therapist-link" accessibilityRole="link" accessibilityLabel="I’m a therapist" onPress={() => go('/portal')} style={{ minHeight: 44, justifyContent: 'center' }}>
             <Text variant="small" color={colors.paper} style={{ textDecorationLine: 'underline' }}>
               I’m a therapist
+            </Text>
+          </Pressable>
+          <Pressable testID="terms-link" accessibilityRole="link" accessibilityLabel="Terms and privacy" onPress={() => go('/about')} style={{ minHeight: 44, justifyContent: 'center' }}>
+            <Text variant="small" color={colors.lichen}>
+              Terms and privacy
             </Text>
           </Pressable>
           <Pressable testID="staff-link" accessibilityRole="link" accessibilityLabel="Echo staff sign-in" onPress={() => go('/admin/sign-in')} style={{ minHeight: 44, justifyContent: 'center' }}>

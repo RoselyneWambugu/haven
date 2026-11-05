@@ -44,7 +44,7 @@ await step('sign-in-goes-to-login', async () => {
 await step('urgent-help-works-signed-out', async () => {
   await page.goto(`${BASE}/`)
   await tid('landing').waitFor()
-  await tid('landing-urgent').click()
+  await tid('footer-urgent').click()
   await page.waitForURL('**/urgent')
 })
 await step('therapist-and-staff-links', async () => {
