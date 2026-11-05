@@ -116,7 +116,7 @@ export default function Home() {
 
       <Card tone="lichen" testID="home-chats-card">
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text variant="h3">Conversations</Text>
+          <Text variant="h3">Ongoing conversations</Text>
           {unread > 0 ? <Badge tone="sun" label={`${unread} new`} /> : null}
         </View>
         {live.length ? (
