@@ -12,7 +12,7 @@ export function supabase(): SupabaseClient {
     const key = process.env.EXPO_PUBLIC_SUPABASE_KEY
     if (!url || !key) throw new Error('Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_KEY (see .env.example).')
     client = createClient(url, key, {
-      auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
+      auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, flowType: 'pkce' },
     })
   }
   return client

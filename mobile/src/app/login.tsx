@@ -3,10 +3,12 @@ import { Pressable, View } from 'react-native'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { REMOTE } from '@/backend/client'
+import { GoogleButton } from '@/components/GoogleButton'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { go } from '@/lib/nav'
+import { go, replace } from '@/lib/nav'
 import { colors } from '@/theme'
 
 /**
@@ -34,6 +36,12 @@ export default function Login() {
       <Banner tone="green" icon="shield">
         If this number has an account, a code is on its way. We say this either way, so nobody can use this screen to check who is on Echo.
       </Banner>
+      <GoogleButton
+        purpose="login"
+        label="Log in with Google"
+        onNext={(next) => replace(next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')}
+      />
+      {REMOTE ? <Button testID="login-with-email" variant="quiet" label="Log in with email and password" onPress={() => go('/login-email')} /> : null}
       <Pressable accessibilityRole="button" onPress={() => go('/recovery')} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'center' }}>
         <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
           I can’t get codes on this number

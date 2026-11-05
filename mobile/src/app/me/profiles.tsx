@@ -28,12 +28,33 @@ export default function Profiles() {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState('')
   const [nameError, setNameError] = useState<string | null>(null)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
+  const [askPassword, setAskPassword] = useState(false)
+  const [password, setPassword] = useState('')
   if (!account) return null
   const p = account.public
   const unlocked = reauthUntil > now()
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
+  // Someone who signs in with Google and has no phone number on Echo proves it's them with Google again.
+  const googleOnly = !account.private.phone && account.hasGoogle === true
+  // Someone with an email and password and no phone confirms with the password.
+  const passwordOnly = !account.private.phone && !account.hasGoogle && account.hasPassword === true
+  async function checkPassword() {
+    const r = await api.auth.reauthWithPassword(password)
+    if (!r.ok) return setVerifyError(r.error)
+    setAskPassword(false)
+    setPassword('')
+    setVerifyError(null)
+  }
+
   async function verify() {
+    if (passwordOnly) return setAskPassword(true)
+    if (googleOnly) {
+      const r = await api.auth.signInWithGoogle('reauth')
+      if (!r.ok && r.code !== 'cancelled') setVerifyError(r.error)
+      return
+    }
     const r = await api.auth.requestOtp('reauth', account!.private.phone)
     if (r.ok) go('/otp?purpose=reauth')
   }
@@ -92,7 +113,7 @@ export default function Profiles() {
           </Banner>
           <View testID="private-details">
             <Row title="Full name" sub={account.private.fullName} />
-            <Row title="Phone" sub={formatPhone(account.private.phone)} />
+            <Row title="Phone" sub={account.private.phone ? formatPhone(account.private.phone) : 'Not added'} />
             <Row title="Date of birth" sub={dayLong(new Date(account.private.dob).getTime())} />
             <Row title="Email" sub={account.private.email || 'Not added'} />
             <Row title="ID" sub={account.private.idVerified ? 'Verified' : 'Not verified'} last />
@@ -104,9 +125,17 @@ export default function Profiles() {
           <Banner tone="green" icon="lock" title="Your real details">
             Your name, phone, date of birth and ID live here. We ask for a quick code before showing them.
           </Banner>
-          <Button testID="verify-private" label="Verify it’s you" onPress={verify} />
+          {verifyError ? <Banner tone="clay">{verifyError}</Banner> : null}
+          <Button testID="verify-private" label={googleOnly ? 'Verify with Google' : passwordOnly ? 'Verify with your password' : 'Verify it’s you'} onPress={verify} />
         </>
       )}
+      <Sheet visible={askPassword} onClose={() => setAskPassword(false)} title="Enter your password">
+        <Text variant="small" muted>
+          Your private details are only for you. Enter your password to open them for five minutes.
+        </Text>
+        <Field testID="reauth-password" label="Password" value={password} onChangeText={(v) => { setPassword(v); setVerifyError(null) }} secureTextEntry autoCapitalize="none" autoComplete="current-password" error={verifyError} />
+        <Button testID="reauth-password-submit" label="Open" onPress={checkPassword} />
+      </Sheet>
       <Sheet visible={editing} onClose={() => setEditing(false)} title="Change pen name">
         <Text variant="small" muted>
           You can change it once every 30 days. Your chats keep working.

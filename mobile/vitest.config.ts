@@ -13,6 +13,8 @@ export default defineConfig({
       '@react-native-async-storage/async-storage': p('./tests/stubs/async-storage.ts'),
       'react-native': p('./tests/stubs/react-native.ts'),
       'expo-secure-store': p('./tests/stubs/secure-store.ts'),
+      'expo-linking': p('./tests/stubs/expo-linking.ts'),
+      'expo-web-browser': p('./tests/stubs/expo-web-browser.ts'),
     },
   },
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },

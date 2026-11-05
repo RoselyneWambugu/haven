@@ -4,11 +4,12 @@ import { api, type PaymentMethod, type PaymentResult } from '@/api'
 import { Ripple } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Radio } from '@/components/Controls'
+import { Field } from '@/components/Field'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
-import { maskPhone } from '@/lib/identity'
+import { maskPhone, normaliseKenyanPhone } from '@/lib/identity'
 import { goBack, replace, resetTo } from '@/lib/nav'
 import { dayAndClock } from '@/lib/time'
 import { useDb } from '@/store/db'
@@ -24,7 +25,12 @@ type Phase = 'review' | 'waiting' | 'success' | 'failed'
 export default function Checkout() {
   const co = useDb((s) => s.checkout)
   const plans = useDb((s) => s.content.plans)
-  const phone = useDb((s) => s.account?.private.phone ?? '')
+  const accountPhone = useDb((s) => s.account?.private.phone ?? '')
+  // A member who signed up with Google has no phone on Echo, so they say which M-Pesa number to charge.
+  const [given, setGiven] = useState('')
+  const [givenError, setGivenError] = useState<string | null>(null)
+  const needsNumber = !accountPhone
+  const phone = accountPhone || normaliseKenyanPhone(given) || ''
   const money = useMoney()
   const [method, setMethod] = useState<PaymentMethod>('mpesa')
   const [phase, setPhase] = useState<Phase>('review')
@@ -58,8 +64,9 @@ export default function Checkout() {
   const sub = item.kind === 'plan' ? (item.autoRenew ? 'Renews automatically' : 'Does not renew') : `${dayAndClock(item.start)} · ${item.mode}`
 
   async function pay() {
+    if (method === 'mpesa' && needsNumber && !normaliseKenyanPhone(given)) return setGivenError('Enter a Kenyan M-Pesa number, like 0712 345 678.')
     setPhase('waiting')
-    const r = await api.billing.pay(method)
+    const r = await api.billing.pay(method, needsNumber ? normaliseKenyanPhone(given) ?? undefined : undefined)
     setResult(r)
     useDbDone.current = r.ok
     setPhase(r.ok ? 'success' : 'failed')
@@ -146,7 +153,10 @@ export default function Checkout() {
       <Text variant="small" muted>
         Pay with
       </Text>
-      <Radio testID="pay-mpesa" selected={method === 'mpesa'} onPress={() => setMethod('mpesa')} label="M-Pesa" sub={`We’ll send a prompt to ${maskPhone(phone)}`} />
+      <Radio testID="pay-mpesa" selected={method === 'mpesa'} onPress={() => setMethod('mpesa')} label="M-Pesa" sub={needsNumber ? 'We’ll send a prompt to the number you enter' : `We’ll send a prompt to ${maskPhone(phone)}`} />
+      {needsNumber && method === 'mpesa' ? (
+        <Field testID="pay-mpesa-number" label="M-Pesa number" prefix="+254" placeholder="712 345 678" value={given} onChangeText={(v) => { setGiven(v); setGivenError(null) }} keyboardType="phone-pad" error={givenError} />
+      ) : null}
       <Radio testID="pay-card" selected={method === 'card'} onPress={() => setMethod('card')} label="Card" sub="Visa or Mastercard" />
       <Text variant="caption" muted>
         Your payment details are never shown to other people. The charge on your statement says “Echo”.

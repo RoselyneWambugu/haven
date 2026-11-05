@@ -1,5 +1,5 @@
 import { auth } from '@/api/auth'
-import type { AvatarKind, Res, Settings } from '@/api/types'
+import type { AvatarKind, SignInNext, Res, Settings } from '@/api/types'
 import { CONFIG } from '@/data/config'
 import { now } from '@/lib/clock'
 import { ageBand, ageOn, normaliseKenyanPhone } from '@/lib/identity'
@@ -12,6 +12,9 @@ import { startPolling, stopPolling } from './remoteChat'
 import { clearTherapistCache } from './remoteTherapists'
 import { restoreAdmin, stopAdminPolling } from './remoteAdmin'
 import { syncHelp } from './remoteHelp'
+import * as Linking from 'expo-linking'
+import { exchange, openGoogle, takePurpose, webBase, type GooglePurpose } from './remoteGoogle'
+import { passwordProblem, validEmail } from '@/lib/password'
 import { restorePortal, stopPortalPolling } from './remotePortal'
 
 const MIN = 60_000
@@ -118,16 +121,160 @@ export const remoteAuth = {
       await supabase().auth.signOut()
       return { ok: true, value: { next: 'no-account' } }
     }
-    stopPortalPolling()
-    stopAdminPolling()
-    update((s) => ({ signedIn: true, locked: false, portal: s.portal ? { ...s.portal, signedIn: false } : null, admin: s.admin ? { ...s.admin, signedIn: false } : null }))
-    startPolling()
-    if (getDb().account?.deletionRequestedAt) {
-      await rpc('cancel_account_deletion')
-      await loadAccount()
-      showToast('Welcome back. Your account deletion was cancelled.')
-    }
+    await enterAsMember()
     return { ok: true, value: { next: 'trust-device' } }
+  },
+
+  /** Opens Google. A member who already has an Echo account is signed in; a new one carries on to registration without a phone number. */
+  async signInWithGoogle(purpose: GooglePurpose): Promise<Res<{ next: SignInNext }>> {
+    const r = await openGoogle(purpose)
+    if (!r.ok) return r
+    if (r.value.redirecting) return { ok: true, value: { next: 'redirecting' } }
+    return afterSignIn(purpose)
+  },
+
+  /** The web page Google sent the person back to. Finishes what signInWithGoogle started before the page left. */
+  async finishGoogleRedirect(url: string): Promise<Res<{ next: SignInNext }>> {
+    const purpose = await takePurpose()
+    // A repeated visit to the same link has nothing left to do.
+    if (!purpose) return failure('That sign-in link has already been used.', 'stale')
+    const r = await exchange(url)
+    if (!r.ok) return r
+    return afterSignIn(purpose)
+  },
+
+  /** Makes an account with an email and a password. Supabase emails a link to confirm the address; until it is opened there is no session. */
+  async signUpWithEmail(email: string, password: string): Promise<Res<{ next: SignInNext | 'check-email' }>> {
+    const e = email.trim()
+    if (!validEmail(e)) return failure('Enter your email address, like name@example.com.', 'email')
+    const problem = passwordProblem(password, e)
+    if (problem) return failure(problem, 'password')
+    const { data, error } = await supabase().auth.signUp({ email: e, password, options: { emailRedirectTo: `${webBase()}/auth-callback` } })
+    if (error) {
+      const limited = error.status === 429 || /rate|too many|seconds/i.test(error.message)
+      return failure(limited ? 'Too many emails asked for. Wait a few minutes and try again.' : 'We couldn’t create that account. Check the details and try again.', limited ? 'rate' : 'send')
+    }
+    // With email confirmation off there is a session at once; with it on, the person has to open the link first.
+    if (data.session) return afterSignIn('register')
+    return { ok: true, value: { next: 'check-email' } }
+  },
+
+  async signInWithEmail(email: string, password: string): Promise<Res<{ next: SignInNext }>> {
+    const e = email.trim()
+    if (!validEmail(e) || !password) return failure('Enter your email and password.', 'form')
+    const { error } = await supabase().auth.signInWithPassword({ email: e, password })
+    if (error) {
+      if (/confirm/i.test(error.message)) return failure('Confirm your email first. We sent you a link when you signed up.', 'unconfirmed')
+      if (error.status === 429 || /rate|too many/i.test(error.message)) return failure('Too many tries. Wait a few minutes and try again.', 'rate')
+      return failure('That email and password don’t match.', 'wrong')
+    }
+    return afterSignIn('login')
+  },
+
+  /** Always says the same thing, so this can't be used to find out who has an account. */
+  async requestPasswordReset(email: string): Promise<Res> {
+    const e = email.trim()
+    if (!validEmail(e)) return failure('Enter your email address, like name@example.com.', 'email')
+    const { error } = await supabase().auth.resetPasswordForEmail(e, { redirectTo: `${webBase()}/auth-callback` })
+    if (error && (error.status === 429 || /rate|too many|seconds/i.test(error.message))) return failure('Too many emails asked for. Wait a few minutes and try again.', 'rate')
+    return { ok: true, value: undefined }
+  },
+
+  /** True while a reset link has signed the person in and they have not yet chosen the new password. */
+  async hasRecoverySession(): Promise<boolean> {
+    return !!(await supabase().auth.getSession()).data.session
+  },
+
+  /** Saves the new password, then carries on exactly as a log in would: into the account, or on to registration. */
+  async setNewPassword(password: string): Promise<Res<{ next: SignInNext }>> {
+    const user = (await supabase().auth.getUser()).data.user
+    const problem = passwordProblem(password, user?.email ?? '')
+    if (problem) return failure(problem, 'password')
+    const { error } = await supabase().auth.updateUser({ password })
+    if (error) {
+      return failure(/same|different/i.test(error.message) ? 'Choose a password you haven’t used before.' : 'We couldn’t save that password. Ask for a new link and try again.', 'save')
+    }
+    return afterSignIn('login')
+  },
+
+  /** The link in the email: a token in the address, opened on any device. Recovery goes to the new-password page; a confirmation carries on to sign-in or registration. */
+  async finishEmailLink(url: string): Promise<Res<{ next: SignInNext | 'reset-password' }>> {
+    const q = Linking.parse(url).queryParams ?? {}
+    const hash = typeof q.token_hash === 'string' ? q.token_hash : null
+    const type = q.type === 'recovery' ? 'recovery' : q.type === 'signup' || q.type === 'email' ? 'email' : q.type === 'email_change' ? 'email_change' : null
+    if (!hash || !type) return failure('That link isn’t valid. Ask for a new one.', 'link')
+    const { error } = await supabase().auth.verifyOtp({ token_hash: hash, type })
+    if (error) return failure('That link has expired or was already used. Ask for a new one.', 'link')
+    if (type === 'recovery') return { ok: true, value: { next: 'reset-password' } }
+    // A confirmed new email on an account that is signed in: the password was added to it.
+    if (type === 'email_change') {
+      await syncMethods()
+      return { ok: true, value: { next: 'linked' } }
+    }
+    return afterSignIn('register')
+  },
+
+  /** Opens the private profile again for someone who signs in with a password. */
+  async reauthWithPassword(password: string): Promise<Res> {
+    const user = (await supabase().auth.getUser()).data.user
+    if (!user?.email || user.id !== getDb().account?.id) return failure('Sign in again first.', 'mismatch')
+    const { error } = await supabase().auth.signInWithPassword({ email: user.email, password })
+    if (error) return failure('That password doesn’t match.', 'wrong')
+    update({ reauthUntil: now() + 5 * MIN })
+    return { ok: true, value: undefined }
+  },
+
+  /** Adds Google to the account that is signed in, so the same person doesn't end up with two accounts. */
+  async linkGoogle(): Promise<Res<{ next: SignInNext }>> {
+    const r = await openGoogle('link')
+    if (!r.ok) return r
+    if (r.value.redirecting) return { ok: true, value: { next: 'redirecting' } }
+    return afterSignIn('link')
+  },
+
+  /** Adds an email and password to the account that is signed in. Supabase emails a link; opening it confirms the email and finishes the link. */
+  async addEmailPassword(email: string, password: string): Promise<Res> {
+    const e = email.trim()
+    if (!validEmail(e)) return failure('Enter your email address, like name@example.com.', 'email')
+    const problem = passwordProblem(password, e)
+    if (problem) return failure(problem, 'password')
+    const { error } = await supabase().auth.updateUser({ email: e, password }, { emailRedirectTo: `${webBase()}/auth-callback` })
+    if (error) {
+      const limited = error.status === 429 || /rate|too many|seconds/i.test(error.message)
+      const used = /already|registered/i.test(error.message)
+      return failure(limited ? 'Too many emails asked for. Wait a few minutes and try again.' : used ? 'That email is already used by another Echo account.' : 'We couldn’t add that email. Check it and try again.', limited ? 'rate' : used ? 'taken' : 'save')
+    }
+    return { ok: true, value: undefined }
+  },
+
+  /** Adds a phone number to an account that signs in another way. A code is texted to the number. */
+  async requestAddPhone(phoneInput: string): Promise<Res<{ phone: string }>> {
+    const phone = normaliseKenyanPhone(phoneInput)
+    if (!phone) return failure('Enter a Kenyan mobile number, like 0712 345 678.', 'phone')
+    const { error } = await supabase().auth.updateUser({ phone })
+    if (error) {
+      const limited = error.status === 429 || /rate|too many|seconds/i.test(error.message)
+      const used = /already|registered/i.test(error.message)
+      return failure(limited ? 'Too many codes asked for. Wait a minute and try again.' : used ? 'That number is already on another Echo account.' : 'We couldn’t send a code. Check the number and try again.', limited ? 'rate' : used ? 'taken' : 'send')
+    }
+    return { ok: true, value: { phone } }
+  },
+
+  async confirmAddPhone(phone: string, code: string): Promise<Res> {
+    const { error } = await supabase().auth.verifyOtp({ phone, token: code.trim(), type: 'phone_change' })
+    if (error) return failure('That code doesn’t match, or it has expired.', 'wrong')
+    const r = await rpc('sync_sign_in_methods')
+    if (!r.ok) return failure(r.error, r.code)
+    await loadAccount()
+    return { ok: true, value: undefined }
+  },
+
+  /** A Google registration has no phone to check, so the details step skips it. Everything else is checked as usual. */
+  submitDetails(input: { fullName: string; phone: string; dob: string; email: string }): Res<{ phone: string }> {
+    if (!getDb().reg?.verified) return auth.submitDetails(input)
+    const r = auth.submitDetails({ ...input, phone: '0700000000' })
+    update((s) => (s.reg ? { reg: { ...s.reg, phone: '', verified: true } } : {}))
+    return r.ok ? { ok: true, value: { phone: '' } } : r
   },
 
   /** Local rules first (fast, and they know common names), then the server (who has the name). */
@@ -208,6 +355,51 @@ export const remoteAuth = {
     auth.setMood(value)
     background(rpc('set_mood', { p_value: value }))
   },
+}
+
+/** Signs the member in on this device once the server has their account. Shared by the phone code and Google. */
+async function enterAsMember(): Promise<void> {
+  stopPortalPolling()
+  stopAdminPolling()
+  update((s) => ({ signedIn: true, locked: false, portal: s.portal ? { ...s.portal, signedIn: false } : null, admin: s.admin ? { ...s.admin, signedIn: false } : null }))
+  startPolling()
+  if (getDb().account?.deletionRequestedAt) {
+    await rpc('cancel_account_deletion')
+    await loadAccount()
+    showToast('Welcome back. Your account deletion was cancelled.')
+  }
+}
+
+/** After a sign-in method is added: copy the new email or phone into Echo's private record, then refresh the account. */
+async function syncMethods(): Promise<void> {
+  await rpc('sync_sign_in_methods')
+  await loadAccount()
+}
+
+/** Google has confirmed who this is. Decide where they go: into their account, a fresh private-profile check, or registration. */
+async function afterSignIn(purpose: GooglePurpose): Promise<Res<{ next: SignInNext }>> {
+  const user = (await supabase().auth.getUser()).data.user
+  if (!user) return failure('Google sign-in didn’t finish. Try again.', 'google')
+  if (purpose === 'link') {
+    // Google was added to the account that is signed in. Copy the new email into Echo's record and refresh.
+    if (user.id !== getDb().account?.id) return failure('That Google account is already used by another Echo account.', 'mismatch')
+    await syncMethods()
+    return { ok: true, value: { next: 'linked' } }
+  }
+  if (purpose === 'reauth') {
+    if (user.id !== getDb().account?.id) return failure('That isn’t the Google account on this Echo account.', 'mismatch')
+    update({ reauthUntil: now() + 5 * MIN })
+    return { ok: true, value: { next: 'reauth-ok' } }
+  }
+  if (await loadAccount()) {
+    await enterAsMember()
+    return { ok: true, value: { next: 'trust-device' } }
+  }
+  const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string }
+  update((s) => ({
+    reg: { ...(s.reg ?? emptyRegistration()), email: user.email ?? '', fullName: s.reg?.fullName || String(meta.full_name ?? meta.name ?? ''), phone: '', verified: true },
+  }))
+  return { ok: true, value: { next: getDb().reg?.consentsAcceptedAt ? 'register' : 'consent' } }
 }
 
 /** The server doesn't know which device is this one, so the app remembers it. */

@@ -7,6 +7,8 @@ export interface RemoteAccount {
   id: string
   standing: StandingState
   has_posted_before: boolean
+  has_google?: boolean
+  has_password?: boolean
   deletion_requested_at: string | null
   trusted_device: boolean
   shared_device: boolean
@@ -14,7 +16,7 @@ export interface RemoteAccount {
   settings: Partial<Account['settings']>
   created_at: string
   public: { pen_name: string; avatar: AvatarKind; languages: string[]; topics: string[]; age_band: AgeBand; open_to_chats: boolean; pen_name_changed_at: string | null }
-  private: { full_name: string; phone: string; email: string; date_of_birth: string; id_verified: boolean }
+  private: { full_name: string; phone: string | null; email: string; date_of_birth: string; id_verified: boolean }
   consents: { version: string; terms: boolean; privacy: boolean; guidelines: boolean; moderation: boolean; at: string } | null
   devices: { id: string; name: string; kind: 'phone' | 'web'; approx_place: string; last_active_at: string }[]
 }
@@ -44,7 +46,7 @@ export function toAccount(r: RemoteAccount, prev: Account | null, currentDeviceI
       openToChats: r.public.open_to_chats,
       penNameChangedAt: ms(r.public.pen_name_changed_at),
     },
-    private: { fullName: r.private.full_name, phone: r.private.phone, email: r.private.email, dob: r.private.date_of_birth, idVerified: r.private.id_verified },
+    private: { fullName: r.private.full_name, phone: r.private.phone ?? '', email: r.private.email, dob: r.private.date_of_birth, idVerified: r.private.id_verified },
     consents: c
       ? { terms: c.terms, privacy: c.privacy, guidelines: c.guidelines, moderation: c.moderation, version: c.version, at: ms(c.at) ?? 0 }
       : { terms: true, privacy: true, guidelines: true, moderation: true, version: '', at: 0 },
@@ -59,5 +61,7 @@ export function toAccount(r: RemoteAccount, prev: Account | null, currentDeviceI
     deletionRequestedAt: ms(r.deletion_requested_at),
     mood,
     hasPostedBefore: r.has_posted_before,
+    hasGoogle: r.has_google ?? false,
+    hasPassword: r.has_password ?? false,
   }
 }

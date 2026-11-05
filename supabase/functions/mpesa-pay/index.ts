@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
   if (!uid) return reply({ ok: false, code: 'auth', error: 'Sign in first.' }, 401)
   if (!configured()) return reply({ ok: false, code: 'unavailable', error: 'Payments aren’t switched on yet.' })
 
-  const { order_id, action } = (await req.json().catch(() => ({}))) as { order_id?: string; action?: string }
+  const { order_id, action, phone: given } = (await req.json().catch(() => ({}))) as { order_id?: string; action?: string; phone?: string }
   if (!order_id) return reply({ ok: false, code: 'order', error: 'No order.' })
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   const ctx = (await admin.rpc('payment_context', { p_order: order_id, p_account: uid })).data as { ok: boolean; status?: string; amount?: number; kind?: string; phone?: string; checkout_request_id?: string | null; error?: string; code?: string }
@@ -46,8 +46,9 @@ Deno.serve(async (req) => {
     if (ctx.checkout_request_id) return reply({ ok: true, state: 'pending' })
     const amount = Math.ceil(Number(ctx.amount ?? 0))
     if (!(amount >= 1)) return reply({ ok: false, code: 'amount', error: 'This checkout has no price yet.' })
-    const phone = msisdn(ctx.phone ?? '')
-    if (!phone) return reply({ ok: false, code: 'phone', error: 'We need a Kenyan M-Pesa number on your account.' })
+    // A member who signed up with Google has no phone number on Echo, so they give the M-Pesa number they are paying from.
+    const phone = msisdn(ctx.phone || given || '')
+    if (!phone) return reply({ ok: false, code: 'phone', error: 'Enter the Kenyan M-Pesa number you are paying from.' })
     const callbackUrl = `${url}/functions/v1/mpesa-callback?token=${encodeURIComponent(Deno.env.get('MPESA_CALLBACK_TOKEN')!)}`
     const p = await stkPush({ phone, amount, reference: `EC${order_id.slice(0, 8)}`, description: ctx.kind === 'session' ? 'Echo session' : 'Echo plan', callbackUrl })
     if (!p.ok) return reply({ ok: false, code: 'push', error: 'We couldn’t reach M-Pesa. Try again in a moment.' })
