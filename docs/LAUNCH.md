@@ -51,3 +51,7 @@ Optional but built. Setup is in `docs/GOOGLE_SIGNIN.md`: a Google OAuth client, 
 ## Email and password, and Forgot password
 
 Built. Setup is in `docs/EMAIL_PASSWORD.md`: the Email provider and minimum password length, redirect URLs, two email templates, and a custom SMTP sender (Supabase's own sender is limited to a few emails an hour). Needs the same `supabase/google_signin_setup.sql` as Google.
+
+## Therapists and staff by email
+
+Link a therapist by email under **Therapists**, and add staff by email under **Roles** (an Admin, with a second Admin to approve). The first Admin can use Google at the staff page with the one-time setup code. Ask staff to turn on 2-step verification on their Google account; avoid email-and-password-only for Admins.

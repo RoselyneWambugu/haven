@@ -32,7 +32,9 @@ The same as a Google member (see `docs/GOOGLE_SIGNIN.md`): Echo holds a verified
 
 Someone who signed up by phone adds an email and password under **Settings, Sign-in methods**. Supabase emails a confirmation link; opening it finishes the link, so the email login reaches the same account. Turn on **Allow manual linking** (see `docs/GOOGLE_SIGNIN.md`). The same screen adds Google, and adds a phone number to an account that began with Google or an email.
 
-## Not built yet
+## Therapists and staff
 
-- Therapists and staff signing in with an email and password (they are linked by phone number today; Q-49).
+They can use an email and password too: **Sign in with email and password** on the therapist portal or staff sign-in page, with **Forgot password?** there as well. A therapist or staff member who has no password yet uses **Create your sign-in**, confirms the email Echo linked to them, and goes straight to their dashboard. Linking is by email, set up by a clinical reviewer or Admin (see `docs/GOOGLE_SIGNIN.md`). Staff with only a password have no second factor, so prefer Google or the phone code for Admins and clinical staff.
+
+## Not built yet
 - Changing the password while logged in (Forgot password covers it for now).

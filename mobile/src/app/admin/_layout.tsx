@@ -50,6 +50,13 @@ export default function AdminLayout() {
       <Text variant="small" color={colors.paper}>
         {name}
       </Text>
+      {REMOTE ? (
+        <Pressable testID="admin-sign-in-methods" accessibilityRole="link" accessibilityLabel="Sign-in methods" onPress={() => router.push('/settings/sign-in-methods' as never)} style={{ minHeight: 40, justifyContent: 'center' }}>
+          <Text variant="small" color={colors.lichen} style={{ textDecorationLine: 'underline' }}>
+            Sign-in methods
+          </Text>
+        </Pressable>
+      ) : null}
       <Pressable testID="admin-sign-out" accessibilityRole="button" accessibilityLabel="Sign out" onPress={() => { api.admin.signOut(); router.replace('/admin/sign-in' as never) }} style={{ minHeight: 40, justifyContent: 'center' }}>
         <Text variant="small" color={colors.lichen} style={{ textDecorationLine: 'underline' }}>
           Sign out

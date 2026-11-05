@@ -10,12 +10,12 @@ import { supabase } from './client'
 import { toAccount, type RemoteAccount } from './map'
 import { startPolling, stopPolling } from './remoteChat'
 import { clearTherapistCache } from './remoteTherapists'
-import { restoreAdmin, stopAdminPolling } from './remoteAdmin'
+import { enterAdmin, isStaff, restoreAdmin, stopAdminPolling } from './remoteAdmin'
 import { syncHelp } from './remoteHelp'
 import * as Linking from 'expo-linking'
 import { exchange, openGoogle, takePurpose, webBase, type GooglePurpose } from './remoteGoogle'
 import { passwordProblem, validEmail } from '@/lib/password'
-import { restorePortal, stopPortalPolling } from './remotePortal'
+import { enterPortal, isTherapist, restorePortal, stopPortalPolling } from './remotePortal'
 
 const MIN = 60_000
 
@@ -159,7 +159,7 @@ export const remoteAuth = {
     return { ok: true, value: { next: 'check-email' } }
   },
 
-  async signInWithEmail(email: string, password: string): Promise<Res<{ next: SignInNext }>> {
+  async signInWithEmail(email: string, password: string, purpose: 'login' | 'portal' | 'admin' = 'login'): Promise<Res<{ next: SignInNext }>> {
     const e = email.trim()
     if (!validEmail(e) || !password) return failure('Enter your email and password.', 'form')
     const { error } = await supabase().auth.signInWithPassword({ email: e, password })
@@ -168,7 +168,7 @@ export const remoteAuth = {
       if (error.status === 429 || /rate|too many/i.test(error.message)) return failure('Too many tries. Wait a few minutes and try again.', 'rate')
       return failure('That email and password don’t match.', 'wrong')
     }
-    return afterSignIn('login')
+    return afterSignIn(purpose)
   },
 
   /** Always says the same thing, so this can't be used to find out who has an account. */
@@ -222,6 +222,19 @@ export const remoteAuth = {
     if (error) return failure('That password doesn’t match.', 'wrong')
     update({ reauthUntil: now() + 5 * MIN })
     return { ok: true, value: undefined }
+  },
+
+  /** The ways the person who is signed in can sign in, read from Supabase. Works for members, therapists and staff alike. Null when nobody is signed in. */
+  async signInMethods(): Promise<{ phone: string; email: string; google: boolean; password: boolean } | null> {
+    const u = (await supabase().auth.getUser()).data.user
+    if (!u) return null
+    const ids = u.identities ?? []
+    return {
+      phone: u.phone ? (u.phone.startsWith('+') ? u.phone : `+${u.phone}`) : '',
+      email: u.email ?? '',
+      google: ids.some((i) => i.provider === 'google'),
+      password: ids.some((i) => i.provider === 'email'),
+    }
   },
 
   /** Adds Google to the account that is signed in, so the same person doesn't end up with two accounts. */
@@ -377,12 +390,11 @@ async function syncMethods(): Promise<void> {
 }
 
 /** Google has confirmed who this is. Decide where they go: into their account, a fresh private-profile check, or registration. */
-async function afterSignIn(purpose: GooglePurpose): Promise<Res<{ next: SignInNext }>> {
+async function afterSignIn(purpose: GooglePurpose | 'portal' | 'admin'): Promise<Res<{ next: SignInNext }>> {
   const user = (await supabase().auth.getUser()).data.user
   if (!user) return failure('Google sign-in didn’t finish. Try again.', 'google')
   if (purpose === 'link') {
     // Google was added to the account that is signed in. Copy the new email into Echo's record and refresh.
-    if (user.id !== getDb().account?.id) return failure('That Google account is already used by another Echo account.', 'mismatch')
     await syncMethods()
     return { ok: true, value: { next: 'linked' } }
   }
@@ -391,9 +403,26 @@ async function afterSignIn(purpose: GooglePurpose): Promise<Res<{ next: SignInNe
     update({ reauthUntil: now() + 5 * MIN })
     return { ok: true, value: { next: 'reauth-ok' } }
   }
+  // The therapist portal and the staff dashboard have their own sign-in pages: the person must really be a therapist or staff.
+  if (purpose === 'portal') {
+    const r = await enterPortal('email')
+    return r.ok ? { ok: true, value: { next: 'portal' } } : r
+  }
+  if (purpose === 'admin') {
+    const r = await enterAdmin('email')
+    return r.ok ? { ok: true, value: { next: 'admin' } } : r
+  }
   if (await loadAccount()) {
     await enterAsMember()
     return { ok: true, value: { next: 'trust-device' } }
+  }
+  // No member account. A therapist or staff member who signed in here is taken to their own place instead of being asked to register.
+  if (await isTherapist()) {
+    const r = await enterPortal('email')
+    if (r.ok) return { ok: true, value: { next: 'portal' } }
+  } else if (await isStaff()) {
+    const r = await enterAdmin('email')
+    if (r.ok) return { ok: true, value: { next: 'admin' } }
   }
   const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string }
   update((s) => ({

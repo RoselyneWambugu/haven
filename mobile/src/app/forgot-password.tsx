@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pressable } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -18,6 +19,8 @@ export default function ForgotPassword() {
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
+  const { for: who } = useLocalSearchParams<{ for?: string }>()
+  const back = who === 'portal' || who === 'admin' ? `/login-email?for=${who}` : '/login-email'
 
   async function send() {
     setBusy(true)
@@ -39,7 +42,7 @@ export default function ForgotPassword() {
           <Text variant="small" muted>
             It can take a minute, and it may land in spam. Open the link on this device or any other.
           </Text>
-          <Button testID="forgot-back" variant="quiet" label="Back to log in" onPress={() => replace('/login-email')} />
+          <Button testID="forgot-back" variant="quiet" label="Back to log in" onPress={() => replace(back)} />
         </>
       ) : (
         <>

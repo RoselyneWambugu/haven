@@ -5,7 +5,7 @@ import { REMOTE } from '@/backend/client'
 import { remoteAdmin } from '@/backend/remoteAdmin'
 import { normaliseKenyanPhone } from '@/lib/identity'
 import { Button } from '@/components/Button'
-import { Badge } from '@/components/Controls'
+import { Badge, Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { StaffDocuments } from '@/components/StaffDocuments'
 import { Panel, PortalPage } from '@/components/Portal'
@@ -31,6 +31,8 @@ export default function Therapists() {
   const [error, setError] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
   const [linkError, setLinkError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [linkBy, setLinkBy] = useState<'phone' | 'email'>('phone')
   const links = a?.therapistLinks ?? {}
   const apps = api.admin.applicants()
   const standing = a?.therapistStanding ?? {}
@@ -62,6 +64,13 @@ export default function Therapists() {
     if (!r.ok) return setLinkError(r.error)
     setLinkError(null)
     setPhone('')
+  }
+  async function linkEmail() {
+    if (!sel) return
+    const r = await remoteAdmin.linkTherapistEmail(sel.id, email)
+    if (!r.ok) return setLinkError(r.error)
+    setLinkError(null)
+    setEmail('')
   }
   async function unlink() {
     if (!sel) return
@@ -114,17 +123,32 @@ export default function Therapists() {
               {links[sel.id]?.linked || links[sel.id]?.pending ? (
                 <>
                   <Banner tone="green" icon="lock">
-                    {links[sel.id].linked ? `Linked to a number ending ${links[sel.id].tail}.` : `Waiting for the number ending ${links[sel.id].tail} to sign in for the first time.`}
+                    {links[sel.id].via === 'email'
+                      ? links[sel.id].linked ? `Linked to the email ${links[sel.id].hint}.` : `Waiting for the email ${links[sel.id].hint} to sign in for the first time.`
+                      : links[sel.id].linked ? `Linked to a number ending ${links[sel.id].tail}.` : `Waiting for the number ending ${links[sel.id].tail} to sign in for the first time.`}
                   </Banner>
                   <Text variant="caption" muted>
                     To unlink, give a reason below.
                   </Text>
-                  <Button testID="unlink-therapist" variant="quiet" label="Unlink number" onPress={unlink} />
+                  <Button testID="unlink-therapist" variant="quiet" label="Unlink" onPress={unlink} />
                 </>
               ) : (
                 <>
-                  <Field testID="link-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={(v) => { setPhone(v); setLinkError(null) }} keyboardType="phone-pad" error={linkError} />
-                  <Button testID="link-therapist-go" label="Link number" onPress={link} />
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Chip testID="link-by-phone" label="By phone number" selected={linkBy === 'phone'} onPress={() => { setLinkBy('phone'); setLinkError(null) }} />
+                    <Chip testID="link-by-email" label="By email" selected={linkBy === 'email'} onPress={() => { setLinkBy('email'); setLinkError(null) }} />
+                  </View>
+                  {linkBy === 'phone' ? (
+                    <>
+                      <Field testID="link-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={(v) => { setPhone(v); setLinkError(null) }} keyboardType="phone-pad" error={linkError} />
+                      <Button testID="link-therapist-go" label="Link number" onPress={link} />
+                    </>
+                  ) : (
+                    <>
+                      <Field testID="link-email" label="Email" placeholder="name@example.com" value={email} onChangeText={(v) => { setEmail(v); setLinkError(null) }} keyboardType="email-address" autoCapitalize="none" error={linkError} />
+                      <Button testID="link-therapist-email-go" label="Link email" onPress={linkEmail} />
+                    </>
+                  )}
                 </>
               )}
               {links[sel.id] && (links[sel.id].linked || links[sel.id].pending) && linkError ? (

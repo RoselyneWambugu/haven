@@ -38,6 +38,15 @@ Run `supabase/google_signin_setup.sql` once in the SQL editor (it makes the phon
 - No SMS reminders (no number to send to), and the phone-number recovery page does not apply to them.
 - One person, one account: someone who signed up by phone adds Google under **Settings, Sign-in methods**, and someone who signed up with Google can add a phone number there. This needs **Allow manual linking** switched on (below). Two accounts that were already made separately are not merged; the person keeps the one they want and asks us to remove the other.
 
-## Still to build
+## Therapists and staff
 
-- Therapists and staff signing in with Google. Today they are linked by phone number, so a Google sign-in for them would only create a member account. Linking by email is the next step.
+They can sign in with Google too, from the **Therapist portal** and **Staff sign-in** pages ("Sign in with Google"). They are matched by a confirmed email, the same way a phone number matches today:
+- **Therapists:** a clinical reviewer or Admin opens **Therapists**, picks the therapist, chooses **By email** and enters the address. The link is made the first time that email signs in. Linking again before then replaces the waiting email.
+- **Staff:** an Admin opens **Roles**, **Add a person**, chooses **By email**. It goes through the same second-Admin approval as adding by phone. The person becomes staff the first time that email signs in.
+- **The first Admin:** if no Admin exists yet, Google sign-in at the staff page offers the one-time setup code, as the phone code does.
+- **People already linked by phone:** they open **Sign-in methods** in the sidebar of the portal or dashboard and add Google there, so the same account answers to both.
+- A Google sign-in that is not linked to a therapist or staff is refused with "This email isn't linked to a therapist (or staff) account", and the session is ended.
+
+**Security note for staff.** Signing in with the phone code is a second factor. Google is a good second factor only if the person's Google account has 2-step verification on; ask staff to switch it on. An email and password has no second factor at all, so for Admins and clinical staff prefer Google or the phone code.
+
+## Still to build

@@ -137,15 +137,30 @@ export async function portalVerifyOtp(code: string): Promise<Res> {
   if (!signInPhone) return { ok: false, error: 'Ask for a new code.', code: 'none' }
   const { error } = await supabase().auth.verifyOtp({ phone: signInPhone, token: code.trim(), type: 'sms' })
   if (error) return { ok: false, error: 'That code doesn’t match, or it has expired.', code: 'wrong' }
+  return enterPortal('number')
+}
+
+/**
+ * Opens the portal for whoever is signed in with Supabase, if they are a linked therapist. A member signed in on this device is signed out of
+ * the member app. When they are not a therapist the Supabase session is ended and the reason names how they signed in.
+ */
+export async function enterPortal(via: 'number' | 'email'): Promise<Res> {
   stopPolling()
   update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [], admin: null })
   if (!(await syncPortal())) {
     await supabase().auth.signOut()
     update({ portal: null })
-    return { ok: false, error: 'This number isn’t linked to a therapist account. Ask Echo to link it.', code: 'not-therapist' }
+    return { ok: false, error: via === 'number' ? 'This number isn’t linked to a therapist account. Ask Echo to link it.' : 'This email isn’t linked to a therapist account. Ask Echo to link it.', code: 'not-therapist' }
   }
   startPortalPolling()
   return { ok: true, value: undefined }
+}
+
+/** True when whoever is signed in with Supabase is a linked therapist. Changes nothing, so a person who is not one can carry on elsewhere. */
+export async function isTherapist(): Promise<boolean> {
+  const { data } = await supabase().rpc('my_portal')
+  const d = data as { ok?: boolean; therapist_id?: string } | null
+  return d?.ok === true && !!d.therapist_id
 }
 
 /** Opens the portal again on start-up if the saved session still belongs to a therapist. */
