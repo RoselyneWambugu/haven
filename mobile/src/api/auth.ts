@@ -6,7 +6,7 @@ import { uid } from '@/lib/id'
 import { validatePenName } from '@/lib/safety'
 import { emptyRegistration, getDb, update, updateAccount, type RegistrationDraft } from '@/store/db'
 import { showToast } from '@/store/toast'
-import type { Account, AvatarKind, Device, GoogleNext, Res, Settings } from './types'
+import type { Account, AvatarKind, Device, SignInNext, Res, Settings } from './types'
 
 const HOUR = 3600_000
 const MIN = 60_000
@@ -52,6 +52,10 @@ function code(): string {
   return /^(\d)\1+$/.test(c) ? '482193'.slice(0, CONFIG.otpLength) : c
 }
 
+function unavailable(): { ok: false; error: string; code: string } {
+  return { ok: false, error: 'This is only available on the live service.', code: 'unavailable' }
+}
+
 export const auth = {
   /** Step 1 of registration: details. Under-18s are stopped and nothing is kept (ACC-9). */
   submitDetails(input: { fullName: string; phone: string; dob: string; email: string }): Res<{ phone: string }> {
@@ -76,12 +80,35 @@ export const auth = {
   },
 
   /** Google sign-in needs the real service. The demo has no Google. */
-  async signInWithGoogle(_purpose: 'login' | 'register' | 'reauth'): Promise<Res<{ next: GoogleNext }>> {
+  async signInWithGoogle(_purpose: 'login' | 'register' | 'reauth'): Promise<Res<{ next: SignInNext }>> {
     return { ok: false, error: 'Google sign-in is only available on the live service.', code: 'unavailable' }
   },
 
-  async finishGoogleRedirect(_url: string): Promise<Res<{ next: GoogleNext }>> {
+  async finishGoogleRedirect(_url: string): Promise<Res<{ next: SignInNext }>> {
     return { ok: false, error: 'Google sign-in is only available on the live service.', code: 'unavailable' }
+  },
+
+  /** Email and password need the real service. The demo has none. */
+  async signUpWithEmail(_email: string, _password: string): Promise<Res<{ next: SignInNext | 'check-email' }>> {
+    return unavailable()
+  },
+  async signInWithEmail(_email: string, _password: string): Promise<Res<{ next: SignInNext }>> {
+    return unavailable()
+  },
+  async requestPasswordReset(_email: string): Promise<Res> {
+    return unavailable()
+  },
+  async hasRecoverySession(): Promise<boolean> {
+    return false
+  },
+  async setNewPassword(_password: string): Promise<Res<{ next: SignInNext }>> {
+    return unavailable()
+  },
+  async finishEmailLink(_url: string): Promise<Res<{ next: SignInNext | 'reset-password' }>> {
+    return unavailable()
+  },
+  async reauthWithPassword(_password: string): Promise<Res> {
+    return unavailable()
   },
 
   acceptConsents(): void {

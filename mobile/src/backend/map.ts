@@ -8,6 +8,7 @@ export interface RemoteAccount {
   standing: StandingState
   has_posted_before: boolean
   has_google?: boolean
+  has_password?: boolean
   deletion_requested_at: string | null
   trusted_device: boolean
   shared_device: boolean
@@ -61,5 +62,6 @@ export function toAccount(r: RemoteAccount, prev: Account | null, currentDeviceI
     mood,
     hasPostedBefore: r.has_posted_before,
     hasGoogle: r.has_google ?? false,
+    hasPassword: r.has_password ?? false,
   }
 }

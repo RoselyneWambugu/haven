@@ -3,6 +3,7 @@ import { Pressable } from 'react-native'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { REMOTE } from '@/backend/client'
 import { GoogleButton } from '@/components/GoogleButton'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
@@ -59,6 +60,7 @@ export default function Register() {
       {google ? null : (
         <GoogleButton purpose="register" label="Sign up with Google instead" onNext={(next) => { if (next === 'trust-device') replace('/trust-device'); else if (next === 'consent') replace('/consent') }} />
       )}
+      {google || !REMOTE ? null : <Button testID="signup-with-email" variant="quiet" label="Sign up with email and password" onPress={() => go('/signup-email')} />}
       <Field testID="reg-name" label="Full name" value={fullName} onChangeText={setFullName} autoComplete="name" textContentType="name" autoCapitalize="words" error={errors.name} />
       {google ? (
         <Banner tone="green" icon="shield">

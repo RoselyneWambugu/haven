@@ -1,5 +1,5 @@
 import { auth } from '@/api/auth'
-import type { AvatarKind, GoogleNext, Res, Settings } from '@/api/types'
+import type { AvatarKind, SignInNext, Res, Settings } from '@/api/types'
 import { CONFIG } from '@/data/config'
 import { now } from '@/lib/clock'
 import { ageBand, ageOn, normaliseKenyanPhone } from '@/lib/identity'
@@ -12,7 +12,9 @@ import { startPolling, stopPolling } from './remoteChat'
 import { clearTherapistCache } from './remoteTherapists'
 import { restoreAdmin, stopAdminPolling } from './remoteAdmin'
 import { syncHelp } from './remoteHelp'
-import { exchange, openGoogle, takePurpose, type GooglePurpose } from './remoteGoogle'
+import * as Linking from 'expo-linking'
+import { exchange, openGoogle, takePurpose, webBase, type GooglePurpose } from './remoteGoogle'
+import { passwordProblem, validEmail } from '@/lib/password'
 import { restorePortal, stopPortalPolling } from './remotePortal'
 
 const MIN = 60_000
@@ -124,21 +126,97 @@ export const remoteAuth = {
   },
 
   /** Opens Google. A member who already has an Echo account is signed in; a new one carries on to registration without a phone number. */
-  async signInWithGoogle(purpose: GooglePurpose): Promise<Res<{ next: GoogleNext }>> {
+  async signInWithGoogle(purpose: GooglePurpose): Promise<Res<{ next: SignInNext }>> {
     const r = await openGoogle(purpose)
     if (!r.ok) return r
     if (r.value.redirecting) return { ok: true, value: { next: 'redirecting' } }
-    return afterGoogle(purpose)
+    return afterSignIn(purpose)
   },
 
   /** The web page Google sent the person back to. Finishes what signInWithGoogle started before the page left. */
-  async finishGoogleRedirect(url: string): Promise<Res<{ next: GoogleNext }>> {
+  async finishGoogleRedirect(url: string): Promise<Res<{ next: SignInNext }>> {
     const purpose = await takePurpose()
     // A repeated visit to the same link has nothing left to do.
     if (!purpose) return failure('That sign-in link has already been used.', 'stale')
     const r = await exchange(url)
     if (!r.ok) return r
-    return afterGoogle(purpose)
+    return afterSignIn(purpose)
+  },
+
+  /** Makes an account with an email and a password. Supabase emails a link to confirm the address; until it is opened there is no session. */
+  async signUpWithEmail(email: string, password: string): Promise<Res<{ next: SignInNext | 'check-email' }>> {
+    const e = email.trim()
+    if (!validEmail(e)) return failure('Enter your email address, like name@example.com.', 'email')
+    const problem = passwordProblem(password, e)
+    if (problem) return failure(problem, 'password')
+    const { data, error } = await supabase().auth.signUp({ email: e, password, options: { emailRedirectTo: `${webBase()}/auth-callback` } })
+    if (error) {
+      const limited = error.status === 429 || /rate|too many|seconds/i.test(error.message)
+      return failure(limited ? 'Too many emails asked for. Wait a few minutes and try again.' : 'We couldn’t create that account. Check the details and try again.', limited ? 'rate' : 'send')
+    }
+    // With email confirmation off there is a session at once; with it on, the person has to open the link first.
+    if (data.session) return afterSignIn('register')
+    return { ok: true, value: { next: 'check-email' } }
+  },
+
+  async signInWithEmail(email: string, password: string): Promise<Res<{ next: SignInNext }>> {
+    const e = email.trim()
+    if (!validEmail(e) || !password) return failure('Enter your email and password.', 'form')
+    const { error } = await supabase().auth.signInWithPassword({ email: e, password })
+    if (error) {
+      if (/confirm/i.test(error.message)) return failure('Confirm your email first. We sent you a link when you signed up.', 'unconfirmed')
+      if (error.status === 429 || /rate|too many/i.test(error.message)) return failure('Too many tries. Wait a few minutes and try again.', 'rate')
+      return failure('That email and password don’t match.', 'wrong')
+    }
+    return afterSignIn('login')
+  },
+
+  /** Always says the same thing, so this can't be used to find out who has an account. */
+  async requestPasswordReset(email: string): Promise<Res> {
+    const e = email.trim()
+    if (!validEmail(e)) return failure('Enter your email address, like name@example.com.', 'email')
+    const { error } = await supabase().auth.resetPasswordForEmail(e, { redirectTo: `${webBase()}/auth-callback` })
+    if (error && (error.status === 429 || /rate|too many|seconds/i.test(error.message))) return failure('Too many emails asked for. Wait a few minutes and try again.', 'rate')
+    return { ok: true, value: undefined }
+  },
+
+  /** True while a reset link has signed the person in and they have not yet chosen the new password. */
+  async hasRecoverySession(): Promise<boolean> {
+    return !!(await supabase().auth.getSession()).data.session
+  },
+
+  /** Saves the new password, then carries on exactly as a log in would: into the account, or on to registration. */
+  async setNewPassword(password: string): Promise<Res<{ next: SignInNext }>> {
+    const user = (await supabase().auth.getUser()).data.user
+    const problem = passwordProblem(password, user?.email ?? '')
+    if (problem) return failure(problem, 'password')
+    const { error } = await supabase().auth.updateUser({ password })
+    if (error) {
+      return failure(/same|different/i.test(error.message) ? 'Choose a password you haven’t used before.' : 'We couldn’t save that password. Ask for a new link and try again.', 'save')
+    }
+    return afterSignIn('login')
+  },
+
+  /** The link in the email: a token in the address, opened on any device. Recovery goes to the new-password page; a confirmation carries on to sign-in or registration. */
+  async finishEmailLink(url: string): Promise<Res<{ next: SignInNext | 'reset-password' }>> {
+    const q = Linking.parse(url).queryParams ?? {}
+    const hash = typeof q.token_hash === 'string' ? q.token_hash : null
+    const type = q.type === 'recovery' ? 'recovery' : q.type === 'signup' || q.type === 'email' ? 'email' : null
+    if (!hash || !type) return failure('That link isn’t valid. Ask for a new one.', 'link')
+    const { error } = await supabase().auth.verifyOtp({ token_hash: hash, type })
+    if (error) return failure('That link has expired or was already used. Ask for a new one.', 'link')
+    if (type === 'recovery') return { ok: true, value: { next: 'reset-password' } }
+    return afterSignIn('register')
+  },
+
+  /** Opens the private profile again for someone who signs in with a password. */
+  async reauthWithPassword(password: string): Promise<Res> {
+    const user = (await supabase().auth.getUser()).data.user
+    if (!user?.email || user.id !== getDb().account?.id) return failure('Sign in again first.', 'mismatch')
+    const { error } = await supabase().auth.signInWithPassword({ email: user.email, password })
+    if (error) return failure('That password doesn’t match.', 'wrong')
+    update({ reauthUntil: now() + 5 * MIN })
+    return { ok: true, value: undefined }
   },
 
   /** A Google registration has no phone to check, so the details step skips it. Everything else is checked as usual. */
@@ -243,7 +321,7 @@ async function enterAsMember(): Promise<void> {
 }
 
 /** Google has confirmed who this is. Decide where they go: into their account, a fresh private-profile check, or registration. */
-async function afterGoogle(purpose: GooglePurpose): Promise<Res<{ next: GoogleNext }>> {
+async function afterSignIn(purpose: GooglePurpose): Promise<Res<{ next: SignInNext }>> {
   const user = (await supabase().auth.getUser()).data.user
   if (!user) return failure('Google sign-in didn’t finish. Try again.', 'google')
   if (purpose === 'reauth') {

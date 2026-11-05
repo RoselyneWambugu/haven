@@ -16,12 +16,13 @@ export default function AuthCallback() {
     ran.current = true
     void (async () => {
       const url = Platform.OS === 'web' ? globalThis.location.href : ''
-      const r = await api.auth.finishGoogleRedirect(url)
+      // A link from an email carries a token (confirm your email, reset your password); a return from Google carries a code.
+      const r = url.includes('token_hash=') ? await api.auth.finishEmailLink(url) : await api.auth.finishGoogleRedirect(url)
       if (!r.ok) {
         if (r.code !== 'stale' && r.code !== 'unavailable') showToast(r.error)
-        return router.replace('/' as never)
+        return router.replace((r.code === 'link' ? '/forgot-password' : '/') as never)
       }
-      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', redirecting: '/' }[r.value.next]
+      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', redirecting: '/' }[r.value.next]
       router.replace(to as never)
     })()
   }, [])

@@ -113,6 +113,8 @@ export interface Account {
   hasPostedBefore: boolean
   /** Signs in with Google. Such an account may have no phone number on Echo. */
   hasGoogle?: boolean
+  /** Signs in with an email and password. */
+  hasPassword?: boolean
 }
 
 // ---------- conversations ----------
@@ -800,5 +802,5 @@ export interface RotaWeek {
   heavy: string[]
 }
 
-/** Where to go after Google sign-in: signed in, or on to the next registration step. 'redirecting' means the browser page is leaving for Google. */
-export type GoogleNext = 'trust-device' | 'consent' | 'register' | 'reauth-ok' | 'redirecting'
+/** Where to go after signing in: signed in, or on to the next registration step. 'redirecting' means the browser page is leaving for Google. */
+export type SignInNext = 'trust-device' | 'consent' | 'register' | 'reauth-ok' | 'redirecting'

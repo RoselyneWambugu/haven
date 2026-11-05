@@ -13,6 +13,12 @@ WebBrowser.maybeCompleteAuthSession()
 
 const failure = (error: string, code: string): Res<never> => ({ ok: false, error, code })
 
+/** The public web address of Echo. Email links open in a browser, so on a phone this comes from the settings, not the app's own address. */
+export function webBase(): string {
+  if (Platform.OS === 'web') return globalThis.location.origin
+  return (process.env.EXPO_PUBLIC_WEB_URL ?? 'https://haven-three-xi.vercel.app').replace(/\/$/, '')
+}
+
 /** The address Google sends the person back to. On the web it is a page of this site; on a phone it is a link into the app. */
 export function callbackUrl(): string {
   if (Platform.OS === 'web') return `${globalThis.location.origin}/auth-callback`

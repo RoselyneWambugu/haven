@@ -29,6 +29,8 @@ export default function Profiles() {
   const [name, setName] = useState('')
   const [nameError, setNameError] = useState<string | null>(null)
   const [verifyError, setVerifyError] = useState<string | null>(null)
+  const [askPassword, setAskPassword] = useState(false)
+  const [password, setPassword] = useState('')
   if (!account) return null
   const p = account.public
   const unlocked = reauthUntil > now()
@@ -36,7 +38,18 @@ export default function Profiles() {
 
   // Someone who signs in with Google and has no phone number on Echo proves it's them with Google again.
   const googleOnly = !account.private.phone && account.hasGoogle === true
+  // Someone with an email and password and no phone confirms with the password.
+  const passwordOnly = !account.private.phone && !account.hasGoogle && account.hasPassword === true
+  async function checkPassword() {
+    const r = await api.auth.reauthWithPassword(password)
+    if (!r.ok) return setVerifyError(r.error)
+    setAskPassword(false)
+    setPassword('')
+    setVerifyError(null)
+  }
+
   async function verify() {
+    if (passwordOnly) return setAskPassword(true)
     if (googleOnly) {
       const r = await api.auth.signInWithGoogle('reauth')
       if (!r.ok && r.code !== 'cancelled') setVerifyError(r.error)
@@ -113,9 +126,16 @@ export default function Profiles() {
             Your name, phone, date of birth and ID live here. We ask for a quick code before showing them.
           </Banner>
           {verifyError ? <Banner tone="clay">{verifyError}</Banner> : null}
-          <Button testID="verify-private" label={googleOnly ? 'Verify with Google' : 'Verify it’s you'} onPress={verify} />
+          <Button testID="verify-private" label={googleOnly ? 'Verify with Google' : passwordOnly ? 'Verify with your password' : 'Verify it’s you'} onPress={verify} />
         </>
       )}
+      <Sheet visible={askPassword} onClose={() => setAskPassword(false)} title="Enter your password">
+        <Text variant="small" muted>
+          Your private details are only for you. Enter your password to open them for five minutes.
+        </Text>
+        <Field testID="reauth-password" label="Password" value={password} onChangeText={(v) => { setPassword(v); setVerifyError(null) }} secureTextEntry autoCapitalize="none" autoComplete="current-password" error={verifyError} />
+        <Button testID="reauth-password-submit" label="Open" onPress={checkPassword} />
+      </Sheet>
       <Sheet visible={editing} onClose={() => setEditing(false)} title="Change pen name">
         <Text variant="small" muted>
           You can change it once every 30 days. Your chats keep working.

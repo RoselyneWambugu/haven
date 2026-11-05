@@ -47,3 +47,7 @@ Verification documents (therapist applications and licence renewals) are kept fo
 ## Sign in with Google
 
 Optional but built. Setup is in `docs/GOOGLE_SIGNIN.md`: a Google OAuth client, the Google provider and redirect URLs in Supabase, and `supabase/google_signin_setup.sql` run once in the SQL editor.
+
+## Email and password, and Forgot password
+
+Built. Setup is in `docs/EMAIL_PASSWORD.md`: the Email provider and minimum password length, redirect URLs, two email templates, and a custom SMTP sender (Supabase's own sender is limited to a few emails an hour). Needs the same `supabase/google_signin_setup.sql` as Google.

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { api } from '@/api'
-import type { GoogleNext } from '@/api/types'
+import type { SignInNext } from '@/api/types'
 import { REMOTE } from '@/backend/client'
 import { Banner } from '@/components/Surfaces'
 import { Button } from '@/components/Button'
@@ -13,7 +13,7 @@ import { Button } from '@/components/Button'
 export function GoogleButton({ purpose, label = 'Continue with Google', onNext, testID = 'google-continue' }: {
   purpose: 'login' | 'register' | 'reauth'
   label?: string
-  onNext: (next: Exclude<GoogleNext, 'redirecting'>) => void
+  onNext: (next: Exclude<SignInNext, 'redirecting'>) => void
   testID?: string
 }) {
   const [busy, setBusy] = useState(false)
