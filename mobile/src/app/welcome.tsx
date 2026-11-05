@@ -32,8 +32,8 @@ export default function Welcome() {
         </>
       }
     >
-      <View style={{ height: 300, borderTopLeftRadius: 150, borderTopRightRadius: 150, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden', backgroundColor: colors.cocoa }}>
-        <Bloom background={colors.cocoa} />
+      <View style={{ height: 300, borderTopLeftRadius: 150, borderTopRightRadius: 150, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden', backgroundColor: colors.fern }}>
+        <Bloom />
       </View>
       <View style={{ gap: 8, paddingHorizontal: 4 }}>
         <Text variant="display">{t('A space to speak.')}</Text>
