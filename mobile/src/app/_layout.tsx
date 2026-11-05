@@ -18,6 +18,7 @@ import { REMOTE } from '@/backend/client'
 import { restoreSession } from '@/backend/remoteAuth'
 import { getDb, loadDb, useDb } from '@/store/db'
 import { MEMBERS_ON_WEB, WEB_PAGES } from '@/lib/webMembers'
+import { SessionAlarmHost } from '@/components/SessionAlarmHost'
 import { useFront } from '@/store/useFront'
 import { useNow } from '@/store/useNow'
 import { colors, LANDING_WIDTH, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
@@ -150,6 +151,7 @@ export default function RootLayout() {
       <Shell>
         <Gate />
         <Notifier />
+        <SessionAlarmHost />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper }, animation: 'fade' }} />
         <ToastHost />
         <SecurityAlert />

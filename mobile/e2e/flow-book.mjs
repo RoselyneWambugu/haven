@@ -85,6 +85,19 @@ await step('book-and-pay', async () => {
   sessionId = page.url().split('/').pop().split('?')[0]
   await shot('38-session')
 })
+await step('session-alarm-in-the-app', async () => {
+  await page.evaluate(() => window.__echo.demo.jumpToBeforeNextSession(8))
+  await tid('session-alarm').waitFor({ timeout: 8000 })
+  const text = await tid('session-alarm').innerText()
+  if (!/starts in/.test(text)) throw new Error('alarm does not say when: ' + text)
+  await shot('38b-alarm')
+  await tid('alarm-dismiss').click()
+  await page.waitForTimeout(400)
+  if ((await tid('session-alarm').count()) !== 0) throw new Error('alarm did not close')
+  await page.evaluate(() => window.__echo.demo.jumpToBeforeNextSession(8))
+  await page.waitForTimeout(400)
+  if ((await tid('session-alarm').count()) !== 0) throw new Error('a dismissed alarm came back')
+})
 await step('reschedule-and-cancel', async () => {
   await tid('cancel-session').click()
   await tid('session-cancel').waitFor()

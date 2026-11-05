@@ -169,6 +169,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-44 | Run `supabase/account_deletion_cleanup.sql` in the SQL editor so requested deletions happen. Decide: how long payment records must be kept | v0.55 |
 | Q-48 | Push notifications to a locked phone (an Expo push token per device, sent by the server); delivery receipts for SMS; add the Africa's Talking secrets and test in the sandbox before launch | v0.59 |
 | Q-49 | A second factor for staff who sign in with an email and password; merging two accounts that were already made separately, changing a password while logged in, and joining a phone account and a Google account that belong to one person | v0.66 |
+| Q-50 | Session alarms: test on real iPhones and Androids (Expo Go and a build); ask for Android's exact-alarm permission so alerts land to the minute; a server push as a backup when the phone has lost its scheduled alerts (Q-48); alarms for a closed web page need push | v0.72 |
 | Q-47 | Pay therapist payouts through M-Pesa B2C; card payments; add the M-Pesa secrets and test in the sandbox before launch | v0.58 |
 | Q-46 | Pay therapists through a payment provider instead of by hand; tax on earnings | v0.57 |
 | Q-45 | Run `supabase/document_retention_cleanup.sql` in the SQL editor so verification documents are removed 12 months after their decision (kept 12 months, decided). Also: virus scanning of uploads; letting a person remove a file they sent | v0.56 |
