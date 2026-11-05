@@ -36,6 +36,8 @@ function Gate() {
   const nav = useRootNavigationState()
   const signedIn = useDb((s) => s.signedIn)
   const locked = useDb((s) => s.locked)
+  // A therapist or staff member signed in is not a signed-in member, but may open their sign-in methods.
+  const proIn = useDb((s) => s.portal?.signedIn === true || s.admin?.signedIn === true)
   const paused = useDb((s) => s.account?.standing === 'paused')
   const first = (segments[0] as string | undefined) ?? ''
 
@@ -43,6 +45,7 @@ function Gate() {
     if (!nav?.key) return
     // The therapist portal and the admin dashboard each have their own sign-in and guard.
     if (first === 'portal' || first === 'admin') return
+    if (first === 'settings' && proIn && !signedIn) return
     if (!signedIn) {
       if (!SIGNED_OUT_OK.has(first)) router.replace(front)
       return
@@ -56,7 +59,7 @@ function Gate() {
       return
     }
     if (paused && !PAUSED_OK.has(first)) router.replace('/paused')
-  }, [nav?.key, signedIn, locked, paused, first, front])
+  }, [nav?.key, signedIn, locked, paused, first, front, proIn])
   return null
 }
 

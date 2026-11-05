@@ -20,9 +20,10 @@ export default function AuthCallback() {
       const r = url.includes('token_hash=') ? await api.auth.finishEmailLink(url) : await api.auth.finishGoogleRedirect(url)
       if (!r.ok) {
         if (r.code !== 'stale' && r.code !== 'unavailable') showToast(r.error)
-        return router.replace((r.code === 'link' ? '/forgot-password' : '/') as never)
+        // A therapist or staff sign-in that did not match goes back to where it started; a bad email link goes to ask for a new one.
+        return router.replace((r.code === 'link' ? '/forgot-password' : r.code === 'not-therapist' ? '/portal/sign-in' : r.code === 'not-staff' ? '/admin/sign-in' : r.code === 'setup' ? '/admin/sign-in?setup=1' : '/') as never)
       }
-      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', linked: '/settings/sign-in-methods', redirecting: '/' }[r.value.next]
+      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', linked: '/settings/sign-in-methods', portal: '/portal/today', admin: '/admin/overview', redirecting: '/' }[r.value.next]
       router.replace(to as never)
     })()
   }, [])

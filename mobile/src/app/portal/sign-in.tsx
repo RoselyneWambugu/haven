@@ -4,6 +4,7 @@ import { Redirect, router } from 'expo-router'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { GoogleButton } from '@/components/GoogleButton'
 import { Panel } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -53,6 +54,7 @@ export default function PortalSignIn() {
           Echo is for licensed therapists. Clients are anonymous: you see a pen name and avatar only.
         </Text>
         {REMOTE ? (
+          <>
           <Panel tone="lichen">
             <Text variant="label">Sign in with your phone</Text>
             <Text variant="small">Use the number Echo has linked to your therapist account.</Text>
@@ -72,6 +74,13 @@ export default function PortalSignIn() {
               Only a number Echo has linked to a therapist account can open the portal.
             </Banner>
           </Panel>
+          <Panel>
+            <Text variant="label">Or sign in with your email</Text>
+            <Text variant="small">Use the email address Echo has linked to your therapist account.</Text>
+            <GoogleButton testID="portal-google" purpose="portal" label="Sign in with Google" onNext={() => router.replace('/portal/today' as never)} />
+            <Button testID="portal-email-signin" variant="quiet" label="Sign in with email and password" onPress={() => go('/login-email?for=portal')} />
+          </Panel>
+          </>
         ) : (
           <Panel tone="lichen">
             <Text variant="label">Demo</Text>

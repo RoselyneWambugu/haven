@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -7,14 +7,16 @@ import { Sheet } from '@/components/Sheet'
 import { Banner, Row } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { formatPhone } from '@/lib/identity'
-import { useDb } from '@/store/db'
 
 /**
  * The ways this account can be signed in to. Adding another one here keeps one person on one account: someone who signed up by phone
  * can add Google or an email and password, and someone who signed up with Google or an email can add a phone number.
  */
 export default function SignInMethods() {
-  const account = useDb((s) => s.account)
+  // Read from Supabase, so it also works for therapists and staff, who have no member account.
+  const [methods, setMethods] = useState<{ phone: string; email: string; google: boolean; password: boolean } | null>(null)
+  const reload = useCallback(async () => setMethods(await api.auth.signInMethods()), [])
+  useEffect(() => { void reload() }, [reload])
   const [sheet, setSheet] = useState<'none' | 'email' | 'phone'>('none')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,11 +27,11 @@ export default function SignInMethods() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  if (!account) return null
+  if (!methods) return null
 
-  const hasPhone = !!account.private.phone
-  const hasGoogle = account.hasGoogle === true
-  const hasPassword = account.hasPassword === true
+  const hasPhone = !!methods.phone
+  const hasGoogle = methods.google
+  const hasPassword = methods.password
 
   function close() {
     setSheet('none')
@@ -48,6 +50,7 @@ export default function SignInMethods() {
       return
     }
     if (r.value.next === 'linked') setInfo('Google is now linked to this account.')
+    await reload()
   }
 
   async function saveEmail() {
@@ -76,6 +79,7 @@ export default function SignInMethods() {
     if (!r.ok) return setError(r.error)
     close()
     setInfo('Your phone number is now on this account.')
+    await reload()
   }
 
   return (
@@ -86,11 +90,11 @@ export default function SignInMethods() {
       </Text>
       {info ? <Banner tone="green" icon="shield" testID="methods-info">{info}</Banner> : null}
       {error && sheet === 'none' ? <Banner tone="clay">{error}</Banner> : null}
-      <Row testID="method-phone" icon="phone" title="Phone number" sub={hasPhone ? formatPhone(account.private.phone) : 'Not added'} last={false}
+      <Row testID="method-phone" icon="phone" title="Phone number" sub={hasPhone ? formatPhone(methods.phone) : 'Not added'} last={false}
         onPress={hasPhone ? undefined : () => { setSheet('phone'); setError(null) }} right={hasPhone ? undefined : <Text variant="small" bold>Add</Text>} />
       <Row testID="method-google" icon="shield" title="Google" sub={hasGoogle ? 'Linked' : 'Not linked'}
         onPress={hasGoogle ? undefined : link} right={hasGoogle ? undefined : <Text variant="small" bold>Link</Text>} />
-      <Row testID="method-password" icon="lock" title="Email and password" sub={hasPassword ? account.private.email || 'Added' : 'Not added'} last
+      <Row testID="method-password" icon="lock" title="Email and password" sub={hasPassword ? methods.email || 'Added' : 'Not added'} last
         onPress={hasPassword ? undefined : () => { setSheet('email'); setError(null) }} right={hasPassword ? undefined : <Text variant="small" bold>Add</Text>} />
       <Text variant="caption" muted>
         Already made a second account by mistake? Log in to the one you want to keep and ask us to remove the other under Help.

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -17,6 +18,8 @@ export default function SignupEmail() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
+  const { for: who } = useLocalSearchParams<{ for?: string }>()
+  const staffOrTherapist = who === 'portal' || who === 'admin'
 
   async function submit() {
     if (password !== again) return setErrors({ again: 'The two passwords don’t match.' })
@@ -25,7 +28,8 @@ export default function SignupEmail() {
     setBusy(false)
     if (!r.ok) return setErrors({ [r.code === 'email' || r.code === 'password' ? r.code : 'form']: r.error })
     if (r.value.next === 'check-email') return setSent(true)
-    replace(r.value.next === 'trust-device' ? '/trust-device' : r.value.next === 'consent' ? '/consent' : '/register')
+    const n = r.value.next
+    replace(n === 'portal' ? '/portal/today' : n === 'admin' ? '/admin/overview' : n === 'trust-device' ? '/trust-device' : n === 'consent' ? '/consent' : '/register')
   }
 
   if (sent) {
@@ -37,7 +41,7 @@ export default function SignupEmail() {
         </Text>
         <Button testID="signup-resend" variant="quiet" label="Send it again" onPress={async () => { const r = await api.auth.signUpWithEmail(email, password); if (!r.ok) setErrors({ form: r.error }) }} />
         {errors.form ? <Banner tone="clay">{errors.form}</Banner> : null}
-        <Pressable accessibilityRole="button" onPress={() => go('/login-email')} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'center' }}>
+        <Pressable accessibilityRole="button" onPress={() => go(staffOrTherapist ? `/login-email?for=${who}` : '/login-email')} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'center' }}>
           <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
             I’ve confirmed it, log in
           </Text>
@@ -48,7 +52,12 @@ export default function SignupEmail() {
 
   return (
     <Screen testID="signup-email" keyboard header={<TopBar back />} footer={<Button testID="signup-email-submit" label={busy ? 'Creating…' : 'Create account'} disabled={busy} onPress={submit} />}>
-      <Text variant="title">Sign up with email</Text>
+      <Text variant="title">{staffOrTherapist ? 'Create your sign-in' : 'Sign up with email'}</Text>
+      {staffOrTherapist ? (
+        <Text variant="small" muted>
+          Use the email address Echo has linked to your {who === 'portal' ? 'therapist' : 'staff'} account. After you confirm it, you go straight to your {who === 'portal' ? 'dashboard' : 'staff dashboard'}.
+        </Text>
+      ) : null}
       <Field testID="signup-email-address" label="Email" placeholder="you@example.com" value={email} onChangeText={(v) => { setEmail(v); setErrors({}) }} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" error={errors.email} />
       <Field testID="signup-email-password" label="Password" hint="At least 8 characters, with a letter and a number." value={password} onChangeText={(v) => { setPassword(v); setErrors({}) }} secureTextEntry autoCapitalize="none" autoComplete="new-password" textContentType="newPassword" error={errors.password} />
       <Field testID="signup-email-again" label="Password again" value={again} onChangeText={(v) => { setAgain(v); setErrors({}) }} secureTextEntry autoCapitalize="none" autoComplete="new-password" textContentType="newPassword" error={errors.again} />
@@ -64,7 +73,7 @@ export default function SignupEmail() {
         <Text variant="small" muted>
           Have an account?
         </Text>
-        <Pressable accessibilityRole="button" onPress={() => replace('/login-email')} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Pressable accessibilityRole="button" onPress={() => replace(staffOrTherapist ? `/login-email?for=${who}` : '/login-email')} style={{ minHeight: 44, justifyContent: 'center' }}>
           <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
             Log in
           </Text>

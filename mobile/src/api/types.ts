@@ -671,14 +671,14 @@ export interface AdminState {
   /** People invited by phone who haven't signed in yet, and who is on the heavy-queue rota. Only on the real backend. */
   /** A team change waiting for a second Admin. Only on the real backend. */
   staffPending?: { id: string; summary: string; requestedBy: string; mine: boolean; at: number } | null
-  staffInvites?: { name: string; role: StaffRole; tail: string; by: string; at: number }[]
+  staffInvites?: { name: string; role: StaffRole; tail: string; hint?: string; by: string; at: number }[]
   heavy?: Record<string, boolean>
   /** Live analytics from the server. Only on the real backend. */
   analytics?: { days: import('@/lib/analytics').Day[]; cohorts: import('@/lib/analytics').Cohort[]; who: import('@/lib/analytics').Breakdown; reviewMinutes: number[] }
   failedPayments?: number
   /** Felt-heard shares worked out by the server, with small groups hidden. Only on the real backend. */
   heardSummary?: { answered: number | null; skipped: number | null; shares: (number | null)[]; positive: number | null }
-  therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string }>
+  therapistLinks?: Record<string, { linked: boolean; pending: boolean; tail: string; via?: 'phone' | 'email'; hint?: string }>
   /** From the server, for clinical reviewers and Admins: every therapist's licence and any renewal waiting. */
   licences?: AdminLicence[]
 }
@@ -803,4 +803,4 @@ export interface RotaWeek {
 }
 
 /** Where to go after signing in: signed in, or on to the next registration step. 'redirecting' means the browser page is leaving for Google. */
-export type SignInNext = 'trust-device' | 'consent' | 'register' | 'reauth-ok' | 'linked' | 'redirecting'
+export type SignInNext = 'trust-device' | 'consent' | 'register' | 'reauth-ok' | 'linked' | 'portal' | 'admin' | 'redirecting'

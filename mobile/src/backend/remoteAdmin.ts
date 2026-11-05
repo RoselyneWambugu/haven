@@ -106,9 +106,9 @@ async function syncFlags(): Promise<void> {
 
 async function syncLinks(): Promise<void> {
   const { data } = await supabase().rpc('admin_therapist_links')
-  const d = data as { ok?: boolean; links?: { id: string; linked: boolean; pending: boolean; tail: string }[] } | null
+  const d = data as { ok?: boolean; links?: { id: string; linked: boolean; pending: boolean; tail: string; via?: 'phone' | 'email'; hint?: string }[] } | null
   if (!d?.ok || !d.links) return
-  const links = Object.fromEntries(d.links.map((l) => [l.id, { linked: l.linked, pending: l.pending, tail: l.tail }]))
+  const links = Object.fromEntries(d.links.map((l) => [l.id, { linked: l.linked, pending: l.pending, tail: l.tail, via: l.via ?? 'phone', hint: l.hint ?? '' }]))
   update((s) => (s.admin ? { admin: { ...s.admin, therapistLinks: links } } : {}))
 }
 
@@ -148,10 +148,12 @@ async function syncBreakGlass(): Promise<void> {
 }
 
 async function syncInvites(): Promise<void> {
-  const { data } = await supabase().rpc('admin_staff_invites')
+  const [{ data }, { data: emailData }] = await Promise.all([supabase().rpc('admin_staff_invites'), supabase().rpc('admin_staff_email_invites')])
   const d = data as { ok?: boolean; invites?: NonNullable<AdminState['staffInvites']>; heavy?: Record<string, boolean>; pending?: AdminState['staffPending'] } | null
   if (!d?.ok) return
-  update((s) => (s.admin ? { admin: { ...s.admin, staffInvites: d.invites ?? [], heavy: d.heavy ?? {}, staffPending: d.pending ?? null } } : {}))
+  const e = emailData as { ok?: boolean; invites?: { hint: string; name: string; role: NonNullable<AdminState['staffInvites']>[number]['role']; by: string; at: number }[] } | null
+  const byEmail = (e?.ok ? e.invites ?? [] : []).map((i) => ({ name: i.name, role: i.role, tail: '', hint: i.hint, by: i.by, at: i.at }))
+  update((s) => (s.admin ? { admin: { ...s.admin, staffInvites: [...(d.invites ?? []), ...byEmail].sort((a, b) => a.at - b.at), heavy: d.heavy ?? {}, staffPending: d.pending ?? null } } : {}))
 }
 
 /** Fetches the analytics in one reply. The module asks when it opens, because the figures are the heaviest the server works out. */
@@ -193,19 +195,31 @@ export async function adminVerifyOtp(code: string): Promise<Res> {
   if (!signInPhone) return { ok: false, error: 'Ask for a new code.', code: 'none' }
   const { error } = await supabase().auth.verifyOtp({ phone: signInPhone, token: code.trim(), type: 'sms' })
   if (error) return { ok: false, error: 'That code doesn’t match, or it has expired.', code: 'wrong' }
+  return enterAdmin('number')
+}
+
+/**
+ * Opens the dashboard for whoever is signed in with Supabase, if they are staff. Any member or therapist session on this device is signed out.
+ * When there is no Admin yet the sign-in is kept, so the person can finish setup with the one-time code (code 'setup').
+ */
+export async function enterAdmin(via: 'number' | 'email'): Promise<Res> {
   stopPolling()
   stopPortalPolling()
   update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [], portal: null })
   const me = await call('staff_me')
   if (!me.ok || !(await syncAdmin())) {
-    // No Admin exists yet: keep the sign-in so this person can finish setup with the one-time code.
     if (me.code === 'not-staff' && (await setupOpen())) return { ok: false, error: 'Setup is open. Enter your name and the setup code.', code: 'setup' }
     await supabase().auth.signOut()
     update({ admin: null })
-    return { ok: false, error: 'This number isn’t linked to a staff account. Ask an Admin to link it.', code: 'not-staff' }
+    return { ok: false, error: via === 'number' ? 'This number isn’t linked to a staff account. Ask an Admin to link it.' : 'This email isn’t linked to a staff account. Ask an Admin to link it.', code: 'not-staff' }
   }
   startAdminPolling()
   return { ok: true, value: undefined }
+}
+
+/** True when whoever is signed in with Supabase is staff. Changes nothing, so a person who is not staff can carry on elsewhere. */
+export async function isStaff(): Promise<boolean> {
+  return (await call('staff_me')).ok
 }
 
 async function setupOpen(): Promise<boolean> {
@@ -299,16 +313,24 @@ export const remoteAdmin = {
 
   /** Links a therapist to the phone number they will sign in to the portal with. */
   linkTherapist: (therapistId: string, phone: string) => act('admin_link_therapist', { p_therapist: therapistId, p_phone: phone }),
+  linkTherapistEmail: (therapistId: string, email: string) => act('admin_link_therapist_email', { p_therapist: therapistId, p_email: email }),
   unlinkTherapist: (therapistId: string, reason: string) => act('admin_unlink_therapist', { p_therapist: therapistId, p_reason: reason }),
 
   /** Adds a person to the team by phone number. They become staff when that number signs in. */
   addStaff: (name: string, role: StaffRole, phone: string) => proposal('admin_add_staff', { p_name: name, p_role: role, p_phone: phone }),
+  addStaffEmail: (name: string, role: StaffRole, email: string) => proposal('admin_add_staff_email', { p_name: name, p_role: role, p_email: email }),
   setStaff: (accountId: string, change: { role?: StaffRole; active?: boolean; heavy?: boolean }) =>
     proposal('admin_set_staff', { p_account: accountId, p_role: change.role ?? null, p_active: change.active ?? null, p_heavy: change.heavy ?? null }),
   /** A second Admin approves or declines the change that is waiting. */
   decideStaffChange: (id: string, approve: boolean) => act('admin_decide_staff_change', { p_id: id, p_approve: approve }),
   withdrawStaffChange: (id: string) => act('admin_withdraw_staff_change', { p_id: id }),
-  cancelInvite: (name: string) => act('admin_cancel_invite', { p_name: name }),
+  cancelInvite: async (name: string) => {
+    // The invitation is either by phone or by email; try the phone list first, then the email list.
+    const r = await call('admin_cancel_invite', { p_name: name })
+    const final = r.ok ? r : await call('admin_cancel_email_invite', { p_name: name })
+    await syncAdmin()
+    return res(final)
+  },
 
   // --- strike policy, approved by a second Admin ---
   async proposePolicy(policy: AdminState['policy']): Promise<Res<{ proposed: boolean }>> {

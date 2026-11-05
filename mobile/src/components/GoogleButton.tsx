@@ -10,10 +10,12 @@ import { Button } from '@/components/Button'
  * "Continue with Google". Only on the live service: the demo has no Google. `onNext` hears where to go next
  * ('redirecting' needs nothing from the screen: on the web the page is already leaving for Google).
  */
-export function GoogleButton({ purpose, label = 'Continue with Google', onNext, testID = 'google-continue' }: {
-  purpose: 'login' | 'register' | 'reauth'
+export function GoogleButton({ purpose, label = 'Continue with Google', onNext, onFail, testID = 'google-continue' }: {
+  purpose: 'login' | 'register' | 'reauth' | 'portal' | 'admin'
   label?: string
   onNext: (next: Exclude<SignInNext, 'redirecting'>) => void
+  /** Hears the code of a refusal, such as 'setup' when the first Admin still has to be made. The message is shown either way unless this returns true. */
+  onFail?: (code: string | undefined) => boolean | void
   testID?: string
 }) {
   const [busy, setBusy] = useState(false)
@@ -26,6 +28,7 @@ export function GoogleButton({ purpose, label = 'Continue with Google', onNext, 
     const r = await api.auth.signInWithGoogle(purpose)
     setBusy(false)
     if (!r.ok) {
+      if (onFail?.(r.code) === true) return
       if (r.code !== 'cancelled') setError(r.error)
       return
     }

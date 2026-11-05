@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
+import { go } from '@/lib/nav'
 import { api } from '@/api'
 import { REMOTE } from '@/backend/client'
 import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin } from '@/backend/remoteAdmin'
@@ -10,6 +11,7 @@ import { useDb } from '@/store/db'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
+import { GoogleButton } from '@/components/GoogleButton'
 import { Panel } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -23,7 +25,9 @@ export default function AdminSignIn() {
   const [phone, setPhone] = useState('')
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [setup, setSetup] = useState(false)
+  // Coming back from an email or Google sign-in with no Admin yet opens the setup form straight away.
+  const { setup: setupParam } = useLocalSearchParams<{ setup?: string }>()
+  const [setup, setSetup] = useState(setupParam === '1')
   const [setupName, setSetupName] = useState('')
   const [setupCode, setSetupCode] = useState('')
   const roster = useDb((s) => s.admin?.staff) ?? STAFF.map((s, i) => ({ id: `st${i}`, ...s, active: true, lastSignInAt: null }))
@@ -109,8 +113,12 @@ export default function AdminSignIn() {
               </>
             )}
           </Panel>
+          <Panel title="Or sign in with your email">
+            <GoogleButton testID="admin-google" purpose="admin" label="Sign in with Google" onFail={(code) => { if (code === 'setup') { setError(null); setSetup(true); return true } }} onNext={() => router.replace('/admin/overview' as never)} />
+            <Button testID="admin-email-signin" variant="quiet" label="Sign in with email and password" onPress={() => go('/login-email?for=admin')} />
+          </Panel>
           <Banner tone="green" icon="lock">
-            Only a number an Admin has linked to a staff account can open the dashboard.
+            Only a number or an email an Admin has linked to a staff account can open the dashboard.
           </Banner>
           <Button variant="ghost" label="Back to the member app" onPress={() => router.replace('/welcome' as never)} />
         </View>

@@ -25,13 +25,13 @@ const base: RemoteAccount = {
 }
 
 /** A phone-number member who is signed in; the stand-in answers account reads from `account` so the test can change it. */
-function fake(o: { userId?: string; updateError?: string; verifyError?: boolean; syncCode?: string } = {}) {
+function fake(o: { userId?: string; updateError?: string; verifyError?: boolean; syncCode?: string; exchangeError?: boolean } = {}) {
   const log: { name: string; args?: unknown }[] = []
   const state = { account: base }
   setClient({
     auth: {
       linkIdentity: async (a: unknown) => (log.push({ name: 'linkIdentity', args: a }), { data: { url: 'https://accounts.google.test/link' }, error: null }),
-      exchangeCodeForSession: async () => ({ error: null }),
+      exchangeCodeForSession: async () => ({ error: o.exchangeError ? { message: 'Identity is already linked to another user' } : null }),
       updateUser: async (a: unknown) => (log.push({ name: 'updateUser', args: a }), { error: o.updateError ? { message: o.updateError } : null }),
       verifyOtp: async (a: unknown) => (log.push({ name: 'verifyOtp', args: a }), { error: o.verifyError ? { message: 'bad' } : null }),
       getUser: async () => ({ data: { user: { id: o.userId ?? 'p1', email: 'wanjiru@example.com', user_metadata: {} } } }),
@@ -71,9 +71,9 @@ describe('adding Google to the account that is signed in', () => {
     expect(getDb().account?.private.email).toBe('wanjiru@example.com')
   })
 
-  it('refuses when Google gives back a different account', async () => {
-    fake({ userId: 'someone-else' })
-    expect(await remoteAuth.linkGoogle()).toMatchObject({ ok: false, code: 'mismatch' })
+  it('says so when that Google account already belongs to another Echo account', async () => {
+    fake({ exchangeError: true })
+    expect(await remoteAuth.linkGoogle()).toMatchObject({ ok: false, code: 'google' })
   })
 })
 

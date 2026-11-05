@@ -5,7 +5,7 @@ import { Platform } from 'react-native'
 import type { Res } from '@/api/types'
 import { supabase } from './client'
 
-export type GooglePurpose = 'login' | 'register' | 'reauth' | 'link'
+export type GooglePurpose = 'login' | 'register' | 'reauth' | 'link' | 'portal' | 'admin'
 
 const KEY = 'echo.google.purpose'
 
@@ -41,7 +41,7 @@ export async function takePurpose(): Promise<GooglePurpose | null> {
   try {
     const v = await AsyncStorage.getItem(KEY)
     await AsyncStorage.removeItem(KEY)
-    return v === 'login' || v === 'register' || v === 'reauth' || v === 'link' ? v : null
+    return v === 'login' || v === 'register' || v === 'reauth' || v === 'link' || v === 'portal' || v === 'admin' ? v : null
   } catch {
     return null
   }

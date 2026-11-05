@@ -80,7 +80,7 @@ export const auth = {
   },
 
   /** Google sign-in needs the real service. The demo has no Google. */
-  async signInWithGoogle(_purpose: 'login' | 'register' | 'reauth'): Promise<Res<{ next: SignInNext }>> {
+  async signInWithGoogle(_purpose: 'login' | 'register' | 'reauth' | 'link' | 'portal' | 'admin'): Promise<Res<{ next: SignInNext }>> {
     return { ok: false, error: 'Google sign-in is only available on the live service.', code: 'unavailable' }
   },
 
@@ -92,7 +92,7 @@ export const auth = {
   async signUpWithEmail(_email: string, _password: string): Promise<Res<{ next: SignInNext | 'check-email' }>> {
     return unavailable()
   },
-  async signInWithEmail(_email: string, _password: string): Promise<Res<{ next: SignInNext }>> {
+  async signInWithEmail(_email: string, _password: string, _purpose?: 'login' | 'portal' | 'admin'): Promise<Res<{ next: SignInNext }>> {
     return unavailable()
   },
   async requestPasswordReset(_email: string): Promise<Res> {
@@ -109,6 +109,9 @@ export const auth = {
   },
   async reauthWithPassword(_password: string): Promise<Res> {
     return unavailable()
+  },
+  async signInMethods(): Promise<{ phone: string; email: string; google: boolean; password: boolean } | null> {
+    return null
   },
   async linkGoogle(): Promise<Res<{ next: SignInNext }>> {
     return unavailable()
