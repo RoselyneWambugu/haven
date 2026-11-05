@@ -21,5 +21,5 @@ export function ToastHost() {
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 100 },
-  toast: { maxWidth: MAX_WIDTH - 40, marginHorizontal: 20, backgroundColor: colors.fern, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 12 },
+  toast: { maxWidth: MAX_WIDTH - 40, marginHorizontal: 20, backgroundColor: colors.cocoa, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 12 },
 })

@@ -3,8 +3,8 @@ import { colors, radius } from '@/theme'
 import { Icon, type IconName } from './Icon'
 import { Text } from './Text'
 
-export function Card({ children, style, tone = 'milk', onPress, accessibilityLabel, testID }: { children: React.ReactNode; style?: ViewStyle; tone?: 'milk' | 'lichen' | 'sun' | 'fern' | 'clay' | 'plain'; onPress?: () => void; accessibilityLabel?: string; testID?: string }) {
-  const bg = { milk: colors.milk, lichen: colors.lichen, sun: colors.sunSoft, fern: colors.fern, clay: colors.claySoft, plain: colors.paper }[tone]
+export function Card({ children, style, tone = 'milk', onPress, accessibilityLabel, testID }: { children: React.ReactNode; style?: ViewStyle; tone?: 'milk' | 'lichen' | 'sun' | 'fern' | 'cocoa' | 'clay' | 'plain'; onPress?: () => void; accessibilityLabel?: string; testID?: string }) {
+  const bg = { milk: colors.milk, lichen: colors.lichen, sun: colors.sunSoft, fern: colors.fern, cocoa: colors.cocoa, clay: colors.claySoft, plain: colors.paper }[tone]
   const border = tone === 'milk' || tone === 'plain' ? { borderWidth: 1, borderColor: colors.line } : null
   const s = [styles.card, { backgroundColor: bg }, border, style]
   if (onPress) {
