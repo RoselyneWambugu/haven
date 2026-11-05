@@ -19,7 +19,7 @@ await page.goto('http://localhost:8095/')
 await page.waitForTimeout(1800)
 await step('urgent-signed-out', async () => {
   await tid('welcome').waitFor()
-  await page.getByRole('button', { name: 'Urgent help' }).first().click()
+  await tid('welcome-urgent').click()
   await tid('urgent').waitFor()
   await shot('40-urgent')
   await tid('breathe').click()

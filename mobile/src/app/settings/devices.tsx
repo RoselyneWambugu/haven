@@ -14,7 +14,7 @@ const NONE: never[] = []
 export default function Devices() {
   const devices = useDb((s) => s.account?.devices ?? NONE)
   return (
-    <Screen testID="devices" header={<TopBar back title="Devices" />}>
+    <Screen testID="devices" header={<TopBar back urgent title="Devices" />}>
       <Text variant="title">Where you’re signed in</Text>
       {devices.map((d) => (
         <Card key={d.id}>

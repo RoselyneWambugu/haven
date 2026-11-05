@@ -83,7 +83,7 @@ export default function SignInMethods() {
   }
 
   return (
-    <Screen testID="sign-in-methods" header={<TopBar back title="Sign-in methods" />}>
+    <Screen testID="sign-in-methods" header={<TopBar back urgent title="Sign-in methods" />}>
       <Text variant="title">Sign-in methods</Text>
       <Text variant="body" muted>
         Add every way you might sign in to this one account, so you never end up with a second one.

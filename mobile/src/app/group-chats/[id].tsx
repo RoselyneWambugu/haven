@@ -146,7 +146,7 @@ export default function GroupChatScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.paper }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} testID="group-room">
       <View style={{ paddingTop: insets.top, paddingHorizontal: 18 }}>
-        <TopBar back urgent />
+        <TopBar back />
         <View style={{ paddingBottom: 10 }}>
           <Text variant="h3" numberOfLines={2}>
             {g.topic}

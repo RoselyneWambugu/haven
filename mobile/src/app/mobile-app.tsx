@@ -12,7 +12,7 @@ import { go } from '@/lib/nav'
 export default function MobileApp() {
   const { done } = useLocalSearchParams<{ done?: string }>()
   return (
-    <Screen testID="mobile-app" header={<TopBar logo urgent />}>
+    <Screen testID="mobile-app" header={<TopBar logo />}>
       <Text variant="title">Echo for members is on your phone</Text>
       {done === 'password' ? (
         <Banner tone="green" icon="shield">Your password has been changed. Open the Echo app and log in with it.</Banner>

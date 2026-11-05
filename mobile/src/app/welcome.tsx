@@ -19,6 +19,11 @@ export default function Welcome() {
           <Text variant="caption" muted align="center">
             Echo is peer support, not emergency care.
           </Text>
+          <Pressable testID="welcome-urgent" accessibilityRole="link" accessibilityLabel="Urgent help" onPress={() => go('/urgent')} style={{ minHeight: 44, justifyContent: 'center' }}>
+            <Text variant="small" align="center" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
+              Need urgent help?
+            </Text>
+          </Pressable>
           <Pressable testID="therapist-link" accessibilityRole="link" accessibilityLabel="I’m a therapist" onPress={() => go('/portal/sign-in')} style={{ minHeight: 44, justifyContent: 'center' }}>
             <Text variant="small" align="center" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
               I’m a therapist

@@ -74,7 +74,7 @@ export default function Checkout() {
 
   if (phase === 'waiting') {
     return (
-      <Screen testID="checkout-waiting" header={<TopBar logo urgent />}>
+      <Screen testID="checkout-waiting" header={<TopBar logo />}>
         <View style={{ height: 220, alignItems: 'center', justifyContent: 'center', marginTop: 16 }}>
           <Ripple size={170} />
           <Text variant="title" color={colors.mossDeep}>

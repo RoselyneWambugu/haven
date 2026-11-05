@@ -20,7 +20,7 @@ export default function Notifications() {
   if (!s) return null
   const set = api.auth.setSettings
   return (
-    <Screen testID="notifications" header={<TopBar back title="Notifications" />}>
+    <Screen testID="notifications" header={<TopBar back urgent title="Notifications" />}>
       <Text variant="title">Notifications</Text>
       <ToggleRow label="New messages" on={s.notifyMessages} onChange={(v) => set({ notifyMessages: v })} />
       <ToggleRow label="Session alarms" sub="An alert an hour and ten minutes before, in the app and when it is closed" on={s.notifySessions} onChange={(v) => { set({ notifySessions: v }); if (v && Platform.OS !== 'web') void askForAlarms().then(setAccess) }} />

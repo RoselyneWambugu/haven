@@ -13,7 +13,7 @@ export default function Security() {
   if (!s) return null
   const set = api.auth.setSettings
   return (
-    <Screen testID="security" header={<TopBar back title="Security" />}>
+    <Screen testID="security" header={<TopBar back urgent title="Security" />}>
       <Text variant="title">Security</Text>
       <ToggleRow testID="app-lock" label="Lock the app" sub="Use your fingerprint, face or phone PIN" on={s.appLock} onChange={(v) => set({ appLock: v })} />
       {s.appLock ? (

@@ -7,7 +7,7 @@ import { go } from '@/lib/nav'
 
 export default function Settings() {
   return (
-    <Screen testID="settings" header={<TopBar back title="Settings" />}>
+    <Screen testID="settings" header={<TopBar back urgent title="Settings" />}>
       <Text variant="title">Settings</Text>
       <View>
         <Row testID="set-notifications" icon="bell" title="Notifications" onPress={() => go('/settings/notifications')} />

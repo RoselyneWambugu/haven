@@ -13,8 +13,8 @@ import { Icon } from './Icon'
 import { Text } from './Text'
 
 // ---------------------------------------------------------------------------
-// TopBar: back or avatar on the left, urgent help on the right. Urgent help is on
-// every screen, signed in or not, and never needs a login (PRD ACC-22, CRS-1).
+// TopBar: back or avatar on the left. The Urgent help pill on the right is off by default and shown on Settings only (decision v0.73);
+// urgent help is otherwise reached from the Help tab, the welcome screen's link, and the /urgent page, none of which needs a login.
 // ---------------------------------------------------------------------------
 
 /** The notification bell, with a count of new notes. */
@@ -34,7 +34,7 @@ function Bell() {
 }
 
 export function TopBar({
-  title, back, avatar, logo, urgent = true, dark, right, onBack,
+  title, back, avatar, logo, urgent = false, dark, right, onBack,
 }: {
   title?: string
   back?: boolean

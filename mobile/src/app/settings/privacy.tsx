@@ -24,7 +24,7 @@ export default function Privacy() {
     setExported(true)
   }
   return (
-    <Screen testID="privacy" header={<TopBar back title="Privacy and data" />}>
+    <Screen testID="privacy" header={<TopBar back urgent title="Privacy and data" />}>
       <Text variant="title">Privacy and data</Text>
       <ToggleRow testID="open-to-chats" label="Open to new chats" sub="Turn off to stop being matched" on={account.public.openToChats} onChange={(v) => api.match.setOpenToChats(v)} />
       <View style={{ gap: 6 }}>

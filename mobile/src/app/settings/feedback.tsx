@@ -25,7 +25,7 @@ export default function Feedback() {
   }
 
   return (
-    <Screen testID="feedback" keyboard header={<TopBar back title="Send feedback" />}>
+    <Screen testID="feedback" keyboard header={<TopBar back urgent title="Send feedback" />}>
       <Text variant="title">Send feedback</Text>
       <Text variant="small" muted>
         Tell us what would help, or what went wrong. Please don’t include contact details or anything about another person.

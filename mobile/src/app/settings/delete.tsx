@@ -16,7 +16,7 @@ export default function DeleteAccount() {
   return (
     <Screen
       testID="delete-account"
-      header={<TopBar back title="Delete account" />}
+      header={<TopBar back urgent title="Delete account" />}
       footer={
         <Button
           testID="delete-confirm"
