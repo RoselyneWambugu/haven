@@ -12,7 +12,7 @@ import { Text } from './Text'
 // ---------------------------------------------------------------------------
 
 /** One green, light to dark. Checked with the palette validator as an ordinal ramp on the card surface. */
-export const RAMP = ['#98B77D', '#68935F', '#3F6B4A', '#1C372A'] as const
+export const RAMP = ['#A9BBA9', '#78947F', '#185844', '#102F27'] as const
 export const MARK = RAMP[2]
 const SURFACE = colors.milk
 const GRID = colors.line

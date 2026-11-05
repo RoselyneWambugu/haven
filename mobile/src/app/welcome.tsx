@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native'
 import { Button } from '@/components/Button'
-import { Scene } from '@/components/Art'
+import { Bloom, Ornament } from '@/components/Bloom'
 import { Screen, TopBar } from '@/components/Layout'
 import { Text } from '@/components/Text'
 import { useT } from '@/i18n'
@@ -32,14 +32,15 @@ export default function Welcome() {
         </>
       }
     >
-      <View style={{ height: 300, borderTopLeftRadius: 150, borderTopRightRadius: 150, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden', backgroundColor: colors.lichen }}>
-        <Scene />
+      <View style={{ height: 300, borderTopLeftRadius: 150, borderTopRightRadius: 150, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden', backgroundColor: colors.fern }}>
+        <Bloom />
       </View>
       <View style={{ gap: 8, paddingHorizontal: 4 }}>
         <Text variant="display">{t('A space to speak.')}</Text>
         <Text variant="display" italic color={colors.mossDeep}>
           {t('Someone to listen.')}
         </Text>
+        <Ornament width={96} />
         <Text variant="body" muted style={{ marginTop: 4 }}>
           Talk anonymously with people who understand, or with a verified therapist.
         </Text>

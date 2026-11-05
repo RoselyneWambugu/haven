@@ -11,6 +11,7 @@ import { Text } from '@/components/Text'
 import { REMOTE } from '@/backend/client'
 import { RemoteApply } from '@/components/RemoteApply'
 import { useDb } from '@/store/db'
+import { colors } from '@/theme'
 
 const STEPS = ['Submitted', 'Under review', 'Decision'] as const
 
@@ -39,7 +40,7 @@ function MockApply() {
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {STEPS.map((s, i) => (
               <View key={s} style={{ flex: 1, gap: 6 }}>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: i <= stepIndex ? '#3F6B4A' : '#C3D6A8' }} />
+                <View style={{ height: 6, borderRadius: 3, backgroundColor: i <= stepIndex ? colors.moss : colors.lichenDeep }} />
                 <Text variant="caption" bold={i === stepIndex}>
                   {s}
                 </Text>

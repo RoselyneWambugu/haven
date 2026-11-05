@@ -3,7 +3,7 @@ import { chromium } from 'playwright-core'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { lotusSvg, mono, ON_DARK } from '../src/data/lotus.ts'
 
-const TEAL = '#1B3F3B'
+const TEAL = '#102F27'
 
 /** The logo in a square, with `pad` units of room around its 1024-unit box. `bg` is a colour, or 'teal' for the deep teal with a little light in the middle. */
 const frame = (inner, size, pad = 0, bg = 'none') => {
@@ -42,7 +42,7 @@ mkdirSync('../docs/brand', { recursive: true })
 const out = {
   'echo-logo.svg': frame(lotusSvg(ON_DARK, { tile: true, radius: 230 }), 1024, 0),
   'echo-logo-no-tile.svg': frame(lotusSvg(ON_DARK), 1024, 0),
-  'echo-logo-mono.svg': frame(lotusSvg(mono('#1B3F3B')), 1024, 0),
+  'echo-logo-mono.svg': frame(lotusSvg(mono('#102F27')), 1024, 0),
   'echo-app-icon.svg': frame(lotusSvg(ON_DARK), 1024, 0, 'teal'),
 }
 for (const [f, svg] of Object.entries(out)) writeFileSync(`../docs/brand/${f}`, svg)

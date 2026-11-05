@@ -95,6 +95,10 @@ A bell at the top of each tab opens the notification centre, a stand-in for push
 
 When a peer chat ends after both people have written, the chat asks *Did you feel heard?* with five faces and an optional comment. It is asked once, can be skipped, and is private to the member. **Settings, then Send feedback** sends an idea or a bug report, with the app details optional. Support / Billing and Admin read the notes in the **Feedback** module, which shows no name or account and lets staff mark a note as read (logged). The felt-heard results appear only as shares once at least 10 people have answered, and members' comments are never shown.
 
+## Colour
+
+The palette is **ivory** `#F2EBDD` (page), **sage** `#78947F`, **emerald** `#185844` (brand and buttons), **forest** `#102F27` (dark panels and the strongest text) and **antique gold** `#B08A4F` (accents only; gold is too light for text on ivory). Urgent help and errors keep a clay red. All of it is in `src/theme.ts`, so changing a value there changes the whole app. `e2e/gallery.mjs` takes screenshots of the landing page and the main screens for review.
+
 ## The logo
 
 The Echo logo is a glowing lotus with a heart. It is drawn as shapes in `src/data/lotus.ts`, so the app, the icons and the web all use the same drawing. `node --experimental-strip-types e2e/make-icons.mjs` rewrites the icon and splash images in `assets/` and the SVG brand files in `docs/brand/`.

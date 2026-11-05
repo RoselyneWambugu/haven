@@ -23,7 +23,7 @@ await step('wide-window-opens-the-landing-page', async () => {
   await tid('landing').waitFor()
   await shot('150-landing')
   const t = await body()
-  for (const w of ['A space to speak.', 'Someone to listen.', 'How it works', 'Peer chat']) if (!t.includes(w)) throw new Error('missing: ' + w)
+  for (const w of ['A space to speak.', 'Someone to listen.', 'Your pace, your people', 'Peer chat']) if (!t.includes(w)) throw new Error('missing: ' + w)
 })
 await step('check-in-answers-and-offers-help', async () => {
   await tid('mood-1').click()

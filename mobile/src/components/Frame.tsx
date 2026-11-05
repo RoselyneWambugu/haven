@@ -75,7 +75,7 @@ export function DashboardFrame({
                   accessibilityState={{ selected: on }}
                   accessibilityLabel={n.accessibilityLabel ?? n.label}
                   onPress={n.onPress}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 12, borderRadius: 12, backgroundColor: on ? (dark ? 'rgba(245,246,234,0.14)' : colors.lichen) : 'transparent' }}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 12, borderRadius: 12, backgroundColor: on ? (dark ? 'rgba(242,235,221,0.14)' : colors.lichen) : 'transparent' }}
                 >
                   <Text variant="label" color={on ? (dark ? colors.white : colors.mossDeep) : muted} style={{ flex: 1 }}>
                     {n.label}
@@ -85,7 +85,7 @@ export function DashboardFrame({
               )
             })}
           </ScrollView>
-          {user ? <View style={{ paddingHorizontal: 10, paddingTop: 14, gap: 8, borderTopWidth: 1, borderTopColor: dark ? 'rgba(245,246,234,0.2)' : colors.line }}>{user}</View> : null}
+          {user ? <View style={{ paddingHorizontal: 10, paddingTop: 14, gap: 8, borderTopWidth: 1, borderTopColor: dark ? 'rgba(242,235,221,0.2)' : colors.line }}>{user}</View> : null}
         </View>
         <View style={{ flex: 1 }}>{children}</View>
       </View>

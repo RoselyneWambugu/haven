@@ -20,7 +20,7 @@ import { getDb, loadDb, useDb } from '@/store/db'
 import { MEMBERS_ON_WEB, WEB_PAGES } from '@/lib/webMembers'
 import { useFront } from '@/store/useFront'
 import { useNow } from '@/store/useNow'
-import { colors, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
+import { colors, LANDING_WIDTH, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
 
@@ -93,9 +93,10 @@ function useAppLock() {
 function Shell({ children }: { children: React.ReactNode }) {
   const first = useSegments()[0] as string | undefined
   const wide = first === 'portal' || first === 'admin' || first === 'landing'
+  const maxWidth = first === 'landing' ? LANDING_WIDTH : PORTAL_WIDTH
   return (
     <View style={styles.backdrop}>
-      <View style={[styles.column, wide ? { maxWidth: PORTAL_WIDTH } : null, Platform.OS === 'web' ? styles.columnWeb : null]}>{children}</View>
+      <View style={[styles.column, wide ? { maxWidth } : null, Platform.OS === 'web' ? styles.columnWeb : null]}>{children}</View>
     </View>
   )
 }

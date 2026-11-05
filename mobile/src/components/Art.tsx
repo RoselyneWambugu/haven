@@ -10,13 +10,13 @@ import { LOTUS_VIEWBOX, lotusScene, ON_DARK } from '@/data/lotus'
 // ---------------------------------------------------------------------------
 
 const AVATAR_COLORS: Record<AvatarKind, { bg: string; fg: string }> = {
-  moon: { bg: '#E5C98C', fg: '#4A3512' },
-  leaf: { bg: '#C3D6A8', fg: '#2C4F37' },
-  wave: { bg: '#B7D2CF', fg: '#1F4A48' },
-  star: { bg: '#F3D9B0', fg: '#6B3F0A' },
-  pine: { bg: '#A9C9A0', fg: '#1C372A' },
-  sun: { bg: '#F6DDB0', fg: '#8A4B0C' },
-  fern: { bg: '#D1E0B8', fg: '#2C4F37' },
+  moon: { bg: '#E7D3A4', fg: '#4A3512' },
+  leaf: { bg: '#BFCDB8', fg: '#12453A' },
+  wave: { bg: '#B4CDC4', fg: '#14463C' },
+  star: { bg: '#EBD9B3', fg: '#5B4216' },
+  pine: { bg: '#A3BBA6', fg: '#102F27' },
+  sun: { bg: '#F0DDB5', fg: '#6B4D17' },
+  fern: { bg: '#CBD8C2', fg: '#12453A' },
   drop: { bg: '#C9DDE3', fg: '#23495A' },
 }
 
@@ -59,7 +59,7 @@ export function Avatar({ kind, size = 44, ring = true }: { kind: AvatarKind; siz
 // ---------------------------------------------------------------------------
 
 const TONES: Record<PortraitTone, [string, string, string]> = {
-  a: ['#C3D6A8', '#2C4F37', '#1C372A'],
+  a: ['#BFCDB8', '#12453A', '#102F27'],
   b: ['#F3D9B0', '#7C5A2E', '#3B2A14'],
   c: ['#B7D2CF', '#2E5E5A', '#17302E'],
   d: ['#E5C9C0', '#8A4B3C', '#40201A'],
@@ -91,23 +91,23 @@ export function Scene({ sun = [264, 120], sky = colors.lichen, pond = true }: { 
   return (
     <Svg width="100%" height="100%" viewBox="0 0 400 480" preserveAspectRatio="xMidYMid slice" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Rect width={400} height={480} fill={sky} />
-      <Circle cx={sun[0]} cy={sun[1]} r={70} fill="#F0A34A" opacity={0.18} />
-      <Circle cx={sun[0]} cy={sun[1]} r={46} fill="#F0A34A" />
-      <Path d="M-10 300c60-50 120-54 190-20 70 34 140 10 230-30v230H-10z" fill="#A9C9A0" />
-      <Path d="M-10 340c80-36 150-30 220 0s130 24 200-10v150H-10z" fill="#5E8A5B" />
-      <Path d="M-10 380c90-26 170-18 250 4s120 8 170-6v110H-10z" fill="#2C4F37" />
+      <Circle cx={sun[0]} cy={sun[1]} r={70} fill="#B08A4F" opacity={0.2} />
+      <Circle cx={sun[0]} cy={sun[1]} r={46} fill="#B08A4F" />
+      <Path d="M-10 300c60-50 120-54 190-20 70 34 140 10 230-30v230H-10z" fill="#9DB4A0" />
+      <Path d="M-10 340c80-36 150-30 220 0s130 24 200-10v150H-10z" fill="#4F7A62" />
+      <Path d="M-10 380c90-26 170-18 250 4s120 8 170-6v110H-10z" fill="#185844" />
       {pond && (
-        <G fill="none" stroke="#DDE7CB" strokeWidth={1.6}>
+        <G fill="none" stroke="#F2EBDD" strokeWidth={1.6}>
           <Ellipse cx={200} cy={430} rx={40} ry={8} opacity={0.7} />
           <Ellipse cx={200} cy={430} rx={76} ry={15} opacity={0.5} />
           <Ellipse cx={200} cy={430} rx={118} ry={23} opacity={0.32} />
           <Ellipse cx={200} cy={430} rx={164} ry={32} opacity={0.18} />
         </G>
       )}
-      <Path d="M40 330c-6-30 2-60 8-84 8 24 14 52 8 84z" fill="#1C372A" />
-      <Path d="M70 340c-4-22 2-44 6-60 6 16 10 38 6 60z" fill="#2C4F37" />
-      <Path d="M352 392c-4-40 2-80 10-110" stroke="#1C372A" strokeWidth={2.2} strokeLinecap="round" fill="none" />
-      <Path d="M362 292c-14-4-22 2-28 12M358 318c14-6 24-2 32 8M356 344c-12-6-22-2-30 6" stroke="#1C372A" strokeWidth={2.2} strokeLinecap="round" fill="none" />
+      <Path d="M40 330c-6-30 2-60 8-84 8 24 14 52 8 84z" fill="#102F27" />
+      <Path d="M70 340c-4-22 2-44 6-60 6 16 10 38 6 60z" fill="#185844" />
+      <Path d="M352 392c-4-40 2-80 10-110" stroke="#102F27" strokeWidth={2.2} strokeLinecap="round" fill="none" />
+      <Path d="M362 292c-14-4-22 2-28 12M358 318c14-6 24-2 32 8M356 344c-12-6-22-2-30 6" stroke="#102F27" strokeWidth={2.2} strokeLinecap="round" fill="none" />
     </Svg>
   )
 }

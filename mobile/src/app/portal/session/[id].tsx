@@ -59,7 +59,7 @@ export default function LiveSession() {
   const ss = String(secs % 60).padStart(2, '0')
 
   const ctl = (icon: IconName, label: string, on: boolean, onPress: () => void, testID: string) => (
-    <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }} onPress={onPress} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: on ? colors.paper : 'rgba(245,246,234,0.18)', alignItems: 'center', justifyContent: 'center' }}>
+    <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }} onPress={onPress} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: on ? colors.paper : 'rgba(242,235,221,0.18)', alignItems: 'center', justifyContent: 'center' }}>
       <Icon name={icon} size={22} color={on ? colors.fern : colors.paper} />
     </Pressable>
   )
