@@ -12,6 +12,7 @@ import { ageBandLabel } from '@/lib/identity'
 import { go, goBack, replace } from '@/lib/nav'
 import { planState } from '@/lib/plan'
 import { useDb } from '@/store/db'
+import { useNow } from '@/store/useNow'
 import { colors } from '@/theme'
 
 /**
@@ -24,6 +25,7 @@ export default function Match() {
   const sub = useDb((s) => s.subscription)
   const open = useDb((s) => s.account?.public.openToChats ?? true)
   const [error, setError] = useState<{ text: string; code?: string } | null>(null)
+  const clock = useNow(5000)
 
   useEffect(() => {
     if (state.state === 'idle') {
@@ -117,6 +119,42 @@ export default function Match() {
     )
   }
 
+  if (state.state === 'none') {
+    return (
+      <Screen
+        testID="match-none"
+        header={<TopBar back />}
+        footer={
+          <>
+            <Button
+              testID="match-look-again"
+              label="Look again"
+              onPress={async () => {
+                api.match.acknowledgeNone()
+                const r = await api.match.start()
+                if (!r.ok) setError({ text: r.error, code: r.code })
+              }}
+            />
+            <Button testID="match-none-back" variant="ghost" label="Back to my chats" onPress={() => { api.match.acknowledgeNone(); goBack('/chats') }} />
+          </>
+        }
+      >
+        <View style={{ alignItems: 'center', gap: 12, paddingTop: 16 }}>
+          <Dice rolling={false} size={56} />
+        </View>
+        <Text variant="title" align="center">
+          No one is free right now
+        </Text>
+        <Text variant="body" muted align="center">
+          We looked for half an hour and nobody who speaks your language and is in a similar age range was free. People come and go through the day.
+        </Text>
+        <Banner tone="green" icon="clock">
+          Try again in a little while. Evenings are usually busier. You don’t need to refresh anything: while you’re searching, Echo keeps checking for you.
+        </Banner>
+      </Screen>
+    )
+  }
+
   return (
     <Screen
       testID="match-searching"
@@ -151,6 +189,11 @@ export default function Match() {
       <Text variant="body" muted align="center">
         We’re looking for a person who speaks your language and is in a similar age range. It can take a little while.
       </Text>
+      {state.state === 'searching' && clock - state.startedAt >= 2 * 60_000 ? (
+        <Banner testID="match-still-looking" tone="sun" icon="clock" title="No one is free just yet">
+          That can happen when it’s quiet. You don’t need to refresh: Echo keeps checking and will tell you the moment someone is. If nobody turns up in 30 minutes, we’ll say so.
+        </Banner>
+      ) : null}
     </Screen>
   )
 }

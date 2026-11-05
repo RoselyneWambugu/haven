@@ -85,6 +85,11 @@ export async function facilitatorRemove(id: string, messageId: string): Promise<
   return res(await call('portal_group_remove_message', { p_group: id, p_message: messageId }))
 }
 
+/** The leading therapist removes a person from the room for good, with a reason. The person can't write or sign up again. */
+export async function facilitatorRemoveMember(id: string, penName: string, reason: string): Promise<Res> {
+  return res(await call('portal_group_remove_member', { p_group: id, p_pen_name: penName, p_reason: reason }))
+}
+
 export async function facilitatorSend(id: string, text: string): Promise<Res> {
   return res(await call('portal_group_send', { p_id: id, p_text: text }))
 }

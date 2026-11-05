@@ -4,6 +4,7 @@ import { api } from '@/api'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Count } from '@/components/Controls'
+import { Dice } from '@/components/Dice'
 import { Icon } from '@/components/Icon'
 import { Screen, TopBar } from '@/components/Layout'
 import { Sheet } from '@/components/Sheet'
@@ -16,6 +17,7 @@ import { Badge } from '@/components/Controls'
 import { useNow } from '@/store/useNow'
 import { leftLabel, timeLeft } from '@/lib/chatLife'
 import { go } from '@/lib/nav'
+import { MAX_PEER_CHATS, openPeerChats } from '@/lib/limits'
 import { planState, canChat } from '@/lib/plan'
 import { relative } from '@/lib/time'
 import { useDb } from '@/store/db'
@@ -44,6 +46,8 @@ export default function Chats() {
   const therapists = active.filter((c) => c.kind === 'therapist')
   const peers = active.filter((c) => c.kind === 'peer')
   const archived = sorted.filter((c) => c.archived)
+  const openPeers = openPeerChats(conversations, allSessions, clockNow)
+  const full = openPeers >= MAX_PEER_CHATS
 
   const happening = groupChats.filter((g) => g.registered && ['lobby', 'open'].includes(status(g, clockNow)))
   const upcoming = groupChats.filter((g) => status(g, clockNow) === 'upcoming' || (!g.registered && status(g, clockNow) === 'lobby')).slice(0, 6)
@@ -114,14 +118,39 @@ export default function Chats() {
           Your plan has ended. You can still read your chats, and therapist chats stay open.
         </Banner>
       ) : null}
-      {match.state === 'searching' ? (
-        <Card tone="lichen" onPress={() => go('/match')} testID="chats-searching">
-          <Text variant="label">Looking for someone…</Text>
-          <Text variant="small" muted>
-            We’ll tell you when you’re matched.
+      <View testID="find-card" style={{ borderRadius: 28, backgroundColor: colors.fern, padding: 20, gap: 14, borderWidth: 1.5, borderColor: colors.sun }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <Dice rolling={match.state === 'searching'} size={56} />
+          <View style={{ flex: 1 }}>
+            <Text variant="h2" color={colors.paper}>
+              {match.state === 'searching' ? 'Looking for someone…' : 'Meet someone new'}
+            </Text>
+            <Text variant="small" color="#BFCDB8">
+              {match.state === 'searching' ? 'We’ll tell you when you’re matched. You can leave this screen.' : match.state === 'none' ? 'Nobody was free last time. It’s worth trying again in a little while.' : 'Matched by language and age range. Anonymous, and gone after 24 hours.'}
+            </Text>
+          </View>
+        </View>
+        <View testID="peer-slots" accessibilityLabel={`${openPeers} of ${MAX_PEER_CHATS} peer chats open`} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {Array.from({ length: MAX_PEER_CHATS }, (_, i) => (
+            <View key={i} style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: i < openPeers ? colors.sun : 'rgba(242,235,221,0.22)' }} />
+          ))}
+          <Text variant="caption" color="#BFCDB8" style={{ marginLeft: 6 }}>
+            {openPeers} of {MAX_PEER_CHATS} chats open
           </Text>
-        </Card>
-      ) : null}
+        </View>
+        {match.state === 'searching' ? (
+          <Button testID="chats-searching" label="See the search" variant="light" onPress={() => go('/match')} />
+        ) : full ? (
+          <View testID="peer-limit" style={{ gap: 8 }}>
+            <Button testID={active.length ? 'chats-find-more' : 'chats-find'} label="Get matched with someone new" variant="light" disabled onPress={() => undefined} />
+            <Text variant="small" color="#D9C8B0">
+              You have {MAX_PEER_CHATS} chats open, the most at one time. A new match opens up when one ends or expires.
+            </Text>
+          </View>
+        ) : (
+          <Button testID={active.length ? 'chats-find-more' : 'chats-find'} label="Get matched with someone new" variant="light" icon="chats" onPress={() => go('/match')} />
+        )}
+      </View>
 
       {happening.length ? (
         <View testID="groups-now">
@@ -148,13 +177,7 @@ export default function Chats() {
         </Text>
         {upcoming.length ? upcoming.map(groupCard) : <Text variant="small" muted>Nothing scheduled right now.</Text>}
       </View>
-      {!active.length ? (
-        <EmptyState icon="chats" title="No chats yet" body="Find someone who speaks your language and is in a similar age range, or book a therapist.">
-          <Button testID="chats-find" label="Find someone to talk to" onPress={() => go('/match')} />
-        </EmptyState>
-      ) : (
-        <Button testID="chats-find-more" variant="quiet" label="Find someone new" onPress={() => go('/match')} />
-      )}
+      {!active.length ? <EmptyState icon="chats" title="No chats yet" body="Get matched with someone who speaks your language and is in a similar age range, or book a therapist." /> : null}
       {archived.length ? (
         <View>
           <Pressable accessibilityRole="button" onPress={() => setShowArchived((v) => !v)} style={{ minHeight: 44, justifyContent: 'center' }}>

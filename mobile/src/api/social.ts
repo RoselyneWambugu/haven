@@ -69,6 +69,9 @@ function pickPeer(): Peer | null {
   return near.length ? choose(near) : null
 }
 
+/** How long a search for someone runs before it gives up and says nobody was free. The real service keeps it for 30 minutes. */
+export const MATCH_SEARCH_MS = 30 * 60_000
+
 function resolveMatch() {
   const db = getDb()
   if (db.match.state !== 'searching') return
@@ -78,6 +81,11 @@ function resolveMatch() {
   }
   const peer = pickPeer()
   if (!peer) {
+    // Like the real service, which keeps a search for 30 minutes: after a while the search ends and says so.
+    if (db.match.state === 'searching' && now() - db.match.startedAt >= MATCH_SEARCH_MS) {
+      update({ match: { state: 'none', at: now() } })
+      return
+    }
     later('match', 6 * SEC, resolveMatch) // keep looking
     return
   }
@@ -116,6 +124,10 @@ export const match = {
   },
   acknowledgeFound(): void {
     if (getDb().match.state === 'found') update({ match: { state: 'idle' } })
+  },
+  /** Clears the "nobody was free" result, so the screen can offer a new search. */
+  acknowledgeNone(): void {
+    if (getDb().match.state === 'none') update({ match: { state: 'idle' } })
   },
   setOpenToChats(open: boolean): void {
     updateAccount((a) => ({ ...a, public: { ...a.public, openToChats: open } }))

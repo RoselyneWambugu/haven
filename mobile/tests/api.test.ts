@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../src/api'
+import { MATCH_SEARCH_MS } from '../src/api/social'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock, advanceClock, now } from '../src/lib/clock'
 import { fromEat } from '../src/lib/time'
@@ -149,6 +150,20 @@ describe('matching and chat', () => {
         api.chat.end(c.id)
       }
     }
+  })
+  it('gives up after half an hour with no one free, and lets the person look again', () => {
+    register()
+    api.demo.grantPlan('monthly')
+    // a language nobody speaks, so no one can ever be matched
+    update((s) => ({ account: { ...s.account!, public: { ...s.account!.public, languages: ['Somali'] } } }))
+    expect(api.match.start().ok).toBe(true)
+    vi.advanceTimersByTime(10 * 60_000)
+    expect(getDb().match.state).toBe('searching')
+    advanceClock(MATCH_SEARCH_MS / 60_000)
+    vi.advanceTimersByTime(7000)
+    expect(getDb().match.state).toBe('none')
+    api.match.acknowledgeNone()
+    expect(getDb().match.state).toBe('idle')
   })
   it('blocks contact details on the server too, and delivers ordinary messages', () => {
     register()

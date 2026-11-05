@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { remoteChat, remoteMatch, remoteReport, stopPolling, syncChats } from '../src/backend/remoteChat'
+import { remoteChat, remoteMatch, remoteReport, startPolling, stopPolling, syncChats } from '../src/backend/remoteChat'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock } from '../src/lib/clock'
 import type { Account } from '../src/api/types'
@@ -112,6 +112,19 @@ describe('matching', () => {
     expect(getDb().match).toEqual({ state: 'found', conversationId: 'c1' })
     expect(getDb().conversations[0].id).toBe('c1')
   })
+
+  it('says nobody was free when the server drops the search without a match', async () => {
+    update({ subscription: paid } as never)
+    fake()
+    await remoteMatch.start()
+    stopPolling()
+    fake({ match: { ok: true, state: 'idle', conversation_id: null } })
+    startPolling()
+    await new Promise((r) => setTimeout(r, 3300))
+    expect(getDb().match.state).toBe('none')
+    remoteMatch.acknowledgeNone()
+    expect(getDb().match.state).toBe('idle')
+  }, 8000)
 
   it('stopping the search tells the server', async () => {
     const calls = fake()

@@ -165,6 +165,8 @@ export type MatchState =
   | { state: 'idle' }
   | { state: 'searching'; startedAt: number }
   | { state: 'found'; conversationId: string }
+  /** The search ended without a match: nobody suitable was free in the whole time it ran. */
+  | { state: 'none'; at: number }
   | { state: 'paused' }
 
 // ---------- forum ----------

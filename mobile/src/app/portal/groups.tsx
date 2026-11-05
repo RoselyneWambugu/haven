@@ -6,7 +6,7 @@ import { Field } from '@/components/Field'
 import { Panel, PortalPage } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { facilitatorRemove, facilitatorSend, loadFacilitatorRooms, type FacilitatorRoom } from '@/backend/remoteGroups'
+import { facilitatorRemove, facilitatorRemoveMember, facilitatorSend, loadFacilitatorRooms, type FacilitatorRoom } from '@/backend/remoteGroups'
 import { REMOTE } from '@/backend/client'
 import { whenLabel } from '@/lib/groupChat'
 import { now } from '@/lib/clock'
@@ -17,6 +17,8 @@ export default function PortalGroups() {
   const [rooms, setRooms] = useState<FacilitatorRoom[] | null>(null)
   const [text, setText] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
+  const [ban, setBan] = useState<{ gid: string; name: string } | null>(null)
+  const [reason, setReason] = useState('')
 
   const load = useCallback(async () => {
     if (!REMOTE) return
@@ -62,8 +64,23 @@ export default function PortalGroups() {
                 {live && !m.mine && m.name !== 'Echo' ? (
                   <Button testID={`room-hide-${m.id}`} size="sm" variant="dangerGhost" label="Remove" onPress={async () => { const r = await facilitatorRemove(g.id, m.id); setError(r.ok ? null : r.error); void load() }} />
                 ) : null}
+                {live && !m.mine && m.name !== 'Echo' ? (
+                  <Button testID={`room-ban-${m.id}`} size="sm" variant="dangerGhost" label="Remove person" onPress={() => { setBan({ gid: g.id, name: m.name }); setReason('') }} />
+                ) : null}
               </View>
             ))}
+            {ban && ban.gid === g.id ? (
+              <Banner tone="sun" icon="shield">
+                Remove {ban.name} from this room? They won’t be able to write or sign up again. Echo’s team is told why.
+              </Banner>
+            ) : null}
+            {ban && ban.gid === g.id ? (
+              <View style={{ gap: 8 }}>
+                <Field testID="room-ban-reason" label="Reason" placeholder="At least 5 characters" value={reason} onChangeText={(v) => { setReason(v); setError(null) }} />
+                <Button testID="room-ban-confirm" label={`Remove ${ban.name}`} variant="danger" disabled={reason.trim().length < 5} onPress={async () => { const r = await facilitatorRemoveMember(g.id, ban.name, reason.trim()); setError(r.ok ? null : r.error); if (r.ok) setBan(null); void load() }} />
+                <Button variant="ghost" label="Cancel" onPress={() => setBan(null)} />
+              </View>
+            ) : null}
             {live ? (
               <View style={{ gap: 8 }}>
                 <Field testID={`room-text-${g.id}`} label="Your message" hideLabel placeholder="Write to the room…" value={text[g.id] ?? ''} onChangeText={(v) => { setText((t) => ({ ...t, [g.id]: v })); setError(null) }} />

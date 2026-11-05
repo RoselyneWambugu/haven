@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
-import { facilitatorRemove, facilitatorSend, loadFacilitatorRooms, remoteGroups, syncGroups, syncStaffGroups } from '../src/backend/remoteGroups'
+import { facilitatorRemove, facilitatorRemoveMember, facilitatorSend, loadFacilitatorRooms, remoteGroups, syncGroups, syncStaffGroups } from '../src/backend/remoteGroups'
 import type { GroupChat } from '../src/api/types'
 import { participants } from '../src/lib/groupChat'
 import { freshState, getDb, update } from '../src/store/db'
@@ -133,6 +133,12 @@ describe('waiting list, editing and removing a line', () => {
     const r = await remoteGroups.edit('gc-grief-20261028', { topic: 'A topic long enough', blurb: 'A description that is long enough', facilitatorId: 't-amina', startsAt: Date.UTC(2026, 10, 3, 11), durationMin: 45, capacity: 10 })
     expect(r.ok).toBe(true)
     expect(calls.find((c) => c.name === 'admin_edit_group')?.args).toMatchObject({ p_id: 'gc-grief-20261028', p_starts: '2026-11-03T11:00:00.000Z', p_duration: 45, p_capacity: 10 })
+  })
+
+  it('lets the leading therapist remove a person with a reason', async () => {
+    const calls = fake()
+    expect((await facilitatorRemoveMember('g1', 'QuietPine', 'Kept sharing personal details')).ok).toBe(true)
+    expect(calls[0]).toEqual({ name: 'portal_group_remove_member', args: { p_group: 'g1', p_pen_name: 'QuietPine', p_reason: 'Kept sharing personal details' } })
   })
 
   it('removes a line as a facilitator or as staff', async () => {

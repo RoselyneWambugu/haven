@@ -111,7 +111,9 @@ async function checkMatch(): Promise<void> {
     update({ match: { state: 'found', conversationId: s.conversation_id } })
     showToast('You’re matched.')
   } else if (s.state === 'idle' && cur.state === 'searching') {
-    update({ match: { state: 'idle' } })
+    // The server keeps a search for 30 minutes. If it is gone and there was no match, nobody suitable was free.
+    update({ match: { state: 'none', at: now() } })
+    showToast('We couldn’t find anyone this time.')
   }
 }
 
