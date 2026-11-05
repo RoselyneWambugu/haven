@@ -25,10 +25,19 @@ await step('wide-window-opens-the-landing-page', async () => {
   const t = await body()
   for (const w of ['A space to speak.', 'Someone to listen.', 'Your pace, your people', 'Peer chat']) if (!t.includes(w)) throw new Error('missing: ' + w)
 })
-await step('check-in-answers-and-offers-help', async () => {
+await step('download-the-app', async () => {
+  await tid('download-app').first().click()
+  await page.waitForURL('**/mobile-app')
+  await tid('mobile-app').waitFor()
+  await shot('150b-download')
+  if ((await tid('app-not-yet').count()) !== 1) throw new Error('expected the not-yet note while no store addresses are set')
+  await page.goto(`${BASE}/`)
+  await tid('landing').waitFor()
+})
+await step('check-in-answers-kindly', async () => {
   await tid('mood-1').click()
   await tid('checkin-reply').waitFor()
-  if (!(await body()).includes('urgent help is free')) throw new Error('no urgent help line')
+  if (!(await body()).includes('Someone here will listen')) throw new Error('no kind reply')
   await shot('151-checkin')
 })
 await step('get-started-goes-to-registration', async () => {
@@ -41,11 +50,11 @@ await step('sign-in-goes-to-login', async () => {
   await tid('landing-signin').click()
   await page.waitForURL('**/login')
 })
-await step('urgent-help-works-signed-out', async () => {
+await step('the-landing-page-has-no-urgent-help-button', async () => {
   await page.goto(`${BASE}/`)
   await tid('landing').waitFor()
-  await tid('footer-urgent').click()
-  await page.waitForURL('**/urgent')
+  if ((await tid('footer-urgent').count()) !== 0) throw new Error('footer urgent help is still there')
+  if ((await page.getByRole('button', { name: 'Urgent help' }).count()) !== 0) throw new Error('an Urgent help button is still on the landing page')
 })
 await step('therapist-and-staff-links', async () => {
   await page.goto(`${BASE}/`)

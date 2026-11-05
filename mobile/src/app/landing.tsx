@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, View } from 'react-native'
+import { AppDownload } from '@/components/AppDownload'
 import { Avatar, Face, LogoMark, type Mood } from '@/components/Art'
 import { Bloom, Ornament } from '@/components/Bloom'
 import { Button } from '@/components/Button'
@@ -14,14 +15,14 @@ const PROMISES: { icon: IconName; title: string; body: string }[] = [
   { icon: 'eye', title: 'Anonymous by default', body: 'A pen name and an avatar. That is all anyone sees.' },
   { icon: 'check', title: 'Verified therapists', body: 'Checked before they can take clients.' },
   { icon: 'lock', title: 'Contact details blocked', body: 'No links, numbers or addresses in chats.' },
-  { icon: 'heart', title: 'Free urgent help', body: 'On every screen, signed in or not.' },
+  { icon: 'shield', title: 'Block and report', body: 'Anyone, at any time, in one tap.' },
 ]
 
 const SERVICES: { icon: IconName; title: string; body: string; band: string; ink: string }[] = [
   { icon: 'chats', title: 'Peer chat', body: 'Matched by age range and language with someone who understands.', band: colors.moss, ink: colors.paper },
   { icon: 'heart', title: 'Therapists', body: 'Verified therapists by chat, voice or video, at a time that suits you.', band: colors.fern, ink: colors.paper },
   { icon: 'forum', title: 'Community', body: 'Share and read posts under a pen name, in spaces for one issue each.', band: colors.sage, ink: colors.fern },
-  { icon: 'help', title: 'Help centre', body: 'Plain answers, and where to find urgent help.', band: colors.sunSoft, ink: colors.sunInk },
+  { icon: 'help', title: 'Help centre', body: 'Plain answers to the questions people ask most.', band: colors.sunSoft, ink: colors.sunInk },
 ]
 
 const STEPS: { title: string; body: string }[] = [
@@ -43,7 +44,7 @@ const MOOD_LINE: Record<Mood, string> = {
   4: 'Glad things feel good. Echo is here when you want to talk.',
   3: 'Okay is a fine place to start. Someone here will listen.',
   2: 'That sounds hard. You don’t have to carry it alone.',
-  1: 'Thank you for saying so. If it feels like too much, urgent help is free right now.',
+  1: 'Thank you for saying so. You don’t have to carry it alone. Someone here will listen.',
 }
 
 function NavLink({ label, onPress, testID }: { label: string; onPress: () => void; testID?: string }) {
@@ -80,6 +81,7 @@ export default function Landing() {
         </View>
         <View style={{ flex: 1 }} />
         {wide ? <NavLink testID="nav-therapist" label="Therapist sign in" onPress={() => go('/portal')} /> : null}
+        <Button testID="nav-download" label="Get the app" size="sm" variant="quiet" icon="phone" block={false} onPress={() => go('/mobile-app')} />
         {MEMBERS_ON_WEB ? (
           <Button testID="landing-signin" label="Sign in" size="sm" variant="ghost" block={false} onPress={() => go('/login')} />
         ) : (
@@ -118,6 +120,7 @@ export default function Landing() {
               </View>
             </View>
           )}
+          <AppDownload variant={MEMBERS_ON_WEB ? 'ghost' : 'primary'} />
         </View>
         <View style={{ flex: wide ? 1 : undefined, width: wide ? undefined : '100%', height: wide ? 500 : 330 }}>
           <View style={{ flex: 1, borderTopLeftRadius: 260, borderTopRightRadius: 260, borderBottomLeftRadius: 48, borderBottomRightRadius: 48, overflow: 'hidden', backgroundColor: colors.fern }}>
@@ -201,7 +204,6 @@ export default function Landing() {
                 <Text variant="small">{MOOD_LINE[mood]}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   <Button label="Talk to someone" size="sm" block={false} onPress={() => go(MEMBERS_ON_WEB ? '/consent' : '/mobile-app')} />
-                  {mood <= 2 ? <Button label="Urgent help" size="sm" variant="urgent" block={false} onPress={() => go('/urgent')} /> : null}
                 </View>
               </View>
             ) : null}
@@ -260,6 +262,11 @@ export default function Landing() {
                 Echo staff
               </Text>
             </Pressable>
+            <Pressable testID="footer-download" accessibilityRole="link" accessibilityLabel="Download the app" onPress={() => go('/mobile-app')} style={{ minHeight: 40, justifyContent: 'center' }}>
+              <Text variant="small" color={colors.paper}>
+                Download the app
+              </Text>
+            </Pressable>
             <Pressable testID="terms-link" accessibilityRole="link" accessibilityLabel="Terms and privacy" onPress={() => go('/about')} style={{ minHeight: 40, justifyContent: 'center' }}>
               <Text variant="small" color={colors.paper}>
                 Terms and privacy
@@ -268,12 +275,11 @@ export default function Landing() {
           </View>
           <View style={{ flex: 1.2, gap: 10 }}>
             <Text variant="label" color="#D9B672">
-              Need help right now?
+              Good to know
             </Text>
             <Text variant="small" color="#BFCDB8">
-              If you or someone else is in danger, call a crisis line. They are free and open now. Echo is peer support, not emergency care.
+              Echo is peer support, not emergency care.
             </Text>
-            <Button testID="footer-urgent" label="Talk to someone now" variant="light" size="sm" block={false} onPress={() => go('/urgent')} />
           </View>
         </View>
         <View style={{ height: 1, backgroundColor: 'rgba(176,138,79,0.35)' }} />

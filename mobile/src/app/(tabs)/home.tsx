@@ -46,7 +46,7 @@ export default function Home() {
   const mood = account?.mood && now() - account.mood.at < 24 * 3600_000 ? account.mood.value : null
 
   return (
-    <Screen tab testID="home" header={<TopBar avatar />}>
+    <Screen tab testID="home" header={<TopBar avatar urgent={false} />}>
       <View>
         <Text variant="title">
           {greeting()}, {account?.public.penName ?? ''}
@@ -78,7 +78,7 @@ export default function Home() {
       ) : null}
       {moodOn && mood !== null && mood <= 2 ? (
         <Banner tone="green" icon="heart" title="That sounds hard">
-          You don’t have to carry it alone. A therapist or a peer can listen, or you can get urgent help any time.
+          You don’t have to carry it alone. A therapist or a peer can listen.
         </Banner>
       ) : null}
 

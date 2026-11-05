@@ -91,6 +91,10 @@ The Community tab opens **Support spaces**: groups for one issue each (domestic 
 
 A bell at the top of each tab opens the notification centre, a stand-in for push. It lists new messages, replies to your community post (a peer and a verified therapist reply a short while after it goes live), session reminders (an hour and ten minutes before), plan reminders, account notices and receipts for reports. Safety and account notices can't be switched off. Quiet hours (10pm to 7am) hold other notes until morning, and more than five an hour are kept in the list but not counted as new. Settings has a lock-screen preview for the privacy options. Nothing is really pushed, texted or emailed yet.
 
+## Download buttons
+
+The landing page has a **Download the app** button (top bar, hero, footer). Until the app is in the stores it opens a page that says so. To switch it on, set `EXPO_PUBLIC_ANDROID_APP_URL` and `EXPO_PUBLIC_IOS_APP_URL` (the Google Play and App Store addresses) on the website's host and redeploy: the buttons then become **Get it on Google Play** and **Download on the App Store**.
+
 ## Session alarms
 
 Every booked session, group chat you signed up for, and (in the therapist portal) client session has an alarm, in two parts:
