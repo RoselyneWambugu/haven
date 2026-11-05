@@ -110,6 +110,18 @@ export const auth = {
   async reauthWithPassword(_password: string): Promise<Res> {
     return unavailable()
   },
+  async linkGoogle(): Promise<Res<{ next: SignInNext }>> {
+    return unavailable()
+  },
+  async addEmailPassword(_email: string, _password: string): Promise<Res> {
+    return unavailable()
+  },
+  async requestAddPhone(_phone: string): Promise<Res<{ phone: string }>> {
+    return unavailable()
+  },
+  async confirmAddPhone(_phone: string, _code: string): Promise<Res> {
+    return unavailable()
+  },
 
   acceptConsents(): void {
     const reg = getDb().reg ?? emptyRegistration()

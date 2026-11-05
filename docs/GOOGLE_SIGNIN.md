@@ -22,7 +22,11 @@ Members can sign up and log in with Google as well as with a phone code. The cod
    - `exp://**` (Expo Go on a phone)
    - `echo://auth-callback` (a real app build)
 
-## 3. The database
+## 3. Linking accounts
+
+In Supabase, **Authentication, then Sign In / Providers**, switch on **Allow manual linking**. Without it, the Link Google button in Settings fails with a plain error.
+
+## 4. The database
 
 Run `supabase/google_signin_setup.sql` once in the SQL editor (it makes the phone number optional, so a Google member can have none). Until you do, Google sign-up is refused with "Signing up with Google isn't switched on yet" and phone sign-up carries on as before. Signing in with Google for someone who already has an account is not affected.
 
@@ -32,9 +36,8 @@ Run `supabase/google_signin_setup.sql` once in the SQL editor (it makes the phon
 - Opening the private profile asks them to confirm with Google again, not a phone code.
 - Paying by M-Pesa asks which number to charge.
 - No SMS reminders (no number to send to), and the phone-number recovery page does not apply to them.
-- A person who has both a phone account and a Google account has two separate Echo accounts. Joining them is not built.
+- One person, one account: someone who signed up by phone adds Google under **Settings, Sign-in methods**, and someone who signed up with Google can add a phone number there. This needs **Allow manual linking** switched on (below). Two accounts that were already made separately are not merged; the person keeps the one they want and asks us to remove the other.
 
 ## Still to build
 
 - Therapists and staff signing in with Google. Today they are linked by phone number, so a Google sign-in for them would only create a member account. Linking by email is the next step.
-- Adding Google to an existing phone account.

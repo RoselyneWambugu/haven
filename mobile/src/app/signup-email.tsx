@@ -56,6 +56,9 @@ export default function SignupEmail() {
       <Banner tone="green" icon="lock">
         This stays private. Others only ever see your pen name and avatar.
       </Banner>
+      <Text variant="caption" muted>
+        Already have an Echo account with your phone? Log in with your phone, then add an email and password under Settings, Sign-in methods, so you keep one account.
+      </Text>
       <View style={{ flex: 1 }} />
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, alignItems: 'center' }}>
         <Text variant="small" muted>

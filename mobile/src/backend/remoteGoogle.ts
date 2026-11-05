@@ -5,7 +5,7 @@ import { Platform } from 'react-native'
 import type { Res } from '@/api/types'
 import { supabase } from './client'
 
-export type GooglePurpose = 'login' | 'register' | 'reauth'
+export type GooglePurpose = 'login' | 'register' | 'reauth' | 'link'
 
 const KEY = 'echo.google.purpose'
 
@@ -41,7 +41,7 @@ export async function takePurpose(): Promise<GooglePurpose | null> {
   try {
     const v = await AsyncStorage.getItem(KEY)
     await AsyncStorage.removeItem(KEY)
-    return v === 'login' || v === 'register' || v === 'reauth' ? v : null
+    return v === 'login' || v === 'register' || v === 'reauth' || v === 'link' ? v : null
   } catch {
     return null
   }
@@ -54,10 +54,11 @@ export async function takePurpose(): Promise<GooglePurpose | null> {
 export async function openGoogle(purpose: GooglePurpose): Promise<Res<{ redirecting: boolean }>> {
   const redirectTo = callbackUrl()
   const web = Platform.OS === 'web'
-  const { data, error } = await supabase().auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo, skipBrowserRedirect: !web, queryParams: { prompt: purpose === 'reauth' ? 'login' : 'select_account' } },
-  })
+  const options = { redirectTo, skipBrowserRedirect: !web, queryParams: { prompt: purpose === 'reauth' ? 'login' : 'select_account' } }
+  // Linking adds Google to the account that is signed in now, instead of signing in as whoever Google says.
+  const { data, error } = purpose === 'link'
+    ? await supabase().auth.linkIdentity({ provider: 'google', options })
+    : await supabase().auth.signInWithOAuth({ provider: 'google', options })
   if (error || !data?.url) return failure('We couldn’t start Google sign-in. Try again in a moment.', 'google')
   if (web) {
     try { await AsyncStorage.setItem(KEY, purpose) } catch { /* the callback then treats the visit as a plain sign-in */ }

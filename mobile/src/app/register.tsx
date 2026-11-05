@@ -64,7 +64,7 @@ export default function Register() {
       <Field testID="reg-name" label="Full name" value={fullName} onChangeText={setFullName} autoComplete="name" textContentType="name" autoCapitalize="words" error={errors.name} />
       {google ? (
         <Banner tone="green" icon="shield">
-          You’re signing up with Google{googleEmail ? ` (${googleEmail})` : ''}. No phone number needed.
+          You’re signing up with Google{googleEmail ? ` (${googleEmail})` : ''}. No phone number needed. Already have an Echo account with your phone? Log in with your phone instead, then add Google under Settings, Sign-in methods, so you keep one account.
         </Banner>
       ) : (
         <Field testID="reg-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" error={errors.phone} />

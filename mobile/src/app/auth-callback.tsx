@@ -22,7 +22,7 @@ export default function AuthCallback() {
         if (r.code !== 'stale' && r.code !== 'unavailable') showToast(r.error)
         return router.replace((r.code === 'link' ? '/forgot-password' : '/') as never)
       }
-      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', redirecting: '/' }[r.value.next]
+      const to = { 'trust-device': '/trust-device', consent: '/consent', register: '/register', 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', linked: '/settings/sign-in-methods', redirecting: '/' }[r.value.next]
       router.replace(to as never)
     })()
   }, [])

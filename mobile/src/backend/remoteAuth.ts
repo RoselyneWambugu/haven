@@ -201,11 +201,16 @@ export const remoteAuth = {
   async finishEmailLink(url: string): Promise<Res<{ next: SignInNext | 'reset-password' }>> {
     const q = Linking.parse(url).queryParams ?? {}
     const hash = typeof q.token_hash === 'string' ? q.token_hash : null
-    const type = q.type === 'recovery' ? 'recovery' : q.type === 'signup' || q.type === 'email' ? 'email' : null
+    const type = q.type === 'recovery' ? 'recovery' : q.type === 'signup' || q.type === 'email' ? 'email' : q.type === 'email_change' ? 'email_change' : null
     if (!hash || !type) return failure('That link isn’t valid. Ask for a new one.', 'link')
     const { error } = await supabase().auth.verifyOtp({ token_hash: hash, type })
     if (error) return failure('That link has expired or was already used. Ask for a new one.', 'link')
     if (type === 'recovery') return { ok: true, value: { next: 'reset-password' } }
+    // A confirmed new email on an account that is signed in: the password was added to it.
+    if (type === 'email_change') {
+      await syncMethods()
+      return { ok: true, value: { next: 'linked' } }
+    }
     return afterSignIn('register')
   },
 
@@ -216,6 +221,51 @@ export const remoteAuth = {
     const { error } = await supabase().auth.signInWithPassword({ email: user.email, password })
     if (error) return failure('That password doesn’t match.', 'wrong')
     update({ reauthUntil: now() + 5 * MIN })
+    return { ok: true, value: undefined }
+  },
+
+  /** Adds Google to the account that is signed in, so the same person doesn't end up with two accounts. */
+  async linkGoogle(): Promise<Res<{ next: SignInNext }>> {
+    const r = await openGoogle('link')
+    if (!r.ok) return r
+    if (r.value.redirecting) return { ok: true, value: { next: 'redirecting' } }
+    return afterSignIn('link')
+  },
+
+  /** Adds an email and password to the account that is signed in. Supabase emails a link; opening it confirms the email and finishes the link. */
+  async addEmailPassword(email: string, password: string): Promise<Res> {
+    const e = email.trim()
+    if (!validEmail(e)) return failure('Enter your email address, like name@example.com.', 'email')
+    const problem = passwordProblem(password, e)
+    if (problem) return failure(problem, 'password')
+    const { error } = await supabase().auth.updateUser({ email: e, password }, { emailRedirectTo: `${webBase()}/auth-callback` })
+    if (error) {
+      const limited = error.status === 429 || /rate|too many|seconds/i.test(error.message)
+      const used = /already|registered/i.test(error.message)
+      return failure(limited ? 'Too many emails asked for. Wait a few minutes and try again.' : used ? 'That email is already used by another Echo account.' : 'We couldn’t add that email. Check it and try again.', limited ? 'rate' : used ? 'taken' : 'save')
+    }
+    return { ok: true, value: undefined }
+  },
+
+  /** Adds a phone number to an account that signs in another way. A code is texted to the number. */
+  async requestAddPhone(phoneInput: string): Promise<Res<{ phone: string }>> {
+    const phone = normaliseKenyanPhone(phoneInput)
+    if (!phone) return failure('Enter a Kenyan mobile number, like 0712 345 678.', 'phone')
+    const { error } = await supabase().auth.updateUser({ phone })
+    if (error) {
+      const limited = error.status === 429 || /rate|too many|seconds/i.test(error.message)
+      const used = /already|registered/i.test(error.message)
+      return failure(limited ? 'Too many codes asked for. Wait a minute and try again.' : used ? 'That number is already on another Echo account.' : 'We couldn’t send a code. Check the number and try again.', limited ? 'rate' : used ? 'taken' : 'send')
+    }
+    return { ok: true, value: { phone } }
+  },
+
+  async confirmAddPhone(phone: string, code: string): Promise<Res> {
+    const { error } = await supabase().auth.verifyOtp({ phone, token: code.trim(), type: 'phone_change' })
+    if (error) return failure('That code doesn’t match, or it has expired.', 'wrong')
+    const r = await rpc('sync_sign_in_methods')
+    if (!r.ok) return failure(r.error, r.code)
+    await loadAccount()
     return { ok: true, value: undefined }
   },
 
@@ -320,10 +370,22 @@ async function enterAsMember(): Promise<void> {
   }
 }
 
+/** After a sign-in method is added: copy the new email or phone into Echo's private record, then refresh the account. */
+async function syncMethods(): Promise<void> {
+  await rpc('sync_sign_in_methods')
+  await loadAccount()
+}
+
 /** Google has confirmed who this is. Decide where they go: into their account, a fresh private-profile check, or registration. */
 async function afterSignIn(purpose: GooglePurpose): Promise<Res<{ next: SignInNext }>> {
   const user = (await supabase().auth.getUser()).data.user
   if (!user) return failure('Google sign-in didn’t finish. Try again.', 'google')
+  if (purpose === 'link') {
+    // Google was added to the account that is signed in. Copy the new email into Echo's record and refresh.
+    if (user.id !== getDb().account?.id) return failure('That Google account is already used by another Echo account.', 'mismatch')
+    await syncMethods()
+    return { ok: true, value: { next: 'linked' } }
+  }
   if (purpose === 'reauth') {
     if (user.id !== getDb().account?.id) return failure('That isn’t the Google account on this Echo account.', 'mismatch')
     update({ reauthUntil: now() + 5 * MIN })
