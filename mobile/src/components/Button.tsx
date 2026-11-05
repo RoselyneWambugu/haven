@@ -13,7 +13,7 @@ const FG: Record<ButtonVariant, string> = {
   primary: colors.white, ghost: colors.mossDeep, quiet: colors.mossDeep, deep: colors.white, urgent: colors.white, light: colors.fern,
   lightGhost: colors.paper, danger: colors.white, dangerGhost: colors.clay,
 }
-const BORDER: Partial<Record<ButtonVariant, string>> = { ghost: colors.moss, lightGhost: 'rgba(245,246,234,0.5)', dangerGhost: colors.clay }
+const BORDER: Partial<Record<ButtonVariant, string>> = { ghost: colors.moss, lightGhost: 'rgba(242,235,221,0.5)', dangerGhost: colors.clay }
 
 export interface ButtonProps {
   label: string

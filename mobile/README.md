@@ -22,7 +22,7 @@ Useful scripts:
 | `npm run web:build` | Static web export into `dist/` |
 | `npm run e2e [webroot] [outdir]` | Every browser flow, with screenshots (Playwright + Chromium). Run `web:build` first |
 
-In a browser window 900 px or wider, `/` opens a landing page. Its buttons go to registration, sign-in, urgent help and the therapist and staff sign-ins. Narrower windows and phones open the Welcome screen.
+On the live website (real backend, in a browser) only therapists and staff sign in; members use the mobile app, and the landing page says so. In the demo build, in a browser window 900 px or wider, `/` opens a landing page. Its buttons go to registration, sign-in, urgent help and the therapist and staff sign-ins. Narrower windows and phones open the Welcome screen.
 
 Browser flows: `onboarding`, `chat`, `forum`, `book`, `help`, `me`, `portal`, `admin`, `analytics`, `config`, `team`, `feedback`, `landing`, `concern`, `spaces`, `groups`, `groupadmin`. Build the web export first, then pass its folder.
 
@@ -94,6 +94,10 @@ A bell at the top of each tab opens the notification centre, a stand-in for push
 ## Feedback
 
 When a peer chat ends after both people have written, the chat asks *Did you feel heard?* with five faces and an optional comment. It is asked once, can be skipped, and is private to the member. **Settings, then Send feedback** sends an idea or a bug report, with the app details optional. Support / Billing and Admin read the notes in the **Feedback** module, which shows no name or account and lets staff mark a note as read (logged). The felt-heard results appear only as shares once at least 10 people have answered, and members' comments are never shown.
+
+## Colour
+
+The palette is **ivory** `#F2EBDD` (page), **sage** `#78947F`, **emerald** `#185844` (brand and buttons), **forest** `#102F27` (dark panels and the strongest text) and **antique gold** `#B08A4F` (accents only; gold is too light for text on ivory). Urgent help and errors keep a clay red. All of it is in `src/theme.ts`, so changing a value there changes the whole app. `e2e/gallery.mjs` takes screenshots of the landing page and the main screens for review.
 
 ## The logo
 

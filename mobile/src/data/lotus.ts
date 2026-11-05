@@ -95,11 +95,11 @@ export interface LotusPalette {
 }
 
 export const ON_DARK: LotusPalette = {
-  key: 'd', edge: '#A9EBCB', vein: '#EFDFA6', leafBase: '#4E9A80', leafTip: '#7CC7A6', leafBaseOpacity: 0.62, leafTipOpacity: 0.36, heart: '#C9F7E1', glow: '#9FE8C6', glowOpacity: 0.26,
+  key: 'd', edge: '#F2EBDD', vein: '#D9B672', leafBase: '#78947F', leafTip: '#B7C9B8', leafBaseOpacity: 0.62, leafTipOpacity: 0.36, heart: '#EBD9A8', glow: '#D9B672', glowOpacity: 0.26,
 }
 /** The same logo for use on a pale background: deeper edges so the glow still reads. */
 export const ON_LIGHT: LotusPalette = {
-  key: 'l', edge: '#3E8E75', vein: '#B79B45', leafBase: '#3E8E75', leafTip: '#8FD0B1', leafBaseOpacity: 0.55, leafTipOpacity: 0.3, heart: '#7CC7A6', glow: '#9FE8C6', glowOpacity: 0.2,
+  key: 'l', edge: '#185844', vein: '#B08A4F', leafBase: '#185844', leafTip: '#78947F', leafBaseOpacity: 0.55, leafTipOpacity: 0.3, heart: '#B08A4F', glow: '#D9B672', glowOpacity: 0.2,
 }
 /** One colour, for stamps and the Android themed icon. */
 export const mono = (c: string): LotusPalette => ({
@@ -148,7 +148,7 @@ export function lotusScene(pal: LotusPalette, opts: { rich?: boolean; tile?: boo
   const id = (s: string) => `echo-${pal.key}-${s}`
 
   if (tile) {
-    gradients.push({ id: id('tile'), kind: 'radial', cx: 512, cy: 500, r: 760, stops: [{ offset: 0, color: '#2B5C54', opacity: 1 }, { offset: 1, color: '#1B3F3B', opacity: 1 }] })
+    gradients.push({ id: id('tile'), kind: 'radial', cx: 512, cy: 500, r: 760, stops: [{ offset: 0, color: '#185844', opacity: 1 }, { offset: 1, color: '#102F27', opacity: 1 }] })
     shapes.push({ d: tilePath(radius), fill: `url(#${id('tile')})` })
   }
   if (rich && pal.glowOpacity > 0) {

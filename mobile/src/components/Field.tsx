@@ -38,7 +38,7 @@ export function Field({ label, hint, error, prefix, multiline, minHeight, hideLa
         <TextInput
           accessibilityLabel={label}
           accessibilityHint={hint}
-          placeholderTextColor="#7C8C80"
+          placeholderTextColor="#6E7B71"
           multiline={multiline}
           textAlignVertical={multiline ? 'top' : 'center'}
           onFocus={(e) => {

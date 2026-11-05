@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#F5F6EA",
+    "backgroundColor": "#F2EBDD",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "ke.echo.app",
@@ -16,7 +16,7 @@
     "android": {
       "package": "ke.echo.app",
       "adaptiveIcon": {
-        "backgroundColor": "#1B3F3B",
+        "backgroundColor": "#102F27",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -31,8 +31,8 @@
       "favicon": "./assets/favicon.png",
       "name": "Echo",
       "shortName": "Echo",
-      "backgroundColor": "#F5F6EA",
-      "themeColor": "#1B3F3B",
+      "backgroundColor": "#F2EBDD",
+      "themeColor": "#102F27",
       "description": "A space to speak. Someone to listen."
     },
     "plugins": [
@@ -40,7 +40,7 @@
       "expo-secure-store",
       "expo-font",
       ["expo-local-authentication", { "faceIDPermission": "Echo uses Face ID to keep your conversations private." }],
-      ["expo-splash-screen", { "backgroundColor": "#1B3F3B", "image": "./assets/splash-icon.png", "imageWidth": 160 }]
+      ["expo-splash-screen", { "backgroundColor": "#102F27", "image": "./assets/splash-icon.png", "imageWidth": 160 }]
     ]
   }
 }

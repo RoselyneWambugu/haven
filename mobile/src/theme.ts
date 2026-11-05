@@ -1,23 +1,32 @@
-/** Design tokens from docs/visual-design.html. */
+/** Design tokens. The palette is ivory, sage, emerald, forest and antique gold; clay is kept for urgent help and errors. */
 export const colors = {
-  paper: '#F5F6EA',
-  milk: '#FBFCF4',
-  lichen: '#DDE7CB',
-  lichenDeep: '#C3D6A8',
-  moss: '#3F6B4A',
-  mossDeep: '#2C4F37',
-  fern: '#1C372A',
-  ink: '#1B2A21',
-  muted: '#566A5B',
-  line: '#D8DFC5',
-  sun: '#F0A34A',
-  sunSoft: '#FBE8C8',
-  sunInk: '#6B3F0A',
+  /** Ivory: the page. */
+  paper: '#F2EBDD',
+  /** A lighter ivory for cards and fields that sit on the page. */
+  milk: '#FAF6EC',
+  /** Sage, thinned: soft panels and chips. */
+  lichen: '#DDE4D3',
+  lichenDeep: '#BFCDB8',
+  /** Sage, as it is in the palette. */
+  sage: '#78947F',
+  /** Emerald: the brand colour for buttons and marks. */
+  moss: '#185844',
+  /** Emerald, deepened: links and text on light, pressed states. */
+  mossDeep: '#12453A',
+  /** Forest: dark panels, footers and the strongest text. */
+  fern: '#102F27',
+  ink: '#12261F',
+  muted: '#53645A',
+  line: '#D8CFB9',
+  /** Antique gold: accents, rules and marks. Too light for text on ivory; use sunInk for gold text. */
+  sun: '#B08A4F',
+  sunSoft: '#EEE0C2',
+  sunInk: '#5B4216',
   clay: '#B2412B',
-  claySoft: '#F6DCD3',
+  claySoft: '#F3DDD3',
   white: '#FFFFFF',
   /** The page behind the app column on wide screens (web). */
-  backdrop: '#E9ECD8',
+  backdrop: '#E6DDC8',
 } as const
 
 export const font = {
@@ -37,4 +46,6 @@ export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const
 export const DOCK_SPACE = 96
 /** The therapist portal is a desktop web app, so it gets a wide column. */
 export const PORTAL_WIDTH = 1180
+/** The landing page is a wide marketing page. */
+export const LANDING_WIDTH = 1440
 export const MAX_WIDTH = 480

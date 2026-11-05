@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
+import { Redirect, useLocalSearchParams } from 'expo-router'
+import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -20,6 +21,8 @@ export default function SignupEmail() {
   const [busy, setBusy] = useState(false)
   const { for: who } = useLocalSearchParams<{ for?: string }>()
   const staffOrTherapist = who === 'portal' || who === 'admin'
+  // Members use the mobile app, so on the live website these pages are only for therapists and staff.
+  if (!MEMBERS_ON_WEB && who !== 'portal' && who !== 'admin') return <Redirect href="/mobile-app" />
 
   async function submit() {
     if (password !== again) return setErrors({ again: 'The two passwords don’t match.' })

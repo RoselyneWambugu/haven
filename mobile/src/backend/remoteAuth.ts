@@ -15,6 +15,7 @@ import { syncHelp } from './remoteHelp'
 import * as Linking from 'expo-linking'
 import { exchange, openGoogle, takePurpose, webBase, type GooglePurpose } from './remoteGoogle'
 import { passwordProblem, validEmail } from '@/lib/password'
+import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { enterPortal, isTherapist, restorePortal, stopPortalPolling } from './remotePortal'
 
 const MIN = 60_000
@@ -412,7 +413,14 @@ async function afterSignIn(purpose: GooglePurpose | 'portal' | 'admin'): Promise
     const r = await enterAdmin('email')
     return r.ok ? { ok: true, value: { next: 'admin' } } : r
   }
-  if (await loadAccount()) {
+  const hasAccount = await loadAccount()
+  // On the live website members have no screens. Whoever this is, they carry on in the mobile app, so no member session is kept here.
+  if (!MEMBERS_ON_WEB && !(await isTherapist()) && !(await isStaff())) {
+    await supabase().auth.signOut()
+    update({ account: null })
+    return { ok: true, value: { next: 'mobile-app' } }
+  }
+  if (hasAccount && MEMBERS_ON_WEB) {
     await enterAsMember()
     return { ok: true, value: { next: 'trust-device' } }
   }

@@ -23,7 +23,7 @@ await step('wide-window-opens-the-landing-page', async () => {
   await tid('landing').waitFor()
   await shot('150-landing')
   const t = await body()
-  for (const w of ['A space to speak.', 'Someone to listen.', 'How it works', 'Peer chat']) if (!t.includes(w)) throw new Error('missing: ' + w)
+  for (const w of ['A space to speak.', 'Someone to listen.', 'Your pace, your people', 'Peer chat']) if (!t.includes(w)) throw new Error('missing: ' + w)
 })
 await step('check-in-answers-and-offers-help', async () => {
   await tid('mood-1').click()
@@ -44,7 +44,7 @@ await step('sign-in-goes-to-login', async () => {
 await step('urgent-help-works-signed-out', async () => {
   await page.goto(`${BASE}/`)
   await tid('landing').waitFor()
-  await tid('landing-urgent').click()
+  await tid('footer-urgent').click()
   await page.waitForURL('**/urgent')
 })
 await step('therapist-and-staff-links', async () => {

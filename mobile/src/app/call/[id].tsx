@@ -41,7 +41,7 @@ export default function Call() {
   const video = s.mode === 'video'
 
   const ctl = (icon: IconName, label: string, on: boolean, onPress: () => void, testID: string) => (
-    <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }} onPress={onPress} style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: on ? colors.paper : 'rgba(245,246,234,0.18)', alignItems: 'center', justifyContent: 'center' }}>
+    <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }} onPress={onPress} style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: on ? colors.paper : 'rgba(242,235,221,0.18)', alignItems: 'center', justifyContent: 'center' }}>
       <Icon name={icon} size={24} color={on ? colors.fern : colors.paper} />
     </Pressable>
   )

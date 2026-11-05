@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { go } from '@/lib/nav'
+import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { api } from '@/api'
 import { REMOTE } from '@/backend/client'
 import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin } from '@/backend/remoteAdmin'
@@ -120,7 +121,7 @@ export default function AdminSignIn() {
           <Banner tone="green" icon="lock">
             Only a number or an email an Admin has linked to a staff account can open the dashboard.
           </Banner>
-          <Button variant="ghost" label="Back to the member app" onPress={() => router.replace('/welcome' as never)} />
+          <Button variant="ghost" label={MEMBERS_ON_WEB ? 'Back to the member app' : 'Back to the home page'} onPress={() => router.replace((MEMBERS_ON_WEB ? '/welcome' : '/landing') as never)} />
         </View>
       </View>
     )
