@@ -2,7 +2,7 @@
 
 The member app for Echo, an anonymous peer-support and therapy platform for Kenya. Built with React Native and Expo (TypeScript), so it runs in Expo Go on a phone and in a browser.
 
-The backend is a **mock** that lives on the device by default, so the app runs with nothing set up and nothing here talks to a server, sends a real SMS, or takes a real payment. Set `EXPO_PUBLIC_BACKEND=supabase` (copy `.env.example` to `.env`) and the same screens run on the real Supabase backend: accounts, chats, the community, billing and M-Pesa, therapists and sessions, the therapist portal, the staff dashboard and its modules, group chats, SMS and payouts. `docs/BACKEND.md` has the setup and `docs/LAUNCH.md` is the runbook for going live. Everything a screen needs goes through `src/api`, which picks the mock or the real service, so screens do not change.
+The backend is a **mock** that lives on the device by default, so the app runs with nothing set up and nothing here talks to a server, sends a real SMS, or takes a real payment. Set `EXPO_PUBLIC_BACKEND=supabase` (copy `.env.example` to `.env`) and the same screens run on the real Supabase backend: accounts, chats, the community, billing and M-Pesa, therapists and sessions, the therapist portal, the staff dashboard and its modules, group chats, SMS and payouts. `docs/BACKEND.md` has the setup, `docs/GOOGLE_SIGNIN.md` covers signing in with Google, and `docs/LAUNCH.md` is the runbook for going live. Everything a screen needs goes through `src/api`, which picks the mock or the real service, so screens do not change.
 
 ## Run it
 

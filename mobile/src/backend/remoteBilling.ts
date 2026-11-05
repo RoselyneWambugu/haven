@@ -29,10 +29,10 @@ const toSubscription = (s: RemoteSub): Subscription => ({
 type Pushed = { ok?: boolean; code?: string; state?: string; failure?: string }
 
 /** Asks the server to send the M-Pesa prompt and waits for the result. Null when M-Pesa isn't set up, so the caller can use the test payment. */
-async function payWithMpesa(orderId: string): Promise<PaymentResult | null> {
+async function payWithMpesa(orderId: string, phone?: string): Promise<PaymentResult | null> {
   const invoke = async (action: 'start' | 'check'): Promise<{ data: Pushed | null; error: unknown }> => {
     try {
-      const r = await supabase().functions.invoke('mpesa-pay', { body: { order_id: orderId, action } })
+      const r = await supabase().functions.invoke('mpesa-pay', { body: { order_id: orderId, action, phone } })
       return { data: r.data as Pushed | null, error: r.error }
     } catch {
       return { data: null, error: true }
@@ -127,12 +127,12 @@ export const remoteBilling = {
    * M-Pesa goes through Safaricom: the server asks for the prompt on the member's phone, and this waits for the answer.
    * When M-Pesa isn't set up on the server (or for card), only test numbers can complete a payment.
    */
-  async pay(method: PaymentMethod): Promise<PaymentResult> {
+  async pay(method: PaymentMethod, mpesaPhone?: string): Promise<PaymentResult> {
     const db = getDb()
     const co = db.checkout
     if (!co) return { ok: false, failure: 'cancelled' }
     if (method === 'mpesa') {
-      const live = await payWithMpesa(co.id)
+      const live = await payWithMpesa(co.id, mpesaPhone)
       if (live) {
         if (live.ok) {
           update({ checkout: null })

@@ -42,7 +42,7 @@ export const billing = {
   },
 
   /** Simulates M-Pesa or card. Takes a few seconds, like the real thing. */
-  pay(method: PaymentMethod): Promise<PaymentResult> {
+  pay(method: PaymentMethod, _mpesaPhone?: string): Promise<PaymentResult> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const db = getDb()

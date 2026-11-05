@@ -6,7 +6,7 @@ import { uid } from '@/lib/id'
 import { validatePenName } from '@/lib/safety'
 import { emptyRegistration, getDb, update, updateAccount, type RegistrationDraft } from '@/store/db'
 import { showToast } from '@/store/toast'
-import type { Account, AvatarKind, Device, Res, Settings } from './types'
+import type { Account, AvatarKind, Device, GoogleNext, Res, Settings } from './types'
 
 const HOUR = 3600_000
 const MIN = 60_000
@@ -73,6 +73,15 @@ export const auth = {
       reg: { ...(prev ?? emptyRegistration()), fullName, phone, dob: dob.toISOString(), email, verified: false },
     })
     return { ok: true, value: { phone } }
+  },
+
+  /** Google sign-in needs the real service. The demo has no Google. */
+  async signInWithGoogle(_purpose: 'login' | 'register' | 'reauth'): Promise<Res<{ next: GoogleNext }>> {
+    return { ok: false, error: 'Google sign-in is only available on the live service.', code: 'unavailable' }
+  },
+
+  async finishGoogleRedirect(_url: string): Promise<Res<{ next: GoogleNext }>> {
+    return { ok: false, error: 'Google sign-in is only available on the live service.', code: 'unavailable' }
   },
 
   acceptConsents(): void {

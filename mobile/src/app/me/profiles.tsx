@@ -28,12 +28,20 @@ export default function Profiles() {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState('')
   const [nameError, setNameError] = useState<string | null>(null)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
   if (!account) return null
   const p = account.public
   const unlocked = reauthUntil > now()
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
+  // Someone who signs in with Google and has no phone number on Echo proves it's them with Google again.
+  const googleOnly = !account.private.phone && account.hasGoogle === true
   async function verify() {
+    if (googleOnly) {
+      const r = await api.auth.signInWithGoogle('reauth')
+      if (!r.ok && r.code !== 'cancelled') setVerifyError(r.error)
+      return
+    }
     const r = await api.auth.requestOtp('reauth', account!.private.phone)
     if (r.ok) go('/otp?purpose=reauth')
   }
@@ -92,7 +100,7 @@ export default function Profiles() {
           </Banner>
           <View testID="private-details">
             <Row title="Full name" sub={account.private.fullName} />
-            <Row title="Phone" sub={formatPhone(account.private.phone)} />
+            <Row title="Phone" sub={account.private.phone ? formatPhone(account.private.phone) : 'Not added'} />
             <Row title="Date of birth" sub={dayLong(new Date(account.private.dob).getTime())} />
             <Row title="Email" sub={account.private.email || 'Not added'} />
             <Row title="ID" sub={account.private.idVerified ? 'Verified' : 'Not verified'} last />
@@ -104,7 +112,8 @@ export default function Profiles() {
           <Banner tone="green" icon="lock" title="Your real details">
             Your name, phone, date of birth and ID live here. We ask for a quick code before showing them.
           </Banner>
-          <Button testID="verify-private" label="Verify it’s you" onPress={verify} />
+          {verifyError ? <Banner tone="clay">{verifyError}</Banner> : null}
+          <Button testID="verify-private" label={googleOnly ? 'Verify with Google' : 'Verify it’s you'} onPress={verify} />
         </>
       )}
       <Sheet visible={editing} onClose={() => setEditing(false)} title="Change pen name">

@@ -1,5 +1,5 @@
 import { auth } from '@/api/auth'
-import type { AvatarKind, Res, Settings } from '@/api/types'
+import type { AvatarKind, GoogleNext, Res, Settings } from '@/api/types'
 import { CONFIG } from '@/data/config'
 import { now } from '@/lib/clock'
 import { ageBand, ageOn, normaliseKenyanPhone } from '@/lib/identity'
@@ -12,6 +12,7 @@ import { startPolling, stopPolling } from './remoteChat'
 import { clearTherapistCache } from './remoteTherapists'
 import { restoreAdmin, stopAdminPolling } from './remoteAdmin'
 import { syncHelp } from './remoteHelp'
+import { exchange, openGoogle, takePurpose, type GooglePurpose } from './remoteGoogle'
 import { restorePortal, stopPortalPolling } from './remotePortal'
 
 const MIN = 60_000
@@ -118,16 +119,34 @@ export const remoteAuth = {
       await supabase().auth.signOut()
       return { ok: true, value: { next: 'no-account' } }
     }
-    stopPortalPolling()
-    stopAdminPolling()
-    update((s) => ({ signedIn: true, locked: false, portal: s.portal ? { ...s.portal, signedIn: false } : null, admin: s.admin ? { ...s.admin, signedIn: false } : null }))
-    startPolling()
-    if (getDb().account?.deletionRequestedAt) {
-      await rpc('cancel_account_deletion')
-      await loadAccount()
-      showToast('Welcome back. Your account deletion was cancelled.')
-    }
+    await enterAsMember()
     return { ok: true, value: { next: 'trust-device' } }
+  },
+
+  /** Opens Google. A member who already has an Echo account is signed in; a new one carries on to registration without a phone number. */
+  async signInWithGoogle(purpose: GooglePurpose): Promise<Res<{ next: GoogleNext }>> {
+    const r = await openGoogle(purpose)
+    if (!r.ok) return r
+    if (r.value.redirecting) return { ok: true, value: { next: 'redirecting' } }
+    return afterGoogle(purpose)
+  },
+
+  /** The web page Google sent the person back to. Finishes what signInWithGoogle started before the page left. */
+  async finishGoogleRedirect(url: string): Promise<Res<{ next: GoogleNext }>> {
+    const purpose = await takePurpose()
+    // A repeated visit to the same link has nothing left to do.
+    if (!purpose) return failure('That sign-in link has already been used.', 'stale')
+    const r = await exchange(url)
+    if (!r.ok) return r
+    return afterGoogle(purpose)
+  },
+
+  /** A Google registration has no phone to check, so the details step skips it. Everything else is checked as usual. */
+  submitDetails(input: { fullName: string; phone: string; dob: string; email: string }): Res<{ phone: string }> {
+    if (!getDb().reg?.verified) return auth.submitDetails(input)
+    const r = auth.submitDetails({ ...input, phone: '0700000000' })
+    update((s) => (s.reg ? { reg: { ...s.reg, phone: '', verified: true } } : {}))
+    return r.ok ? { ok: true, value: { phone: '' } } : r
   },
 
   /** Local rules first (fast, and they know common names), then the server (who has the name). */
@@ -208,6 +227,39 @@ export const remoteAuth = {
     auth.setMood(value)
     background(rpc('set_mood', { p_value: value }))
   },
+}
+
+/** Signs the member in on this device once the server has their account. Shared by the phone code and Google. */
+async function enterAsMember(): Promise<void> {
+  stopPortalPolling()
+  stopAdminPolling()
+  update((s) => ({ signedIn: true, locked: false, portal: s.portal ? { ...s.portal, signedIn: false } : null, admin: s.admin ? { ...s.admin, signedIn: false } : null }))
+  startPolling()
+  if (getDb().account?.deletionRequestedAt) {
+    await rpc('cancel_account_deletion')
+    await loadAccount()
+    showToast('Welcome back. Your account deletion was cancelled.')
+  }
+}
+
+/** Google has confirmed who this is. Decide where they go: into their account, a fresh private-profile check, or registration. */
+async function afterGoogle(purpose: GooglePurpose): Promise<Res<{ next: GoogleNext }>> {
+  const user = (await supabase().auth.getUser()).data.user
+  if (!user) return failure('Google sign-in didn’t finish. Try again.', 'google')
+  if (purpose === 'reauth') {
+    if (user.id !== getDb().account?.id) return failure('That isn’t the Google account on this Echo account.', 'mismatch')
+    update({ reauthUntil: now() + 5 * MIN })
+    return { ok: true, value: { next: 'reauth-ok' } }
+  }
+  if (await loadAccount()) {
+    await enterAsMember()
+    return { ok: true, value: { next: 'trust-device' } }
+  }
+  const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string }
+  update((s) => ({
+    reg: { ...(s.reg ?? emptyRegistration()), email: user.email ?? '', fullName: s.reg?.fullName || String(meta.full_name ?? meta.name ?? ''), phone: '', verified: true },
+  }))
+  return { ok: true, value: { next: getDb().reg?.consentsAcceptedAt ? 'register' : 'consent' } }
 }
 
 /** The server doesn't know which device is this one, so the app remembers it. */

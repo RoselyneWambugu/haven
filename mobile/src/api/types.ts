@@ -111,6 +111,8 @@ export interface Account {
   deletionRequestedAt: number | null
   mood: { value: 1 | 2 | 3 | 4 | 5; at: number } | null
   hasPostedBefore: boolean
+  /** Signs in with Google. Such an account may have no phone number on Echo. */
+  hasGoogle?: boolean
 }
 
 // ---------- conversations ----------
@@ -797,3 +799,6 @@ export interface RotaWeek {
   weekStart: number
   heavy: string[]
 }
+
+/** Where to go after Google sign-in: signed in, or on to the next registration step. 'redirecting' means the browser page is leaving for Google. */
+export type GoogleNext = 'trust-device' | 'consent' | 'register' | 'reauth-ok' | 'redirecting'
