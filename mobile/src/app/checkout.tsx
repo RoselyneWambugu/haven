@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { api, type PaymentMethod, type PaymentResult } from '@/api'
 import { Ripple } from '@/components/Art'
+import { Bloom } from '@/components/Bloom'
 import { Button } from '@/components/Button'
-import { Radio } from '@/components/Controls'
+import { Icon } from '@/components/Icon'
 import { Field } from '@/components/Field'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
@@ -11,6 +12,7 @@ import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { maskPhone, normaliseKenyanPhone } from '@/lib/identity'
 import { goBack, replace, resetTo } from '@/lib/nav'
+import { planIncludes } from '@/lib/plan'
 import { dayAndClock } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -57,10 +59,8 @@ export default function Checkout() {
     )
   }
 
-  const title =
-    item.kind === 'plan'
-      ? `${plans.find((p) => p.id === item.planId)?.label} peer plan`
-      : `Session with ${THERAPISTS.find((t) => t.id === item.therapistId)?.name}`
+  const planDef = item.kind === 'plan' ? plans.find((p) => p.id === item.planId) : undefined
+  const title = item.kind === 'plan' ? `${planDef?.label} plan` : `Session with ${THERAPISTS.find((t) => t.id === item.therapistId)?.name}`
   const sub = item.kind === 'plan' ? (item.autoRenew ? 'Renews automatically' : 'Does not renew') : `${dayAndClock(item.start)} · ${item.mode}`
 
   async function pay() {
@@ -107,9 +107,20 @@ export default function Checkout() {
           />
         }
       >
-        <Banner tone="green" icon="check" title="Payment received">
-          {title}. Receipt {result?.receiptNo}.
-        </Banner>
+        <View style={{ borderRadius: 28, backgroundColor: colors.fern, borderWidth: 1.5, borderColor: colors.sun, padding: 20, gap: 6, overflow: 'hidden' }}>
+          <View pointerEvents="none" style={{ position: 'absolute', right: -70, top: -70, width: 230, height: 258, opacity: 0.7 }}>
+            <Bloom background="transparent" glow={false} />
+          </View>
+          <Text variant="caption" color={colors.sun}>
+            Payment received
+          </Text>
+          <Text variant="display" color={colors.paper} style={{ fontSize: 30, lineHeight: 34 }}>
+            {title}
+          </Text>
+          <Text variant="small" color={colors.lichen}>
+            {money(amount)} · Receipt {result?.receiptNo}
+          </Text>
+        </View>
         <Text variant="title">You’re all set</Text>
         <Text variant="body" muted>
           {item.kind === 'plan' ? 'Your plan is active. You can start matching now.' : 'Your session is booked. We’ll remind you before it starts.'}
@@ -141,27 +152,72 @@ export default function Checkout() {
   return (
     <Screen testID="checkout" header={<TopBar back />} footer={<Button testID="pay" label={`Pay ${money(amount)}`} onPress={pay} />}>
       <Text variant="title">Checkout</Text>
-      <Card>
-        <Text variant="h3">{title}</Text>
-        <Text variant="small" muted>
+      <View testID="checkout-summary" style={{ borderRadius: 28, backgroundColor: colors.fern, borderWidth: 1.5, borderColor: colors.sun, padding: 20, gap: 6, overflow: 'hidden' }}>
+        <View pointerEvents="none" style={{ position: 'absolute', right: -70, top: -70, width: 230, height: 258, opacity: 0.7 }}>
+          <Bloom background="transparent" glow={false} />
+        </View>
+        <Text variant="caption" color={colors.sun}>
+          {item.kind === 'plan' ? 'You’re getting' : 'You’re booking'}
+        </Text>
+        <Text variant="display" color={colors.paper} style={{ fontSize: 30, lineHeight: 34 }}>
+          {title}
+        </Text>
+        <Text variant="small" color={colors.lichen}>
           {sub}
         </Text>
-        <Text variant="title" style={{ marginTop: 8 }}>
+        <Text variant="h2" color={colors.paper} style={{ marginTop: 8 }}>
           {money(amount)}
         </Text>
-      </Card>
-      <Text variant="small" muted>
-        Pay with
-      </Text>
-      <Radio testID="pay-mpesa" selected={method === 'mpesa'} onPress={() => setMethod('mpesa')} label="M-Pesa" sub={needsNumber ? 'We’ll send a prompt to the number you enter' : `We’ll send a prompt to ${maskPhone(phone)}`} />
+      </View>
+      {planDef ? (
+        <Card testID="checkout-includes">
+          <Text variant="h3">What it includes</Text>
+          <View style={{ gap: 10, marginTop: 10 }}>
+            {planIncludes(planDef).map((i) => (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                <Icon name="check" size={16} color={colors.moss} />
+                <Text variant="small" style={{ flex: 1 }}>
+                  {i}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Card>
+      ) : null}
+      <Text variant="h3">Pay with</Text>
+      <MethodCard testID="pay-mpesa" selected={method === 'mpesa'} onPress={() => setMethod('mpesa')} label="M-Pesa" sub={needsNumber ? 'We’ll send a prompt to the number you enter' : `We’ll send a prompt to ${maskPhone(phone)}`} />
       {needsNumber && method === 'mpesa' ? (
         <Field testID="pay-mpesa-number" label="M-Pesa number" prefix="+254" placeholder="712 345 678" value={given} onChangeText={(v) => { setGiven(v); setGivenError(null) }} keyboardType="phone-pad" error={givenError} />
       ) : null}
-      <Radio testID="pay-card" selected={method === 'card'} onPress={() => setMethod('card')} label="Card" sub="Visa or Mastercard" />
+      <MethodCard testID="pay-card" selected={method === 'card'} onPress={() => setMethod('card')} label="Card" sub="Visa or Mastercard" />
       <Text variant="caption" muted>
         Your payment details are never shown to other people. The charge on your statement says “Echo”.
       </Text>
     </Screen>
+  )
+}
+
+/** A payment choice drawn like the plan cards: the chosen one is dark green with a gold edge. */
+function MethodCard({ selected, label, sub, onPress, testID }: { selected: boolean; label: string; sub: string; onPress: () => void; testID: string }) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={`${label}. ${sub}`}
+      onPress={onPress}
+      style={{ borderRadius: 20, padding: 16, borderWidth: 1.5, borderColor: selected ? colors.sun : colors.line, backgroundColor: selected ? colors.fern : colors.white, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+    >
+      <View style={{ flex: 1 }}>
+        <Text variant="h3" color={selected ? colors.paper : colors.ink}>
+          {label}
+        </Text>
+        <Text variant="small" color={selected ? colors.lichen : colors.muted}>
+          {sub}
+        </Text>
+      </View>
+      {selected ? <Icon name="check" size={18} color={colors.sun} /> : null}
+    </Pressable>
   )
 }
 
