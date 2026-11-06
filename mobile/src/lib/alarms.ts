@@ -50,6 +50,9 @@ export function alarmItems(src: { sessions: Session[]; groupChats: GroupChat[]; 
   return out.sort((a, b) => a.start - b.start)
 }
 
+/** Drops the items whose bell the person switched off. */
+export const withoutMuted = (items: AlarmItem[], muted: readonly string[]): AlarmItem[] => items.filter((i) => !muted.includes(i.id))
+
 const words = (leadMin: number): string => (leadMin >= 60 ? `${leadMin / 60 === 1 ? 'an hour' : `${leadMin / 60} hours`}` : `${leadMin} minutes`)
 
 /**

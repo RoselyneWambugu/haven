@@ -136,3 +136,13 @@ describe('on the phone', () => {
     expect(now() - before).toBe(30 * MIN)
   })
 })
+
+import { withoutMuted } from '../src/lib/alarms'
+describe('a session whose bell is off', () => {
+  it('is left out of the reminders, the others are kept', () => {
+    const a = { id: 's:1', kind: 'session', start: 1, who: 'x', route: '/' } as AlarmItem
+    const b = { ...a, id: 's:2' }
+    expect(withoutMuted([a, b], ['s:1']).map((i) => i.id)).toEqual(['s:2'])
+    expect(withoutMuted([a, b], [])).toHaveLength(2)
+  })
+})

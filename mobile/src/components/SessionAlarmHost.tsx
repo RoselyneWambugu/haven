@@ -3,12 +3,13 @@ import { Platform, Pressable, Vibration, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSegments } from 'expo-router'
 import * as Haptics from 'expo-haptics'
-import { alarmItems, dueAlarm, planAlarms, startsIn } from '@/lib/alarms'
+import { alarmItems, dueAlarm, planAlarms, startsIn, withoutMuted } from '@/lib/alarms'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { alarmAccess, askForAlarms, onAlarmTapped, syncLocalAlarms } from '@/lib/localAlarms'
 import { go } from '@/lib/nav'
 import { THERAPISTS } from '@/data/seed'
 import { useDb } from '@/store/db'
+import { useMuted } from '@/store/mutedAlarms'
 import { useNow } from '@/store/useNow'
 import { colors, MAX_WIDTH, radius } from '@/theme'
 import { Button } from './Button'
@@ -42,9 +43,10 @@ export function SessionAlarmHost() {
   const shown = useRef<string | null>(null)
 
   // What is booked. Only the person who is signed in on this device gets alarms for it.
+  const muted = useMuted()
   const items = useMemo(
     () =>
-      alarmItems(
+      withoutMuted(alarmItems(
         {
           sessions: memberIn && remind ? sessions : [],
           groupChats: memberIn && remind ? groupChats : [],
@@ -53,10 +55,10 @@ export function SessionAlarmHost() {
           therapistName: (id) => THERAPISTS.find((x) => x.id === id)?.name,
         },
         t,
-      ),
+      ), muted),
     // `t` only matters for dropping what has ended, so a coarse minute is enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sessions, groupChats, portalSessions, events, memberIn, therapistIn, remind, remindEvents, Math.floor(t / 60_000)],
+    [sessions, groupChats, portalSessions, events, memberIn, therapistIn, remind, remindEvents, muted, Math.floor(t / 60_000)],
   )
   const on = memberIn || therapistIn
 
