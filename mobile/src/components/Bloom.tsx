@@ -6,7 +6,7 @@ import { colors } from '@/theme'
  * The brand flower: dark emerald petals behind pale ivory ones, with a gold centre. It is drawn, not photographed, so it is crisp at any
  * size and weighs nothing. It sits on a forest-green panel.
  */
-export function Bloom({ background = colors.fern }: { background?: string }) {
+export function Bloom({ background = colors.fern, glow = true }: { background?: string; glow?: boolean }) {
   const cx = 250
   const cy = 262
   const turn = (deg: number) => `rotate(${deg} ${cx} ${cy})`
@@ -29,8 +29,8 @@ export function Bloom({ background = colors.fern }: { background?: string }) {
           <Stop offset="1" stopColor="#D9C9A5" />
         </LinearGradient>
       </Defs>
-      <Ellipse cx={cx} cy={cy} rx={270} ry={290} fill={background} />
-      <Ellipse cx={cx} cy={cy} rx={270} ry={290} fill="url(#bloom-glow)" />
+      {background !== 'transparent' ? <Ellipse cx={cx} cy={cy} rx={270} ry={290} fill={background} /> : null}
+      {glow ? <Ellipse cx={cx} cy={cy} rx={270} ry={290} fill="url(#bloom-glow)" /> : null}
       {back.map((a) => (
         <G key={`b${a}`} transform={turn(a)}>
           <Ellipse cx={cx} cy={cy - 118} rx={58} ry={134} fill="url(#bloom-back)" stroke="#78947F" strokeOpacity={0.35} strokeWidth={1.4} />

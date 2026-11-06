@@ -89,7 +89,7 @@ export function TopBar({
 // ---------------------------------------------------------------------------
 
 export function Screen({
-  children, header, footer, scroll = true, tab, dark, padded = true, gap = 14, testID, keyboard,
+  children, header, footer, scroll = true, tab, dark, padded = true, gap = 14, testID, keyboard, backdrop,
 }: {
   children?: React.ReactNode
   header?: React.ReactNode
@@ -97,6 +97,8 @@ export function Screen({
   scroll?: boolean
   tab?: boolean
   dark?: boolean
+  /** Drawn behind the header and the content, edge to edge (a large illustration, for example). */
+  backdrop?: React.ReactNode
   padded?: boolean
   gap?: number
   testID?: string
@@ -107,6 +109,7 @@ export function Screen({
   const body = (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <StatusBar style={dark ? 'light' : 'dark'} />
+      {backdrop ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>{backdrop}</View> : null}
       <View style={{ paddingTop: insets.top, paddingHorizontal: padded ? 18 : 0 }}>{header}</View>
       {scroll ? (
         <ScrollView
