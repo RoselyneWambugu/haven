@@ -1,3 +1,4 @@
+import { syncPortalEvents } from './remoteEvents'
 import { portal as mockPortal } from '@/api/portal'
 import type { AdminAppeal, AvatarKind, ConcernType, ForumComment, Message, PortalConcern, PortalProfile, PortalSession, PortalState, PortalThread, Res } from '@/api/types'
 import type { AvailabilityBlock, Mode } from '@/lib/booking'
@@ -111,8 +112,10 @@ export function startPortalPolling(): void {
     ticks += 1
     void syncPortal()
     if (ticks % 3 === 0) void syncForum()
+    if (ticks % 3 === 1) void syncPortalEvents()
   }, 4000)
   void syncPortal()
+  void syncPortalEvents()
   void syncForum()
   void syncDirectory()
 }

@@ -173,7 +173,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-51 | Group chats: let the leading therapist propose a room size (clinical reviewers approve); a way to appeal a removal from a room; push or SMS to say a search found no one | v0.74 |
 | Q-52 | Group chat titles: make the list of clinical words editable in Configuration; a second person approves a new room's title before it is shown | v0.75 |
 | Q-53 | Gossip: edit the safe-word list in Configuration; a moderator queue that shows gossip reports first; more reactions than “Heard it”; hide a gossip post once it has several reports until a moderator looks | v0.78 |
-| Q-54 | Events: therapists propose an event from the portal for a clinical reviewer to approve; a reminder an hour before to people who are interested; places and sign-up for small events; a note to interested members when an event is cancelled or moved | v0.79 |
+| Q-54 | Events: tell a therapist when a proposal is decided; let them edit a proposal; a reminder an hour before to people who are interested; places and sign-up for small events; a note to interested members when an event is cancelled or moved | v0.79 |
 | Q-47 | Pay therapist payouts through M-Pesa B2C; card payments; add the M-Pesa secrets and test in the sandbox before launch | v0.58 |
 | Q-46 | Pay therapists through a payment provider instead of by hand; tax on earnings | v0.57 |
 | Q-45 | Run `supabase/document_retention_cleanup.sql` in the SQL editor so verification documents are removed 12 months after their decision (kept 12 months, decided). Also: virus scanning of uploads; letting a person remove a file they sent | v0.56 |

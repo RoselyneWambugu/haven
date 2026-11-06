@@ -9,7 +9,7 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { canManageEvents } from '@/lib/admin'
 import { now } from '@/lib/clock'
-import { EVENT_KINDS, EVENT_LIMITS, eventEnd, isHappeningNow, isOver, kindLabel } from '@/lib/events'
+import { EVENT_KINDS, EVENT_LIMITS, eventEnd, isHappeningNow, isLive, isOver, kindLabel } from '@/lib/events'
 import { whenLabel } from '@/lib/groupChat'
 import { startOfEatDay } from '@/lib/time'
 import type { EventKind, EventMode } from '@/api/types'
@@ -40,11 +40,15 @@ export default function Events() {
   const [cancelling, setCancelling] = useState<string | null>(null)
   const [why, setWhy] = useState('')
   const [cancelError, setCancelError] = useState<string | null>(null)
+  const [declining, setDeclining] = useState<string | null>(null)
+  const [declineWhy, setDeclineWhy] = useState('')
+  const [decideError, setDecideError] = useState<string | null>(null)
   if (!a) return null
   const allowed = canManageEvents(a.role)
   const startsAt = startOfEatDay(now()) + day * DAY + hour * HOUR
-  const upcoming = events.filter((e) => !e.cancelled && !isOver(e, t)).sort((x, y) => x.startsAt - y.startsAt)
-  const past = events.filter((e) => e.cancelled || isOver(e, t)).sort((x, y) => y.startsAt - x.startsAt).slice(0, 6)
+  const proposals = events.filter((e) => e.status === 'pending').sort((x, y) => x.startsAt - y.startsAt)
+  const upcoming = events.filter((e) => isLive(e) && !e.cancelled && !isOver(e, t)).sort((x, y) => x.startsAt - y.startsAt)
+  const past = events.filter((e) => e.status === 'declined' || e.status === 'withdrawn' || e.cancelled || isOver(e, t)).sort((x, y) => y.startsAt - x.startsAt).slice(0, 8)
 
   async function create() {
     const r = await api.events.schedule({ title, blurb, kind, mode, place, startsAt, durationMin: mins, host })
@@ -67,18 +71,23 @@ export default function Events() {
           <Text variant="label" style={{ flex: 1, minWidth: 220 }}>
             {e.title}
           </Text>
-          <Badge label={e.cancelled ? 'Cancelled' : over ? 'Finished' : isHappeningNow(e, t) ? 'Happening now' : kindLabel(e.kind)} tone={e.cancelled ? 'clay' : isHappeningNow(e, t) ? 'green' : 'plain'} />
+          <Badge label={e.status === 'declined' ? 'Declined' : e.status === 'withdrawn' ? 'Withdrawn' : e.cancelled ? 'Cancelled' : over ? 'Finished' : isHappeningNow(e, t) ? 'Happening now' : kindLabel(e.kind)} tone={e.cancelled || e.status === 'declined' ? 'clay' : isHappeningNow(e, t) ? 'green' : 'plain'} />
         </View>
         <Text variant="small" muted>
           {whenLabel(e.startsAt, t)} · {e.durationMin} min · {e.mode === 'online' ? 'online' : 'in person'} · hosted by {e.host} · {e.interested} interested
-          {e.createdBy ? ` · scheduled by ${e.createdBy}` : ''}
+          {e.proposedBy ? ` · proposed by ${e.proposedBy}` : e.createdBy ? ` · scheduled by ${e.createdBy}` : ''}
         </Text>
         {e.cancelled ? (
           <Text variant="caption" muted>
             Cancelled: {e.cancelled.reason}
           </Text>
         ) : null}
-        {allowed && !e.cancelled && !over ? (
+        {e.status === 'declined' && e.declineReason ? (
+          <Text variant="caption" muted>
+            Declined: {e.declineReason}
+          </Text>
+        ) : null}
+        {allowed && isLive(e) && !e.cancelled && !over ? (
           cancelling === e.id ? (
             <View style={{ gap: 8 }}>
               <Field testID="ev-cancel-reason" label="Reason (required, shown on the event)" value={why} onChangeText={(v) => { setWhy(v); setCancelError(null) }} error={cancelError} />
@@ -110,8 +119,62 @@ export default function Events() {
     <PortalPage testID="admin-events" title="Events" sub="Webinars, workshops and walks for the community. Members see them under Community, Events, and say they are interested.">
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         <Stat value={String(upcoming.length)} label="Coming up" />
+        <Stat value={String(proposals.length)} label="Proposals waiting" tone={proposals.length ? 'sun' : undefined} />
         <Stat value={String(upcoming.reduce((n, e) => n + e.interested, 0))} label="Interested in total" />
       </View>
+      {proposals.length ? (
+        <Panel title="Proposed by therapists" testID="ev-proposals" tone="sun">
+          <Text variant="small" muted>
+            Approve to put it in front of members. Decline with a reason so the therapist can improve it. In-person events must be in a public place.
+          </Text>
+          {proposals.map((e) => (
+            <View key={e.id} testID={`aproposal-${e.id}`} style={{ paddingVertical: 8, gap: 6 }}>
+              <Text variant="label">{e.title}</Text>
+              <Text variant="small" muted>
+                {kindLabel(e.kind)} · {e.mode === 'online' ? 'online' : 'in person'} · {whenLabel(e.startsAt, t)} · {e.durationMin} min · proposed by {e.proposedBy ?? e.host}
+              </Text>
+              <Text variant="small">{e.place}</Text>
+              <Text variant="small">{e.blurb}</Text>
+              {allowed ? (
+                declining === e.id ? (
+                  <View style={{ gap: 8 }}>
+                    <Field testID="ev-decline-reason" label="Reason (the therapist reads this)" value={declineWhy} onChangeText={(v) => { setDeclineWhy(v); setDecideError(null) }} error={decideError} />
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <Button
+                        testID="ev-decline-confirm"
+                        variant="danger"
+                        size="sm"
+                        label="Decline"
+                        onPress={async () => {
+                          const r = await api.events.decide(e.id, false, declineWhy)
+                          if (!r.ok) return setDecideError(r.error)
+                          setDeclining(null)
+                          setDeclineWhy('')
+                        }}
+                      />
+                      <Button variant="ghost" size="sm" label="Back" onPress={() => setDeclining(null)} />
+                    </View>
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Button
+                      testID={`ev-approve-${e.id}`}
+                      size="sm"
+                      label="Approve"
+                      onPress={async () => {
+                        const r = await api.events.decide(e.id, true)
+                        setDecideError(r.ok ? null : r.error)
+                      }}
+                    />
+                    <Button testID={`ev-decline-${e.id}`} variant="quiet" size="sm" label="Decline" onPress={() => { setDeclining(e.id); setDeclineWhy(''); setDecideError(null) }} />
+                  </View>
+                )
+              ) : null}
+            </View>
+          ))}
+          {decideError && declining === null ? <Banner tone="clay">{decideError}</Banner> : null}
+        </Panel>
+      ) : null}
       <Panel title="Coming up" style={{ gap: 0 }}>
         {upcoming.length ? upcoming.map(row) : <Text variant="small" muted>Nothing scheduled.</Text>}
       </Panel>

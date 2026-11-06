@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../src/api'
 import { DEMO_MFA } from '../src/api/admin'
 import type { NewEventInput } from '../src/lib/events'
-import { upcomingEvents, validateNewEvent } from '../src/lib/events'
+import { upcomingEvents, validateNewEvent, validateProposal } from '../src/lib/events'
 import { seedEvents } from '../src/data/events'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
 import { freshState, getDb, update } from '../src/store/db'
@@ -91,5 +91,75 @@ describe('events in the app', () => {
     expect(api.events.cancel(e.id, 'The speaker is unwell').ok).toBe(true)
     expect(getDb().events.find((x) => x.id === e.id)!.cancelled?.reason).toBe('The speaker is unwell')
     expect(api.events.cancel(e.id, 'Again')).toMatchObject({ ok: false })
+  })
+})
+
+describe('proposals from therapists', () => {
+  const DAY = 24 * H
+  const proposal = (over: Partial<Omit<NewEventInput, 'host'>> = {}) => {
+    const { host: _h, ...rest } = good({ startsAt: now() + 6 * DAY })
+    return { ...rest, ...over }
+  }
+  beforeEach(() => {
+    vi.useFakeTimers()
+    resetClock()
+    update(freshState())
+  })
+
+  it('need more notice than a staff event, and are run by the therapist', () => {
+    const { host: _h, ...p } = good({ startsAt: 2 * DAY })
+    expect(validateProposal(p, 'Dr. Amina Otieno', 0)).toMatch(/3 days ahead/)
+    expect(validateProposal({ ...p, startsAt: 5 * DAY }, 'Dr. Amina Otieno', 0)).toBeNull()
+  })
+
+  it('wait for review, and members do not see them until they are approved', () => {
+    expect(api.events.propose(proposal())).toMatchObject({ ok: false, code: 'not-therapist' })
+    api.portal.signIn()
+    const r = api.events.propose(proposal())
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    const e = getDb().events.find((x) => x.id === r.value.id)!
+    expect(e).toMatchObject({ status: 'pending', host: 'Dr. Amina Otieno', proposedBy: 'Dr. Amina Otieno' })
+    expect(upcomingEvents(getDb().events, now()).some((x) => x.id === e.id)).toBe(false)
+
+    api.demo.grantPlan('monthly')
+    expect(api.events.toggleInterest(e.id)).toMatchObject({ ok: false, code: 'gone' })
+
+    expect(api.events.decide(e.id, true)).toMatchObject({ ok: false, code: 'role' })
+    api.admin.signIn('T. Njeri', DEMO_MFA)
+    expect(api.events.decide(e.id, true)).toMatchObject({ ok: false, code: 'role' })
+    api.admin.signIn('Dr. K. Mwende', DEMO_MFA)
+    expect(api.events.decide(e.id, true).ok).toBe(true)
+    expect(getDb().admin!.audit[0]).toMatchObject({ action: 'Approved event proposal' })
+    expect(upcomingEvents(getDb().events, now()).some((x) => x.id === e.id)).toBe(true)
+    expect(api.events.toggleInterest(e.id).ok).toBe(true)
+    expect(api.events.decide(e.id, true)).toMatchObject({ ok: false, code: 'gone' })
+  })
+
+  it('can be declined with a reason the therapist reads, and never shown to members', () => {
+    api.portal.signIn()
+    const r = api.events.propose(proposal())
+    if (!r.ok) throw new Error('propose')
+    api.admin.signIn('Dr. K. Mwende', DEMO_MFA)
+    expect(api.events.decide(r.value.id, false, 'no')).toMatchObject({ ok: false, code: 'reason' })
+    expect(api.events.decide(r.value.id, false, 'We already have a walk that week').ok).toBe(true)
+    const e = getDb().events.find((x) => x.id === r.value.id)!
+    expect(e).toMatchObject({ status: 'declined', declineReason: 'We already have a walk that week' })
+    expect(upcomingEvents(getDb().events, now()).some((x) => x.id === e.id)).toBe(false)
+    expect(api.events.cancel(e.id, 'Cancelling a proposal')).toMatchObject({ ok: false, code: 'not-live' })
+  })
+
+  it('allow three waiting at once, and a therapist can withdraw one', () => {
+    api.portal.signIn()
+    const ids = [1, 2, 3].map((n) => {
+      const r = api.events.propose(proposal({ title: `A proposal number ${n} here` }))
+      if (!r.ok) throw new Error('propose')
+      return r.value.id
+    })
+    expect(api.events.propose(proposal({ title: 'A fourth proposal here' }))).toMatchObject({ ok: false, code: 'too-many' })
+    expect(api.events.withdraw(ids[0]).ok).toBe(true)
+    expect(getDb().events.find((x) => x.id === ids[0])!.status).toBe('withdrawn')
+    expect(api.events.withdraw(ids[0])).toMatchObject({ ok: false, code: 'gone' })
+    expect(api.events.propose(proposal({ title: 'A fourth proposal here' })).ok).toBe(true)
   })
 })

@@ -35,6 +35,12 @@ export async function syncStaffEvents(): Promise<void> {
   if (d.ok && d.events) update({ events: d.events })
 }
 
+/** A therapist's own proposals, with each one's status. */
+export async function syncPortalEvents(): Promise<void> {
+  const d = await call<Reply & { events?: CommunityEvent[] }>('portal_events')
+  if (d.ok && d.events) update({ events: d.events })
+}
+
 export const remoteEvents = {
   ...mockEvents,
 
@@ -59,6 +65,27 @@ export const remoteEvents = {
 
   async cancel(id: string, reason: string): Promise<Res> {
     const r = await call('admin_cancel_event', { p_id: id, p_reason: reason })
+    await syncStaffEvents()
+    return res(r)
+  },
+
+  async propose(input: Omit<NewEventInput, 'host'>): Promise<Res<{ id: string }>> {
+    const r = await call<Reply & { id?: string }>('portal_propose_event', {
+      p_title: input.title, p_blurb: input.blurb, p_kind: input.kind, p_mode: input.mode, p_place: input.place,
+      p_starts: new Date(input.startsAt).toISOString(), p_duration: input.durationMin,
+    })
+    await syncPortalEvents()
+    return r.ok ? { ok: true, value: { id: r.id ?? '' } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+
+  async withdraw(id: string): Promise<Res> {
+    const r = await call('portal_withdraw_event', { p_id: id })
+    await syncPortalEvents()
+    return res(r)
+  },
+
+  async decide(id: string, approve: boolean, reason = ''): Promise<Res> {
+    const r = await call('admin_decide_event', { p_id: id, p_approve: approve, p_reason: approve ? null : reason })
     await syncStaffEvents()
     return res(r)
   },

@@ -430,7 +430,14 @@ export interface CommunityEvent {
   cancelled?: { reason: string; at: number }
   /** The staff member who scheduled it. Staff only. */
   createdBy?: string
+  /** Staff events are live at once. A therapist's proposal is pending until a clinical reviewer decides. Missing means live. */
+  status?: EventStatus
+  /** The therapist who proposed it. */
+  proposedBy?: string
+  /** Why a proposal was declined. Staff and the therapist see it. */
+  declineReason?: string
 }
+export type EventStatus = 'pending' | 'live' | 'declined' | 'withdrawn'
 
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'
 /** The last three are concerns about a therapist, and go to Clinical reviewers. */

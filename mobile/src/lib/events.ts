@@ -40,11 +40,23 @@ export function validateNewEvent(i: NewEventInput, now: number): string | null {
   return null
 }
 
+export const PROPOSAL_LEAD_DAYS = 3
+export const MAX_PENDING_PROPOSALS = 3
+export const isLive = (e: Pick<CommunityEvent, 'status'>): boolean => !e.status || e.status === 'live'
+
+/** A therapist's proposal is checked like a staff event, but needs more notice so a reviewer has time to decide. The therapist runs it themselves. */
+export function validateProposal(i: Omit<NewEventInput, 'host'>, therapistName: string, now: number): string | null {
+  const err = validateNewEvent({ ...i, host: therapistName }, now)
+  if (err) return err
+  if (i.startsAt < now + PROPOSAL_LEAD_DAYS * 24 * 60 * MIN) return `Propose it at least ${PROPOSAL_LEAD_DAYS} days ahead, so it can be reviewed.`
+  return null
+}
+
 export const eventEnd = (e: Pick<CommunityEvent, 'startsAt' | 'durationMin'>): number => e.startsAt + e.durationMin * MIN
 export const isOver = (e: Pick<CommunityEvent, 'startsAt' | 'durationMin'>, now: number): boolean => eventEnd(e) <= now
 export const isHappeningNow = (e: Pick<CommunityEvent, 'startsAt' | 'durationMin' | 'cancelled'>, now: number): boolean => !e.cancelled && e.startsAt <= now && now < eventEnd(e)
 
 /** What a member sees: events that have not finished and are not cancelled, soonest first. */
 export function upcomingEvents(events: CommunityEvent[], now: number): CommunityEvent[] {
-  return events.filter((e) => !e.cancelled && !isOver(e, now)).sort((a, b) => a.startsAt - b.startsAt)
+  return events.filter((e) => isLive(e) && !e.cancelled && !isOver(e, now)).sort((a, b) => a.startsAt - b.startsAt)
 }
