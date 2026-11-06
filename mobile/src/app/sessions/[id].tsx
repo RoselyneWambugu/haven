@@ -104,8 +104,8 @@ export default function SessionDetail() {
           ) : null}
           <Banner tone={free ? 'green' : 'sun'} icon="cal">
             {free
-              ? 'Free to reschedule or cancel until the last hour. After that, cancelling keeps 10%, and if you don’t come you get half back.'
-              : 'It’s within the last hour. Cancelling keeps 10%, and if you don’t come you get half back. It can’t be moved now.'}
+              ? 'Free to reschedule or cancel until the last hour. After that, cancelling keeps 10%, and if you don’t come you get 85% back.'
+              : 'It’s within the last hour. Cancelling keeps 10%, and if you don’t come you get 85% back. It can’t be moved now.'}
           </Banner>
           {free ? <Button testID="reschedule" variant="quiet" label="Reschedule" onPress={() => go(`/session-change/${s.id}?action=reschedule`)} /> : null}
           <Button testID="cancel-session" variant="dangerGhost" label="Cancel session" onPress={() => go(`/session-change/${s.id}?action=cancel`)} />

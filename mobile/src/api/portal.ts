@@ -201,8 +201,8 @@ export const portal = {
     const p = getDb().portal
     const s = p?.sessions.find((x) => x.id === id)
     if (!p || !s) return { ok: false, error: 'Session not found.' }
-    // A member who does not come: half goes back to them, and the therapist and Echo each take a quarter.
-    const gross = input.attendance === 'no-show' ? memberNoShowSplit(p.profile.priceKes ?? 0).therapistKes : p.profile.priceKes
+    // A member who does not come: 85% goes back to them and Echo keeps the rest, so the therapist earns nothing from it.
+    const gross = input.attendance === 'no-show' ? (memberNoShowSplit(p.profile.priceKes ?? 0).therapistKes || null) : p.profile.priceKes
     patch((x) => ({
       sessions: x.sessions.map((q) => (q.id === id ? { ...q, status: 'completed', attendance: input.attendance, note: input.note, followUp: input.followUp, grossKes: gross, end: Math.min(q.end, now()) } : q)),
     }))

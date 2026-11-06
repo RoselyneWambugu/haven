@@ -368,6 +368,7 @@ export const remoteAdmin = {
   verify: (id: string, decision: 'approved' | 'info' | 'rejected', message: string, checklist: Applicant['checklist']) =>
     act('admin_verify_applicant', { p_id: id, p_decision: decision, p_message: message, p_checklist: checklist }),
   decideRefund: (id: string, approve: boolean) => act('admin_decide_refund', { p_id: id, p_approve: approve }),
+  markRefundSent: (id: string, reference = '') => act('admin_mark_refund_sent', { p_id: id, p_reference: reference }),
 
   users(): AdminUser[] {
     return getDb().admin?.users ?? []

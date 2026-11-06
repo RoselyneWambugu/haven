@@ -479,6 +479,17 @@ export const admin = {
     return { ok: true, value: undefined }
   },
 
+  /** Billing sent an automatic refund by hand (until the M-Pesa sender is connected, or after it failed). */
+  markRefundSent(id: string, _reference = ''): Res {
+    const { name, role } = me()
+    if (!can(role, 'issueRefunds')) return { ok: false, error: 'Only billing staff can do this.', code: 'role' }
+    const r = getDb().admin!.refunds.find((x) => x.id === id)
+    if (!r || r.status !== 'approved' || r.sendStatus === 'sent') return { ok: false, error: 'This refund can’t be marked sent.' }
+    patch((a) => ({ refunds: a.refunds.map((x) => (x.id === id ? { ...x, sendStatus: 'sent' as const, sendError: null } : x)) }))
+    log('Marked refund sent', id, `Sent by hand by ${name}`)
+    return { ok: true, value: undefined }
+  },
+
   // --- strike policy (ADM-13, D5) ---
   proposePolicy(policy: AdminState['policy']): Res {
     const { name, role } = me()

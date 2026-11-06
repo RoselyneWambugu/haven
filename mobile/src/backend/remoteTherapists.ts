@@ -1,3 +1,4 @@
+import { FLAKE_STARS } from '@/lib/ratings'
 import { sessions as mockSessions } from '@/api/care'
 import type { AvailabilityBlock, Res, Session, SessionStatus, Therapist } from '@/api/types'
 import { THERAPISTS } from '@/data/seed'
@@ -38,6 +39,7 @@ interface RemoteSession {
   created_at: string
   late_charge: boolean
   refund_kes?: number | null
+  flaked?: boolean
   follow_up_offer: string | null
   rating: { stars: number; comment: string } | null
 }
@@ -54,7 +56,7 @@ export async function rpc(name: string, args?: Record<string, unknown>): Promise
 
 const toSession = (s: RemoteSession): Session => ({
   id: s.id, therapistId: s.therapist_id, mode: s.mode, start: ms(s.start_at), end: ms(s.end_at), status: s.status, priceKes: s.price_kes, receiptNo: s.receipt_no ?? '',
-  createdAt: ms(s.created_at), rating: s.rating, followUpOffer: s.follow_up_offer ? ms(s.follow_up_offer) : null, lateChargeApplied: s.late_charge, refundKes: s.refund_kes ?? null,
+  createdAt: ms(s.created_at), rating: s.rating, followUpOffer: s.follow_up_offer ? ms(s.follow_up_offer) : null, lateChargeApplied: s.late_charge, refundKes: s.refund_kes ?? null, flaked: s.flaked ?? false,
 })
 
 let directory: RemoteTherapist[] = []
@@ -64,11 +66,11 @@ let directory: RemoteTherapist[] = []
  * member's own ratings, because the screens add those back from the member's sessions.
  */
 function applyDirectory(): void {
-  const mine = getDb().sessions.filter((s) => s.rating)
+  const mine = getDb().sessions.filter((s) => s.rating || s.flaked)
   const list: Therapist[] = directory.map((t) => {
     const own = mine.filter((s) => s.therapistId === t.id)
     const baseCount = Math.max(0, t.rating_count - own.length)
-    const baseSum = Math.max(0, t.rating_sum - own.reduce((a, s) => a + (s.rating?.stars ?? 0), 0))
+    const baseSum = Math.max(0, t.rating_sum - own.reduce((a, s) => a + (s.flaked ? FLAKE_STARS : (s.rating?.stars ?? 0)), 0))
     return {
       id: t.id, name: t.name, title: t.title, tone: t.tone, bio: t.bio, specialisations: t.specialisations, languages: t.languages, modes: t.modes, priceKes: t.price_kes,
       rating: baseCount ? baseSum / baseCount : 0, reviews: baseCount, licenceBody: t.licence_body, licenceNumber: t.licence_number, licenceValidTo: t.licence_valid_to,

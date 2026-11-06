@@ -49,8 +49,8 @@ begin
   -- 3. The member did not come: 50% back, 25% to the therapist, 25% to Echo.
   perform private.settle_session_money(s3, 'member-no-show');
   select * into x from private.sessions where id = s3;
-  if x.refund_kes <> 1000 or x.gross_kes <> 500 or x.fee_kes <> 0 then bad := bad || ('no-show split: ' || x.refund_kes || '/' || coalesce(x.gross_kes, -1)); end if;
-  if not exists (select 1 from private.refunds where order_id = o3 and amount_kes = 1000) then bad := bad || 'no-show refund record'; end if;
+  if x.refund_kes <> 1700 or x.gross_kes is not null then bad := bad || ('no-show split: ' || x.refund_kes || '/' || coalesce(x.gross_kes, -1)); end if;
+  if not exists (select 1 from private.refunds where order_id = o3 and amount_kes = 1700) then bad := bad || 'no-show refund record'; end if;
 
   -- 4. The therapist has not joined 15 minutes in: everything goes back and the therapist earns nothing.
   perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true); set local role authenticated;

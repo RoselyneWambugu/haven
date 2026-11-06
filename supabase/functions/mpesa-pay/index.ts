@@ -53,6 +53,8 @@ Deno.serve(async (req) => {
     const p = await stkPush({ phone, amount, reference: `EC${order_id.slice(0, 8)}`, description: ctx.kind === 'session' ? 'Echo session' : 'Echo plan', callbackUrl })
     if (!p.ok) return reply({ ok: false, code: 'push', error: 'We couldn’t reach M-Pesa. Try again in a moment.' })
     await admin.rpc('payment_attach_request', { p_order: order_id, p_checkout_request_id: p.id })
+    // Remember which number is paying, so a refund goes back to the same one.
+    await admin.rpc('payment_set_phone', { p_order: order_id, p_phone: phone })
     return reply({ ok: true, state: 'pending' })
   } catch (_e) {
     return reply({ ok: false, code: 'push', error: 'We couldn’t reach M-Pesa. Try again in a moment.' })

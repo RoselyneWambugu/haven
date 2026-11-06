@@ -1,7 +1,7 @@
 -- Money when a paid session is cancelled or missed. The member's payment is held and shared out afterwards:
 --   cancelled more than an hour before the start: everything goes back;
 --   cancelled in the last hour: 10% is kept (half to the therapist, half to Echo) and 90% goes back;
---   the member does not come: 50% goes back, the therapist takes 25% and Echo 25%;
+--   the member does not come: 85% goes back and Echo keeps 15% (the therapist earns nothing);
 --   the therapist has not joined 15 minutes after the start: the member leaves with everything back.
 -- The percentages sit in private.config (key sessionMoney) so they can be changed without a release.
 -- An automatic refund is recorded as an approved refund made by "System" with its amount. Until a payment provider's reversal is connected
@@ -10,7 +10,7 @@
 -- Nothing here removes data.
 
 insert into private.config (key, value) values ('sessionMoney',
-  '{"lateCancelMinutes":60,"lateCancelFeePct":10,"lateCancelTherapistSharePct":50,"noShowRefundPct":50,"noShowTherapistPct":25,"therapistWaitMinutes":15}')
+  '{"lateCancelMinutes":60,"lateCancelFeePct":10,"lateCancelTherapistSharePct":50,"noShowRefundPct":85,"noShowTherapistPct":0,"therapistWaitMinutes":15}')
   on conflict (key) do nothing;
 
 alter table private.sessions add column if not exists refund_kes int;

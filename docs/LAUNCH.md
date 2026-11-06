@@ -15,6 +15,7 @@ The live checklist is in the Admin dashboard (Overview, real backend only). It r
 
 | What | Where | Steps |
 | --- | --- | --- |
+| M-Pesa refunds | Edge Functions > Secrets | Add `MPESA_INITIATOR_NAME` (the B2C API operator Safaricom gave you) and `MPESA_SECURITY_CREDENTIAL` (that operator's password encrypted with Safaricom's certificate; the Daraja portal can generate it) next to the payment secrets, and make sure `SMS_DRAIN_TOKEN` is set (the same token the text sender uses). In Daraja, set the B2C result and timeout address to `https://<project>.supabase.co/functions/v1/mpesa-refund-result?token=<MPESA_CALLBACK_TOKEN>`. B2C has to be enabled on your shortcode by Safaricom for production. Until these are set, refunds wait in Billing as "Send by hand". Test one refund in the sandbox first. |
 | M-Pesa | Edge Functions > Secrets | `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_SHORTCODE`, `MPESA_PASSKEY`, `MPESA_CALLBACK_TOKEN`, `MPESA_ENV=sandbox` first. Test in the Daraja sandbox, then `production`. Make one real payment and refund it. |
 | SMS | Edge Functions > Secrets, Vault, Auth | `AT_USERNAME`, `AT_API_KEY`, `AT_ENV`, optional `AT_SENDER_ID`; `SMS_DRAIN_TOKEN` and a vault secret `sms_drain_token` with the same value; enable the Phone provider and the Send SMS hook (`send-sms-hook`) and copy its secret to `SEND_SMS_HOOK_SECRET`. Receive one real sign-in code. |
 

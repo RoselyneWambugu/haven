@@ -128,7 +128,7 @@ export const sessions = {
     if (!s || s.status !== 'booked') return { ok: false, error: 'That session can’t be changed.' }
     if (!canReportTherapistLate(s.start, s.end, now())) return { ok: false, error: 'Please wait 15 minutes after the start for your therapist to join.', code: 'early' }
     const split = therapistNoShowSplit(s.priceKes ?? 0)
-    setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: false, refundKes: split.refundKes }))
+    setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: false, refundKes: split.refundKes, flaked: true }))
     return { ok: true, value: { refundKes: split.refundKes } }
   },
 

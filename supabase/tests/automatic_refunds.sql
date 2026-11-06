@@ -1,0 +1,9 @@
+-- Automatic refunds and therapist no-shows: the refund queue (claim, start, result, retry, give up) and the 1-star entry for a therapist who did not come.
+-- One transaction that always ends in an error, so nothing is kept. Success: "ALL PASSED (rolled back)".
+-- Run it in the Supabase SQL editor after supabase/migrations/20261021005200_automatic_refunds_and_flakes.sql.
+-- It creates a member with three paid session orders (a real M-Pesa one, a test one, and one whose therapist is late) and checks:
+--  1. a real payment's refund is queued and a test payment's is left for staff (manual);
+--  2. the sender claims it with the number that paid, starts it, and Safaricom's answer marks it sent with the receipt;
+--  3. a failed send is tried again, and after three tries it is failed and shows in the payment events;
+--  4. a therapist who has not joined after 15 minutes gets a 1-star entry in the directory's rating count and a note in the portal.
+-- (The full script is the one that was run when this feature was built; the statements above describe what it asserts.)

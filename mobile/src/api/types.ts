@@ -258,6 +258,8 @@ export interface Session {
   lateChargeApplied: boolean
   /** What goes back (or went back) to the member's M-Pesa number when the session was cancelled or missed. Null while nothing is owed. */
   refundKes?: number | null
+  /** The therapist did not join and the member left: it counts as a 1-star rating for the therapist. */
+  flaked?: boolean
 }
 
 // ---------- plans and payments ----------
@@ -664,6 +666,9 @@ export interface AdminRefund {
   /** For a refund made by a cancelled or missed session: how much to send back to the member's number. */
   amountKes?: number | null
   automatic?: boolean
+  /** For an automatic refund: waiting to be sent, on its way, sent, failed, or to be sent by hand. */
+  sendStatus?: 'queued' | 'sending' | 'processing' | 'sent' | 'failed' | 'manual' | null
+  sendError?: string | null
 }
 
 export interface AdminFlag {

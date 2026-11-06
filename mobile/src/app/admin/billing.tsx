@@ -11,6 +11,8 @@ import { PaymentEvents, SmsQueuePanel } from '@/components/PaymentOps'
 import { StaffPayouts } from '@/components/StaffPayouts'
 import { useDb } from '@/store/db'
 
+const SEND_LABEL = { queued: 'Waiting to send', sending: 'Sending', processing: 'On its way', sent: 'Sent', failed: 'Failed, send by hand', manual: 'Send by hand' } as const
+
 /** Billing staff see the pen name and the payment reference. A full name appears only when needed to resolve a dispute, and that view is logged (ADM-12). */
 export default function Billing() {
   const a = useDb((s) => s.admin)
@@ -46,7 +48,17 @@ export default function Billing() {
                 <Button testID={`decline-${r.id}`} size="sm" variant="ghost" label="Decline" onPress={async () => { const x = await api.admin.decideRefund(r.id, false); setError(x.ok ? null : x.error) }} />
               </View>
             ) : (
-              <Badge tone="plain" label={`${r.status === 'approved' ? 'Approved' : 'Declined'} by ${r.decidedBy}`} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <Badge tone="plain" label={`${r.status === 'approved' ? 'Approved' : 'Declined'} by ${r.decidedBy}`} />
+                {r.status === 'approved' && r.sendStatus ? (
+                  <View testID={`send-${r.id}`}>
+                    <Badge tone={r.sendStatus === 'sent' ? 'green' : r.sendStatus === 'failed' ? 'clay' : 'plain'} label={SEND_LABEL[r.sendStatus]} />
+                  </View>
+                ) : null}
+                {r.status === 'approved' && r.sendStatus && r.sendStatus !== 'sent' && r.sendStatus !== 'processing' ? (
+                  <Button testID={`mark-sent-${r.id}`} size="sm" variant="ghost" label="I sent it" onPress={async () => { const x = await api.admin.markRefundSent(r.id); setError(x.ok ? null : x.error) }} />
+                ) : null}
+              </View>
             )}
           </View>
         ))}

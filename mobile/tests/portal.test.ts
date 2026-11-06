@@ -93,13 +93,13 @@ describe('portal api', () => {
     expect(api.portal.join(soon.id).ok).toBe(true)
   })
 
-  it('pays for attended sessions and gives a no-show a quarter', () => {
+  it('pays for attended sessions and pays nothing for a no-show', () => {
     const [a, b] = p().sessions.filter((s) => s.status === 'booked')
     api.portal.wrapUp(a.id, { attendance: 'attended', note: 'ok', followUp: null })
     api.portal.wrapUp(b.id, { attendance: 'no-show', note: '', followUp: null })
     const s = getDb().portal!.sessions
     expect(s.find((x) => x.id === a.id)!.grossKes).toBe(1500)
-    expect(s.find((x) => x.id === b.id)!.grossKes).toBe(375)
+    expect(s.find((x) => x.id === b.id)!.grossKes).toBeNull()
   })
 
   it('sorts earnings into pending and available by the hold period', () => {

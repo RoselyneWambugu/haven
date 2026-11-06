@@ -12,9 +12,9 @@ export const SESSION_MONEY = {
   /** Of that fee, the share that goes to the therapist for the time they kept free. The rest is Echo's. */
   lateCancelTherapistSharePct: 50,
   /** A member who does not come: the share of the payment that goes back, and how the rest is shared. */
-  noShowRefundPct: 50,
-  noShowTherapistPct: 25,
-  noShowPlatformPct: 25,
+  noShowRefundPct: 85,
+  noShowTherapistPct: 0,
+  noShowPlatformPct: 15,
   /** How long a member waits for the therapist to join before they may leave with everything back. */
   therapistWaitMinutes: 15,
   /** What the app tells a member about how long a refund takes: to the same M-Pesa number, within this many working days. */
@@ -48,7 +48,7 @@ export function cancelSplit(start: number, at: number, paidKes: number): Split {
   return make('late-cancel', paidKes, paidKes - fee, pct(fee, SESSION_MONEY.lateCancelTherapistSharePct))
 }
 
-/** The member did not come. Half goes back; the therapist and Echo each take a quarter. */
+/** The member did not come. 85% goes back and Echo keeps the rest; the therapist earns nothing from it. */
 export function memberNoShowSplit(paidKes: number): Split {
   return make('member-no-show', paidKes, pct(paidKes, SESSION_MONEY.noShowRefundPct), pct(paidKes, SESSION_MONEY.noShowTherapistPct))
 }
@@ -74,4 +74,4 @@ export function cancelWords(split: Split, money: (n: number | null) => string): 
     : `It’s within the last hour, so a ${SESSION_MONEY.lateCancelFeePct}% fee (${money(split.paidKes - split.refundKes)}) is kept. ${money(split.refundKes)} goes back to your M-Pesa number.`
 }
 
-export const REFUND_NOTE = `Refunds go to the M-Pesa number you paid from, usually within ${SESSION_MONEY.refundWorkingDays} working days.`
+export const REFUND_NOTE = `Refunds go to the M-Pesa number you paid from, usually within a few minutes, and always within ${SESSION_MONEY.refundWorkingDays} working days.`

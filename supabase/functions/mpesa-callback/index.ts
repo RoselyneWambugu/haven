@@ -60,6 +60,8 @@ Deno.serve(async (req) => {
     await admin.rpc('payment_event', { p_kind: 'unverified', p_reference: id, p_order: orderId, p_payload: { receipt } })
     return accepted()
   }
+  // The number that really paid is in the callback; a refund goes back to it.
+  if (items.PhoneNumber) await admin.rpc('payment_set_phone', { p_order: orderId, p_phone: String(items.PhoneNumber) })
   const c = (await admin.rpc('confirm_payment', { p_order: orderId, p_provider_ref: receipt, p_method: 'mpesa' })).data as { ok: boolean; refund?: boolean }
   if (c?.refund) await admin.rpc('payment_event', { p_kind: 'refund_needed', p_reference: id, p_order: orderId, p_payload: { receipt, why: 'the time was taken while paying' } })
   return accepted()

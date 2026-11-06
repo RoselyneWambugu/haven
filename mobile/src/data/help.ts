@@ -101,7 +101,7 @@ export const ARTICLES: HelpArticle[] = [
     'Open Therapists, then My sessions.',
     'Choose Reschedule or Cancel on the session.',
     'Cancel more than an hour before and all of it goes back to your M-Pesa number. In the last hour, 10% is kept.',
-    'If you don’t come, half goes back. If your therapist hasn’t joined after 15 minutes, you can leave and get all of it back.',
+    'If you don’t come, 85% goes back. If your therapist hasn’t joined after 15 minutes, you can leave and get all of it back.',
   ], ['book-session']),
   a('camera-off', 'therapists', 'Do I have to show my face on a video call?', 'No. Your camera is off by default.', [
     'You appear as your pen name and avatar.',

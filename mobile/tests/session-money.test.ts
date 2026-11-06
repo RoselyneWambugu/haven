@@ -28,8 +28,8 @@ describe('cancelling a paid session', () => {
 })
 
 describe('a member who does not come', () => {
-  it('gets half back, and the therapist and Echo each take a quarter', () => {
-    expect(memberNoShowSplit(2000)).toMatchObject({ kind: 'member-no-show', refundKes: 1000, therapistKes: 500, platformKes: 500 })
+  it('gets 85% back, Echo keeps the rest and the therapist earns nothing', () => {
+    expect(memberNoShowSplit(2000)).toMatchObject({ kind: 'member-no-show', refundKes: 1700, therapistKes: 0, platformKes: 300 })
   })
 })
 
@@ -49,5 +49,25 @@ describe('what the cancel screen says', () => {
     const late = cancelWords(cancelSplit(start, start - 20 * MIN, 2000), money)
     expect(late).toMatch(/10% fee \(KES 200\)/)
     expect(late).toMatch(/KES 1800 goes back/)
+  })
+})
+
+import { FLAKE_STARS, liveStars, summarise } from '../src/lib/ratings'
+describe('a therapist who does not come', () => {
+  it('counts as a 1-star rating on their profile, whatever else was given', () => {
+    const sessions = [
+      { therapistId: 't1', rating: { stars: 5, comment: '' }, flaked: false },
+      { therapistId: 't1', rating: null, flaked: true },
+      { therapistId: 't2', rating: null, flaked: true },
+    ]
+    expect(liveStars(sessions, 't1')).toEqual([5, FLAKE_STARS])
+    expect(liveStars(sessions, 't2')).toEqual([FLAKE_STARS])
+  })
+  it('pulls their average down', () => {
+    const base = { rating: 4.8, reviews: 20 }
+    const before = summarise(base).average!
+    const after = summarise(base, [FLAKE_STARS]).average!
+    expect(after).toBeLessThan(before)
+    expect(after).toBe(4.6)
   })
 })
