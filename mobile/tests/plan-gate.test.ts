@@ -3,6 +3,8 @@ import { api } from '../src/api'
 import { THERAPISTS } from '../src/data/seed'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
 import { slotsFor } from '../src/lib/directory'
+import { daysLeft, daysLeftLabel, periodUsed, planIncludes } from '../src/lib/plan'
+import type { PlanCfg } from '../src/api/types'
 import { freshState, getDb, update } from '../src/store/db'
 
 const BODY = 'Some days are harder than others and I wanted to say so.'
@@ -56,5 +58,39 @@ describe('the whole platform needs a paid plan', () => {
     advanceClock(31 * 24 * 60)
     expect(api.spaces.join('anxiety')).toMatchObject({ ok: false, code: 'needs-plan' })
     expect(api.forum.create({ topic: 'Grief', title: 'Hello', body: BODY })).toMatchObject({ ok: false, code: 'needs-plan' })
+  })
+})
+
+
+describe('what My plan shows', () => {
+  const DAY = 24 * 3600_000
+  const sub = { startedAt: 0, endsAt: 30 * DAY }
+  it('counts whole days left, and says so in words', () => {
+    expect(daysLeft(sub, 0)).toBe(30)
+    expect(daysLeft(sub, 29.5 * DAY)).toBe(1)
+    expect(daysLeft(sub, 31 * DAY)).toBe(0)
+    expect(daysLeftLabel(sub, 7 * DAY)).toBe('23 days left')
+    expect(daysLeftLabel(sub, 29.2 * DAY)).toBe('Ends today')
+    expect(daysLeftLabel({ endsAt: 1.5 * DAY }, 0)).toBe('2 days left')
+    expect(daysLeftLabel(sub, 31 * DAY)).toBe('Ended')
+  })
+  it('measures how much of the period has passed, never outside 0 to 1', () => {
+    expect(periodUsed(sub, 0)).toBe(0)
+    expect(periodUsed(sub, 15 * DAY)).toBe(0.5)
+    expect(periodUsed(sub, 99 * DAY)).toBe(1)
+    expect(periodUsed(sub, -5 * DAY)).toBe(0)
+    expect(periodUsed({ startedAt: 5, endsAt: 5 }, 9)).toBe(1)
+  })
+  it('lists what the plan gives from the plan’s own settings', () => {
+    const plan = (e: PlanCfg['entitlements']) => ({ entitlements: e })
+    const all = planIncludes(plan({ disappearing: true, therapistDiscountPct: 10 }))
+    expect(all.some((l) => /5 chats at a time/.test(l))).toBe(true)
+    expect(all.some((l) => /Community/.test(l))).toBe(true)
+    expect(all).toContain('Therapist sessions at 10% off')
+    expect(all).toContain('Disappearing messages')
+    const lean = planIncludes(plan({ disappearing: false, therapistDiscountPct: 0 }))
+    expect(lean).toContain('Book sessions with a verified therapist')
+    expect(lean).not.toContain('Disappearing messages')
+    expect(lean.some((l) => /% off/.test(l))).toBe(false)
   })
 })
