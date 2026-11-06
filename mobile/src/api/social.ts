@@ -15,6 +15,7 @@ import { chatSnapshot, commentSnapshot, groupSnapshot, postSnapshot, priorReport
 import { dayAndClock } from '@/lib/time'
 import { spaceById } from '@/data/spaces'
 import { needsCheck } from '@/lib/spaces'
+import { detectNames, explainNames, GOSSIP_SPACE, GOSSIP_TOPIC, isGossip } from '@/lib/gossip'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
 
 const SEC = 1000
@@ -358,18 +359,23 @@ export const forum = {
     if (body.length < 10) return { ok: false, error: 'Write a little more. A few sentences is plenty.', code: 'body' }
     const check = detectBlockedContent(`${title}\n${body}`)
     if (check.blocked) return { ok: false, error: explainBlock(check.reasons), code: 'blocked' }
-    const space = input.space ? spaceById(input.space) : undefined
-    if (input.space && !space) return { ok: false, error: 'That space isn’t here.', code: 'space' }
+    const gossip = input.space === GOSSIP_SPACE
+    if (gossip) {
+      const names = detectNames(`${title}\n${body}`)
+      if (names.length) return { ok: false, error: explainNames(names), code: 'names' }
+    }
+    const space = input.space && !gossip ? spaceById(input.space) : undefined
+    if (input.space && !gossip && !space) return { ok: false, error: 'That space isn’t here.', code: 'space' }
     if (space && !db.spaces.includes(space.id)) return { ok: false, error: 'Join this space to post in it.', code: 'not-joined' }
     const pending = needsCheck(space, !!a.hasPostedBefore)
     const post: ForumPost = {
-      id: uid('post'), authorName: a.public.penName, authorAvatar: a.public.avatar, authorKey: 'me', topic: space ? space.name : input.topic, space: space?.id, title, body,
+      id: uid('post'), authorName: a.public.penName, authorAvatar: a.public.avatar, authorKey: 'me', topic: gossip ? GOSSIP_TOPIC : space ? space.name : input.topic, space: gossip ? GOSSIP_SPACE : space?.id, title, body,
       createdAt: now(), supports: 0, supportedByMe: false, comments: [], status: pending ? 'pending' : 'published', mine: true,
     }
     update((s) => ({ posts: [post, ...s.posts] }))
     updateAccount((x) => ({ ...x, hasPostedBefore: true }))
     if (pending) later(`pub-${post.id}`, 15 * SEC, () => publishPending(post.id))
-    else scheduleReplies(post.id)
+    else if (!gossip) scheduleReplies(post.id)
     return { ok: true, value: { post, pending } }
   },
 
@@ -379,6 +385,10 @@ export const forum = {
     if (now() - p.createdAt > EDIT_WINDOW) return { ok: false, error: 'You can edit a post for 15 minutes after posting.', code: 'window' }
     const check = detectBlockedContent(`${patch.title}\n${patch.body}`)
     if (check.blocked) return { ok: false, error: explainBlock(check.reasons), code: 'blocked' }
+    if (isGossip(p)) {
+      const names = detectNames(`${patch.title}\n${patch.body}`)
+      if (names.length) return { ok: false, error: explainNames(names), code: 'names' }
+    }
     setPost(id, (x) => ({ ...x, title: patch.title.trim(), body: patch.body.trim() }))
     return { ok: true, value: undefined }
   },
@@ -391,6 +401,7 @@ export const forum = {
     const a = getDb().account
     const post = getDb().posts.find((p) => p.id === postId)
     if (!a || !post) return { ok: false, error: 'That post is gone.' }
+    if (isGossip(post)) return { ok: false, error: 'Gossip takes reactions, not replies.', code: 'gossip' }
     const gate = requirePlan('The community')
     if (gate) return gate as Res<{ comment: ForumComment }>
     if (!getDb().content.flags.forum) return { ok: false, error: 'Comments are paused for now.', code: 'forum-off' }

@@ -7,6 +7,7 @@ import { Text } from './Text'
 import { now } from '@/lib/clock'
 import { relative } from '@/lib/time'
 import { go } from '@/lib/nav'
+import { isGossip } from '@/lib/gossip'
 import type { ForumPost } from '@/api'
 import { colors } from '@/theme'
 
@@ -39,12 +40,14 @@ export function PostCard({ post, showTopic = true }: { post: ForumPost; showTopi
             {post.supports}
           </Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-          <Icon name="chats" size={16} color={colors.muted} />
-          <Text variant="caption" muted>
-            {post.comments.length}
-          </Text>
-        </View>
+        {isGossip(post) ? null : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Icon name="chats" size={16} color={colors.muted} />
+            <Text variant="caption" muted>
+              {post.comments.length}
+            </Text>
+          </View>
+        )}
         {therapistReplied ? <Badge icon="check" label="Therapist replied" /> : null}
         {post.status === 'pending' ? <Badge tone="sun" label="In review" /> : null}
       </View>

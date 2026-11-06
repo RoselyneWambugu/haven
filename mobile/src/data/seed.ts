@@ -90,6 +90,24 @@ export function seedPosts(now: number): ForumPost[] {
       ],
     }),
     mk({
+      id: 'g1', space: 'gossip', authorName: 'SilverRiver', authorAvatar: 'leaf', authorKey: 'p-silver', topic: 'Gossip', createdAt: now - 3 * H, supports: 24,
+      title: 'The new matatu fares have everyone talking',
+      body: 'Half my estate says the new fares kicked in on Monday and the other half swears nothing has changed. Anyone actually paid more?',
+      comments: [],
+    }),
+    mk({
+      id: 'g2', space: 'gossip', authorName: 'BlueHeron', authorAvatar: 'drop', authorKey: 'p-heron', topic: 'Gossip', createdAt: now - 9 * H, supports: 41,
+      title: 'Apparently a certain radio presenter is moving stations',
+      body: 'Heard it from three different people today, so either it is true or it is the best rumour of the week. Nobody has confirmed anything yet.',
+      comments: [],
+    }),
+    mk({
+      id: 'g3', space: 'gossip', authorName: 'MorningSun', authorAvatar: 'sun', authorKey: 'p-morning', topic: 'Gossip', createdAt: now - 20 * H, supports: 17,
+      title: 'Wedding season is out of control',
+      body: 'Every weekend there is a send-off, a kamukunji and a wedding, and my group chat is only about what to wear. Is it just me or are the contributions getting bigger?',
+      comments: [],
+    }),
+    mk({
       id: 'f2', authorName: 'QuietPine', authorAvatar: 'pine', authorKey: 'p-quiet', topic: 'Grief', createdAt: now - 5 * H, supports: 51,
       title: 'Lost my dad last month',
       body: 'I don’t know how to explain it to people at work. Everyone says be strong and it makes me feel worse.',

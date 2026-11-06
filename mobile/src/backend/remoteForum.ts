@@ -9,6 +9,7 @@ import { canChat, planState } from '@/lib/plan'
 import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
+import { detectNames, explainNames, GOSSIP_SPACE, GOSSIP_TOPIC, isGossip } from '@/lib/gossip'
 
 interface RemoteComment { id: string; author_name: string; author_avatar: AvatarKind; text: string; at: string; mine: boolean }
 interface RemotePost {
@@ -86,8 +87,12 @@ export const remoteForum = {
     // Checked here for a quick answer, and again on the server so the rule holds even if the app is changed.
     const check = detectBlockedContent(`${input.title}\n${input.body}`)
     if (check.blocked) return { ok: false, error: explainBlock(check.reasons), code: 'blocked' }
+    if (input.space === GOSSIP_SPACE) {
+      const names = detectNames(`${input.title}\n${input.body}`)
+      if (names.length) return { ok: false, error: explainNames(names), code: 'names' }
+    }
     const space = input.space ? spaceById(input.space) : undefined
-    const r = await rpc('create_post', { p_topic: space ? space.name : input.topic, p_title: input.title, p_body: input.body, p_space: input.space ?? null })
+    const r = await rpc('create_post', { p_topic: input.space === GOSSIP_SPACE ? GOSSIP_TOPIC : space ? space.name : input.topic, p_title: input.title, p_body: input.body, p_space: input.space ?? null })
     if (!r.ok) return { ok: false, error: r.error, code: r.code }
     await syncForum()
     const id = String(r.post_id)
@@ -109,6 +114,8 @@ export const remoteForum = {
   },
 
   async comment(postId: string, text: string): Promise<Res<{ comment: ForumComment }>> {
+    const post = getDb().posts.find((x) => x.id === postId)
+    if (post && isGossip(post)) return { ok: false, error: 'Gossip takes reactions, not replies.', code: 'gossip' }
     const gate = needsPlan()
     if (gate) return gate as Res<{ comment: ForumComment }>
     const t = text.trim()

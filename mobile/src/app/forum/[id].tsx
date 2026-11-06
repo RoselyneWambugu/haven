@@ -20,6 +20,7 @@ import { detectBlockedContent, explainBlock } from '@/lib/safety'
 import { useDb } from '@/store/db'
 import type { ReportReason } from '@/api'
 import { colors } from '@/theme'
+import { isGossip } from '@/lib/gossip'
 
 const REASONS: { value: ReportReason; label: string }[] = [
   { value: 'harassment', label: 'Harassment or bullying' },
@@ -87,7 +88,7 @@ export default function PostDetail() {
         />
       }
       footer={
-        post.status === 'published' && forumOn ? (
+        post.status === 'published' && forumOn && !isGossip(post) ? (
           <View style={{ gap: 8 }}>
             {draftBlock.blocked ? (
               <Banner tone="clay" icon="shield">
@@ -126,20 +127,25 @@ export default function PostDetail() {
         <Pressable
           testID="support"
           accessibilityRole="button"
-          accessibilityLabel={post.supportedByMe ? 'Remove your support' : 'Send support'}
+          accessibilityLabel={isGossip(post) ? (post.supportedByMe ? 'Remove your reaction' : 'React: heard it') : post.supportedByMe ? 'Remove your support' : 'Send support'}
           accessibilityState={{ selected: post.supportedByMe }}
           onPress={() => api.forum.toggleSupport(post.id)}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 16, borderRadius: 22, backgroundColor: post.supportedByMe ? colors.moss : colors.lichen }}
         >
           <Icon name="heart" size={18} color={post.supportedByMe ? colors.white : colors.mossDeep} />
           <Text variant="label" color={post.supportedByMe ? colors.white : colors.mossDeep}>
-            {post.supportedByMe ? 'You sent support' : 'Send support'} · {post.supports}
+            {isGossip(post) ? (post.supportedByMe ? 'You heard it' : 'Heard it') : post.supportedByMe ? 'You sent support' : 'Send support'} · {post.supports}
           </Text>
         </Pressable>
       </View>
       <Divider />
-      <Text variant="h3">{post.comments.length ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'No comments yet'}</Text>
-      {post.comments.map((c) => {
+      {isGossip(post) ? (
+        <Banner testID="gossip-no-replies" tone="green" icon="shield">
+          Gossip takes reactions, not replies. If a post names someone or is cruel, report it from the menu.
+        </Banner>
+      ) : null}
+      {isGossip(post) ? null : <Text variant="h3">{post.comments.length ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'No comments yet'}</Text>}
+      {(isGossip(post) ? [] : post.comments).map((c) => {
         const th = c.therapistId ? THERAPISTS.find((t) => t.id === c.therapistId) : null
         return (
           <Card key={c.id} tone={th ? 'lichen' : 'milk'}>
