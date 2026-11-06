@@ -177,6 +177,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-55 | Polls: the asker closes a poll early; choose more than one answer; a longer or shorter run time; hide a reported poll once several people report it | v0.82 |
 | Q-56 | Edit profile: a confirmation link for a changed contact email; a list of past changes the member can read; a request to change date of birth that a reviewer approves with proof | v0.83 |
 | Q-57 | Languages: hide a language from new choices while keeping it for people who have it; rename a language; show members how many people speak each language before it is added | v0.84 |
+| Q-58 | Trending and search: search older posts on the server without logging what people type; trending by topic; a “most reacted” sort in the Feed that uses the same rule; tune the numbers (minimum reactions, fade) once there is real traffic | v0.85 |
 | Q-47 | Pay therapist payouts through M-Pesa B2C; card payments; add the M-Pesa secrets and test in the sandbox before launch | v0.58 |
 | Q-46 | Pay therapists through a payment provider instead of by hand; tax on earnings | v0.57 |
 | Q-45 | Run `supabase/document_retention_cleanup.sql` in the SQL editor so verification documents are removed 12 months after their decision (kept 12 months, decided). Also: virus scanning of uploads; letting a person remove a file they sent | v0.56 |
