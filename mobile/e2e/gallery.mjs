@@ -36,6 +36,8 @@ await page.screenshot({ path: `${out}/m-welcome.png` })
 const safe = async (name, fn) => { try { await fn() } catch (e) { console.log('skip', name, String(e).split('\n')[0]) } }
 await safe('register', async () => {
   await tid(page, 'get-started').click()
+  await page.screenshot({ path: `${out}/m-who.png` })
+  await tid(page, 'who-member').click()
   await page.screenshot({ path: `${out}/m-consent.png` })
   for (const id of ['consent-terms', 'consent-privacy', 'consent-guidelines', 'consent-screening']) await tid(page, id).click()
   await tid(page, 'consent-continue').click()

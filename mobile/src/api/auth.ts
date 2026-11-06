@@ -149,7 +149,7 @@ export const auth = {
     return { ok: true, value: { demoCode: c, phone } }
   },
 
-  verifyOtp(input: string): Res<{ next: 'create-profile' | 'trust-device' | 'reauth-ok' | 'no-account' | 'already-registered' }> {
+  verifyOtp(input: string): Res<{ next: 'create-profile' | 'trust-device' | 'reauth-ok' | 'no-account' | 'already-registered' | 'portal' | 'admin' }> {
     const db = getDb()
     const otp = db.otp
     if (!otp) return { ok: false, error: 'Ask for a new code.', code: 'none' }

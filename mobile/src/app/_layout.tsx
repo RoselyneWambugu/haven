@@ -26,9 +26,9 @@ import { colors, LANDING_WIDTH, MAX_WIDTH, PORTAL_WIDTH } from '@/theme'
 void SplashScreen.preventAutoHideAsync().catch(() => undefined)
 
 /** Screens a person can reach without being signed in. Urgent help is always one of them. */
-const SIGNED_OUT_OK = new Set(['welcome', 'landing', 'consent', 'register', 'otp', 'pen-name', 'languages', 'login', 'under-18', 'recovery', 'unlock', 'urgent', 'about', 'auth-callback', 'mobile-app', 'login-email', 'signup-email', 'forgot-password', 'reset-password'])
+const SIGNED_OUT_OK = new Set(['welcome', 'who', 'landing', 'consent', 'register', 'otp', 'pen-name', 'languages', 'login', 'under-18', 'recovery', 'unlock', 'urgent', 'about', 'auth-callback', 'mobile-app', 'login-email', 'signup-email', 'forgot-password', 'reset-password'])
 /** Signed-in people have no reason to be here (they would only land here with the back button). */
-const SIGNED_IN_AWAY = new Set(['welcome', 'landing', 'consent', 'register', 'login', 'under-18'])
+const SIGNED_IN_AWAY = new Set(['welcome', 'who', 'landing', 'consent', 'register', 'login', 'under-18'])
 /** A paused account can still reach these (PRD SAF-15, ACC-18). */
 const PAUSED_OK = new Set(['paused', 'urgent', 'help', 'plan', 'plans', 'refund', 'checkout', 'pay', 'settings', 'standing', 'appeal', 'about'])
 

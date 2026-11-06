@@ -86,7 +86,7 @@ export const remoteAuth = {
     return { ok: true, value: { demoCode: '', phone } }
   },
 
-  async verifyOtp(input: string): Promise<Res<{ next: 'create-profile' | 'trust-device' | 'reauth-ok' | 'no-account' | 'already-registered' }>> {
+  async verifyOtp(input: string): Promise<Res<{ next: 'create-profile' | 'trust-device' | 'reauth-ok' | 'no-account' | 'already-registered' | 'portal' | 'admin' }>> {
     const otp = getDb().otp
     if (!otp) return failure('Ask for a new code.', 'none')
     if (otp.lockedUntil && otp.lockedUntil > now()) {
@@ -119,6 +119,14 @@ export const remoteAuth = {
       return { ok: true, value: { next: 'create-profile' } }
     }
     if (!has) {
+      // Not a member. A therapist or a staff member who logs in with their number goes to their own place: Echo already knows who they are.
+      if (await isTherapist()) {
+        const r = await enterPortal('number')
+        if (r.ok) return { ok: true, value: { next: 'portal' } }
+      } else if (await isStaff()) {
+        const r = await enterAdmin('number')
+        if (r.ok) return { ok: true, value: { next: 'admin' } }
+      }
       await supabase().auth.signOut()
       return { ok: true, value: { next: 'no-account' } }
     }

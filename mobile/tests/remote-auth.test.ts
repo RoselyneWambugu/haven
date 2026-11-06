@@ -137,11 +137,18 @@ describe('signing up and signing in', () => {
   })
 
   it('logging in with an unknown number says there is no account and signs the session out', async () => {
-    const f = fake()
+    const f = fake({ rpcs: { staff_me: { ok: false, code: 'role' } } })
     await remoteAuth.requestOtp('login', '0712 345 678')
     expect(await remoteAuth.verifyOtp('123456')).toEqual({ ok: true, value: { next: 'no-account' } })
     expect(getDb().signedIn).toBe(false)
     expect(f.state.signedOut).toBe(1)
+  })
+
+  it('a therapist logging in with their number goes to the portal, not to “no account”', async () => {
+    const f = fake({ rpcs: { my_portal: { ok: true, therapist_id: 't1', name: 'Dr. Amina', sessions: [], threads: [], concerns: [] } } })
+    await remoteAuth.requestOtp('login', '0712 345 678')
+    expect(await remoteAuth.verifyOtp('123456')).toEqual({ ok: true, value: { next: 'portal' } })
+    expect(f.state.signedOut).toBe(0)
   })
 
   it('registering with a number that already has an account does not sign in', async () => {

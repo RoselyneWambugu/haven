@@ -39,6 +39,8 @@ export default function Otp() {
     switch (r.value.next) {
       case 'create-profile': return replace('/pen-name')
       case 'trust-device': return replace('/trust-device')
+      case 'portal': return replace('/portal/today')
+      case 'admin': return replace('/admin/overview')
       case 'reauth-ok': return goBack('/me/profiles')
       case 'already-registered': return setInfo('This number already has an account. Log in instead.')
       case 'no-account': return setInfo('There is no account for this number. You can create one.')

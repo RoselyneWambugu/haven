@@ -100,7 +100,6 @@ export default function Chat() {
       <View style={{ paddingTop: insets.top, paddingHorizontal: 18 }}>
         <TopBar
           back
-          urgent
           right={
             <Pressable testID="chat-menu" accessibilityRole="button" accessibilityLabel="Chat options" onPress={() => setMenu(true)} hitSlop={8} style={{ padding: 8 }}>
               <Icon name="dots" size={22} color={colors.ink} />
@@ -177,8 +176,11 @@ export default function Chat() {
         <View style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 12), gap: 8, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.paper }}>
           {distress !== 'none' ? (
             <Banner tone="sun" icon="heart" title="It sounds like things are heavy">
-              Urgent help is free and open now. Tap “Urgent help” at the top any time.
+              Urgent help is free and open now.
             </Banner>
+          ) : null}
+          {distress !== 'none' ? (
+            <Button testID="chat-urgent" variant="quiet" label="Get urgent help" onPress={() => go('/urgent')} />
           ) : null}
           {error ? (
             <View testID="chat-block-reason">

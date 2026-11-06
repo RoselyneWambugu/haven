@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native'
+import { View } from 'react-native'
 import { Button } from '@/components/Button'
 import { Bloom, Ornament } from '@/components/Bloom'
 import { Screen, TopBar } from '@/components/Layout'
@@ -7,46 +7,31 @@ import { useT } from '@/i18n'
 import { go } from '@/lib/nav'
 import { colors } from '@/theme'
 
-/** The first thing a person sees: a calm place and a plain promise. Urgent help is already in the corner. */
+/** The first thing a person sees: a calm place and a plain promise. Get started asks who you are; signing in does not, because Echo already knows. */
 export default function Welcome() {
   const t = useT()
   return (
-    <Screen testID="welcome" header={<TopBar logo />} gap={16}
+    <Screen testID="welcome" dark header={<TopBar logo dark />} gap={16}
       footer={
         <>
-          <Button testID="get-started" label={t('Get started')} onPress={() => go('/consent')} />
-          <Button testID="have-account" label={t('I already have an account')} variant="ghost" onPress={() => go('/login')} />
-          <Text variant="caption" muted align="center">
+          <Button testID="get-started" variant="light" label={t('Get started')} onPress={() => go('/who')} />
+          <Button testID="have-account" label={t('I already have an account')} variant="lightGhost" onPress={() => go('/login')} />
+          <Text variant="caption" align="center" color={colors.lichen}>
             Echo is peer support, not emergency care.
           </Text>
-          <Pressable testID="welcome-urgent" accessibilityRole="link" accessibilityLabel="Urgent help" onPress={() => go('/urgent')} style={{ minHeight: 44, justifyContent: 'center' }}>
-            <Text variant="small" align="center" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
-              Need urgent help?
-            </Text>
-          </Pressable>
-          <Pressable testID="therapist-link" accessibilityRole="link" accessibilityLabel="I’m a therapist" onPress={() => go('/portal/sign-in')} style={{ minHeight: 44, justifyContent: 'center' }}>
-            <Text variant="small" align="center" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
-              I’m a therapist
-            </Text>
-          </Pressable>
-          <Pressable testID="staff-link" accessibilityRole="link" accessibilityLabel="Echo staff sign-in" onPress={() => go('/admin/sign-in')} style={{ minHeight: 36, justifyContent: 'center' }}>
-            <Text variant="caption" align="center" muted>
-              Echo staff
-            </Text>
-          </Pressable>
         </>
       }
     >
-      <View style={{ height: 300, borderTopLeftRadius: 150, borderTopRightRadius: 150, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden', backgroundColor: colors.fern }}>
+      <View style={{ height: 300, borderTopLeftRadius: 150, borderTopRightRadius: 150, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden', backgroundColor: colors.fern, borderWidth: 1.5, borderColor: colors.sun }}>
         <Bloom />
       </View>
       <View style={{ gap: 8, paddingHorizontal: 4 }}>
-        <Text variant="display">{t('A space to speak.')}</Text>
-        <Text variant="display" italic color={colors.mossDeep}>
+        <Text variant="display" color={colors.paper}>{t('A space to speak.')}</Text>
+        <Text variant="display" italic color={colors.sun}>
           {t('Someone to listen.')}
         </Text>
         <Ornament width={96} />
-        <Text variant="body" muted style={{ marginTop: 4 }}>
+        <Text variant="body" color={colors.lichen} style={{ marginTop: 4 }}>
           Talk anonymously with people who understand, or with a verified therapist.
         </Text>
       </View>

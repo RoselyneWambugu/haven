@@ -19,6 +19,7 @@ await page.goto('http://localhost:8094/')
 await page.waitForTimeout(1800)
 await step('register', async () => {
   await tid('get-started').click()
+  await tid('who-member').click()
   for (const id of ['consent-terms', 'consent-privacy', 'consent-guidelines', 'consent-screening']) await tid(id).click()
   await tid('consent-continue').click()
   await tid('reg-name').fill('Amina Otieno')
