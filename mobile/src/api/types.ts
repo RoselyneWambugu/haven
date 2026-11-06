@@ -201,6 +201,15 @@ export interface ForumPost {
   authorKey: string
   /** The support space this post belongs to. Space posts stay out of the general community feed. */
   space?: string
+  /** Set on a poll: a quick question with a few answers. */
+  poll?: PollState
+}
+
+/** The answers to a poll. A count is null while the member may not see it yet (before they vote, so counts can't sway them). */
+export interface PollState {
+  options: { text: string; votes: number | null }[]
+  myVote: number | null
+  closesAt: number
 }
 
 // ---------- therapists and sessions ----------

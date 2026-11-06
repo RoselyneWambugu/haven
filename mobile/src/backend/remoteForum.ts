@@ -10,6 +10,8 @@ import { getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { supabase } from './client'
 import { detectNames, explainNames, GOSSIP_SPACE, GOSSIP_TOPIC, isGossip } from '@/lib/gossip'
+import { cleanOptions, isPoll, validatePoll } from '@/lib/polls'
+import type { PollState } from '@/api/types'
 
 interface RemoteComment { id: string; author_name: string; author_avatar: AvatarKind; text: string; at: string; mine: boolean }
 interface RemotePost {
@@ -58,7 +60,11 @@ export function syncForum(): Promise<void> {
     const d = data as { ok?: boolean; posts?: RemotePost[]; spaces?: string[] } | null
     if (error || !d || d.ok !== true || !Array.isArray(d.posts)) return
     const before = new Map(getDb().posts.map((p) => [p.id, p]))
-    const posts = d.posts.map(toPost)
+    const posts = d.posts.map((p) => {
+      const post = toPost(p)
+      const prevPoll = before.get(p.id)?.poll
+      return prevPoll ? { ...post, poll: prevPoll } : post
+    })
     for (const p of posts) {
       const prev = before.get(p.id)
       if (!p.mine || !prev) continue
@@ -67,10 +73,19 @@ export function syncForum(): Promise<void> {
       for (const c of p.comments) if (!c.mine && !known.has(c.id)) notify.push('forum', `reply:${c.id}`, 'New reply to your post', `${c.authorName} replied to “${p.title}”.`, `/forum/${p.id}`)
     }
     update({ posts, spaces: d.spaces ?? [] })
+    if (posts.some((p) => isPoll(p))) await syncPolls()
   })().finally(() => {
     syncing = null
   })
   return syncing
+}
+
+/** The answers, and the counts the member is allowed to see, for the polls they can read. */
+export async function syncPolls(): Promise<void> {
+  const r = await rpc('poll_list')
+  if (!r.ok || typeof r.polls !== 'object' || !r.polls) return
+  const polls = r.polls as Record<string, PollState>
+  update((s) => ({ posts: s.posts.map((p) => (polls[p.id] ? { ...p, poll: polls[p.id] } : p)) }))
 }
 
 const needsPlan = (): Res | null => {
@@ -101,6 +116,29 @@ export const remoteForum = {
     return { ok: true, value: { post, pending: r.pending === true } }
   },
 
+  /** Asks a poll. Checked here for a quick answer, and again on the server. */
+  async createPoll(input: { question: string; options: string[] }): Promise<Res<{ post: ForumPost; pending: boolean }>> {
+    const gate = needsPlan()
+    if (gate) return gate as Res<{ post: ForumPost; pending: boolean }>
+    const err = validatePoll(input.question, input.options)
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    const r = await rpc('create_poll', { p_question: input.question.trim(), p_options: cleanOptions(input.options) })
+    if (!r.ok) return { ok: false, error: r.error, code: r.code }
+    await syncForum()
+    const id = String(r.post_id)
+    const post = getDb().posts.find((p) => p.id === id)
+    if (!post) return { ok: false, error: OFFLINE, code: 'network' }
+    return { ok: true, value: { post, pending: r.pending === true } }
+  },
+
+  async vote(id: string, idx: number): Promise<Res> {
+    const gate = needsPlan()
+    if (gate) return gate
+    const r = await rpc('poll_vote', { p_post: id, p_idx: idx })
+    await syncPolls()
+    return r.ok ? { ok: true, value: undefined } : { ok: false, error: r.error, code: r.code }
+  },
+
   async edit(id: string, patch: { title: string; body: string }): Promise<Res> {
     const r = await rpc('edit_post', { p_post: id, p_title: patch.title, p_body: patch.body })
     if (!r.ok) return { ok: false, error: r.error, code: r.code }
@@ -116,6 +154,7 @@ export const remoteForum = {
   async comment(postId: string, text: string): Promise<Res<{ comment: ForumComment }>> {
     const post = getDb().posts.find((x) => x.id === postId)
     if (post && isGossip(post)) return { ok: false, error: 'Gossip takes reactions, not replies.', code: 'gossip' }
+    if (post && isPoll(post)) return { ok: false, error: 'Polls take votes, not replies.', code: 'gossip' }
     const gate = needsPlan()
     if (gate) return gate as Res<{ comment: ForumComment }>
     const t = text.trim()

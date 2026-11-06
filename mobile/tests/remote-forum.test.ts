@@ -157,3 +157,65 @@ describe('spaces and reports', () => {
     expect(calls.find((c) => c.name === 'report_comment')?.args).toMatchObject({ p_comment: 'c1', p_reason: 'hate' })
   })
 })
+
+describe('polls on the server', () => {
+  const POLL_POST = { ...POST, id: 'pl1', space: 'polls', topic: 'Polls', title: 'What helps you unwind after a long day?', body: 'Poll: Walk / Music', comments: [] }
+  const POLLS = { pl1: { closesAt: Date.now() + 86_400_000, myVote: null, options: [{ text: 'Walk', votes: null }, { text: 'Music', votes: null }] } }
+
+  function pollFake(extra: Record<string, unknown> = {}) {
+    const calls: { name: string; args?: Record<string, unknown> }[] = []
+    setClient({
+      rpc: async (name: string, args?: Record<string, unknown>) => {
+        calls.push({ name, args })
+        if (name in extra) return { data: extra[name], error: null }
+        if (name === 'forum_feed') return { data: { ok: true, posts: [POLL_POST], spaces: [] }, error: null }
+        if (name === 'poll_list') return { data: { ok: true, polls: POLLS }, error: null }
+        return { data: { ok: true }, error: null }
+      },
+    } as unknown as SupabaseClient)
+    return calls
+  }
+
+  it('bring the answers into the post after a forum sync, and keep them across the next one', async () => {
+    update({ account: member, subscription: paid } as never)
+    pollFake()
+    await syncForum()
+    expect(getDb().posts[0].poll?.options.map((o) => o.text)).toEqual(['Walk', 'Music'])
+    expect(getDb().posts[0].poll?.options[0].votes).toBeNull()
+  })
+
+  it('vote through the server, then show the counts it returns', async () => {
+    update({ account: member, subscription: paid } as never)
+    pollFake()
+    await syncForum()
+    const calls = pollFake({ poll_list: { ok: true, polls: { pl1: { closesAt: POLLS.pl1.closesAt, myVote: 1, options: [{ text: 'Walk', votes: 4 }, { text: 'Music', votes: 7 }] } } } })
+    const r = await remoteForum.vote('pl1', 1)
+    expect(r.ok).toBe(true)
+    expect(calls.find((c) => c.name === 'poll_vote')?.args).toEqual({ p_post: 'pl1', p_idx: 1 })
+    expect(getDb().posts[0].poll).toMatchObject({ myVote: 1 })
+    expect(getDb().posts[0].poll?.options[1].votes).toBe(7)
+  })
+
+  it('shows the server’s reason when a vote is refused', async () => {
+    update({ account: member, subscription: paid } as never)
+    pollFake({ poll_vote: { ok: false, code: 'voted', error: 'You have already voted in this poll.' } })
+    expect(await remoteForum.vote('pl1', 0)).toMatchObject({ ok: false, code: 'voted' })
+  })
+
+  it('ask with the answers tidied, after checking them on the device', async () => {
+    update({ account: member, subscription: paid } as never)
+    const bad = await remoteForum.createPoll({ question: 'Should Wanjiku quit her job this year?', options: ['Yes', 'No'] })
+    expect(bad).toMatchObject({ ok: false, code: 'invalid' })
+    const calls = pollFake({ create_poll: { ok: true, post_id: 'pl1', pending: false } })
+    const r = await remoteForum.createPoll({ question: 'What helps you unwind after a long day?', options: ['Walk', ' ', 'Music'] })
+    expect(r.ok).toBe(true)
+    expect(calls.find((c) => c.name === 'create_poll')?.args).toEqual({ p_question: 'What helps you unwind after a long day?', p_options: ['Walk', 'Music'] })
+  })
+
+  it('refuse a reply to a poll without asking the server', async () => {
+    update({ account: member, subscription: paid } as never)
+    pollFake()
+    await syncForum()
+    expect(await remoteForum.comment('pl1', 'Nice one')).toMatchObject({ ok: false, code: 'gossip' })
+  })
+})

@@ -16,6 +16,7 @@ import { dayAndClock } from '@/lib/time'
 import { spaceById } from '@/data/spaces'
 import { needsCheck } from '@/lib/spaces'
 import { detectNames, explainNames, GOSSIP_SPACE, GOSSIP_TOPIC, isGossip } from '@/lib/gossip'
+import { cleanOptions, isPoll, POLL_DAYS, POLL_SPACE, POLL_TOPIC, pollOpen, validatePoll } from '@/lib/polls'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
 
 const SEC = 1000
@@ -379,9 +380,47 @@ export const forum = {
     return { ok: true, value: { post, pending } }
   },
 
+  /** Asks a poll: a question and two to four answers. Everyone with a plan can vote once. It closes after a week. */
+  createPoll(input: { question: string; options: string[] }): Res<{ post: ForumPost; pending: boolean }> {
+    const db = getDb()
+    const a = db.account
+    if (!a) return { ok: false, error: 'Sign in first.' }
+    const gate = requirePlan('The community')
+    if (gate) return gate as Res<{ post: ForumPost; pending: boolean }>
+    if (a.standing === 'paused') return { ok: false, error: 'Your account is paused.', code: 'paused' }
+    if (!db.content.flags.forum) return { ok: false, error: 'Posting is paused for now. You can still read the community.', code: 'forum-off' }
+    const err = validatePoll(input.question, input.options)
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    const opts = cleanOptions(input.options)
+    const pending = !a.hasPostedBefore
+    const post: ForumPost = {
+      id: uid('post'), authorName: a.public.penName, authorAvatar: a.public.avatar, authorKey: 'me', topic: POLL_TOPIC, space: POLL_SPACE, title: input.question.trim(),
+      body: `Poll: ${opts.join(' / ')}`, createdAt: now(), supports: 0, supportedByMe: false, comments: [], status: pending ? 'pending' : 'published', mine: true,
+      poll: { options: opts.map((text) => ({ text, votes: 0 })), myVote: null, closesAt: now() + POLL_DAYS * 24 * 3600_000 },
+    }
+    update((s) => ({ posts: [post, ...s.posts] }))
+    updateAccount((x) => ({ ...x, hasPostedBefore: true }))
+    if (pending) later(`pub-${post.id}`, 15 * SEC, () => publishPending(post.id))
+    return { ok: true, value: { post, pending } }
+  },
+
+  /** Votes once in a poll. The answer can't be changed, and nobody is told who voted. */
+  vote(id: string, idx: number): Res {
+    const gate = requirePlan('The community')
+    if (gate) return gate
+    const p = getDb().posts.find((x) => x.id === id)
+    if (!p || !p.poll || !isPoll(p) || p.status !== 'published') return { ok: false, error: 'That poll isn’t here.', code: 'gone' }
+    if (!pollOpen(p.poll, now())) return { ok: false, error: 'This poll has closed.', code: 'closed' }
+    if (p.poll.myVote !== null) return { ok: false, error: 'You have already voted in this poll.', code: 'voted' }
+    if (!p.poll.options[idx]) return { ok: false, error: 'Choose one of the answers.', code: 'option' }
+    setPost(id, (x) => ({ ...x, poll: { ...x.poll!, myVote: idx, options: x.poll!.options.map((o, i) => (i === idx ? { ...o, votes: (o.votes ?? 0) + 1 } : o)) } }))
+    return { ok: true, value: undefined }
+  },
+
   edit(id: string, patch: { title: string; body: string }): Res {
     const p = getDb().posts.find((x) => x.id === id)
     if (!p || !p.mine) return { ok: false, error: 'You can only edit your own post.' }
+    if (isPoll(p)) return { ok: false, error: 'A poll can’t be edited once it is posted. Remove it and ask again.', code: 'poll' }
     if (now() - p.createdAt > EDIT_WINDOW) return { ok: false, error: 'You can edit a post for 15 minutes after posting.', code: 'window' }
     const check = detectBlockedContent(`${patch.title}\n${patch.body}`)
     if (check.blocked) return { ok: false, error: explainBlock(check.reasons), code: 'blocked' }
@@ -402,6 +441,7 @@ export const forum = {
     const post = getDb().posts.find((p) => p.id === postId)
     if (!a || !post) return { ok: false, error: 'That post is gone.' }
     if (isGossip(post)) return { ok: false, error: 'Gossip takes reactions, not replies.', code: 'gossip' }
+    if (isPoll(post)) return { ok: false, error: 'Polls take votes, not replies.', code: 'gossip' }
     const gate = requirePlan('The community')
     if (gate) return gate as Res<{ comment: ForumComment }>
     if (!getDb().content.flags.forum) return { ok: false, error: 'Comments are paused for now.', code: 'forum-off' }

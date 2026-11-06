@@ -1,6 +1,7 @@
 import type { AvailabilityBlock, ForumComment, ForumPost, Peer, Therapist } from '@/api/types'
 
 const H = 3600_000
+const D = 24 * H
 
 export const PEERS: Peer[] = [
   { id: 'p-silver', penName: 'SilverRiver', avatar: 'leaf', languages: ['English', 'Kiswahili'], ageBand: '25-34', topics: ['Grief', 'Loneliness'] },
@@ -107,6 +108,18 @@ export function seedPosts(now: number): ForumPost[] {
       body: 'Every weekend there is a send-off, a kamukunji and a wedding, and my group chat is only about what to wear. Is it just me or are the contributions getting bigger?',
       comments: [],
     }),
+    { ...mk({
+      id: 'pl1', space: 'polls', authorName: 'RainyDay', authorAvatar: 'wave', authorKey: 'p-rainy', topic: 'Polls', createdAt: now - 6 * H, supports: 0,
+      title: 'What helps you unwind after a long day?', body: 'Poll: A long walk / Music / Sleep / Talking to someone', comments: [],
+    }), poll: { options: [{ text: 'A long walk', votes: 41 }, { text: 'Music', votes: 58 }, { text: 'Sleep', votes: 33 }, { text: 'Talking to someone', votes: 27 }], myVote: null, closesAt: now + 5 * D } },
+    { ...mk({
+      id: 'pl2', space: 'polls', authorName: 'KindLeaf', authorAvatar: 'fern', authorKey: 'p-kind', topic: 'Polls', createdAt: now - 22 * H, supports: 0,
+      title: 'Morning person or night owl?', body: 'Poll: Morning / Night / Depends on the day', comments: [],
+    }), poll: { options: [{ text: 'Morning', votes: 64 }, { text: 'Night', votes: 49 }, { text: 'Depends on the day', votes: 71 }], myVote: null, closesAt: now + 6 * D } },
+    { ...mk({
+      id: 'pl3', space: 'polls', authorName: 'SteadyPine', authorAvatar: 'pine', authorKey: 'p-pine', topic: 'Polls', createdAt: now - 2 * D, supports: 0,
+      title: 'Would you try a group walk with other members?', body: 'Poll: Yes / Maybe / Not for me', comments: [],
+    }), poll: { options: [{ text: 'Yes', votes: 52 }, { text: 'Maybe', votes: 38 }, { text: 'Not for me', votes: 14 }], myVote: null, closesAt: now + 4 * D } },
     mk({
       id: 'f2', authorName: 'QuietPine', authorAvatar: 'pine', authorKey: 'p-quiet', topic: 'Grief', createdAt: now - 5 * H, supports: 51,
       title: 'Lost my dad last month',

@@ -21,6 +21,8 @@ import { useDb } from '@/store/db'
 import type { ReportReason } from '@/api'
 import { colors } from '@/theme'
 import { isGossip } from '@/lib/gossip'
+import { isPoll } from '@/lib/polls'
+import { PollCard } from '@/components/PollCard'
 
 const REASONS: { value: ReportReason; label: string }[] = [
   { value: 'harassment', label: 'Harassment or bullying' },
@@ -88,7 +90,7 @@ export default function PostDetail() {
         />
       }
       footer={
-        post.status === 'published' && forumOn && !isGossip(post) ? (
+        post.status === 'published' && forumOn && !isGossip(post) && !isPoll(post) ? (
           <View style={{ gap: 8 }}>
             {draftBlock.blocked ? (
               <Banner tone="clay" icon="shield">
@@ -116,13 +118,14 @@ export default function PostDetail() {
           </Text>
         </View>
       </View>
-      <Text variant="title">{post.title}</Text>
-      <Text variant="body">{post.body}</Text>
+      {isPoll(post) && post.poll ? <PollCard post={post} open={false} /> : <Text variant="title">{post.title}</Text>}
+      {isPoll(post) ? null : <Text variant="body">{post.body}</Text>}
       {post.status === 'pending' ? (
         <Banner tone="sun" icon="clock" title="Being checked">
           Only you can see this until it’s checked. Comments open once it’s live.
         </Banner>
       ) : null}
+      {isPoll(post) ? null : (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Pressable
           testID="support"
@@ -138,14 +141,20 @@ export default function PostDetail() {
           </Text>
         </Pressable>
       </View>
+      )}
       <Divider />
+      {isPoll(post) ? (
+        <Banner testID="poll-no-replies" tone="green" icon="shield">
+          Polls take votes, not replies. If a poll names someone or is unkind, report it from the menu.
+        </Banner>
+      ) : null}
       {isGossip(post) ? (
         <Banner testID="gossip-no-replies" tone="green" icon="shield">
           Gossip takes reactions, not replies. If a post names someone or is cruel, report it from the menu.
         </Banner>
       ) : null}
-      {isGossip(post) ? null : <Text variant="h3">{post.comments.length ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'No comments yet'}</Text>}
-      {(isGossip(post) ? [] : post.comments).map((c) => {
+      {isGossip(post) || isPoll(post) ? null : <Text variant="h3">{post.comments.length ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'No comments yet'}</Text>}
+      {(isGossip(post) || isPoll(post) ? [] : post.comments).map((c) => {
         const th = c.therapistId ? THERAPISTS.find((t) => t.id === c.therapistId) : null
         return (
           <Card key={c.id} tone={th ? 'lichen' : 'milk'}>
