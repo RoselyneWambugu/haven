@@ -15,6 +15,7 @@ import { THERAPISTS } from '@/data/seed'
 import { go } from '@/lib/nav'
 import { licenceStatus } from '@/lib/portal'
 import { liveStars, ratingLabel, summarise } from '@/lib/ratings'
+import { FLAKE_RULE, missedIn } from '@/lib/sessionMoney'
 import { dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
@@ -39,6 +40,8 @@ export default function Therapists() {
   const concerns = (id: string) => (a?.cases ?? []).filter((c) => c.therapistId === id).length
   const sel = THERAPISTS.find((x) => x.id === picked)
   const canAct = !!a && (a.role === 'clinical' || a.role === 'admin')
+  const missed = (id: string) => (REMOTE ? (a?.therapistMissed?.[id] ?? 0) : missedIn(sessions, id, t))
+  const watched = THERAPISTS.filter((x) => missed(x.id) >= FLAKE_RULE.warnAt)
 
   const [renewing, setRenewing] = useState<string | null>(null)
   const [renewNote, setRenewNote] = useState('')
@@ -91,11 +94,16 @@ export default function Therapists() {
           </Pressable>
         ))}
       </Panel>
+      {watched.length ? (
+        <Banner testID="missed-watch" tone="sun" icon="clock" title="Therapists who keep missing sessions">
+          {watched.map((x) => `${x.name} (${missed(x.id)} in ${FLAKE_RULE.windowDays} days)`).join(', ')}. {FLAKE_RULE.warnAt} gets a warning and {FLAKE_RULE.pauseAt} pauses new clients, automatically. A clinical reviewer can lift a pause.
+        </Banner>
+      ) : null}
       <Panel title="Roster" style={{ gap: 0 }} testID="roster">
         {THERAPISTS.map((th) => {
           const lic = licenceStatus(a?.licences?.find((x) => x.id === th.id)?.validTo ?? th.licenceValidTo, t)
           const off = !!standing[th.id]
-          const paused = portal?.therapistId === th.id && portal.paused
+          const paused = REMOTE ? !!a?.therapistPausedIds?.includes(th.id) : portal?.therapistId === th.id && portal.paused
           return (
             <Pressable key={th.id} testID={`roster-${th.id}`} accessibilityRole="button" accessibilityLabel={`${th.name}, ${off ? 'suspended' : 'active'}`} onPress={() => { setPicked(th.id); setReason(''); setError(null) }} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, minHeight: 52, flexWrap: 'wrap' }}>
               <Text variant="label" style={{ flex: 1, minWidth: 160 }}>
@@ -104,6 +112,7 @@ export default function Therapists() {
               <Text variant="caption" muted>
                 {ratingLabel(summarise(th, liveStars(sessions, th.id)))} · {concerns(th.id)} {concerns(th.id) === 1 ? 'concern' : 'concerns'}
               </Text>
+              {missed(th.id) > 0 ? <Badge tone={missed(th.id) >= FLAKE_RULE.warnAt ? 'clay' : 'sun'} label={`Missed ${missed(th.id)}`} /> : null}
               {lic.state !== 'ok' ? <Badge tone="sun" label={lic.state === 'expiring' ? `Licence ${lic.days} d left` : 'Licence expired'} /> : null}
               <Badge tone={off ? 'clay' : paused ? 'sun' : 'green'} label={off ? 'Suspended' : paused ? 'Paused' : 'Active'} />
             </Pressable>

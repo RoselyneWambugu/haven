@@ -17,7 +17,7 @@ const STATE = () => ({
   }],
   users: [{ id: 'u1', penName: 'LoudRiver', joined: '01 Oct 2026', languages: 'English', ageBand: '25-34', standing: 'good', strikes: [], reportsAgainst: 1, reportsMade: 0, blocksReceived: 0, plan: 'No plan', matches: 0, skips: 0 }],
   appeals: [], held: [{ id: 'p1', title: 'Held', body: 'Waiting for review', author: 'LoudRiver', at: now(), topic: 'Anxiety' }],
-  therapists: [{ id: 't-amina', name: 'Amina', suspended: true, paused: false }],
+  therapists: [{ id: 't-amina', name: 'Amina', suspended: true, paused: false, missed: 2 }, { id: 't-james', name: 'James', suspended: false, paused: true, missed: 3 }],
   audit: [{ id: '1', at: now(), actor: 'M. Test One', role: 'moderator', action: 'Signed in', target: 'Dashboard', reason: '' }],
   revealed: ['C-r:abc:e0'],
 })
@@ -130,6 +130,8 @@ describe('the dashboard state', () => {
     expect(a.held).toHaveLength(1)
     expect(a.audit[0].action).toBe('Signed in')
     expect(a.therapistStanding?.['t-amina']).toBeTruthy()
+    expect(a.therapistMissed).toEqual({ 't-amina': 2, 't-james': 3 })
+    expect(a.therapistPausedIds).toEqual(['t-james'])
     expect(a.revealed).toEqual(['M. Test One|C-r:abc:e0'])
   })
 

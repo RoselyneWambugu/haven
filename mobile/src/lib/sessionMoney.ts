@@ -99,3 +99,24 @@ export function flakeOffer(sessions: Pick<Session, 'id' | 'therapistId' | 'flake
 }
 
 export const discountedKes = (price: number, pct: number): number => Math.round((price * (100 - pct)) / 100)
+
+/** When a therapist keeps missing sessions: counted over this many days, a warning at the first number, new clients paused at the second. The server holds the same. */
+export const FLAKE_RULE = { windowDays: 60, warnAt: 2, pauseAt: 3 } as const
+
+/** How many sessions this therapist has missed (the member left because they had not joined) in the last 60 days. */
+export function missedIn(sessions: Pick<Session, 'therapistId' | 'flaked' | 'start'>[], therapistId: string, at: number): number {
+  return sessions.filter((s) => s.therapistId === therapistId && s.flaked && s.start > at - FLAKE_RULE.windowDays * 24 * 60 * MIN).length
+}
+
+export type FlakeStanding = 'ok' | 'warning' | 'paused'
+
+export function flakeStanding(missed: number): FlakeStanding {
+  return missed >= FLAKE_RULE.pauseAt ? 'paused' : missed >= FLAKE_RULE.warnAt ? 'warning' : 'ok'
+}
+
+/** What the therapist is told. */
+export function flakeNotice(missed: number): string {
+  const days = FLAKE_RULE.windowDays
+  if (flakeStanding(missed) === 'paused') return `New clients are paused because you missed ${missed} sessions in the last ${days} days: clients waited and you didn’t join. Your existing clients are not affected. A clinical reviewer will look at this and can lift the pause. You can appeal.`
+  return `You missed ${missed} sessions in the last ${days} days: clients waited and you didn’t join. This is a warning. If you miss ${FLAKE_RULE.pauseAt - missed} more in that time, new clients will be paused. Each missed session also counts as a 1-star rating on your profile. You can appeal.`
+}

@@ -737,6 +737,9 @@ export interface AdminState {
   wellbeing: WellbeingCfg
   /** Therapists staff have suspended, by therapist id. */
   therapistStanding?: Record<string, { reason: string; by: string; at: number }>
+  /** Real backend: how many sessions each therapist missed in the last 60 days, and whose new clients are paused. */
+  therapistMissed?: Record<string, number>
+  therapistPausedIds?: string[]
   /** Who works the heavy queue (Severity-1 and crisis cases) each week. */
   rota: RotaWeek[]
   cases: AdminCase[]

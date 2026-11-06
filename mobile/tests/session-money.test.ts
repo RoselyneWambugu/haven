@@ -97,3 +97,24 @@ describe('the discount after a therapist misses a session', () => {
     expect(discountedKes(1333, 10)).toBe(1200)
   })
 })
+
+import { FLAKE_RULE, flakeNotice, flakeStanding, missedIn } from '../src/lib/sessionMoney'
+describe('a therapist who keeps missing sessions', () => {
+  const day = 24 * 60 * MIN
+  const missedAt = (t: string, daysAgo: number) => ({ therapistId: t, flaked: true, start: start - daysAgo * day })
+  it('is counted over the last 60 days, for that therapist only', () => {
+    const list = [missedAt('t1', 1), missedAt('t1', 59), missedAt('t1', 61), missedAt('t2', 1), { therapistId: 't1', flaked: false, start: start - day }]
+    expect(missedIn(list, 't1', start)).toBe(2)
+    expect(missedIn(list, 't2', start)).toBe(1)
+  })
+  it('is warned at 2 and paused at 3', () => {
+    expect([0, 1, 2, 3, 4].map(flakeStanding)).toEqual(['ok', 'ok', 'warning', 'paused', 'paused'])
+    expect(FLAKE_RULE).toMatchObject({ warnAt: 2, pauseAt: 3 })
+  })
+  it('is told in plain words what happens next', () => {
+    expect(flakeNotice(2)).toMatch(/missed 2 sessions in the last 60 days/)
+    expect(flakeNotice(2)).toMatch(/1 more/)
+    expect(flakeNotice(3)).toMatch(/New clients are paused/)
+    expect(flakeNotice(3)).toMatch(/You can appeal/)
+  })
+})

@@ -23,7 +23,7 @@ interface RemoteAdmin {
   users: AdminUser[]
   appeals: AdminAppeal[]
   held: HeldPost[]
-  therapists: { id: string; name: string; suspended: boolean; paused: boolean }[]
+  therapists: { id: string; name: string; suspended: boolean; paused: boolean; missed?: number }[]
   audit: AuditEntry[]
   revealed: string[]
 }
@@ -57,6 +57,8 @@ function toState(d: RemoteAdmin, prev: AdminState | null): AdminState {
     held: d.held,
     revealed: d.revealed.map((k) => `${d.name}|${k}`),
     therapistStanding: standing,
+    therapistMissed: Object.fromEntries(d.therapists.map((t) => [t.id, t.missed ?? 0])),
+    therapistPausedIds: d.therapists.filter((t) => t.paused).map((t) => t.id),
   }
 }
 

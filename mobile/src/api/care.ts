@@ -1,7 +1,7 @@
 import { hasPlan } from './access'
 import { canBookTherapist } from '@/lib/limits'
 import { THERAPISTS } from '@/data/seed'
-import { cancelSplit, canReportTherapistLate, discountedKes, FLAKE_DISCOUNT, flakeOffer, therapistNoShowSplit } from '@/lib/sessionMoney'
+import { cancelSplit, canReportTherapistLate, discountedKes, FLAKE_DISCOUNT, flakeNotice, flakeOffer, flakeStanding, missedIn, therapistNoShowSplit } from '@/lib/sessionMoney'
 import { changeOutcome, canJoin, SESSION_MINUTES, MIN } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
@@ -135,6 +135,14 @@ export const sessions = {
     if (!canReportTherapistLate(s.start, s.end, now())) return { ok: false, error: 'Please wait 15 minutes after the start for your therapist to join.', code: 'early' }
     const split = therapistNoShowSplit(s.priceKes ?? 0)
     setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: false, refundKes: split.refundKes, flaked: true, flakeDiscountPct: FLAKE_DISCOUNT.pct || null, flakeDiscountUntil: now() + FLAKE_DISCOUNT.days * DAY, discountUsed: false }))
+    // A therapist who keeps missing sessions is warned, then paused. In the demo this reaches the portal if that therapist is the one signed in.
+    const db = getDb()
+    const missed = missedIn(db.sessions, s.therapistId, now())
+    const standing = flakeStanding(missed)
+    const portal = db.portal
+    if (standing !== 'ok' && portal && portal.therapistId === s.therapistId && portal.review?.kind !== 'paused') {
+      update({ portal: { ...portal, paused: standing === 'paused' ? true : portal.paused, review: { kind: standing, text: flakeNotice(missed), at: now(), by: 'System' } } })
+    }
     return { ok: true, value: { refundKes: split.refundKes } }
   },
 
