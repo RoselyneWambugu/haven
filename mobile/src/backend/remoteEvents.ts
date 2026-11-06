@@ -1,5 +1,6 @@
 import { events as mockEvents } from '@/api/events'
-import type { CommunityEvent, Res } from '@/api/types'
+import { notify } from '@/api/notify'
+import type { CommunityEvent, PortalNote, Res } from '@/api/types'
 import type { NewEventInput } from '@/lib/events'
 import { getDb, update } from '@/store/db'
 import { supabase } from './client'
@@ -21,8 +22,17 @@ export function syncEvents(): Promise<void> {
   if (syncing) return syncing
   syncing = (async () => {
     const d = await call<Reply & { events?: CommunityEvent[] }>('event_list')
-    if (d.ok && d.events) update({ events: d.events })
-    else if (d.code === 'needs-plan') update({ events: [] })
+    if (d.ok && d.events) {
+      // Someone who was interested hears when an event they cared about is cancelled. Each only once.
+      const before = getDb().events
+      for (const e of d.events) {
+        const was = before.find((x) => x.id === e.id)
+        if (e.cancelled && e.interestedByMe && was && !was.cancelled) {
+          notify.push('event', `e:${e.id}:cancelled`, 'An event you were interested in was cancelled', `${e.title} won’t go ahead. ${e.cancelled.reason}`, `/events/${e.id}`)
+        }
+      }
+      update({ events: d.events })
+    } else if (d.code === 'needs-plan') update({ events: [] })
   })().finally(() => {
     syncing = null
   })
@@ -39,6 +49,8 @@ export async function syncStaffEvents(): Promise<void> {
 export async function syncPortalEvents(): Promise<void> {
   const d = await call<Reply & { events?: CommunityEvent[] }>('portal_events')
   if (d.ok && d.events) update({ events: d.events })
+  const n = await call<Reply & { notes?: PortalNote[] }>('portal_notes')
+  if (n.ok && n.notes) update({ portalNotes: n.notes })
 }
 
 export const remoteEvents = {
@@ -88,5 +100,19 @@ export const remoteEvents = {
     const r = await call('admin_decide_event', { p_id: id, p_approve: approve, p_reason: approve ? null : reason })
     await syncStaffEvents()
     return res(r)
+  },
+
+  async edit(id: string, input: Omit<NewEventInput, 'host'>): Promise<Res> {
+    const r = await call('portal_edit_event', {
+      p_id: id, p_title: input.title, p_blurb: input.blurb, p_kind: input.kind, p_mode: input.mode, p_place: input.place,
+      p_starts: new Date(input.startsAt).toISOString(), p_duration: input.durationMin,
+    })
+    await syncPortalEvents()
+    return res(r)
+  },
+
+  markNotesRead(): void {
+    update((s) => ({ portalNotes: s.portalNotes.map((n) => ({ ...n, read: true })) }))
+    void call('portal_notes_read')
   },
 }

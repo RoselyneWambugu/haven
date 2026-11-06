@@ -14,6 +14,7 @@ const MIN = 60_000
 export const DEFAULT_SETTINGS: Settings = {
   notifyMessages: true,
   notifySessions: true,
+  notifyEvents: true,
   notifyForum: true,
   notifyPlan: true,
   quietHours: true,

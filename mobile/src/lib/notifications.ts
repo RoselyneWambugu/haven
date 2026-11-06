@@ -1,7 +1,7 @@
 import type { Settings } from '@/api/types'
 import { eat, fromEat } from './time'
 
-export type NoteCategory = 'message' | 'session' | 'forum' | 'plan' | 'safety' | 'account'
+export type NoteCategory = 'message' | 'session' | 'event' | 'forum' | 'plan' | 'safety' | 'account'
 
 export interface AppNote {
   id: string
@@ -27,13 +27,14 @@ export const QUIET_END = 7
 /** At most this many notes an hour count as new, apart from safety and account notices (NTF-2). */
 export const HOURLY_CAP = 5
 
-const FLAG: Partial<Record<NoteCategory, keyof Settings>> = { message: 'notifyMessages', session: 'notifySessions', forum: 'notifyForum', plan: 'notifyPlan' }
+const FLAG: Partial<Record<NoteCategory, keyof Settings>> = { message: 'notifyMessages', session: 'notifySessions', event: 'notifyEvents', forum: 'notifyForum', plan: 'notifyPlan' }
 
 export const isAlways = (c: NoteCategory): boolean => ALWAYS.includes(c)
 
-export function isEnabled(c: NoteCategory, s: Pick<Settings, 'notifyMessages' | 'notifySessions' | 'notifyForum' | 'notifyPlan'>): boolean {
+export function isEnabled(c: NoteCategory, s: Pick<Settings, 'notifyMessages' | 'notifySessions' | 'notifyForum' | 'notifyPlan'> & Partial<Pick<Settings, 'notifyEvents'>>): boolean {
   const flag = FLAG[c]
-  return flag ? !!s[flag as keyof typeof s] : true
+  // A setting added later is missing from older accounts, and means on.
+  return flag ? (s[flag as keyof typeof s] ?? true) !== false : true
 }
 
 export function inQuietHours(ms: number): boolean {

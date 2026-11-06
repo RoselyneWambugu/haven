@@ -141,6 +141,23 @@ await step('events', async () => {
   const back = Number((await tid('event-interested').innerText()).match(/(\d+)\s*$/)[1])
   if (back !== before) throw new Error('taking it back should lower the count')
 })
+await step('event-reminder', async () => {
+  await page.goto('http://localhost:8097/events/ev-sleep')
+  await tid('event-detail').waitFor()
+  await tid('event-interested').click()
+  await page.waitForTimeout(300)
+  // move to 50 minutes before it starts
+  await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('echo.demo.v1'))
+    const e = s.events.find((x) => x.id === 'ev-sleep')
+    window.__echo.demo.advanceClock(Math.floor((e.startsAt - 50 * 60000 - Date.now()) / 60000))
+  })
+  // stay inside the app: a page load would reset the clock that was moved on
+  await page.evaluate(() => { window.history.pushState({}, '', '/notifications'); window.dispatchEvent(new PopStateEvent('popstate')) })
+  await tid('notification-centre').waitFor()
+  await page.getByText('An event you’re interested in is coming up').waitFor()
+  await shot('29-event-reminder')
+})
 await browser.close()
 server.close()
 if (problems.length) { console.log('PROBLEMS:\n' + problems.join('\n')); process.exit(1) }

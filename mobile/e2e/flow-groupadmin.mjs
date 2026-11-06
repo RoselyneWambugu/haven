@@ -128,6 +128,13 @@ await step('a-reviewer-decides-therapist-proposals', async () => {
   const sleep = after.find(([t]) => t.startsWith('Sleep'))
   if (!sleep || sleep[1] !== 'live') throw new Error('the approved proposal should be live: ' + JSON.stringify(after))
   await shot('198-decided')
+  // the therapist is told of both decisions
+  await page.goto('http://localhost:8105/portal/notifications')
+  await tid('portal-notifications').waitFor()
+  await page.getByText('Your event was approved').waitFor()
+  await page.getByText('Your event proposal was declined').waitFor()
+  await page.getByText(/Reason: “We already have a talk on anxiety that week”/).waitFor()
+  await shot('199-therapist-notifications')
 })
 await step('moderators-cannot-schedule-events', async () => {
   await login('T. Njeri')

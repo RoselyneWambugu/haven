@@ -5,9 +5,14 @@ import { isLive, isOver, MAX_PENDING_PROPOSALS, validateNewEvent, validatePropos
 import { uid } from '@/lib/id'
 import { getDb, update } from '@/store/db'
 import { requirePlan } from './access'
+import { notify } from './notify'
 import { log, me } from './admin'
-import type { CommunityEvent, Res } from './types'
+import type { CommunityEvent, PortalNote, Res } from './types'
 
+const addNote = (title: string, body: string): void => {
+  const n: PortalNote = { id: uid('pn'), title, body, href: '/portal/events', at: now(), read: false }
+  update((s) => ({ portalNotes: [n, ...s.portalNotes].slice(0, 30) }))
+}
 const setEvent = (id: string, fn: (e: CommunityEvent) => CommunityEvent) => update((s) => ({ events: s.events.map((e) => (e.id === id ? fn(e) : e)) }))
 
 export const events = {
@@ -48,6 +53,7 @@ export const events = {
     if (isOver(e, now())) return { ok: false, error: 'It has already finished.', code: 'over' }
     if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
     setEvent(id, (x) => ({ ...x, cancelled: { reason: reason.trim(), at: now() } }))
+    if (e.interestedByMe) notify.push('event', `e:${id}:cancelled`, 'An event you were interested in was cancelled', `${e.title} won’t go ahead. ${reason.trim()}`, `/events/${id}`)
     log('Cancelled event', e.title, reason.trim())
     return { ok: true, value: undefined }
   },
@@ -92,12 +98,34 @@ export const events = {
     if (approve) {
       if (e.startsAt < now() + 60 * 60_000) return { ok: false, error: 'The start time is too close or has passed. Decline it and ask for a new time.', code: 'late' }
       setEvent(id, (x) => ({ ...x, status: 'live' }))
+      addNote('Your event was approved', `${e.title} is now live for members to see and say they are interested.`)
       log('Approved event proposal', e.title, `Proposed by ${e.proposedBy}`)
     } else {
       if (reason.trim().length < 5) return { ok: false, error: 'Say why, so the therapist can improve it.', code: 'reason' }
       setEvent(id, (x) => ({ ...x, status: 'declined', declineReason: reason.trim() }))
+      addNote('Your event proposal was declined', `${e.title}. Reason: “${reason.trim()}”. You can edit it and send it again.`)
       log('Declined event proposal', e.title, reason.trim())
     }
     return { ok: true, value: undefined }
+  },
+
+  /** A therapist edits a proposal that is waiting, or one that was declined (which sends it back for review). */
+  edit(id: string, input: Omit<NewEventInput, 'host'>): Res {
+    const p = getDb().portal
+    const th = THERAPISTS.find((x) => x.id === p?.therapistId)
+    const e = getDb().events.find((x) => x.id === id)
+    if (!p?.signedIn || !th || !e || e.proposedBy !== th.name || (e.status !== 'pending' && e.status !== 'declined')) return { ok: false, error: 'That proposal can’t be edited any more.', code: 'gone' }
+    const err = validateProposal(input, th.name, now())
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    if (e.status === 'declined' && getDb().events.filter((x) => x.status === 'pending' && x.proposedBy === th.name).length >= MAX_PENDING_PROPOSALS) {
+      return { ok: false, error: 'You already have three proposals waiting. Wait for a decision, or withdraw one.', code: 'too-many' }
+    }
+    setEvent(id, (x) => ({ ...x, title: input.title.trim(), blurb: input.blurb.trim(), kind: input.kind, mode: input.mode, place: input.place.trim(), startsAt: input.startsAt, durationMin: input.durationMin, status: 'pending', declineReason: undefined }))
+    return { ok: true, value: undefined }
+  },
+
+  /** The therapist has seen their notices. */
+  markNotesRead(): void {
+    update((s) => ({ portalNotes: s.portalNotes.map((n) => ({ ...n, read: true })) }))
   },
 }

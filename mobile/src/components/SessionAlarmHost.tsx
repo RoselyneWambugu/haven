@@ -32,6 +32,8 @@ export function SessionAlarmHost() {
   const sessions = useDb((s) => s.sessions)
   const groupChats = useDb((s) => s.groupChats)
   const portalSessions = useDb((s) => s.portal?.sessions)
+  const events = useDb((s) => s.events)
+  const remindEvents = useDb((s) => s.account?.settings.notifyEvents ?? true)
   const memberIn = useDb((s) => s.signedIn)
   const therapistIn = useDb((s) => s.portal?.signedIn === true)
   const remind = useDb((s) => s.account?.settings.notifySessions ?? true)
@@ -41,12 +43,22 @@ export function SessionAlarmHost() {
 
   // What is booked. Only the person who is signed in on this device gets alarms for it.
   const items = useMemo(
-    () => alarmItems({ sessions: memberIn ? sessions : [], groupChats: memberIn ? groupChats : [], portalSessions: therapistIn ? portalSessions : [], therapistName: (id) => THERAPISTS.find((x) => x.id === id)?.name }, t),
+    () =>
+      alarmItems(
+        {
+          sessions: memberIn && remind ? sessions : [],
+          groupChats: memberIn && remind ? groupChats : [],
+          portalSessions: therapistIn && remind ? portalSessions : [],
+          events: memberIn && remindEvents ? events : [],
+          therapistName: (id) => THERAPISTS.find((x) => x.id === id)?.name,
+        },
+        t,
+      ),
     // `t` only matters for dropping what has ended, so a coarse minute is enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sessions, groupChats, portalSessions, memberIn, therapistIn, Math.floor(t / 60_000)],
+    [sessions, groupChats, portalSessions, events, memberIn, therapistIn, remind, remindEvents, Math.floor(t / 60_000)],
   )
-  const on = remind && (memberIn || therapistIn)
+  const on = memberIn || therapistIn
 
   // Out of the app: give the phone the plan. A change in what is booked, or in the settings, replaces the old plan.
   const planKey = useMemo(() => JSON.stringify(on ? planAlarms(items, t, { hideTextOnLockScreen: hide }).map((a) => [a.id, a.at, a.body]) : []), [on, items, hide, t])

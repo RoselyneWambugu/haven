@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, CommunityEvent, FeedbackItem, ForumPost, GroupChat, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
+import type { Account, Conversation, Device, CommunityEvent, FeedbackItem, PortalNote, ForumPost, GroupChat, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
 import { LIVE } from '@/data/config'
 import { defaultContent } from '@/data/content'
 import { seedEvents } from '@/data/events'
@@ -63,6 +63,8 @@ export interface DbState {
   groupChats: GroupChat[]
   /** Community events: webinars, workshops and walks Echo puts on. */
   events: CommunityEvent[]
+  /** Notices for the therapist who is signed in to the portal. */
+  portalNotes: PortalNote[]
   retainedGroups: GroupChat[]
   reports: ReportRecord[]
   openConversationId: string | null
@@ -110,6 +112,7 @@ export function freshState(): DbState {
     retained: [],
     groupChats: [],
     events: seedEvents(now()),
+    portalNotes: [],
     retainedGroups: [],
     reports: [],
     openConversationId: null,

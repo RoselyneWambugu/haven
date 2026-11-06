@@ -10,6 +10,7 @@ import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
 import { EVENT_KINDS, EVENT_LIMITS, kindLabel, MAX_PENDING_PROPOSALS, PROPOSAL_LEAD_DAYS } from '@/lib/events'
+import type { CommunityEvent } from '@/api/types'
 import { whenLabel } from '@/lib/groupChat'
 import { startOfEatDay } from '@/lib/time'
 import type { EventKind, EventMode } from '@/api/types'
@@ -38,21 +39,42 @@ export default function PortalEvents() {
   const [mins, setMins] = useState(60)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
+  const [editing, setEditing] = useState<string | null>(null)
   const startsAt = startOfEatDay(now()) + day * DAY + hour * HOUR
   const mine = events.filter((e) => e.proposedBy && (!me || e.proposedBy === me)).sort((a, b) => b.startsAt - a.startsAt)
   const waiting = mine.filter((e) => e.status === 'pending').length
 
+  function startEdit(e: CommunityEvent) {
+    setEditing(e.id)
+    setTitle(e.title)
+    setBlurb(e.blurb)
+    setKind(e.kind)
+    setMode(e.mode)
+    setPlace(e.place)
+    setMins(e.durationMin)
+    const d = Math.round((startOfEatDay(e.startsAt) - startOfEatDay(now())) / DAY)
+    setDay(Math.max(PROPOSAL_LEAD_DAYS, d))
+    setHour(Math.round((e.startsAt - startOfEatDay(e.startsAt)) / HOUR))
+    setError(null)
+    setDone(null)
+  }
+  function reset() {
+    setEditing(null)
+    setTitle('')
+    setBlurb('')
+    setPlace('')
+  }
+
   async function propose() {
-    const r = await api.events.propose({ title, blurb, kind, mode, place, startsAt, durationMin: mins })
+    const input = { title, blurb, kind, mode, place, startsAt, durationMin: mins }
+    const r = editing ? await api.events.edit(editing, input) : await api.events.propose(input)
     if (!r.ok) {
       setDone(null)
       return setError(r.error)
     }
     setError(null)
-    setDone('Sent to a clinical reviewer. You will see the decision here.')
-    setTitle('')
-    setBlurb('')
-    setPlace('')
+    setDone(editing ? 'Saved, and sent to a clinical reviewer. You will see the decision here.' : 'Sent to a clinical reviewer. You will see the decision here.')
+    reset()
   }
 
   return (
@@ -76,7 +98,12 @@ export default function PortalEvents() {
                   {e.declineReason}
                 </Banner>
               ) : null}
-              {e.status === 'pending' ? <Button testID={`pevent-withdraw-${e.id}`} variant="quiet" size="sm" label="Withdraw" onPress={() => api.events.withdraw(e.id)} /> : null}
+              {e.status === 'pending' || e.status === 'declined' ? (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Button testID={`pevent-edit-${e.id}`} variant="quiet" size="sm" label={e.status === 'declined' ? 'Edit and send again' : 'Edit'} onPress={() => startEdit(e)} />
+                  {e.status === 'pending' ? <Button testID={`pevent-withdraw-${e.id}`} variant="quiet" size="sm" label="Withdraw" onPress={() => api.events.withdraw(e.id)} /> : null}
+                </View>
+              ) : null}
             </View>
           ))
         ) : (
@@ -85,7 +112,7 @@ export default function PortalEvents() {
           </Text>
         )}
       </Panel>
-      <Panel title="Propose an event" testID="pevent-form">
+      <Panel title={editing ? 'Edit your proposal' : 'Propose an event'} testID="pevent-form">
         <Field testID="pev-title" label="Title" value={title} onChangeText={(v) => { setTitle(v); setError(null); setDone(null) }} maxLength={EVENT_LIMITS.maxTitle} />
         <Field testID="pev-blurb" label="What it is about" value={blurb} onChangeText={(v) => { setBlurb(v); setError(null); setDone(null) }} multiline minHeight={80} maxLength={EVENT_LIMITS.maxBlurb} hint="Write it for members, in plain words. General information, not treatment." />
         <Text variant="small" muted>
@@ -141,7 +168,8 @@ export default function PortalEvents() {
             {done}
           </Banner>
         ) : null}
-        <Button testID="pev-create" label="Send for review" onPress={propose} />
+        <Button testID="pev-create" label={editing ? 'Save and send for review' : 'Send for review'} onPress={propose} />
+        {editing ? <Button testID="pev-cancel-edit" variant="ghost" label="Stop editing" onPress={() => { reset(); setError(null) }} /> : null}
       </Panel>
     </PortalPage>
   )

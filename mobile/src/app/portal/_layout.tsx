@@ -18,6 +18,7 @@ const NAV: { key: string; label: string; path: string }[] = [
   { key: 'forum', label: 'Forum', path: '/portal/forum' },
   { key: 'groups', label: 'Group chats', path: '/portal/groups' },
   { key: 'events', label: 'Events', path: '/portal/events' },
+  { key: 'notifications', label: 'Notifications', path: '/portal/notifications' },
   { key: 'earnings', label: 'Earnings', path: '/portal/earnings' },
   { key: 'profile', label: 'Profile', path: '/portal/profile' },
   { key: 'help', label: 'Help', path: '/portal/help' },
@@ -34,6 +35,7 @@ export default function PortalLayout() {
   const signedIn = useDb((s) => s.portal?.signedIn ?? false)
   const therapistId = useDb((s) => s.portal?.therapistId)
   const unread = useDb((s) => s.portal?.threads.reduce((n, t) => n + t.unread, 0) ?? 0)
+  const noteCount = useDb((s) => s.portalNotes.filter((n) => !n.read).length)
   const th = THERAPISTS.find((t) => t.id === therapistId)
 
   useEffect(() => {
@@ -44,8 +46,8 @@ export default function PortalLayout() {
   // Session screens take the whole window, so the live call is not crowded by navigation.
   const bare = !signedIn || page === 'session'
   const items: NavItem[] = NAV.map((n) => ({
-    key: n.key, label: n.label, testID: `nav-${n.key}`, dot: n.key === 'inbox' && unread > 0,
-    accessibilityLabel: n.key === 'inbox' && unread ? `Inbox, ${unread} unread` : n.label, onPress: () => router.push(n.path as never),
+    key: n.key, label: n.label, testID: `nav-${n.key}`, dot: (n.key === 'inbox' && unread > 0) || (n.key === 'notifications' && noteCount > 0),
+    accessibilityLabel: n.key === 'inbox' && unread ? `Inbox, ${unread} unread` : n.key === 'notifications' && noteCount ? `Notifications, ${noteCount} new` : n.label, onPress: () => router.push(n.path as never),
   }))
   const active = page === 'wrap-up' ? 'sessions' : page
   const user =

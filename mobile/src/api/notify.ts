@@ -51,6 +51,10 @@ export const notify = {
       if (g.startsAt - t <= 10 * MIN) notify.push('session', `g:${g.id}:10m`, 'Your group chat starts soon', `${g.topic}. You can go in now from Chats.`, `/group-chats/${g.id}`)
       else if (g.startsAt - t <= 60 * MIN) notify.push('session', `g:${g.id}:1h`, 'Your group chat is in an hour', `${g.topic}, ${dayAndClock(g.startsAt)} EAT.`, `/group-chats/${g.id}`)
     }
+    for (const e of db.events) {
+      if (!e.interestedByMe || e.cancelled || (e.status && e.status !== 'live') || e.startsAt <= t) continue
+      if (e.startsAt - t <= 60 * MIN) notify.push('event', `e:${e.id}:1h`, 'An event you’re interested in is coming up', `${e.title}, ${dayAndClock(e.startsAt)} EAT.`, `/events/${e.id}`)
+    }
     const sub = db.subscription
     if (sub) {
       const state = planState(sub, t)

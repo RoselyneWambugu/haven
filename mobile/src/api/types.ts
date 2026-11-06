@@ -81,6 +81,8 @@ export interface Notice {
 export interface Settings {
   notifyMessages: boolean
   notifySessions: boolean
+  /** Reminders for community events the member said they are interested in. */
+  notifyEvents: boolean
   notifyForum: boolean
   notifyPlan: boolean
   quietHours: boolean
@@ -436,6 +438,15 @@ export interface CommunityEvent {
   proposedBy?: string
   /** Why a proposal was declined. Staff and the therapist see it. */
   declineReason?: string
+}
+/** A notice for a therapist in the portal, such as the decision on an event they proposed. */
+export interface PortalNote {
+  id: string
+  title: string
+  body: string
+  href: string
+  at: number
+  read: boolean
 }
 export type EventStatus = 'pending' | 'live' | 'declined' | 'withdrawn'
 

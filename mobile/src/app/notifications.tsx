@@ -13,7 +13,7 @@ import { useDb } from '@/store/db'
 import { useNow } from '@/store/useNow'
 import { colors } from '@/theme'
 
-const ICON: Record<NoteCategory, IconName> = { message: 'chats', session: 'cal', forum: 'forum', plan: 'wallet', safety: 'shield', account: 'person' }
+const ICON: Record<NoteCategory, IconName> = { message: 'chats', session: 'cal', event: 'cal', forum: 'forum', plan: 'wallet', safety: 'shield', account: 'person' }
 
 /** Everything that would have been a push notification, newest first. Held-back notes appear when quiet hours end. */
 export default function Notifications() {

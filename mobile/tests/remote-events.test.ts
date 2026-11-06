@@ -50,6 +50,25 @@ describe('events from the server', () => {
   })
 })
 
+describe('a cancelled event', () => {
+  it('is told to a member who was interested, once', async () => {
+    update({ events: [ev({ id: 'e1', interestedByMe: true })], account: { id: 'u1', settings: { notifyEvents: true, notifyMessages: true, notifySessions: true, notifyForum: true, notifyPlan: true, quietHours: false } } as never })
+    fake({ event_list: { ok: true, events: [ev({ id: 'e1', interestedByMe: true, cancelled: { reason: 'The speaker is unwell', at: Date.now() } })] } })
+    await syncEvents()
+    await syncEvents()
+    const notes = getDb().notifications.filter((n) => n.category === 'event')
+    expect(notes).toHaveLength(1)
+    expect(notes[0].body).toContain('The speaker is unwell')
+  })
+
+  it('is not told to someone who never said they were interested', async () => {
+    update({ events: [ev({ id: 'e1', interestedByMe: false })], account: { id: 'u1', settings: { notifyEvents: true, notifyMessages: true, notifySessions: true, notifyForum: true, notifyPlan: true, quietHours: false } } as never })
+    fake({ event_list: { ok: true, events: [ev({ id: 'e1', cancelled: { reason: 'The speaker is unwell', at: Date.now() } })] } })
+    await syncEvents()
+    expect(getDb().notifications.filter((n) => n.category === 'event')).toEqual([])
+  })
+})
+
 describe('events the app asks for', () => {
   it('marks interest, then takes the server’s answer', async () => {
     update({ events: [ev()], subscription: { plan: 'monthly', status: 'active', renewsAt: Date.now() + 1e10 } as never, account: { id: 'u1' } as never })
@@ -98,7 +117,7 @@ describe('event proposals on the server', () => {
     await remoteEvents.withdraw('p1')
     await remoteEvents.decide('p1', true)
     await remoteEvents.decide('p2', false, 'We already have a walk that week')
-    expect(calls.filter((c) => c.name !== 'portal_events' && c.name !== 'admin_events').map((c) => [c.name, c.args])).toEqual([
+    expect(calls.filter((c) => c.name !== 'portal_events' && c.name !== 'portal_notes' && c.name !== 'admin_events').map((c) => [c.name, c.args])).toEqual([
       ['portal_withdraw_event', { p_id: 'p1' }],
       ['admin_decide_event', { p_id: 'p1', p_approve: true, p_reason: null }],
       ['admin_decide_event', { p_id: 'p2', p_approve: false, p_reason: 'We already have a walk that week' }],
@@ -109,5 +128,29 @@ describe('event proposals on the server', () => {
     fake({ portal_events: { ok: true, events: [ev({ status: 'declined', declineReason: 'Not this month' })] } })
     await syncPortalEvents()
     expect(getDb().events[0].declineReason).toBe('Not this month')
+  })
+})
+
+describe('editing and notices on the server', () => {
+  it('sends an edit with an ISO time and refreshes the therapist’s list and notices', async () => {
+    const calls = fake({ portal_edit_event: { ok: true }, portal_events: { ok: true, events: [ev({ id: 'p1', status: 'pending' })] }, portal_notes: { ok: true, notes: [{ id: 'n1', title: 'Your event was approved', body: 'It is live.', href: '/portal/events', at: 1, read: false }] } })
+    const r = await remoteEvents.edit('p1', { title: 'A slow evening walk, edited', blurb: 'An easy group walk with a therapist alongside.', kind: 'walk', mode: 'in-person', place: 'Karura Forest, main gate', startsAt: Date.UTC(2026, 10, 24, 15), durationMin: 75 })
+    expect(r.ok).toBe(true)
+    expect(calls[0]).toMatchObject({ name: 'portal_edit_event', args: { p_id: 'p1', p_starts: '2026-11-24T15:00:00.000Z', p_duration: 75 } })
+    expect(getDb().portalNotes[0]).toMatchObject({ title: 'Your event was approved', read: false })
+  })
+
+  it('shows the server’s reason when an edit is refused', async () => {
+    fake({ portal_edit_event: { ok: false, code: 'gone', error: 'That proposal can’t be edited any more.' } })
+    expect(await remoteEvents.edit('p1', { title: 'A slow evening walk', blurb: 'An easy group walk with a therapist alongside.', kind: 'walk', mode: 'online', place: 'Link sent the day before', startsAt: Date.now() + 9 * 86_400_000, durationMin: 60 })).toMatchObject({ ok: false, code: 'gone' })
+  })
+
+  it('marks notices read at once and tells the server', async () => {
+    update({ portalNotes: [{ id: 'n1', title: 't', body: 'b', href: '/portal/events', at: 1, read: false }] })
+    const calls = fake()
+    remoteEvents.markNotesRead()
+    expect(getDb().portalNotes[0].read).toBe(true)
+    await Promise.resolve()
+    expect(calls.some((c) => c.name === 'portal_notes_read')).toBe(true)
   })
 })

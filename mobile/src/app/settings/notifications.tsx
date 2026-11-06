@@ -30,6 +30,7 @@ export default function Notifications() {
         </Banner>
       ) : null}
       {s.notifySessions && access === 'off' ? <Button testID="alarm-allow" label="Allow notifications" variant="quiet" onPress={() => void askForAlarms().then(setAccess)} /> : null}
+      <ToggleRow testID="event-reminders" label="Event reminders" sub="An alert an hour before an event you said you are interested in" on={s.notifyEvents ?? true} onChange={(v) => { set({ notifyEvents: v }); if (v && Platform.OS !== 'web') void askForAlarms().then(setAccess) }} />
       {REMOTE ? <ToggleRow testID="sms-reminders" label="Text reminders" sub="One text an hour before a session. It says nothing about who it is with. Standard SMS rates may apply." on={s.smsReminders} onChange={(v) => set({ smsReminders: v })} /> : null}
       <ToggleRow label="Community replies" on={s.notifyForum} onChange={(v) => set({ notifyForum: v })} />
       <ToggleRow label="Plan and payment" on={s.notifyPlan} onChange={(v) => set({ notifyPlan: v })} />
