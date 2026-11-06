@@ -12,7 +12,7 @@ import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, canJoin, joinOpensAt } from '@/lib/booking'
-import { canReportTherapistLate, REFUND_NOTE } from '@/lib/sessionMoney'
+import { canReportTherapistLate, flakeOffer, REFUND_NOTE } from '@/lib/sessionMoney'
 import { now } from '@/lib/clock'
 import { go, goBack } from '@/lib/nav'
 import { clock, dayAndClock, dayLong } from '@/lib/time'
@@ -75,6 +75,11 @@ export default function SessionDetail() {
           {s.refundKes != null && s.priceKes != null
             ? `${money(s.refundKes)} of ${money(s.priceKes)} goes back to your M-Pesa number${s.refundKes < s.priceKes ? `. ${money(s.priceKes - s.refundKes)} was kept` : ''}. ${REFUND_NOTE}`
             : 'No charge.'}
+        </Banner>
+      ) : null}
+      {s.flaked && flakeOffer([s], s.therapistId, now()) ? (
+        <Banner testID="flake-offer" tone="green" icon="check" title={`${s.flakeDiscountPct}% off your next session`}>
+          {t.name} missed this one, so your next booking with them is {s.flakeDiscountPct}% cheaper, until {dayLong(s.flakeDiscountUntil ?? 0)}.
         </Banner>
       ) : null}
       {booked ? (

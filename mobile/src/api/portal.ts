@@ -1,7 +1,7 @@
 import { THERAPISTS } from '@/data/seed'
 import { canJoin, SESSION_MINUTES, MIN, HOUR } from '@/lib/booking'
 import { now } from '@/lib/clock'
-import { memberNoShowSplit } from '@/lib/sessionMoney'
+import { canMarkNoShow, memberNoShowSplit } from '@/lib/sessionMoney'
 import { uid } from '@/lib/id'
 import { blocksToCells, cellKey, cellsToBlocks, nextCell, split, isAvailable, type Cell } from '@/lib/portal'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
@@ -201,6 +201,8 @@ export const portal = {
     const p = getDb().portal
     const s = p?.sessions.find((x) => x.id === id)
     if (!p || !s) return { ok: false, error: 'Session not found.' }
+    // A client who joined the session can't be marked a no-show.
+    if (input.attendance === 'no-show' && !canMarkNoShow(s.clientJoinedAt)) return { ok: false, error: 'This client joined the session, so it can’t be marked as a no-show.', code: 'joined' }
     // A member who does not come: 85% goes back to them and Echo keeps the rest, so the therapist earns nothing from it.
     const gross = input.attendance === 'no-show' ? (memberNoShowSplit(p.profile.priceKes ?? 0).therapistKes || null) : p.profile.priceKes
     patch((x) => ({
@@ -233,10 +235,14 @@ export const portal = {
   },
 
   // --- earnings (THR-20) ---
-  earnings(): { rows: (ReturnType<typeof split> & { id: string; at: number; client: string; mode: string; available: boolean })[]; available: number | null; pending: number | null } {
+  earnings(): { rows: (ReturnType<typeof split> & { id: string; at: number; client: string; mode: string; label: string; available: boolean })[]; available: number | null; pending: number | null } {
     const p = getDb().portal
     const done = (p?.sessions ?? []).filter((s) => s.status === 'completed' && s.grossKes !== null).sort((a, b) => b.end - a.end)
-    const rows = done.map((s) => ({ id: s.id, at: s.end, client: s.clientName, mode: s.mode, available: isAvailable(s.end, now()), ...split(s.grossKes, s.feeKes) }))
+    const rows = [
+      ...done.map((s) => ({ id: s.id, at: s.end, client: s.clientName, mode: s.mode, label: '', available: isAvailable(s.end, now()), ...split(s.grossKes, s.feeKes) })),
+      // The therapist's share of a cancellation fee, for a session the client cancelled in the last hour.
+      ...(p?.lateCancels ?? []).filter((c) => c.grossKes !== null).map((c) => ({ id: c.id, at: c.end, client: c.clientName, mode: c.mode, label: 'Cancelled late', available: isAvailable(c.end, now()), ...split(c.grossKes, c.feeKes ?? 0) })),
+    ].sort((a, b) => b.at - a.at)
     const sum = (list: typeof rows) => (list.length ? list.reduce((n, r) => n + (r.net ?? 0), 0) : 0)
     return { rows, available: sum(rows.filter((r) => r.available)), pending: sum(rows.filter((r) => !r.available)) }
   },

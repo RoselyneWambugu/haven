@@ -23,7 +23,8 @@ interface RemotePortal {
   time_off: { id: string; start: number; end: number }[]
   payout: PortalState['payout']
   licence_valid_to: number
-  sessions: { id: string; client_key: string; client_name: string; client_avatar: AvatarKind; mode: Mode; start: number; end: number; number: number; status: PortalSession['status']; attendance: PortalSession['attendance']; note: string; follow_up: number | null; gross_kes: number | null; fee_kes?: number | null }[]
+  sessions: { id: string; client_key: string; client_name: string; client_avatar: AvatarKind; mode: Mode; start: number; end: number; number: number; status: PortalSession['status']; attendance: PortalSession['attendance']; note: string; follow_up: number | null; gross_kes: number | null; fee_kes?: number | null; client_joined?: number | null }[]
+  late_cancels?: { id: string; client_name: string; mode: Mode; start: number; end: number; gross_kes: number | null; fee_kes?: number | null }[]
   threads: { id: string; client_name: string; client_avatar: AvatarKind; unread: number; closed: boolean; next_session: number | null; messages: { id: string; from: Message['from']; text: string; at: string }[] }[]
   concerns: { id: string; session_id: string | null; danger: boolean; type: ConcernType; detail: string; at: number }[]
 }
@@ -41,7 +42,8 @@ function toPortal(d: RemotePortal, prev: PortalState | null): PortalState {
     availability: d.availability,
     timeOff: d.time_off,
     profile: d.profile,
-    sessions: d.sessions.map((s): PortalSession => ({ id: s.id, clientKey: s.client_key, clientName: s.client_name, clientAvatar: s.client_avatar, mode: s.mode, start: s.start, end: s.end, number: s.number, status: s.status, attendance: s.attendance, note: s.note, followUp: s.follow_up, grossKes: s.gross_kes, feeKes: s.fee_kes ?? null })),
+    sessions: d.sessions.map((s): PortalSession => ({ id: s.id, clientKey: s.client_key, clientName: s.client_name, clientAvatar: s.client_avatar, mode: s.mode, start: s.start, end: s.end, number: s.number, status: s.status, attendance: s.attendance, note: s.note, followUp: s.follow_up, grossKes: s.gross_kes, feeKes: s.fee_kes ?? null, clientJoinedAt: s.client_joined ?? null })),
+    lateCancels: (d.late_cancels ?? []).map((c) => ({ id: c.id, clientName: c.client_name, mode: c.mode, start: c.start, end: c.end, grossKes: c.gross_kes, feeKes: c.fee_kes ?? null })),
     threads: d.threads.map((t): PortalThread => ({ id: t.id, clientName: t.client_name, clientAvatar: t.client_avatar, unread: t.unread, closed: t.closed, nextSession: t.next_session, messages: t.messages.map((m) => ({ id: m.id, from: m.from, text: m.text, at: ms(m.at) })) })),
     concerns: d.concerns.map((c): PortalConcern => ({ id: c.id, sessionId: c.session_id, danger: c.danger, type: c.type, detail: c.detail, at: c.at })),
     payout: d.payout,

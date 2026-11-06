@@ -95,6 +95,15 @@ describe('what the portal shows', () => {
     expect(p.timeOff).toHaveLength(1)
   })
 
+  it('carries when the client joined and what late cancellations earned', async () => {
+    const t = 1_900_000_000_000
+    fake({ replies: { my_portal: { ...PORTAL(), sessions: [{ ...PORTAL().sessions[0], client_joined: t - HOUR }], late_cancels: [{ id: 'lc1', client_name: 'QuietPine', mode: 'chat', start: t - 30 * HOUR, end: t - 29 * HOUR, gross_kes: 100, fee_kes: 0 }] } } })
+    await syncPortal()
+    const p = getDb().portal!
+    expect(p.sessions[0].clientJoinedAt).toBe(t - HOUR)
+    expect(p.lateCancels).toEqual([{ id: 'lc1', clientName: 'QuietPine', mode: 'chat', start: t - 30 * HOUR, end: t - 29 * HOUR, grossKes: 100, feeKes: 0 }])
+  })
+
   it('keeps what it had when the server can’t be reached', async () => {
     fake()
     await syncPortal()

@@ -13,6 +13,8 @@ import { THERAPISTS } from '@/data/seed'
 import { maskPhone, normaliseKenyanPhone } from '@/lib/identity'
 import { goBack, replace, resetTo } from '@/lib/nav'
 import { planIncludes } from '@/lib/plan'
+import { flakeOffer } from '@/lib/sessionMoney'
+import { now } from '@/lib/clock'
 import { dayAndClock } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -28,6 +30,7 @@ export default function Checkout() {
   const co = useDb((s) => s.checkout)
   const plans = useDb((s) => s.content.plans)
   const accountPhone = useDb((s) => s.account?.private.phone ?? '')
+  const mySessions = useDb((s) => s.sessions)
   // A member who signed up with Google has no phone on Echo, so they say which M-Pesa number to charge.
   const [given, setGiven] = useState('')
   const [givenError, setGivenError] = useState<string | null>(null)
@@ -61,6 +64,9 @@ export default function Checkout() {
 
   const planDef = item.kind === 'plan' ? plans.find((p) => p.id === item.planId) : undefined
   const title = item.kind === 'plan' ? `${planDef?.label} plan` : `Session with ${THERAPISTS.find((t) => t.id === item.therapistId)?.name}`
+  const listKes = item.kind === 'session' ? (THERAPISTS.find((t) => t.id === item.therapistId)?.priceKes ?? null) : null
+  const offPct = listKes && amount !== null && amount < listKes ? Math.round((1 - amount / listKes) * 100) : 0
+  const missedBy = item.kind === 'session' && flakeOffer(mySessions, item.therapistId, now()) ? THERAPISTS.find((t) => t.id === item.therapistId)?.name : null
   const sub = item.kind === 'plan' ? (item.autoRenew ? 'Renews automatically' : 'Does not renew') : `${dayAndClock(item.start)} · ${item.mode}`
 
   async function pay() {
@@ -168,6 +174,11 @@ export default function Checkout() {
         <Text variant="h2" color={colors.paper} style={{ marginTop: 8 }}>
           {money(amount)}
         </Text>
+        {offPct > 0 ? (
+          <Text testID="checkout-discount" variant="small" color={colors.sun}>
+            {`${money(listKes)} less ${offPct}%${missedBy ? ` because ${missedBy} missed your last session` : ' with your plan'}`}
+          </Text>
+        ) : null}
       </View>
       {planDef ? (
         <Card testID="checkout-includes">

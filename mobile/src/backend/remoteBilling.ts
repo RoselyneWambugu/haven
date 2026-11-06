@@ -119,7 +119,7 @@ export const remoteBilling = {
     update({ checkout: { id: String(r.order_id), item, amountKes, createdAt: now() } })
     const pct = Number(r.discount_pct ?? 0)
     // The server has already taken the plan's discount off the price; the title says so, so the lower price isn't a surprise.
-    const title = pct > 0 ? `${String(r.title)} (${pct}% off with your plan)` : String(r.title)
+    const title = r.discount_note ? `${String(r.title)} (${pct}% off because ${String(r.discount_note)})` : pct > 0 ? `${String(r.title)} (${pct}% off with your plan)` : String(r.title)
     return { ok: true, value: { title, amountKes } }
   },
 

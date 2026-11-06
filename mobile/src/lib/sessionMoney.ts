@@ -1,3 +1,4 @@
+import type { Session } from '@/api/types'
 import { MIN } from './booking'
 
 /**
@@ -75,3 +76,26 @@ export function cancelWords(split: Split, money: (n: number | null) => string): 
 }
 
 export const REFUND_NOTE = `Refunds go to the M-Pesa number you paid from, usually within a few minutes, and always within ${SESSION_MONEY.refundWorkingDays} working days.`
+
+/** A therapist can mark a client a no-show only if the client never joined. Joining late still counts as joining. */
+export const canMarkNoShow = (clientJoinedAt: number | null | undefined): boolean => !clientJoinedAt
+
+/** After a therapist misses a session, the member's next booking with them is this much cheaper, for this long. The server holds the same values. */
+export const FLAKE_DISCOUNT = { pct: 10, days: 90 } as const
+
+export interface FlakeOffer {
+  /** The missed session that earned the discount. */
+  sessionId: string
+  pct: number
+  until: number
+}
+
+/** The discount waiting for this member with this therapist: from a session they missed, not yet used, not expired. */
+export function flakeOffer(sessions: Pick<Session, 'id' | 'therapistId' | 'flaked' | 'flakeDiscountPct' | 'flakeDiscountUntil' | 'discountUsed'>[], therapistId: string, at: number): FlakeOffer | null {
+  const hit = sessions
+    .filter((s) => s.therapistId === therapistId && s.flaked && (s.flakeDiscountPct ?? 0) > 0 && !s.discountUsed && (s.flakeDiscountUntil ?? 0) > at)
+    .sort((a, b) => (a.flakeDiscountUntil ?? 0) - (b.flakeDiscountUntil ?? 0))[0]
+  return hit ? { sessionId: hit.id, pct: hit.flakeDiscountPct ?? 0, until: hit.flakeDiscountUntil ?? 0 } : null
+}
+
+export const discountedKes = (price: number, pct: number): number => Math.round((price * (100 - pct)) / 100)

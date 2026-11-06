@@ -93,6 +93,20 @@ describe('portal api', () => {
     expect(api.portal.join(soon.id).ok).toBe(true)
   })
 
+  it('refuses a no-show for a client who joined', () => {
+    const [a] = p().sessions.filter((s) => s.status === 'booked')
+    update((st) => ({ portal: st.portal ? { ...st.portal, sessions: st.portal.sessions.map((x) => (x.id === a.id ? { ...x, clientJoinedAt: now() } : x)) } : st.portal }))
+    expect(api.portal.wrapUp(a.id, { attendance: 'no-show', note: '', followUp: null })).toMatchObject({ ok: false, code: 'joined' })
+    expect(p().sessions.find((x) => x.id === a.id)!.status).toBe('booked')
+    expect(api.portal.wrapUp(a.id, { attendance: 'late', note: '', followUp: null }).ok).toBe(true)
+  })
+
+  it('shows what a late cancellation earned in earnings', () => {
+    update((st) => ({ portal: st.portal ? { ...st.portal, lateCancels: [{ id: 'lc1', clientName: 'QuietPine', mode: 'chat' as const, start: now() - 72 * 3600_000, end: now() - 71 * 3600_000, grossKes: 100, feeKes: 0 }] } : st.portal }))
+    const row = api.portal.earnings().rows.find((r) => r.id === 'lc1')!
+    expect(row).toMatchObject({ label: 'Cancelled late', gross: 100, net: 100 })
+  })
+
   it('pays for attended sessions and pays nothing for a no-show', () => {
     const [a, b] = p().sessions.filter((s) => s.status === 'booked')
     api.portal.wrapUp(a.id, { attendance: 'attended', note: 'ok', followUp: null })

@@ -260,6 +260,10 @@ export interface Session {
   refundKes?: number | null
   /** The therapist did not join and the member left: it counts as a 1-star rating for the therapist. */
   flaked?: boolean
+  /** After a therapist missed this session: the discount on the next booking with them, until when, and whether it has been used. */
+  flakeDiscountPct?: number | null
+  flakeDiscountUntil?: number | null
+  discountUsed?: boolean
 }
 
 // ---------- plans and payments ----------
@@ -504,6 +508,19 @@ export interface PortalSession {
   grossKes: number | null
   /** The platform fee fixed on the session when it was completed. Only on the real backend. */
   feeKes?: number | null
+  /** When the client joined the session (chat, voice or video). A client who joined can't be marked a no-show. */
+  clientJoinedAt?: number | null
+}
+
+/** A session the client cancelled in the last hour: the therapist's share of the cancellation fee. */
+export interface LateCancel {
+  id: string
+  clientName: string
+  mode: Mode
+  start: number
+  end: number
+  grossKes: number | null
+  feeKes?: number | null
 }
 
 export interface PortalThread {
@@ -545,6 +562,8 @@ export interface PortalState {
   timeOff: { id: string; start: number; end: number }[]
   profile: PortalProfile
   sessions: PortalSession[]
+  /** Real backend: late cancellations that earned the therapist something. */
+  lateCancels?: LateCancel[]
   threads: PortalThread[]
   concerns: PortalConcern[]
   payout: { method: string; schedule: 'weekly' | 'monthly' }

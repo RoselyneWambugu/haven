@@ -63,6 +63,7 @@ export default function Earnings() {
             </Text>
             <Text variant="small" style={{ flex: 2 }} numberOfLines={1}>
               {r.client} · {MODE[r.mode as keyof typeof MODE]}
+              {r.label ? ` · ${r.label}` : ''}
             </Text>
             <Text variant="small" style={{ flex: 1 }}>
               {money(r.gross)}

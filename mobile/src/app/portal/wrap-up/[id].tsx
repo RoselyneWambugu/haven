@@ -9,7 +9,9 @@ import { Panel } from '@/components/Portal'
 import { Text } from '@/components/Text'
 import { now } from '@/lib/clock'
 import { go, resetTo } from '@/lib/nav'
-import { dayAndClock } from '@/lib/time'
+import { canMarkNoShow } from '@/lib/sessionMoney'
+import { clock, dayAndClock } from '@/lib/time'
+import { colors } from '@/theme'
 import { useDb } from '@/store/db'
 
 /** Wrap-up (THR-19): attendance feeds billing and no-show rules, the note stays private, and a follow-up goes to the client as a booking offer. */
@@ -19,7 +21,9 @@ export default function WrapUp() {
   const [attendance, setAttendance] = useState<Attendance>('attended')
   const [note, setNote] = useState(s?.note ?? '')
   const [follow, setFollow] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   if (!s) return null
+  const joined = !canMarkNoShow(s.clientJoinedAt)
   const suggested = Math.max(now(), s.start) + 7 * 24 * 3600_000
 
   return (
@@ -30,7 +34,10 @@ export default function WrapUp() {
           {s.clientName} · {dayAndClock(s.start)}
         </Text>
         <Text variant="label">Attendance</Text>
-        <Segmented value={attendance} onChange={setAttendance} options={[{ value: 'attended', label: 'Attended' }, { value: 'late', label: 'Late' }, { value: 'no-show', label: 'No-show' }]} />
+        <Segmented value={attendance} onChange={setAttendance} options={[{ value: 'attended', label: 'Attended' }, { value: 'late', label: 'Late' }, ...(joined ? [] : [{ value: 'no-show' as const, label: 'No-show' }])]} />
+        <Text testID="wrap-joined" variant="small" muted>
+          {joined ? `The client joined at ${clock(s.clientJoinedAt!)}, so this can’t be a no-show.` : 'The client has not joined this session.'}
+        </Text>
         <Field testID="wrap-note" label="Private session note (autosaved)" value={note} onChangeText={setNote} multiline minHeight={150} hint="Only you can see this. Notes are stored encrypted." />
         <Check testID="wrap-follow" checked={follow} label={`Suggest a follow-up on ${dayAndClock(suggested)}`} onPress={() => setFollow((v) => !v)} />
         <Panel tone="lichen">
@@ -40,10 +47,16 @@ export default function WrapUp() {
           testID="wrap-save"
           label="Save and close"
           onPress={async () => {
-            await api.portal.wrapUp(s.id, { attendance, note, followUp: follow ? suggested : null })
+            const r = await api.portal.wrapUp(s.id, { attendance, note, followUp: follow ? suggested : null })
+            if (!r.ok) return setError(r.error)
             resetTo('/portal/sessions')
           }}
         />
+        {error ? (
+          <Text testID="wrap-error" variant="small" color={colors.clay}>
+            {error}
+          </Text>
+        ) : null}
         <Button variant="ghost" icon="flag" label="I have a concern to flag" onPress={() => go(`/portal/concern?session=${s.id}`)} />
       </View>
     </View>

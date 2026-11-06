@@ -57,6 +57,12 @@ describe('syncing the plan', () => {
 })
 
 describe('checkout and payment', () => {
+  it('says why a session is cheaper when the therapist missed the last one', async () => {
+    fake({ checkout: { ok: true, order_id: 'o-2', amount_kes: 1350, title: 'Session with Dr. Amina', discount_pct: 10, discount_note: 'Dr. Amina missed your last session' } })
+    const r = await remoteBilling.createCheckout({ kind: 'session', therapistId: 't-amina', mode: 'chat', start: 1_900_000_000_000 })
+    expect(r).toEqual({ ok: true, value: { title: 'Session with Dr. Amina (10% off because Dr. Amina missed your last session)', amountKes: 1350 } })
+  })
+
   it('asks the server to open a checkout and keeps its order id and amount', async () => {
     const calls = fake()
     const r = await remoteBilling.createCheckout({ kind: 'plan', planId: 'monthly', autoRenew: true })

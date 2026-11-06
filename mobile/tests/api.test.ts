@@ -277,6 +277,36 @@ describe('payments, sessions and plans', () => {
     expect(getDb().sessions[0].lateChargeApplied).toBe(true)
     expect(getDb().sessions[0].refundKes).toBe(paid - Math.round(paid / 10))
   })
+  it('gives 10% off the next booking with a therapist who missed a session, once', async () => {
+    registerPaid()
+    const { THERAPISTS } = await import('../src/data/seed')
+    const { slotsFor } = await import('../src/lib/directory')
+    const t = THERAPISTS[0]
+    const book = async (start: number) => {
+      expect(api.billing.createCheckout({ kind: 'session', therapistId: t.id, mode: 'voice', start }).ok).toBe(true)
+      const price = getDb().checkout!.amountKes
+      const pay = api.billing.pay('mpesa')
+      await vi.advanceTimersByTimeAsync(3000)
+      const res = await pay
+      expect(res.ok).toBe(true)
+      return { id: res.sessionId!, price }
+    }
+    const slots = slotsFor(t, [], now(), 14).filter((s) => s.start > now() + 3 * 24 * 3600_000 && s.modes.includes('voice'))
+    const first = await book(slots[0].start)
+    expect(first.price).toBe(t.priceKes)
+    // the therapist does not come: 15 minutes in, the member leaves with everything back
+    advanceClock(Math.floor((slots[0].start + 15 * 60_000 - now()) / 60_000) + 1)
+    expect(api.sessions.reportTherapistLate(first.id)).toMatchObject({ ok: true })
+    expect(getDb().sessions.find((x) => x.id === first.id)).toMatchObject({ flaked: true, refundKes: t.priceKes, flakeDiscountPct: 10, discountUsed: false })
+    // the next booking with them is 10% off, and paying uses the discount up
+    const next = slots.find((s) => s.start > now() + 2 * 3600_000)!
+    const second = await book(next.start)
+    expect(second.price).toBe(Math.round(t.priceKes! * 0.9))
+    expect(getDb().sessions.find((x) => x.id === first.id)!.discountUsed).toBe(true)
+    expect(getDb().sessions.find((x) => x.id === second.id)!.priceKes).toBe(second.price)
+    const later = slots.find((s) => s.start > next.start + 3 * 3600_000)!
+    expect((await book(later.start)).price).toBe(t.priceKes)
+  })
   it('refuses a mode the therapist does not offer', () => {
     register()
     const r = api.billing.createCheckout({ kind: 'session', therapistId: 't-peter', mode: 'video', start: fromEat(2026, 9, 26, 10, 0) })

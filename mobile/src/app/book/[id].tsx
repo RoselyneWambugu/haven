@@ -13,6 +13,7 @@ import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
 import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
+import { discountedKes, flakeOffer } from '@/lib/sessionMoney'
 import { clock, dayLong } from '@/lib/time'
 import { useDb } from '@/store/db'
 import { useMoney } from '@/store/useMoney'
@@ -33,6 +34,8 @@ export default function Book() {
   const [start, setStart] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   if (!t) return null
+  const offer = flakeOffer(sessions, t.id, now())
+  const price = offer && t.priceKes !== null ? discountedKes(t.priceKes, offer.pct) : t.priceKes
 
   const slots = slotsFor(t, sessions, now()).filter((s) => s.modes.includes(mode))
   const days = groupSlotsByDay(slots).slice(0, 7)
@@ -48,8 +51,13 @@ export default function Book() {
   }
 
   return (
-    <Screen testID="book-screen" header={<TopBar back title={t.name} />} footer={<Button testID="book-continue" label={start === null ? 'Pick a time' : `Continue · ${money(t.priceKes)}`} disabled={start === null} onPress={next} />}>
+    <Screen testID="book-screen" header={<TopBar back title={t.name} />} footer={<Button testID="book-continue" label={start === null ? 'Pick a time' : `Continue · ${money(price)}`} disabled={start === null} onPress={next} />}>
       <Text variant="title">Book a session</Text>
+      {offer ? (
+        <Banner testID="flake-offer" tone="green" icon="check" title={`${offer.pct}% off`}>
+          {t.name} missed your last session, so this booking is {offer.pct}% cheaper. It is yours until {dayLong(offer.until)}.
+        </Banner>
+      ) : null}
       <Text variant="small" muted>
         Session type
       </Text>

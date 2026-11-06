@@ -40,6 +40,9 @@ interface RemoteSession {
   late_charge: boolean
   refund_kes?: number | null
   flaked?: boolean
+  flake_discount_pct?: number | null
+  flake_discount_until?: number | null
+  discount_used?: boolean
   follow_up_offer: string | null
   rating: { stars: number; comment: string } | null
 }
@@ -56,7 +59,7 @@ export async function rpc(name: string, args?: Record<string, unknown>): Promise
 
 const toSession = (s: RemoteSession): Session => ({
   id: s.id, therapistId: s.therapist_id, mode: s.mode, start: ms(s.start_at), end: ms(s.end_at), status: s.status, priceKes: s.price_kes, receiptNo: s.receipt_no ?? '',
-  createdAt: ms(s.created_at), rating: s.rating, followUpOffer: s.follow_up_offer ? ms(s.follow_up_offer) : null, lateChargeApplied: s.late_charge, refundKes: s.refund_kes ?? null, flaked: s.flaked ?? false,
+  createdAt: ms(s.created_at), rating: s.rating, followUpOffer: s.follow_up_offer ? ms(s.follow_up_offer) : null, lateChargeApplied: s.late_charge, refundKes: s.refund_kes ?? null, flaked: s.flaked ?? false, flakeDiscountPct: s.flake_discount_pct ?? null, flakeDiscountUntil: s.flake_discount_until ?? null, discountUsed: s.discount_used ?? false,
 })
 
 let directory: RemoteTherapist[] = []

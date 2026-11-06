@@ -71,3 +71,29 @@ describe('a therapist who does not come', () => {
     expect(after).toBe(4.6)
   })
 })
+
+import { canMarkNoShow, discountedKes, flakeOffer } from '../src/lib/sessionMoney'
+describe('a client who joined', () => {
+  it('cannot be marked a no-show, even when they were late', () => {
+    expect(canMarkNoShow(null)).toBe(true)
+    expect(canMarkNoShow(undefined)).toBe(true)
+    expect(canMarkNoShow(start + 10 * MIN)).toBe(false)
+  })
+})
+
+describe('the discount after a therapist misses a session', () => {
+  const missed = { id: 's1', therapistId: 't1', flaked: true, flakeDiscountPct: 10, flakeDiscountUntil: start + 90 * 24 * 60 * MIN, discountUsed: false }
+  it('is for the next booking with that same therapist only', () => {
+    expect(flakeOffer([missed], 't1', start)).toEqual({ sessionId: 's1', pct: 10, until: missed.flakeDiscountUntil })
+    expect(flakeOffer([missed], 't2', start)).toBeNull()
+  })
+  it('is used once and expires', () => {
+    expect(flakeOffer([{ ...missed, discountUsed: true }], 't1', start)).toBeNull()
+    expect(flakeOffer([missed], 't1', missed.flakeDiscountUntil + 1)).toBeNull()
+    expect(flakeOffer([{ ...missed, flakeDiscountPct: null }], 't1', start)).toBeNull()
+  })
+  it('takes 10% off the listed price', () => {
+    expect(discountedKes(1500, 10)).toBe(1350)
+    expect(discountedKes(1333, 10)).toBe(1200)
+  })
+})

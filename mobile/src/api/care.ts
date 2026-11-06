@@ -1,7 +1,7 @@
 import { hasPlan } from './access'
 import { canBookTherapist } from '@/lib/limits'
 import { THERAPISTS } from '@/data/seed'
-import { cancelSplit, canReportTherapistLate, therapistNoShowSplit } from '@/lib/sessionMoney'
+import { cancelSplit, canReportTherapistLate, discountedKes, FLAKE_DISCOUNT, flakeOffer, therapistNoShowSplit } from '@/lib/sessionMoney'
 import { changeOutcome, canJoin, SESSION_MINUTES, MIN } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
@@ -29,7 +29,7 @@ export const billing = {
       const plan = plansNow().find((p) => p.id === item.planId && p.enabled)
       if (!plan) return { ok: false, error: 'That plan is not available.' }
       update({ checkout: { id: uid('co'), item, amountKes: plan.priceKes, createdAt: now() } })
-      return { ok: true, value: { title: `${plan.label} peer plan`, amountKes: plan.priceKes } }
+      return { ok: true, value: { title: `${plan.label} plan`, amountKes: plan.priceKes } }
     }
     const t = therapistOf(item.therapistId)
     if (!t || t.suspended) return { ok: false, error: 'That therapist is not available.' }
@@ -38,8 +38,11 @@ export const billing = {
     if (!t.modes.includes(item.mode) || (item.mode === 'video' && !db.content.flags.therapistVideo)) return { ok: false, error: `${t.name} doesn’t offer that kind of session.` }
     const slot = slotsFor(t, db.sessions, now()).find((s) => s.start === item.start)
     if (!slot || !slot.modes.includes(item.mode)) return { ok: false, error: 'That time was just taken. Please pick another.', code: 'taken' }
-    update({ checkout: { id: uid('co'), item, amountKes: t.priceKes, createdAt: now() } })
-    return { ok: true, value: { title: `Session with ${t.name}`, amountKes: t.priceKes } }
+    // A therapist who missed the member's last session: this booking is cheaper.
+    const offer = flakeOffer(db.sessions, t.id, now())
+    const amount = offer && t.priceKes !== null ? discountedKes(t.priceKes, offer.pct) : t.priceKes
+    update({ checkout: { id: uid('co'), item, amountKes: amount, createdAt: now() } })
+    return { ok: true, value: { title: offer ? `Session with ${t.name} (${offer.pct}% off because they missed your last session)` : `Session with ${t.name}`, amountKes: amount } }
   },
 
   /** Simulates M-Pesa or card. Takes a few seconds, like the real thing. */
@@ -71,8 +74,11 @@ export const billing = {
         const th = therapistOf(item.therapistId)!
         const session: Session = {
           id: uid('s'), therapistId: th.id, mode: item.mode, start: item.start, end: item.start + SESSION_MINUTES * MIN, status: 'booked',
-          priceKes: th.priceKes, receiptNo: rcpt, createdAt: now(), rating: null, followUpOffer: null, lateChargeApplied: false,
+          priceKes: co.amountKes ?? th.priceKes, receiptNo: rcpt, createdAt: now(), rating: null, followUpOffer: null, lateChargeApplied: false,
         }
+        // The discount is used up by paying for the booking it was given for.
+        const usedOffer = flakeOffer(db.sessions, th.id, now())
+        const sessionsNow = usedOffer && co.amountKes !== null && th.priceKes !== null && co.amountKes < th.priceKes ? db.sessions.map((x) => (x.id === usedOffer.sessionId ? { ...x, discountUsed: true } : x)) : db.sessions
         let conversations = db.conversations
         if (item.mode === 'chat' && !conversations.some((c) => c.therapistId === th.id)) {
           const conv: Conversation = {
@@ -82,7 +88,7 @@ export const billing = {
           }
           conversations = [conv, ...conversations]
         }
-        update({ sessions: [...db.sessions, session], conversations, checkout: null })
+        update({ sessions: [...sessionsNow, session], conversations, checkout: null })
         resolve({ ok: true, receiptNo: rcpt, sessionId: session.id })
       }, 2800)
     })
@@ -128,7 +134,7 @@ export const sessions = {
     if (!s || s.status !== 'booked') return { ok: false, error: 'That session can’t be changed.' }
     if (!canReportTherapistLate(s.start, s.end, now())) return { ok: false, error: 'Please wait 15 minutes after the start for your therapist to join.', code: 'early' }
     const split = therapistNoShowSplit(s.priceKes ?? 0)
-    setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: false, refundKes: split.refundKes, flaked: true }))
+    setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: false, refundKes: split.refundKes, flaked: true, flakeDiscountPct: FLAKE_DISCOUNT.pct || null, flakeDiscountUntil: now() + FLAKE_DISCOUNT.days * DAY, discountUsed: false }))
     return { ok: true, value: { refundKes: split.refundKes } }
   },
 
