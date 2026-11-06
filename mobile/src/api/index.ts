@@ -66,6 +66,7 @@ const account: typeof mockAccount = REMOTE
         remoteAccountActions.revokeDevice(id)
       },
       appeal: appealNotice as unknown as typeof mockAccount.appeal,
+      updateDetails: remoteAccountActions.updateDetails as unknown as typeof mockAccount.updateDetails,
       requestDeletion(keepPosts) {
         mockAccount.requestDeletion(keepPosts)
         remoteAccountActions.requestDeletion()

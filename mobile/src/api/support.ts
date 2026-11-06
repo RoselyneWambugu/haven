@@ -2,6 +2,7 @@ import { LIVE } from '@/data/config'
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
 import { detectDistress } from '@/lib/safety'
+import { validateDetailsEdit } from '@/lib/identity'
 import { getDb, resetDb, update, updateAccount } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { CRISIS_STAFF_REPLY, STAFF_REPLIES } from './bot'
@@ -70,6 +71,19 @@ export const tickets = {
 // ---------------------------------------------------------------------------
 
 export const account = {
+  /**
+   * The member edits their full name and contact email. Date of birth and ID can't be changed here, because the age band and the
+   * under-18 rule depend on the date. A new name means the ID no longer matches, so it is marked unverified.
+   */
+  updateDetails(input: { fullName: string; email: string }): Res {
+    const a = getDb().account
+    if (!a) return { ok: false, error: 'Sign in first.' }
+    const err = validateDetailsEdit(input, { fullName: a.private.fullName, email: a.private.email, penName: a.public.penName, emailIsSignIn: !!a.hasGoogle || !!a.hasPassword })
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    const name = input.fullName.trim()
+    updateAccount((x) => ({ ...x, private: { ...x.private, fullName: name, email: input.email.trim(), idVerified: name === x.private.fullName ? x.private.idVerified : false } }))
+    return { ok: true, value: undefined }
+  },
   signOutDevice(id: string): void {
     updateAccount((a) => ({ ...a, devices: a.devices.filter((d) => d.id !== id) }))
   },

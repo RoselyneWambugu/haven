@@ -31,6 +31,12 @@ export default function Profiles() {
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const [askPassword, setAskPassword] = useState(false)
   const [password, setPassword] = useState('')
+  const [editDetails, setEditDetails] = useState(false)
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [detailsError, setDetailsError] = useState<string | null>(null)
+  const [detailsSaved, setDetailsSaved] = useState(false)
+  const [idReset, setIdReset] = useState(false)
   if (!account) return null
   const p = account.public
   const unlocked = reauthUntil > now()
@@ -46,6 +52,17 @@ export default function Profiles() {
     setAskPassword(false)
     setPassword('')
     setVerifyError(null)
+  }
+
+  const emailIsSignIn = !!account.hasGoogle || !!account.hasPassword
+  async function saveDetails() {
+    const wasVerified = account!.private.idVerified
+    const r = await api.account.updateDetails({ fullName, email })
+    if (!r.ok) return setDetailsError(r.error)
+    setDetailsError(null)
+    setIdReset(wasVerified && fullName.trim() !== account!.private.fullName)
+    setDetailsSaved(true)
+    setEditDetails(false)
   }
 
   async function verify() {
@@ -118,7 +135,41 @@ export default function Profiles() {
             <Row title="Email" sub={account.private.email || 'Not added'} />
             <Row title="ID" sub={account.private.idVerified ? 'Verified' : 'Not verified'} last />
           </View>
-          <Button variant="quiet" label="Ask us to correct something" onPress={() => go('/help/contact?dept=account')} />
+          {detailsSaved && !editDetails ? (
+            <Banner testID="details-saved" tone="green" icon="check">
+              Saved.{idReset ? ' Because your name changed, your ID shows as not verified until it is checked again.' : ''}
+            </Banner>
+          ) : null}
+          {editDetails ? (
+            <View testID="edit-details" style={{ gap: 12 }}>
+              <Field testID="detail-name" label="Full name" value={fullName} onChangeText={(v) => { setFullName(v); setDetailsError(null) }} maxLength={120} autoComplete="name" />
+              {emailIsSignIn ? (
+                <Banner tone="sun" icon="lock" title="Your email is how you sign in">
+                  Change it under Sign-in methods, where it is confirmed.
+                </Banner>
+              ) : (
+                <Field testID="detail-email" label="Email (optional)" value={email} onChangeText={(v) => { setEmail(v); setDetailsError(null) }} keyboardType="email-address" autoComplete="email" />
+              )}
+              <Text variant="caption" muted>
+                Your date of birth and ID can’t be changed here, because your age range depends on the date. To change your phone number, use Sign-in methods. For anything else, contact us.
+              </Text>
+              {detailsError ? <Banner testID="details-error" tone="clay">{detailsError}</Banner> : null}
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Button testID="details-save" label="Save" onPress={saveDetails} disabled={fullName.trim().length < 2} />
+                </View>
+                <Button testID="details-cancel" variant="ghost" label="Cancel" onPress={() => { setEditDetails(false); setDetailsError(null) }} />
+              </View>
+            </View>
+          ) : (
+            <Button
+              testID="edit-profile"
+              variant="quiet"
+              label="Edit profile"
+              icon="pencil"
+              onPress={() => { setFullName(account.private.fullName); setEmail(account.private.email); setDetailsError(null); setDetailsSaved(false); setEditDetails(true) }}
+            />
+          )}
         </>
       ) : (
         <>

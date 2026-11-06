@@ -61,3 +61,25 @@ export function neighbouringBands(band: AgeBand): AgeBand[] {
   const i = order.indexOf(band)
   return order.filter((_, j) => Math.abs(i - j) === 1)
 }
+
+/**
+ * Checks an edit to the real name and contact email. Returns a plain reason, or null when it is fine.
+ * A pen name can't contain a part of the real name, and an email that is how the member signs in is changed under Sign-in methods.
+ */
+export function validateDetailsEdit(
+  input: { fullName: string; email: string },
+  current: { fullName: string; email: string; penName: string; emailIsSignIn: boolean },
+): string | null {
+  const name = input.fullName.trim()
+  if (name.length < 2) return 'Enter your full name.'
+  if (name.length > 120) return 'Keep your name under 120 characters.'
+  const email = input.email.trim()
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'That email doesn’t look right. You can leave it blank.'
+  if (current.emailIsSignIn && email.toLowerCase() !== current.email.toLowerCase()) return 'Your email is how you sign in. Change it under Sign-in methods.'
+  if (name !== current.fullName) {
+    const pen = current.penName.toLowerCase()
+    const parts = name.toLowerCase().replace(/[^a-z ]/g, '').split(/\s+/)
+    if (parts.some((p) => p.length >= 3 && pen.includes(p))) return 'Part of that name is in your pen name. Change your pen name first, then update your name.'
+  }
+  return null
+}

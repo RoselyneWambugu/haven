@@ -2,7 +2,7 @@ import { auth } from '@/api/auth'
 import type { AvatarKind, SignInNext, Res, Settings } from '@/api/types'
 import { CONFIG } from '@/data/config'
 import { now } from '@/lib/clock'
-import { ageBand, ageOn, normaliseKenyanPhone } from '@/lib/identity'
+import { ageBand, ageOn, normaliseKenyanPhone, validateDetailsEdit } from '@/lib/identity'
 import { validatePenName } from '@/lib/safety'
 import { emptyRegistration, getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
@@ -456,6 +456,17 @@ function markCurrent(id: string | null): void {
 
 /** The account actions that need the server. Each runs the on-device change first so the screen answers at once. */
 export const remoteAccountActions = {
+  /** Edits the full name and contact email. Checked here for a quick answer, and again on the server; the account is read back after. */
+  async updateDetails(input: { fullName: string; email: string }): Promise<Res> {
+    const a = getDb().account
+    if (!a) return failure('Sign in first.', 'no-account')
+    const err = validateDetailsEdit(input, { fullName: a.private.fullName, email: a.private.email, penName: a.public.penName, emailIsSignIn: !!a.hasGoogle || !!a.hasPassword })
+    if (err) return failure(err, 'invalid')
+    const r = await rpc('update_my_details', { p_full_name: input.fullName.trim(), p_email: input.email.trim() })
+    if (!r.ok) return failure(r.error, r.code)
+    await loadAccount()
+    return { ok: true, value: undefined }
+  },
   revokeDevice: (id: string) => background(rpc('revoke_device', { p_device_id: id })),
   requestDeletion: () => background(rpc('request_account_deletion')),
 }
