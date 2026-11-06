@@ -13,13 +13,13 @@ describe('therapist directory', () => {
     expect([...firsts].sort((a, b) => a - b)).toEqual(firsts)
   })
   it('filters by topic, language, mode and gender together', () => {
-    const f = { ...NO_FILTERS, specialisation: 'Grief', languages: ['Dholuo'], modes: ['chat' as const], gender: 'man' as const }
+    const f = { ...NO_FILTERS, specialisation: 'Grief', languages: ['Kiswahili'], modes: ['chat' as const], gender: 'man' as const }
     expect(filterTherapists(THERAPISTS, [], f, NOW).map((r) => r.therapist.id)).toEqual(['t-peter'])
     expect(activeFilterCount(f)).toBe(4)
   })
   it('searches names and topics', () => {
     expect(filterTherapists(THERAPISTS, [], { ...NO_FILTERS, query: 'psychiatrist' }, NOW).map((r) => r.therapist.id)).toEqual(['t-grace'])
-    expect(filterTherapists(THERAPISTS, [], { ...NO_FILTERS, query: 'somali' }, NOW).map((r) => r.therapist.id)).toEqual(['t-hassan'])
+    expect(filterTherapists(THERAPISTS, [], { ...NO_FILTERS, query: 'hassan' }, NOW).map((r) => r.therapist.id)).toEqual(['t-hassan'])
     expect(filterTherapists(THERAPISTS, [], { ...NO_FILTERS, query: 'zzz' }, NOW)).toEqual([])
   })
   it('can ask for a price ceiling', () => {
@@ -30,8 +30,9 @@ describe('therapist directory', () => {
   it('sorts by rating and by language match', () => {
     const byRating = filterTherapists(THERAPISTS, [], NO_FILTERS, NOW, 'rating').map((r) => r.therapist.rating)
     expect([...byRating].sort((a, b) => b - a)).toEqual(byRating)
-    const byLang = filterTherapists(THERAPISTS, [], NO_FILTERS, NOW, 'language', ['Somali', 'Kiswahili'])
-    expect(byLang[0].therapist.id).toBe('t-hassan')
+    const byLang = filterTherapists(THERAPISTS, [], NO_FILTERS, NOW, 'language', ['Kiswahili'])
+    expect(byLang[0].therapist.languages).toContain('Kiswahili')
+    expect(byLang.at(-1)!.therapist.languages).not.toContain('Kiswahili')
   })
   it('leaves out slots I have already booked', () => {
     const amina = THERAPISTS[0]

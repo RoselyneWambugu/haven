@@ -1,5 +1,5 @@
 import type { ContentState, DepartmentCfg, PlanCfg } from '@/api/types'
-import { FORUM_TOPICS } from '@/api/types'
+import { DEFAULT_LANGUAGES, FORUM_TOPICS } from '@/api/types'
 import { ARTICLES, CRISIS_LINES, DEPARTMENTS, EMERGENCY, PLANS, POPULAR, SUPPORT_ORGS } from './help'
 
 const OWNER: Record<string, DepartmentCfg['owner']> = {
@@ -20,6 +20,7 @@ export function defaultContent(): ContentState {
     supportOrgs: SUPPORT_ORGS.map((o) => ({ ...o, archived: false })),
     suggestions: [],
     topics: [...FORUM_TOPICS],
+    languages: [...DEFAULT_LANGUAGES],
     plans,
     pendingPlans: null,
     matching: { neighbourFallback: true, softTopicWeight: 0, rematchCooldownDays: 30 },

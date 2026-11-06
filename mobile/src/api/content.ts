@@ -1,7 +1,7 @@
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
 import {
-  canEditConfig, canEditDepartments, canEditDirectory, ownsDepartment, slugify, validateArticle, validateLimits, validateLine, validateMatching, validatePlans, validateTopic, type ArticleInput,
+  canEditConfig, canEditDepartments, canEditDirectory, ownsDepartment, slugify, validateArticle, validateLanguage, validateLimits, validateLine, validateMatching, validatePlans, validateTopic, type ArticleInput,
 } from '@/lib/content'
 import { applyLimits, getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
@@ -189,6 +189,17 @@ export const config = {
     if (content().topics.length <= 3) return { ok: false, error: 'Keep at least three topics.', code: 'min' }
     patch((c) => ({ topics: c.topics.filter((t) => t !== name) }))
     log('Retired topic', name)
+    return { ok: true, value: undefined }
+  },
+
+  // --- the languages members and therapists can choose ---
+  /** Adds a language to the list people choose from. Admin only, and logged. */
+  addLanguage(name: string): Res {
+    if (!canEditConfig(me().role)) return denied('change languages')
+    const problem = validateLanguage(name, content().languages)
+    if (problem) return { ok: false, error: problem, code: 'invalid' }
+    patch((c) => ({ languages: [...c.languages, name.trim()] }))
+    log('Added language', name.trim())
     return { ok: true, value: undefined }
   },
 

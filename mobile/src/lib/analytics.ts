@@ -209,9 +209,9 @@ export interface Breakdown {
 export function whoIsUsing(seed = 5): Breakdown {
   const r = rng(seed)
   const rows = ['18–24', '25–34', '35–44', '45–54', '55+']
-  const cols = ['English', 'Kiswahili', 'Sheng', 'Kikuyu', 'Dholuo']
+  const cols = ['English', 'Kiswahili']
   const weight = [0.26, 0.38, 0.2, 0.1, 0.06]
-  const lang = [0.58, 0.28, 0.07, 0.04, 0.03]
+  const lang = [0.9, 0.1]
   const total = 1240
   return { rows, cols, cells: rows.map((_, i) => cols.map((_, j) => suppress(Math.round(total * weight[i] * lang[j] * (0.85 + r() * 0.3))))) }
 }

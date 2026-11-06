@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Platform, View } from 'react-native'
-import { api, SPOKEN_LANGUAGES } from '@/api'
+import { api } from '@/api'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
@@ -17,6 +17,7 @@ import { colors } from '@/theme'
 export default function Languages() {
   const reg = getDb().reg
   const TOPICS = useDb((s) => s.content.topics)
+  const languages = useDb((s) => s.content.languages)
   const [langs, setLangs] = useState<string[]>(reg?.languages ?? ['English'])
   const [topics, setTopics] = useState<string[]>(reg?.topics ?? [])
   const [error, setError] = useState<string | null>(null)
@@ -41,7 +42,7 @@ export default function Languages() {
         Languages you speak. We match you with people who share at least one.
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {SPOKEN_LANGUAGES.map((l) => (
+        {languages.map((l) => (
           <Chip key={l} testID={`lang-${l}`} label={l} selected={langs.includes(l)} onPress={() => setLangs((x) => toggle(x, l))} />
         ))}
       </View>

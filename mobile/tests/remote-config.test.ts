@@ -66,6 +66,18 @@ describe('what an Admin does', () => {
     expect(c.pendingPlans?.plans.find((p) => p.id === 'daily')?.priceKes).toBe(200)
   })
 
+  it('reads the available languages, for members and for Admins', async () => {
+    fake({ app_config: { ...APP(), languages: ['English', 'Kiswahili', 'Kikuyu'] } })
+    await syncConfig()
+    expect(getDb().content.languages).toEqual(['English', 'Kiswahili', 'Kikuyu'])
+  })
+
+  it('adds a language through the server and shows its reason when refused', async () => {
+    const calls = fake({ admin_add_language: { ok: false, code: 'invalid', error: 'That language is already on the list.' } })
+    expect(await remoteConfig.addLanguage('English')).toMatchObject({ ok: false, error: 'That language is already on the list.' })
+    expect(calls[0]).toEqual({ name: 'admin_add_language', args: { p_name: 'English' } })
+  })
+
   it('sends every change to the server', async () => {
     const calls = fake({ admin_propose_plans: { ok: true, proposed: true, id: 'p9' } })
     await remoteConfig.setFlag('forum', false)

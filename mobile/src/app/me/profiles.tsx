@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
-import { api, SPOKEN_LANGUAGES } from '@/api'
+import { api } from '@/api'
 import { AVATAR_KINDS, Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Chip, Segmented } from '@/components/Controls'
@@ -23,6 +23,7 @@ import { colors } from '@/theme'
 export default function Profiles() {
   const account = useDb((s) => s.account)
   const TOPICS = useDb((s) => s.content.topics)
+  const languages = useDb((s) => s.content.languages)
   const reauthUntil = useDb((s) => s.reauthUntil)
   const [tab, setTab] = useState<'public' | 'private'>('public')
   const [editing, setEditing] = useState(false)
@@ -110,7 +111,7 @@ export default function Profiles() {
             Languages (used for matching)
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {SPOKEN_LANGUAGES.map((l) => (
+            {languages.map((l) => (
               <Chip key={l} label={l} selected={p.languages.includes(l)} onPress={() => api.auth.setLanguages(toggle(p.languages, l))} />
             ))}
           </View>

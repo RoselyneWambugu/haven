@@ -102,6 +102,20 @@ export function validateTopic(name: string, existing: string[]): string | null {
   return null
 }
 
+// ---------- languages ----------
+
+export const MAX_LANGUAGES = 20
+
+/** Checks a language an Admin wants to add. Returns a plain reason, or null when it is fine. */
+export function validateLanguage(name: string, existing: string[]): string | null {
+  const n = name.trim()
+  if (n.length < 3 || n.length > 20) return 'A language name is 3 to 20 characters.'
+  if (!/^[A-Z][A-Za-z]*([ -][A-Za-z]+)*$/.test(n)) return 'Start with a capital letter and use letters only, like Kikuyu.'
+  if (existing.some((l) => l.toLowerCase() === n.toLowerCase())) return 'That language is already on the list.'
+  if (existing.length >= MAX_LANGUAGES) return `The list can hold up to ${MAX_LANGUAGES} languages.`
+  return null
+}
+
 // ---------- plans (BIL-1, BIL-2) ----------
 
 export function validatePlan(p: PlanCfg): string | null {

@@ -218,6 +218,18 @@ describe('content api', () => {
     expect(api.config.retireTopic(c().topics[0])).toMatchObject({ ok: false, code: 'min' })
   })
 
+  it('starts with English and Kiswahili, and lets an Admin add a language that is checked and logged', () => {
+    expect(c().languages).toEqual(['English', 'Kiswahili'])
+    expect(api.config.addLanguage('kikuyu')).toMatchObject({ ok: false, code: 'invalid' })
+    expect(api.config.addLanguage('Ki')).toMatchObject({ ok: false, code: 'invalid' })
+    expect(api.config.addLanguage('Kik5yu')).toMatchObject({ ok: false, code: 'invalid' })
+    expect(api.config.addLanguage('english')).toMatchObject({ ok: false, code: 'invalid' })
+    expect(api.config.addLanguage('Kikuyu').ok).toBe(true)
+    expect(c().languages).toEqual(['English', 'Kiswahili', 'Kikuyu'])
+    expect(api.config.addLanguage('Kikuyu')).toMatchObject({ ok: false, code: 'invalid' })
+    expect(getDb().admin!.audit[0]).toMatchObject({ action: 'Added language', target: 'Kikuyu' })
+  })
+
   it('needs two different admins to change plans', () => {
     const plans = c().plans.map((p) => (p.id === 'monthly' ? { ...p, priceKes: 1800 } : p))
     as('J. Otieno')
@@ -261,6 +273,7 @@ describe('content api', () => {
       expect(api.config.setMatching({ neighbourFallback: true, softTopicWeight: 0, rematchCooldownDays: 30 })).toMatchObject({ ok: false, code: 'role' })
       expect(api.config.setLimits({ graceDays: 7, penNameChangeDays: 30, deletionHoldDays: 14 })).toMatchObject({ ok: false, code: 'role' })
       expect(api.config.addTopic('Money')).toMatchObject({ ok: false, code: 'role' })
+      expect(api.config.addLanguage('Kikuyu')).toMatchObject({ ok: false, code: 'role' })
     }
   })
 })

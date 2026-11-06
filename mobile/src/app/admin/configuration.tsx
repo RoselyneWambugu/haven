@@ -16,10 +16,11 @@ import { ALWAYS_ON, FLAGS, HARD_RULES } from '@/lib/content'
 import { useDb } from '@/store/db'
 import { colors } from '@/theme'
 
-type Tab = 'plans' | 'topics' | 'matching' | 'flags' | 'limits'
+type Tab = 'plans' | 'topics' | 'languages' | 'matching' | 'flags' | 'limits'
 const TABS: { key: Tab; label: string }[] = [
   { key: 'plans', label: 'Plans and entitlements' },
   { key: 'topics', label: 'Topics' },
+  { key: 'languages', label: 'Languages' },
   { key: 'matching', label: 'Matching' },
   { key: 'flags', label: 'Feature flags' },
   { key: 'limits', label: 'Limits' },
@@ -39,6 +40,7 @@ export default function Configuration() {
   const [draft, setDraft] = useState<PlanCfg[] | null>(null)
   const [prices, setPrices] = useState<Record<string, string>>({})
   const [topic, setTopic] = useState('')
+  const [language, setLanguage] = useState('')
   const [rename, setRename] = useState<{ from: string; to: string } | null>(null)
   const [match, setMatch] = useState(c.matching)
   const [limits, setLimits] = useState(c.limits)
@@ -137,6 +139,35 @@ export default function Configuration() {
                 const r = await api.config.addTopic(topic)
                 result(r, `Added ${topic.trim()}.`)
                 if (r.ok) setTopic('')
+              }}
+            />
+          </View>
+        </Panel>
+      ) : null}
+
+      {tab === 'languages' ? (
+        <Panel title="Available languages" testID="languages">
+          <Text variant="small" muted>
+            Members choose the languages they speak from this list, therapists choose the languages they work in, and matching and the therapist directory use it. Echo starts with English and Kiswahili. Add a language when you are ready to support it. Each addition is logged.
+          </Text>
+          {c.languages.map((l) => (
+            <View key={l} testID={`language-${l}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text variant="body" style={{ flex: 1 }}>
+                {l}
+              </Text>
+            </View>
+          ))}
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
+            <View style={{ flex: 1 }}>
+              <Field testID="new-language" label="Add a language" value={language} onChangeText={setLanguage} hint="Start with a capital letter, like Kikuyu." />
+            </View>
+            <Button
+              testID="add-language"
+              label="Add"
+              onPress={async () => {
+                const r = await api.config.addLanguage(language)
+                result(r, `Added ${language.trim()}.`)
+                if (r.ok) setLanguage('')
               }}
             />
           </View>

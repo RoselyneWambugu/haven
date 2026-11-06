@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { api, SPOKEN_LANGUAGES, type Mode } from '@/api'
+import { api, type Mode } from '@/api'
 import { Portrait } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge, Chip } from '@/components/Controls'
@@ -26,6 +26,7 @@ export default function Profile() {
   const p = useDb((s) => s.portal)
   const sessions = useDb((s) => s.sessions)
   const TOPICS = useDb((s) => s.content.topics)
+  const languages = useDb((s) => s.content.languages)
   const wide = useWide()
   const th = THERAPISTS.find((t) => t.id === p?.therapistId)
   const [bio, setBio] = useState(p?.profile.bio ?? '')
@@ -64,7 +65,7 @@ export default function Profile() {
             Languages
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {SPOKEN_LANGUAGES.slice(0, 4).map((l) => (
+            {languages.map((l) => (
               <Chip key={l} label={l} selected={langs.includes(l)} onPress={() => { setLangs(toggle(langs, l)); setSaved(false) }} />
             ))}
           </View>

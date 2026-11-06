@@ -7,11 +7,11 @@ export const PEERS: Peer[] = [
   { id: 'p-silver', penName: 'SilverRiver', avatar: 'leaf', languages: ['English', 'Kiswahili'], ageBand: '25-34', topics: ['Grief', 'Loneliness'] },
   { id: 'p-rainy', penName: 'RainyDay', avatar: 'wave', languages: ['English'], ageBand: '25-34', topics: ['Anxiety', 'Wellbeing'] },
   { id: 'p-kind', penName: 'KindLeaf', avatar: 'fern', languages: ['English', 'Kiswahili'], ageBand: '35-44', topics: ['Work stress', 'Anxiety'] },
-  { id: 'p-morning', penName: 'MorningSun', avatar: 'sun', languages: ['English', 'Sheng'], ageBand: '18-24', topics: ['Wellbeing'] },
+  { id: 'p-morning', penName: 'MorningSun', avatar: 'sun', languages: ['English'], ageBand: '18-24', topics: ['Wellbeing'] },
   { id: 'p-heron', penName: 'BlueHeron', avatar: 'drop', languages: ['English', 'Kiswahili'], ageBand: '25-34', topics: ['Relationships', 'Family'] },
-  { id: 'p-fern', penName: 'GentleFern', avatar: 'fern', languages: ['English', 'Kikuyu'], ageBand: '45-54', topics: ['Grief', 'Family'] },
+  { id: 'p-fern', penName: 'GentleFern', avatar: 'fern', languages: ['English'], ageBand: '45-54', topics: ['Grief', 'Family'] },
   { id: 'p-star', penName: 'WanderingStar', avatar: 'star', languages: ['English', 'Kiswahili'], ageBand: '18-24', topics: ['Loneliness', 'Life changes'] },
-  { id: 'p-pine', penName: 'SteadyPine', avatar: 'pine', languages: ['English', 'Dholuo'], ageBand: '35-44', topics: ['Family', 'Grief'] },
+  { id: 'p-pine', penName: 'SteadyPine', avatar: 'pine', languages: ['English', 'Kiswahili'], ageBand: '35-44', topics: ['Family', 'Grief'] },
   { id: 'p-quiet', penName: 'QuietPine', avatar: 'pine', languages: ['English'], ageBand: '25-34' },
 ]
 
@@ -39,7 +39,7 @@ export const THERAPISTS: Therapist[] = [
   {
     id: 't-grace', name: 'Dr. Grace Wanjiru', title: 'Psychiatrist', tone: 'c', gender: 'woman',
     bio: 'I support people living with depression and anxiety, including medication questions.',
-    specialisations: ['Depression', 'Anxiety', 'Trauma'], languages: ['English', 'Kikuyu'], modes: ALL,
+    specialisations: ['Depression', 'Anxiety', 'Trauma'], languages: ['English'], modes: ALL,
     priceKes: 2500, rating: 4.9, reviews: 88, licenceBody: 'Kenya Medical Practitioners and Dentists Council', licenceNumber: 'A-5521',
     licenceValidTo: Date.UTC(2027, 0, 31), acceptingNew: false,
     availability: [wk(3, '14:00', '18:00', ALL), wk(5, '14:00', '18:00', ALL)],
@@ -47,7 +47,7 @@ export const THERAPISTS: Therapist[] = [
   {
     id: 't-peter', name: 'Peter Ochieng', title: 'Counsellor', tone: 'd', gender: 'man',
     bio: 'I walk with people through grief and family change, at your pace.',
-    specialisations: ['Grief', 'Family'], languages: ['English', 'Dholuo'], modes: TXT,
+    specialisations: ['Grief', 'Family'], languages: ['English', 'Kiswahili'], modes: TXT,
     priceKes: 1000, rating: 4.6, reviews: 41, licenceBody: 'Counsellors and Psychologists Board', licenceNumber: '3017',
     licenceValidTo: Date.UTC(2026, 11, 3), acceptingNew: true,
     availability: [wk(1, '10:00', '13:00', TXT), wk(3, '15:00', '18:00', TXT), wk(5, '10:00', '13:00', TXT)],
@@ -55,7 +55,7 @@ export const THERAPISTS: Therapist[] = [
   {
     id: 't-faith', name: 'Faith Njeri', title: 'Counselling psychologist', tone: 'c', gender: 'woman',
     bio: 'Trauma-informed support for relationships, identity and big life changes.',
-    specialisations: ['Trauma', 'Relationships', 'Life changes'], languages: ['English', 'Kiswahili', 'Kikuyu'], modes: ALL,
+    specialisations: ['Trauma', 'Relationships', 'Life changes'], languages: ['English', 'Kiswahili'], modes: ALL,
     priceKes: 1800, rating: 4.8, reviews: 72, licenceBody: 'Counsellors and Psychologists Board', licenceNumber: '2894',
     licenceValidTo: Date.UTC(2027, 7, 31), acceptingNew: true,
     availability: [wk(2, '10:00', '13:00', ALL), wk(4, '10:00', '13:00', ALL), wk(6, '09:00', '12:00', ALL)],
@@ -63,7 +63,7 @@ export const THERAPISTS: Therapist[] = [
   {
     id: 't-hassan', name: 'Dr. Hassan Abdi', title: 'Clinical psychologist', tone: 'b', gender: 'man',
     bio: 'Evidence-based support for depression and anxiety, in your own language.',
-    specialisations: ['Depression', 'Anxiety'], languages: ['English', 'Kiswahili', 'Somali'], modes: ['voice', 'video'],
+    specialisations: ['Depression', 'Anxiety'], languages: ['English', 'Kiswahili'], modes: ['voice', 'video'],
     priceKes: 2000, rating: 4.7, reviews: 53, licenceBody: 'Counsellors and Psychologists Board', licenceNumber: '1980',
     licenceValidTo: Date.UTC(2027, 3, 30), acceptingNew: true,
     availability: [wk(1, '14:00', '18:00', ['voice', 'video']), wk(3, '09:00', '12:00', ['voice', 'video']), wk(4, '09:00', '12:00', ['voice', 'video'])],

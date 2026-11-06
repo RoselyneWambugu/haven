@@ -174,6 +174,25 @@ await step('configuration-is-admin-only', async () => {
   if (await tid('anav-configuration').count()) throw new Error('billing should not see Config')
 })
 
+await step('an-admin-adds-a-language-and-members-can-choose-it', async () => {
+  await login('S. Kamau')
+  await tid('anav-configuration').click()
+  await tid('admin-config').waitFor()
+  await tid('cf-languages').click()
+  await tid('languages').waitFor()
+  if ((await tid('languages').innerText()).includes('Sheng')) throw new Error('only English and Kiswahili to start with')
+  await tid('new-language').fill('kikuyu')
+  await tid('add-language').click()
+  await page.getByText(/and use letters only/).waitFor()
+  await tid('new-language').fill('Kikuyu')
+  await tid('add-language').click()
+  await tid('language-Kikuyu').waitFor()
+  await shot('114-languages')
+  await member('/languages')
+  await tid('lang-Kikuyu').waitFor()
+  if (await tid('lang-Sheng').count()) throw new Error('Sheng is not on the list')
+})
+
 await step('topics-flags-reach-members', async () => {
   await login('S. Kamau')
   await tid('anav-configuration').click()

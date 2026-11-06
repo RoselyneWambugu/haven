@@ -12,7 +12,8 @@ export type { Mode, AvailabilityBlock }
 
 export type AvatarKind = 'moon' | 'leaf' | 'wave' | 'star' | 'pine' | 'sun' | 'fern' | 'drop'
 
-export const SPOKEN_LANGUAGES = ['English', 'Kiswahili', 'Sheng', 'Dholuo', 'Kikuyu', 'Kalenjin', 'Luhya', 'Kamba', 'Somali'] as const
+/** The languages Echo starts with. An Admin can add more in Configuration, and members and therapists choose from that list. */
+export const DEFAULT_LANGUAGES = ['English', 'Kiswahili'] as const
 
 export const FORUM_TOPICS = ['Anxiety', 'Grief', 'Loneliness', 'Relationships', 'Family', 'Work stress', 'Life changes', 'Wellbeing'] as const
 
@@ -816,6 +817,8 @@ export interface ContentState {
   supportOrgs: SupportOrgCfg[]
   suggestions: ServiceSuggestion[]
   topics: string[]
+  /** The languages members and therapists can choose. Admins add to it. */
+  languages: string[]
   plans: PlanCfg[]
   pendingPlans: { plans: PlanCfg[]; requestedBy: string; approvals: string[]; id?: string; mine?: boolean } | null
   matching: MatchingCfg

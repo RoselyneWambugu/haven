@@ -12,6 +12,7 @@ interface ConfigReply extends Reply {
   limits?: LimitsCfg
   matching?: MatchingCfg
   topics?: string[]
+  languages?: string[]
   plans?: ServerPlan[]
   pendingPlans?: { id: string; plans: Partial<ServerPlan>[]; requestedBy: string; mine: boolean } | null
 }
@@ -38,7 +39,7 @@ export async function syncConfig(): Promise<void> {
   const d = await call<ConfigReply>('app_config')
   if (!d.ok || !d.flags || !d.limits) return
   update((s) => ({
-    content: { ...s.content, flags: d.flags!, limits: d.limits!, topics: d.topics?.length ? d.topics : s.content.topics, plans: d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans },
+    content: { ...s.content, flags: d.flags!, limits: d.limits!, topics: d.topics?.length ? d.topics : s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans: d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans },
   }))
   applyLimits()
 }
@@ -51,7 +52,7 @@ export async function syncAdminConfig(): Promise<void> {
     const plans = d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans
     return {
       content: {
-        ...s.content, flags: d.flags!, limits: d.limits!, matching: d.matching!, topics: d.topics ?? s.content.topics, plans,
+        ...s.content, flags: d.flags!, limits: d.limits!, matching: d.matching!, topics: d.topics ?? s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans,
         pendingPlans: d.pendingPlans ? { plans: mergePlans(plans, d.pendingPlans.plans), requestedBy: d.pendingPlans.requestedBy, approvals: [], id: d.pendingPlans.id, mine: d.pendingPlans.mine } : null,
       },
     }
@@ -70,6 +71,7 @@ export const remoteConfig = {
   addTopic: (name: string) => act('admin_add_topic', { p_name: name }),
   renameTopic: (from: string, to: string) => act('admin_rename_topic', { p_from: from, p_to: to }),
   retireTopic: (name: string) => act('admin_retire_topic', { p_name: name }),
+  addLanguage: (name: string) => act('admin_add_language', { p_name: name }),
   async proposePlans(plans: PlanCfg[]): Promise<Res<{ proposed: boolean }>> {
     const payload = plans.map((p) => ({ id: p.id, enabled: p.enabled, priceKes: p.priceKes, entitlements: p.entitlements }))
     const r = await call<Reply & { proposed?: boolean }>('admin_propose_plans', { p_plans: payload })
