@@ -271,9 +271,11 @@ describe('payments, sessions and plans', () => {
     // the join window opens 10 minutes before
     advanceClock(Math.floor((slot.start - 10 * 60_000 - now()) / 60_000) + 1)
     expect(api.sessions.join(sid).ok).toBe(true)
-    // cancelling inside 24 hours is "late"
-    expect(api.sessions.cancel(sid)).toEqual({ ok: true, value: { outcome: 'late' } })
+    // cancelling inside the last hour is "late": 10% is kept
+    const paid = getDb().sessions[0].priceKes!
+    expect(api.sessions.cancel(sid)).toEqual({ ok: true, value: { outcome: 'late', refundKes: paid - Math.round(paid / 10) } })
     expect(getDb().sessions[0].lateChargeApplied).toBe(true)
+    expect(getDb().sessions[0].refundKes).toBe(paid - Math.round(paid / 10))
   })
   it('refuses a mode the therapist does not offer', () => {
     register()

@@ -9,6 +9,8 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, groupSlotsByDay } from '@/lib/booking'
+import { cancelSplit, cancelWords, REFUND_NOTE } from '@/lib/sessionMoney'
+import { useMoney } from '@/store/useMoney'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
 import { goBack } from '@/lib/nav'
@@ -26,6 +28,8 @@ export default function SessionChange() {
   const [error, setError] = useState<string | null>(null)
   if (!s || !t) return null
   const free = changeOutcome(s.start, now()) === 'free'
+  const money = useMoney()
+  const split = cancelSplit(s.start, now(), s.priceKes ?? 0)
 
   if (done) {
     return (
@@ -49,7 +53,7 @@ export default function SessionChange() {
               onPress={async () => {
                 const r = await api.sessions.cancel(s.id)
                 if (!r.ok) return setError(r.error)
-                setDone(r.value.outcome === 'free' ? 'Cancelled. No charge.' : 'Cancelled. The session was charged.')
+                setDone(`Cancelled. ${money(r.value.refundKes)} goes back to your M-Pesa number.`)
               }}
             />
             <Button variant="ghost" label="Keep session" onPress={() => goBack('/sessions')} />
@@ -61,8 +65,11 @@ export default function SessionChange() {
           {t.name}, {dayAndClock(s.start)}
         </Text>
         <Banner tone={free ? 'green' : 'sun'} icon={free ? 'check' : 'clock'}>
-          {free ? 'There’s no charge. You’re cancelling more than 24 hours before.' : 'It’s less than 24 hours before, so you’ll still be charged for this session.'}
+          {s.priceKes === null ? (free ? 'There’s no charge.' : 'It’s within the last hour, so a 10% fee is kept.') : cancelWords(split, money)}
         </Banner>
+        <Text variant="small" muted>
+          {REFUND_NOTE}
+        </Text>
         {error ? <Banner tone="clay">{error}</Banner> : null}
       </Screen>
     )
@@ -78,18 +85,18 @@ export default function SessionChange() {
         <Button
           testID="reschedule-confirm"
           label={pick === null ? 'Pick a new time' : 'Move session'}
-          disabled={pick === null}
+          disabled={pick === null || !free}
           onPress={async () => {
             const r = await api.sessions.reschedule(s.id, pick!)
             if (!r.ok) return setError(r.error)
-            setDone(r.value.outcome === 'free' ? 'Moved. No charge.' : 'Moved. A late change fee applies.')
+            setDone('Moved. No charge.')
           }}
         />
       }
     >
       <Text variant="title">Pick a new time</Text>
       <Banner tone={free ? 'green' : 'sun'} icon="cal">
-        {free ? 'Free to change.' : 'It’s within 24 hours of the session, so moving it will be charged.'}
+        {free ? 'Free to change until the last hour before it starts.' : 'It’s within the last hour, so it can’t be moved. You can cancel instead, and a 10% fee is kept.'}
       </Banner>
       {days.map(({ day, slots: list }) => (
         <View key={day} style={{ gap: 8 }}>

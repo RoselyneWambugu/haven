@@ -34,7 +34,7 @@ export default function WrapUp() {
         <Field testID="wrap-note" label="Private session note (autosaved)" value={note} onChangeText={setNote} multiline minHeight={150} hint="Only you can see this. Notes are stored encrypted." />
         <Check testID="wrap-follow" checked={follow} label={`Suggest a follow-up on ${dayAndClock(suggested)}`} onPress={() => setFollow((v) => !v)} />
         <Panel tone="lichen">
-          <Text variant="caption">Attendance feeds billing and the no-show rules. A no-show isn’t paid until the late-change rule is applied.</Text>
+          <Text variant="caption">Attendance feeds billing. If the client didn’t come, half of what they paid goes back to them, and you and Echo each take a quarter.</Text>
         </Panel>
         <Button
           testID="wrap-save"

@@ -37,6 +37,7 @@ interface RemoteSession {
   receipt_no: string | null
   created_at: string
   late_charge: boolean
+  refund_kes?: number | null
   follow_up_offer: string | null
   rating: { stars: number; comment: string } | null
 }
@@ -53,7 +54,7 @@ export async function rpc(name: string, args?: Record<string, unknown>): Promise
 
 const toSession = (s: RemoteSession): Session => ({
   id: s.id, therapistId: s.therapist_id, mode: s.mode, start: ms(s.start_at), end: ms(s.end_at), status: s.status, priceKes: s.price_kes, receiptNo: s.receipt_no ?? '',
-  createdAt: ms(s.created_at), rating: s.rating, followUpOffer: s.follow_up_offer ? ms(s.follow_up_offer) : null, lateChargeApplied: s.late_charge,
+  createdAt: ms(s.created_at), rating: s.rating, followUpOffer: s.follow_up_offer ? ms(s.follow_up_offer) : null, lateChargeApplied: s.late_charge, refundKes: s.refund_kes ?? null,
 })
 
 let directory: RemoteTherapist[] = []
@@ -117,16 +118,24 @@ export function clearTherapistCache(): void {
   directory = []
 }
 
-type Outcome = { outcome: 'free' | 'late' }
+type Outcome = { outcome: 'free' | 'late'; refundKes?: number }
+type CancelOutcome = { outcome: 'free' | 'late'; refundKes: number }
 
 export const remoteSessions = {
   ...mockSessions,
 
-  async cancel(id: string): Promise<Res<Outcome>> {
+  async cancel(id: string): Promise<Res<CancelOutcome>> {
     const r = await rpc('cancel_session', { p_id: id })
     if (!r.ok) return { ok: false, error: r.error, code: r.code }
     await Promise.all([syncSessions(), syncDirectory()])
-    return { ok: true, value: { outcome: r.outcome as Outcome['outcome'] } }
+    return { ok: true, value: { outcome: r.outcome as Outcome['outcome'], refundKes: Number(r.refundKes ?? 0) } }
+  },
+
+  async reportTherapistLate(id: string): Promise<Res<{ refundKes: number }>> {
+    const r = await rpc('report_therapist_late', { p_id: id })
+    if (!r.ok) return { ok: false, error: r.error, code: r.code }
+    await Promise.all([syncSessions(), syncDirectory()])
+    return { ok: true, value: { refundKes: Number(r.refundKes ?? 0) } }
   },
 
   async reschedule(id: string, newStart: number): Promise<Res<Outcome>> {

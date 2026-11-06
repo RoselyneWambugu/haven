@@ -125,8 +125,10 @@ await step('reschedule-and-cancel', async () => {
   await tid('cancel-session').click()
   await tid('session-cancel').waitFor()
   await shot('39-cancel')
+  if (!/goes back to your M-Pesa number/.test(await page.locator('body').innerText())) throw new Error('the cancel screen should say what goes back')
   await tid('cancel-confirm').click()
   await tid('change-done').waitFor()
+  if (!/goes back to your M-Pesa number/.test(await tid('change-done').innerText())) throw new Error('the result should say what goes back')
   await tid('change-ok').click()
 })
 await step('report-a-therapist-concern', async () => {

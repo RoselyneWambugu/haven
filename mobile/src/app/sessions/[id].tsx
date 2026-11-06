@@ -12,6 +12,7 @@ import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, canJoin, joinOpensAt } from '@/lib/booking'
+import { canReportTherapistLate, REFUND_NOTE } from '@/lib/sessionMoney'
 import { now } from '@/lib/clock'
 import { go, goBack } from '@/lib/nav'
 import { clock, dayAndClock, dayLong } from '@/lib/time'
@@ -69,9 +70,11 @@ export default function SessionDetail() {
           {money(s.priceKes)} · Receipt {s.receiptNo}
         </Text>
       </Card>
-      {s.status === 'cancelled' ? (
-        <Banner tone={s.lateChargeApplied ? 'sun' : 'green'} icon="check">
-          {s.lateChargeApplied ? 'Cancelled less than 24 hours before, so this session was charged.' : 'Cancelled. No charge.'}
+      {s.status === 'cancelled' || s.status === 'missed' ? (
+        <Banner testID="session-refund" tone={s.lateChargeApplied || s.status === 'missed' ? 'sun' : 'green'} icon="check" title={s.status === 'missed' ? 'You didn’t join' : s.lateChargeApplied ? 'Cancelled in the last hour' : 'Cancelled'}>
+          {s.refundKes != null && s.priceKes != null
+            ? `${money(s.refundKes)} of ${money(s.priceKes)} goes back to your M-Pesa number${s.refundKes < s.priceKes ? `. ${money(s.priceKes - s.refundKes)} was kept` : ''}. ${REFUND_NOTE}`
+            : 'No charge.'}
         </Banner>
       ) : null}
       {booked ? (
@@ -84,10 +87,27 @@ export default function SessionDetail() {
             </Banner>
           )}
           {error ? <Banner tone="clay">{error}</Banner> : null}
+          {canReportTherapistLate(s.start, s.end, now()) ? (
+            <Banner tone="sun" icon="clock" title="Your therapist hasn’t joined">
+              You’ve waited 15 minutes. You can leave now and get all of it back.
+            </Banner>
+          ) : null}
+          {canReportTherapistLate(s.start, s.end, now()) ? (
+            <Button
+              testID="therapist-late"
+              label="Leave and get a full refund"
+              onPress={async () => {
+                const r = await api.sessions.reportTherapistLate(s.id)
+                if (!r.ok) setError(r.error)
+              }}
+            />
+          ) : null}
           <Banner tone={free ? 'green' : 'sun'} icon="cal">
-            {free ? 'Free to reschedule or cancel until 24 hours before.' : 'It’s within 24 hours, so changing it will be charged.'}
+            {free
+              ? 'Free to reschedule or cancel until the last hour. After that, cancelling keeps 10%, and if you don’t come you get half back.'
+              : 'It’s within the last hour. Cancelling keeps 10%, and if you don’t come you get half back. It can’t be moved now.'}
           </Banner>
-          <Button testID="reschedule" variant="quiet" label="Reschedule" onPress={() => go(`/session-change/${s.id}?action=reschedule`)} />
+          {free ? <Button testID="reschedule" variant="quiet" label="Reschedule" onPress={() => go(`/session-change/${s.id}?action=reschedule`)} /> : null}
           <Button testID="cancel-session" variant="dangerGhost" label="Cancel session" onPress={() => go(`/session-change/${s.id}?action=cancel`)} />
         </>
       ) : null}

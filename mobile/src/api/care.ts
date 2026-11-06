@@ -1,6 +1,7 @@
 import { hasPlan } from './access'
 import { canBookTherapist } from '@/lib/limits'
 import { THERAPISTS } from '@/data/seed'
+import { cancelSplit, canReportTherapistLate, therapistNoShowSplit } from '@/lib/sessionMoney'
 import { changeOutcome, canJoin, SESSION_MINUTES, MIN } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
@@ -112,18 +113,30 @@ function setSession(id: string, fn: (s: Session) => Session) {
 }
 
 export const sessions = {
-  cancel(id: string): Res<{ outcome: 'free' | 'late' }> {
+  cancel(id: string): Res<{ outcome: 'free' | 'late'; refundKes: number }> {
     const s = getDb().sessions.find((x) => x.id === id)
     if (!s || s.status !== 'booked') return { ok: false, error: 'That session can’t be changed.' }
-    const outcome = changeOutcome(s.start, now())
-    setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: outcome === 'late' }))
-    return { ok: true, value: { outcome } }
+    const split = cancelSplit(s.start, now(), s.priceKes ?? 0)
+    const outcome = split.kind === 'free' ? 'free' : 'late'
+    setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: outcome === 'late', refundKes: split.refundKes }))
+    return { ok: true, value: { outcome, refundKes: split.refundKes } }
+  },
+
+  /** The therapist has not joined 15 minutes after the start: the member leaves with everything back. */
+  reportTherapistLate(id: string): Res<{ refundKes: number }> {
+    const s = getDb().sessions.find((x) => x.id === id)
+    if (!s || s.status !== 'booked') return { ok: false, error: 'That session can’t be changed.' }
+    if (!canReportTherapistLate(s.start, s.end, now())) return { ok: false, error: 'Please wait 15 minutes after the start for your therapist to join.', code: 'early' }
+    const split = therapistNoShowSplit(s.priceKes ?? 0)
+    setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: false, refundKes: split.refundKes }))
+    return { ok: true, value: { refundKes: split.refundKes } }
   },
 
   reschedule(id: string, newStart: number): Res<{ outcome: 'free' | 'late' }> {
     const db = getDb()
     const s = db.sessions.find((x) => x.id === id)
     if (!s || s.status !== 'booked') return { ok: false, error: 'That session can’t be changed.' }
+    if (changeOutcome(s.start, now()) === 'late') return { ok: false, error: 'It’s within the last hour, so it can’t be moved. You can cancel instead.', code: 'late' }
     const t = therapistOf(s.therapistId)
     if (!t) return { ok: false, error: 'That therapist is not available.' }
     const others = db.sessions.filter((x) => x.id !== id)

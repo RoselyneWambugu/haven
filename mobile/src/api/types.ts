@@ -256,6 +256,8 @@ export interface Session {
   rating: { stars: number; comment: string } | null
   followUpOffer: number | null
   lateChargeApplied: boolean
+  /** What goes back (or went back) to the member's M-Pesa number when the session was cancelled or missed. Null while nothing is owed. */
+  refundKes?: number | null
 }
 
 // ---------- plans and payments ----------
@@ -659,6 +661,9 @@ export interface AdminRefund {
   reason: string
   status: 'pending' | 'approved' | 'declined'
   decidedBy: string | null
+  /** For a refund made by a cancelled or missed session: how much to send back to the member's number. */
+  amountKes?: number | null
+  automatic?: boolean
 }
 
 export interface AdminFlag {

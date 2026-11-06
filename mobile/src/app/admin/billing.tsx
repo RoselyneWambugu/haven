@@ -38,7 +38,7 @@ export default function Billing() {
               {r.id}
             </Text>
             <Text variant="small" style={{ flex: 1, minWidth: 180 }}>
-              {r.penName} · {r.plan} · {r.reason}
+              {r.penName} · {r.plan} · {r.reason}{r.amountKes ? ` · send KES ${r.amountKes} to the number that paid` : ''}
             </Text>
             {r.status === 'pending' ? (
               <View style={{ flexDirection: 'row', gap: 8 }}>

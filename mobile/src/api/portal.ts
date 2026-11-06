@@ -1,6 +1,7 @@
 import { THERAPISTS } from '@/data/seed'
 import { canJoin, SESSION_MINUTES, MIN, HOUR } from '@/lib/booking'
 import { now } from '@/lib/clock'
+import { memberNoShowSplit } from '@/lib/sessionMoney'
 import { uid } from '@/lib/id'
 import { blocksToCells, cellKey, cellsToBlocks, nextCell, split, isAvailable, type Cell } from '@/lib/portal'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
@@ -200,8 +201,8 @@ export const portal = {
     const p = getDb().portal
     const s = p?.sessions.find((x) => x.id === id)
     if (!p || !s) return { ok: false, error: 'Session not found.' }
-    // A no-show is paid only under the late-change rule (D39), so it is flagged for billing rather than paid here.
-    const gross = input.attendance === 'no-show' ? null : p.profile.priceKes
+    // A member who does not come: half goes back to them, and the therapist and Echo each take a quarter.
+    const gross = input.attendance === 'no-show' ? memberNoShowSplit(p.profile.priceKes ?? 0).therapistKes : p.profile.priceKes
     patch((x) => ({
       sessions: x.sessions.map((q) => (q.id === id ? { ...q, status: 'completed', attendance: input.attendance, note: input.note, followUp: input.followUp, grossKes: gross, end: Math.min(q.end, now()) } : q)),
     }))

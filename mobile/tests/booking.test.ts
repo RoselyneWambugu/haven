@@ -30,11 +30,11 @@ describe('Kenya time', () => {
 
 describe('change and join rules', () => {
   const start = fromEat(2026, 9, 21, 10, 30)
-  it('is free to change until 24 hours before', () => {
-    expect(freeChangeDeadline(start)).toBe(fromEat(2026, 9, 20, 10, 30))
-    expect(changeOutcome(start, fromEat(2026, 9, 20, 10, 29))).toBe('free')
-    expect(changeOutcome(start, fromEat(2026, 9, 20, 10, 30))).toBe('free')
-    expect(changeOutcome(start, fromEat(2026, 9, 20, 10, 31))).toBe('late')
+  it('is free to change until the last hour', () => {
+    expect(freeChangeDeadline(start)).toBe(fromEat(2026, 9, 21, 9, 30))
+    expect(changeOutcome(start, fromEat(2026, 9, 21, 9, 29))).toBe('free')
+    expect(changeOutcome(start, fromEat(2026, 9, 21, 9, 30))).toBe('free')
+    expect(changeOutcome(start, fromEat(2026, 9, 21, 9, 31))).toBe('late')
   })
   it('opens the join window 10 minutes before and closes at the end', () => {
     const end = start + 45 * MIN

@@ -119,11 +119,17 @@ describe('sessions', () => {
   })
 
   it('cancelling and moving a session return the server’s verdict on charges', async () => {
-    const calls = fake({ replies: { cancel_session: { ok: true, outcome: 'late' }, reschedule_session: { ok: true, outcome: 'free' } } })
-    expect(await remoteSessions.cancel('s-1')).toEqual({ ok: true, value: { outcome: 'late' } })
+    const calls = fake({ replies: { cancel_session: { ok: true, outcome: 'late', refundKes: 1350 }, reschedule_session: { ok: true, outcome: 'free' } } })
+    expect(await remoteSessions.cancel('s-1')).toEqual({ ok: true, value: { outcome: 'late', refundKes: 1350 } })
     const when = now() + 72 * HOUR
     expect(await remoteSessions.reschedule('s-1', when)).toEqual({ ok: true, value: { outcome: 'free' } })
     expect(calls.find((c) => c.name === 'reschedule_session')?.args).toEqual({ p_id: 's-1', p_start: iso(when) })
+  })
+
+  it('lets a member leave when the therapist has not joined, and returns what went back', async () => {
+    const calls = fake({ replies: { report_therapist_late: { ok: true, refundKes: 1500 } } })
+    expect(await remoteSessions.reportTherapistLate('s-1')).toEqual({ ok: true, value: { refundKes: 1500 } })
+    expect(calls.find((c) => c.name === 'report_therapist_late')?.args).toEqual({ p_id: 's-1' })
   })
 
   it('shows the server’s reason when a time can’t be taken or joined yet', async () => {
