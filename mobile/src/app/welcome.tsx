@@ -39,19 +39,17 @@ function Words({ text, start, reduced, italic, color }: { text: string; start: n
   )
 }
 
-/** The flower opens into place, then turns very slowly for as long as the screen is open. */
+/** The flower opens into place and then stays still. */
 function Flower({ reduced }: { reduced: boolean }) {
   const { width } = useWindowDimensions()
   const w = Math.min(Math.max(width, 360) * 1.2, 620)
   const enter = useRef(new Animated.Value(reduced ? 1 : 0)).current
-  const idle = useRef(new Animated.Value(0)).current
   useEffect(() => {
     if (reduced) return enter.setValue(1)
-    Animated.timing(enter, { toValue: 1, duration: 1800, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start()
-    const loop = Animated.loop(Animated.timing(idle, { toValue: 1, duration: 120_000, easing: Easing.linear, useNativeDriver: native }))
-    loop.start()
-    return () => loop.stop()
-  }, [reduced, enter, idle])
+    const run = Animated.timing(enter, { toValue: 1, duration: 1800, easing: Easing.out(Easing.cubic), useNativeDriver: native })
+    run.start()
+    return () => run.stop()
+  }, [reduced, enter])
   return (
     <Animated.View
       accessibilityElementsHidden
@@ -61,7 +59,6 @@ function Flower({ reduced }: { reduced: boolean }) {
         transform: [
           { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1] }) },
           { rotate: enter.interpolate({ inputRange: [0, 1], outputRange: ['-14deg', '0deg'] }) },
-          { rotate: idle.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
         ],
       }}
     >
