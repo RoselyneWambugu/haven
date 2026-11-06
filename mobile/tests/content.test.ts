@@ -3,8 +3,8 @@ import { api } from '../src/api'
 import { DEMO_MFA } from '../src/api/admin'
 import { LIVE } from '../src/data/config'
 import { defaultContent } from '../src/data/content'
-import { canEditConfig, canEditDirectory, includesList, isOverdue, ownedBy, slugify, splitSteps, ticketDue, titleAdvice, validateArticle, validateLimits, validateLine, validateMatching, validatePhone, validatePlan, validatePlans, validateTopic, verification, visibleArticles } from '../src/lib/content'
-import { planState, graceEndsAt } from '../src/lib/plan'
+import { canEditConfig, canEditDirectory, isOverdue, ownedBy, slugify, splitSteps, ticketDue, titleAdvice, validateArticle, validateLimits, validateLine, validateMatching, validatePhone, validatePlan, validatePlans, validateTopic, verification, visibleArticles } from '../src/lib/content'
+import { planState, graceEndsAt, planIncludes } from '../src/lib/plan'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
 import { applyLimits, freshState, getDb, update } from '../src/store/db'
 
@@ -110,8 +110,10 @@ describe('topics, plans, matching and limits', () => {
     expect(validatePlans(off)).toMatch(/at least one/)
   })
   it('lists what a plan includes from its entitlements', () => {
-    expect(includesList(plan)).toContain('Disappearing chats')
-    expect(includesList({ ...plan, entitlements: { disappearing: false, therapistDiscountPct: 0 } })).toEqual(['Automatic matching and unlimited peer chat', 'Posting and commenting in the community'])
+    expect(planIncludes(plan)).toContain('Disappearing messages')
+    const lean = planIncludes({ ...plan, entitlements: { disappearing: false, therapistDiscountPct: 0 } })
+    expect(lean).not.toContain('Disappearing messages')
+    expect(lean.some((l) => /Community/.test(l))).toBe(true)
   })
   it('bounds matching and limits', () => {
     expect(validateMatching({ neighbourFallback: true, softTopicWeight: 0.5, rematchCooldownDays: 30 })).toBeNull()

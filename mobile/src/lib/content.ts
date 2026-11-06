@@ -134,14 +134,6 @@ export function validatePlans(plans: PlanCfg[]): string | null {
   return null
 }
 
-/** What the plan screen lists under "Your plan includes", worked out from the entitlements. */
-export function includesList(p: PlanCfg): string[] {
-  const out = ['Automatic matching and unlimited peer chat', 'Posting and commenting in the community']
-  if (p.entitlements.disappearing) out.push('Disappearing chats')
-  if (p.entitlements.therapistDiscountPct > 0) out.push(`${p.entitlements.therapistDiscountPct}% off therapy sessions`)
-  return out
-}
-
 // ---------- matching (MAT-1, MAT-3, MAT-7) ----------
 
 /** Age range and a shared language are hard rules. They are shown, but they are not settings. */

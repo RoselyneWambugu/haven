@@ -151,5 +151,3 @@ export const PLANS: PlanDef[] = [
   { id: 'yearly', label: 'Yearly', period: 'per year', blurb: 'Best value', priceKes: 12000, days: 365 },
 ]
 
-export const ALWAYS_FREE = ['Urgent help and crisis lines', 'Help centre and support tickets', 'Block, report and your data', 'The community, to read and post']
-export const PLAN_INCLUDES = ['Automatic matching and unlimited peer chat', 'Disappearing chats', 'Posting and commenting in the community']

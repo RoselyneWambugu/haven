@@ -3,7 +3,7 @@ import { api } from '../src/api'
 import { THERAPISTS } from '../src/data/seed'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
 import { slotsFor } from '../src/lib/directory'
-import { daysLeft, daysLeftLabel, periodUsed, planIncludes } from '../src/lib/plan'
+import { daysLeft, daysLeftLabel, FREE_ITEMS, perDayKes, periodUsed, planIncludes, savingVsDaily } from '../src/lib/plan'
 import type { PlanCfg } from '../src/api/types'
 import { freshState, getDb, update } from '../src/store/db'
 
@@ -92,5 +92,29 @@ describe('what My plan shows', () => {
     expect(lean).toContain('Book sessions with a verified therapist')
     expect(lean).not.toContain('Disappearing messages')
     expect(lean.some((l) => /% off/.test(l))).toBe(false)
+  })
+})
+
+describe('what the plans picker shows', () => {
+  const daily = { priceKes: 100, days: 1 }
+  const monthly = { priceKes: 1500, days: 30 }
+  const yearly = { priceKes: 12000, days: 365 }
+  it('works out the price a day, and says nothing while a price is undecided', () => {
+    expect(perDayKes(daily)).toBe(100)
+    expect(perDayKes(monthly)).toBe(50)
+    expect(perDayKes(yearly)).toBe(33)
+    expect(perDayKes({ priceKes: null, days: 30 })).toBeNull()
+  })
+  it('shows how much cheaper a longer plan is than the daily one, and nothing when it is not', () => {
+    expect(savingVsDaily(monthly, daily)).toBe(50)
+    expect(savingVsDaily(yearly, daily)).toBe(67)
+    expect(savingVsDaily(daily, daily)).toBeNull()
+    expect(savingVsDaily({ priceKes: 5000, days: 30 }, daily)).toBeNull()
+    expect(savingVsDaily(monthly, undefined)).toBeNull()
+    expect(savingVsDaily({ priceKes: null, days: 30 }, daily)).toBeNull()
+  })
+  it('keeps the free list to what really is free, and says nothing about the Community', () => {
+    expect(FREE_ITEMS.join(' ')).toMatch(/Urgent help/)
+    expect(FREE_ITEMS.join(' ')).not.toMatch(/community/i)
   })
 })

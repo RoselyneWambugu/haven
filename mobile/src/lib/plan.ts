@@ -1,5 +1,5 @@
 import { LIVE } from '@/data/config'
-import type { PlanCfg, Subscription } from '@/api/types'
+import type { PlanCfg, PlanDef, Subscription } from '@/api/types'
 import { MAX_PEER_CHATS } from './limits'
 
 export type PlanState = 'none' | 'active' | 'ending' | 'lapsed'
@@ -53,3 +53,19 @@ export function planIncludes(plan: Pick<PlanCfg, 'entitlements'>): string[] {
 }
 
 export const ALWAYS_FREE = 'Urgent help and the help centre are always free, with or without a plan.'
+
+/** The parts of Echo that need no plan. */
+export const FREE_ITEMS = ['Urgent help and crisis lines', 'The help centre and support tickets', 'Blocking, reporting and your own data']
+
+/** What a plan costs a day, rounded up to a whole shilling. Null while the price is undecided. */
+export function perDayKes(p: Pick<PlanDef, 'priceKes' | 'days'>): number | null {
+  return p.priceKes === null || p.days <= 0 ? null : Math.ceil(p.priceKes / p.days)
+}
+
+/** How much cheaper a plan is each day than the daily plan, in whole percent. Null when it isn't cheaper or a price is undecided. */
+export function savingVsDaily(p: Pick<PlanDef, 'priceKes' | 'days'>, daily: Pick<PlanDef, 'priceKes' | 'days'> | undefined): number | null {
+  const mine = p.priceKes === null || p.days <= 0 ? null : p.priceKes / p.days
+  const base = !daily || daily.priceKes === null || daily.days <= 0 ? null : daily.priceKes / daily.days
+  if (mine === null || base === null || mine >= base) return null
+  return Math.round((1 - mine / base) * 100)
+}
