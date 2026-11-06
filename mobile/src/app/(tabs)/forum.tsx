@@ -3,6 +3,7 @@ import { ScrollView, View } from 'react-native'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
+import { EventCard } from '@/components/EventCard'
 import { PostCard } from '@/components/PostCard'
 import { Banner, EmptyState } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -10,6 +11,8 @@ import { PlanGate, usePlan } from '@/components/PlanGate'
 import { go } from '@/lib/nav'
 import { generalPosts } from '@/lib/spaces'
 import { gossipFeed, GOSSIP_RULES } from '@/lib/gossip'
+import { upcomingEvents } from '@/lib/events'
+import { now } from '@/lib/clock'
 import { useDb } from '@/store/db'
 
 export default function Forum() {
@@ -21,7 +24,7 @@ export default function Forum() {
   const muted = useDb((s) => s.mutedAuthors)
   const [topic, setTopic] = useState<string | null>(null)
   const [sort, setSort] = useState<'new' | 'support'>('new')
-  const [view, setView] = useState<'feed' | 'gossip'>('feed')
+  const [view, setView] = useState<'feed' | 'gossip' | 'events'>('feed')
 
   const visible = generalPosts(posts)
     .filter((p) => p.status !== 'hidden' && !hidden.includes(p.id) && !muted.includes(p.authorKey))
@@ -30,12 +33,14 @@ export default function Forum() {
     .sort((a, b) => (sort === 'new' ? b.createdAt - a.createdAt : b.supports - a.supports))
 
   const gossip = gossipFeed(posts, hidden, muted)
+  const events = useDb((s) => s.events)
+  const upcoming = upcomingEvents(events, now())
 
   return (
     <Screen tab testID="forum" header={<TopBar avatar />}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text variant="title">Community</Text>
-        {forumOn && plan ? (
+        {forumOn && plan && view !== 'events' ? (
           view === 'gossip' ? (
             <Button testID="gossip-new" label="Share gossip" size="sm" icon="pencil" onPress={() => go('/gossip/new')} />
           ) : (
@@ -46,6 +51,7 @@ export default function Forum() {
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Chip testID="view-feed" label="Feed" selected={view === 'feed'} onPress={() => setView('feed')} />
         <Chip testID="view-gossip" label="Gossip" selected={view === 'gossip'} onPress={() => setView('gossip')} />
+        <Chip testID="view-events" label="Events" selected={view === 'events'} onPress={() => setView('events')} />
         <Chip testID="open-spaces" label="Support spaces" onPress={() => go('/spaces')} />
       </View>
       {!plan ? <PlanGate what="The community, support spaces and group chats" /> : null}
@@ -53,6 +59,18 @@ export default function Forum() {
         <Banner tone="sun" icon="clock" title="Posting is paused">
           You can still read the community. We’ll turn posting back on soon.
         </Banner>
+      ) : null}
+      {plan && view === 'events' ? (
+        <>
+          <Text variant="small" muted>
+            Webinars, workshops and walks Echo puts on. Tap an event and say you are interested, so Echo knows how many people want to come.
+          </Text>
+          {upcoming.length ? (
+            upcoming.map((e) => <EventCard key={e.id} event={e} />)
+          ) : (
+            <EmptyState icon="forum" title="No events planned yet" body="When Echo schedules a webinar, workshop or walk, it will show up here." />
+          )}
+        </>
       ) : null}
       {plan && view === 'gossip' ? (
         <>

@@ -406,6 +406,32 @@ export interface GroupChat {
   waitlisted?: boolean
 }
 
+// ---------- community events ----------
+
+export type EventKind = 'webinar' | 'workshop' | 'walk' | 'meetup' | 'talk'
+export type EventMode = 'online' | 'in-person'
+
+/** Something Echo puts on for the community: a webinar, a workshop, a group walk. Members mark themselves interested; nothing more is asked of them. */
+export interface CommunityEvent {
+  id: string
+  title: string
+  blurb: string
+  kind: EventKind
+  mode: EventMode
+  /** For an in-person event, a public place. For an online one, a short note such as “The link is sent the day before”. */
+  place: string
+  startsAt: number
+  durationMin: number
+  /** Who is running it: a therapist's name, or Echo. */
+  host: string
+  interested: number
+  interestedByMe: boolean
+  /** Set when staff cancel it. */
+  cancelled?: { reason: string; at: number }
+  /** The staff member who scheduled it. Staff only. */
+  createdBy?: string
+}
+
 export type ReportTarget = 'message' | 'post' | 'comment' | 'member' | 'session'
 /** The last three are concerns about a therapist, and go to Clinical reviewers. */
 export type ReportReason = 'harassment' | 'threats' | 'sexual' | 'scam' | 'self-harm' | 'impersonation' | 'hate' | 'other' | 'therapist-conduct' | 'therapist-boundaries' | 'therapist-privacy'

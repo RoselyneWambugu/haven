@@ -357,7 +357,7 @@ describe('wellbeing and the rota', () => {
     await remoteTeam.handOn('C-r:abc')
     remoteTeam.askForSupport()
     await Promise.resolve()
-    const sent = f.calls.filter((c) => c.name !== 'admin_state' && !c.name.startsWith('admin_policy') && c.name !== 'admin_break_glass' && c.name !== 'admin_wellbeing' && c.name !== 'admin_billing' && c.name !== 'admin_help' && c.name !== 'admin_groups' && c.name !== 'admin_flags')
+    const sent = f.calls.filter((c) => c.name !== 'admin_state' && !c.name.startsWith('admin_policy') && c.name !== 'admin_break_glass' && c.name !== 'admin_wellbeing' && c.name !== 'admin_billing' && c.name !== 'admin_help' && c.name !== 'admin_groups' && c.name !== 'admin_events' && c.name !== 'admin_flags')
     expect(sent.map((c) => [c.name, c.args])).toEqual([
       ['admin_set_wellbeing', { p_daily: 10, p_every: 4, p_minutes: 5 }],
       ['admin_start_break', {}],

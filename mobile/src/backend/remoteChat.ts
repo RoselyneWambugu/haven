@@ -1,3 +1,4 @@
+import { syncEvents } from './remoteEvents'
 import { chat as mockChat, match as mockMatch, report as mockReport } from '@/api/social'
 import { notify } from '@/api/notify'
 import type { Conversation, Message, Peer, ReportReason, ReportTarget, Res } from '@/api/types'
@@ -135,6 +136,7 @@ export function startPolling(): void {
       void syncSessions()
       void syncNotices()
       void syncTickets()
+      void syncEvents()
     }
     if (ticks % 60 === 0) {
       void syncHelp()
@@ -146,6 +148,7 @@ export function startPolling(): void {
   void syncChats()
   void syncForum()
   void syncGroups()
+  void syncEvents()
   void syncPlan()
   void syncSessions()
   void syncNotices()
