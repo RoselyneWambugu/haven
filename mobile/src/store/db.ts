@@ -178,7 +178,10 @@ export async function loadDb(): Promise<void> {
     const raw = await AsyncStorage.getItem(KEY)
     if (raw) {
       const saved = JSON.parse(raw) as Partial<DbState>
-      state = { ...freshState(), ...saved, otp: null, checkout: null }
+      const fresh = freshState()
+      // Data saved by an older version has no entry for anything added since (languages, session rules, polls…), so every part of
+      // the content that is missing is filled in from the starting values rather than left empty.
+      state = { ...fresh, ...saved, content: { ...fresh.content, ...(saved.content ?? {}) }, otp: null, checkout: null }
     }
     const sec = await secure.get(SESSION_KEY)
     const signedIn = sec ? (JSON.parse(sec) as { signedIn?: boolean }).signedIn === true : false

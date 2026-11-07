@@ -36,7 +36,7 @@ export default function Therapists() {
   const sessions = useDb((s) => s.sessions)
   useDb((s) => s.directoryVersion)
   const langs = useDb((s) => s.account?.public.languages ?? NONE)
-  const languages = useDb((s) => s.content.languages)
+  const languages = useDb((s) => s.content.languages) ?? []
   const money = useMoney()
   const flags = useDb((s) => s.content.flags)
   const [filters, setFilters] = useState<DirectoryFilters>(NO_FILTERS)
