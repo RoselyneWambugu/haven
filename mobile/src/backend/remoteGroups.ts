@@ -136,6 +136,18 @@ export const remoteGroups = {
     await syncStaffGroups()
     return res(r)
   },
+  async leadSchedule(input: Omit<NewGroupInput, 'facilitatorId'>): Promise<Res<{ id: string }>> {
+    const r = await call<Reply & { id?: string }>('portal_schedule_group', {
+      p_topic: input.topic, p_blurb: input.blurb, p_starts: new Date(input.startsAt).toISOString(), p_duration: input.durationMin, p_capacity: input.capacity,
+    })
+    return r.ok ? { ok: true, value: { id: r.id ?? '' } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+  async leadEdit(id: string, input: Omit<NewGroupInput, 'facilitatorId'>): Promise<Res> {
+    return res(await call('portal_edit_group', { p_id: id, p_topic: input.topic, p_blurb: input.blurb, p_starts: new Date(input.startsAt).toISOString(), p_duration: input.durationMin, p_capacity: input.capacity }))
+  },
+  async leadCancel(id: string, reason: string): Promise<Res> {
+    return res(await call('portal_cancel_group', { p_id: id, p_reason: reason }))
+  },
   async waitlistJoin(id: string): Promise<Res> {
     const r = await call('group_waitlist_join', { p_id: id })
     await syncGroups()

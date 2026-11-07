@@ -1,7 +1,7 @@
 import { CLOSING, GENERIC_CLOSING, GENERIC_SCRIPT, GROUP_TEMPLATES, SCRIPTS } from '@/data/groupChats'
 import { THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
-import { canRegister, deletesAt, isRemoved, linesDue, participants, status, validateNewGroup, type NewGroupInput } from '@/lib/groupChat'
+import { canRegister, deletesAt, isRemoved, ledUpcoming, linesDue, MAX_LED_UPCOMING, participants, status, validateNewGroup, type NewGroupInput } from '@/lib/groupChat'
 import { canManageGroups, canModerateGroups } from '@/lib/admin'
 import { uid } from '@/lib/id'
 import { detectBlockedContent, explainBlock } from '@/lib/safety'
@@ -151,6 +151,59 @@ export const groups = {
     if (input.capacity < g.takenOthers + (g.registered ? 1 : 0)) return { ok: false, error: 'People are already signed up, so it needs more places.', code: 'invalid' }
     setGroup(id, (x) => ({ ...x, topic: input.topic.trim(), blurb: input.blurb.trim(), startsAt: input.startsAt, durationMin: input.durationMin, capacity: input.capacity }))
     log('Edited group chat', input.topic.trim(), '')
+    return { ok: true, value: undefined }
+  },
+
+  /** The therapist who is signed in to the portal, if they may lead a group chat now. */
+  _leader(): { ok: true; id: string; name: string } | { ok: false; error: string; code: string } {
+    const p = getDb().portal
+    if (!p || !p.signedIn) return { ok: false, error: 'Sign in to the portal first.', code: 'not-therapist' }
+    const th = THERAPISTS.find((x) => x.id === p.therapistId)
+    if (!th || th.suspended || getDb().admin?.therapistStanding?.[p.therapistId]) return { ok: false, error: 'Your account is suspended, so you can’t schedule a group chat.', code: 'suspended' }
+    if (p.paused) return { ok: false, error: 'New clients are paused on your account, so you can’t schedule a group chat right now.', code: 'paused' }
+    return { ok: true, id: th.id, name: th.name }
+  },
+
+  /** A therapist schedules a group chat they will lead. Same rules as staff, plus a cap on how many they lead at once. */
+  leadSchedule(input: Omit<NewGroupInput, 'facilitatorId'>): Res<{ id: string }> {
+    const l = groups._leader()
+    if (!l.ok) return { ok: false, error: l.error, code: l.code }
+    const full = { ...input, facilitatorId: l.id }
+    const err = validateNewGroup(full, now(), getDb().groupChats, true)
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    if (ledUpcoming(getDb().groupChats, l.id, now()) >= MAX_LED_UPCOMING) return { ok: false, error: `You already lead ${MAX_LED_UPCOMING} upcoming group chats. Wait for one to finish, or cancel one, before scheduling another.`, code: 'limit' }
+    const id = `gc-custom-${uid('g')}`
+    const g: GroupChat = { id, topic: input.topic.trim(), blurb: input.blurb.trim(), facilitatorId: l.id, startsAt: input.startsAt, durationMin: input.durationMin, capacity: input.capacity, takenOthers: 0, registered: false, messages: [], posted: 0, createdBy: l.name }
+    update((s) => ({ groupChats: [...s.groupChats, g].sort((x, y) => x.startsAt - y.startsAt) }))
+    return { ok: true, value: { id } }
+  },
+
+  /** A therapist edits a room they lead, before it opens. */
+  leadEdit(id: string, input: Omit<NewGroupInput, 'facilitatorId'>): Res {
+    const l = groups._leader()
+    if (!l.ok) return { ok: false, error: l.error, code: l.code }
+    const g = getDb().groupChats.find((x) => x.id === id && x.facilitatorId === l.id)
+    if (!g) return { ok: false, error: 'That group chat isn’t here.', code: 'gone' }
+    if (status(g, now()) !== 'upcoming') return { ok: false, error: 'A room can be edited only before it opens.', code: 'started' }
+    const err = validateNewGroup({ ...input, facilitatorId: l.id }, now(), getDb().groupChats.filter((x) => x.id !== id), true)
+    if (err) return { ok: false, error: err, code: 'invalid' }
+    if (input.capacity < g.takenOthers + (g.registered ? 1 : 0)) return { ok: false, error: 'People are already signed up, so it needs more places.', code: 'invalid' }
+    setGroup(id, (x) => ({ ...x, topic: input.topic.trim(), blurb: input.blurb.trim(), startsAt: input.startsAt, durationMin: input.durationMin, capacity: input.capacity }))
+    return { ok: true, value: undefined }
+  },
+
+  /** A therapist cancels a room they lead, before it starts. Anyone signed up is told. */
+  leadCancel(id: string, reason: string): Res {
+    const l = groups._leader()
+    if (!l.ok) return { ok: false, error: l.error, code: l.code }
+    const g = getDb().groupChats.find((x) => x.id === id && x.facilitatorId === l.id)
+    if (!g) return { ok: false, error: 'That group chat isn’t here.', code: 'gone' }
+    const st = status(g, now())
+    if (st === 'cancelled') return { ok: false, error: 'It is already cancelled.', code: 'cancelled' }
+    if (st === 'open' || st === 'ended') return { ok: false, error: 'It has already started, so it can’t be cancelled.', code: 'started' }
+    if (reason.trim().length < 5) return { ok: false, error: 'A reason is required.', code: 'reason' }
+    setGroup(id, (x) => ({ ...x, cancelled: { reason: reason.trim(), by: l.name, at: now() } }))
+    if (g.registered) notify.push('session', `g:${id}:cancelled`, 'Your group chat was cancelled', `${g.topic} won’t go ahead. We’re sorry. There will be another soon.`, `/group-chats/${id}`)
     return { ok: true, value: undefined }
   },
 

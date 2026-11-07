@@ -60,6 +60,14 @@ export function linesDue(script: ScriptLine[], posted: number, g: Pick<GroupChat
 /** The time of day of an event, for building a schedule. */
 export const hourOf = (ms: number): number => eat(ms).hour
 
+/** A therapist can lead at most this many group chats that haven't finished or been cancelled. */
+export const MAX_LED_UPCOMING = 3
+
+/** How many rooms a therapist leads that are still to come or running. */
+export function ledUpcoming(groups: Pick<GroupChat, 'facilitatorId' | 'startsAt' | 'durationMin' | 'cancelled'>[], facilitatorId: string, now: number): number {
+  return groups.filter((g) => g.facilitatorId === facilitatorId && !g.cancelled && g.startsAt + g.durationMin * MIN > now).length
+}
+
 export interface NewGroupInput {
   topic: string
   blurb: string

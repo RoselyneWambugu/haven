@@ -182,6 +182,7 @@ Last updated at PRD v0.38 (backend slices 1 to 6, accounts and privacy, peer mat
 | Q-60 | Phone push when Echo is closed for new messages, community replies and plan notices: a push service (Expo push tokens saved per device, a sender on the server that respects the member's switches, quiet hours and lock-screen privacy), and a development build rather than Expo Go for testing | v0.97 |
 | Q-61 | Calls: test with real people on real phones (camera and microphone permission prompts in the web view on iOS and Android, a weak network, the phone locking mid-call); a development build with Daily's own SDK for better audio routing and picture-in-picture; a "your therapist has joined" signal in the app before the member opens the call; a switch for voice like the one for video | v0.98 |
 | Q-62 | Sign-up: remember the M-Pesa number after the first payment (and let a member save or change it in Settings); an email code instead of a link for confirming the address, so it works on a different device from the one that signed up; turn off phone sign-up on the server so a stray phone code can't create an auth account; let a member add a phone number later (Settings, Sign-in methods) for text reminders | v1.00 |
+| Q-63 | Group chats led by therapists: staff are not told when a therapist schedules a room (it shows in the audit log and the Group chats list only); consider a review step for a therapist's first room, and a monthly cap alongside the 3-at-once cap |
 | Q-47 | Pay therapist payouts through M-Pesa B2C; card payments; add the M-Pesa secrets and test in the sandbox before launch | v0.58 |
 | Q-46 | Pay therapists through a payment provider instead of by hand; tax on earnings | v0.57 |
 | Q-45 | Run `supabase/document_retention_cleanup.sql` in the SQL editor so verification documents are removed 12 months after their decision (kept 12 months, decided). Also: virus scanning of uploads; letting a person remove a file they sent | v0.56 |
@@ -217,5 +218,5 @@ The full list of numbered decisions is in PRD section 14.1. These are the ones r
 - Any verified therapist may lead a group chat, and there is no weekly limit (v0.31).
 - Chats are deleted 24 hours after they start unless reported; five open peer chats and one therapist at a time (v0.29).
 - The whole platform needs a paid plan: the community, support spaces, group chats and booking, as well as peer chat. Urgent help, the help centre, settings, billing and browsing the therapist directory stay free (v0.32).
-- Moderators can remove people from a group chat but cannot schedule or cancel one; no emergency cancel (v0.32).
+- Moderators can remove people from a group chat but cannot schedule or cancel one; no emergency cancel (v0.32). Therapists schedule, edit and cancel the rooms they lead (v1.02).
 - Peer chats are deleted daily and therapist chats weekly, unless reported (v0.32).

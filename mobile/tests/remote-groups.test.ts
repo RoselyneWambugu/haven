@@ -148,3 +148,21 @@ describe('waiting list, editing and removing a line', () => {
     expect(calls.map((c) => c.name)).toEqual(['portal_group_remove_message', 'admin_remove_group_message'])
   })
 })
+
+describe('a therapist schedules their own rooms', () => {
+  const input = { topic: 'Evenings that feel heavy', blurb: 'A calm hour to talk about long evenings.', startsAt: Date.UTC(2026, 10, 20, 15), durationMin: 60, capacity: 10 }
+  it('schedules, edits and cancels through the portal functions', async () => {
+    const calls = fake({ portal_schedule_group: { ok: true, id: 'gc-custom-1' } })
+    const made = await remoteGroups.leadSchedule(input)
+    expect(made).toEqual({ ok: true, value: { id: 'gc-custom-1' } })
+    expect(calls[0]).toEqual({ name: 'portal_schedule_group', args: { p_topic: input.topic, p_blurb: input.blurb, p_starts: '2026-11-20T15:00:00.000Z', p_duration: 60, p_capacity: 10 } })
+    expect((await remoteGroups.leadEdit('gc-custom-1', input)).ok).toBe(true)
+    expect(calls[1].name).toBe('portal_edit_group')
+    expect((await remoteGroups.leadCancel('gc-custom-1', 'I am unwell that day')).ok).toBe(true)
+    expect(calls[2]).toEqual({ name: 'portal_cancel_group', args: { p_id: 'gc-custom-1', p_reason: 'I am unwell that day' } })
+  })
+  it('hands back the server’s plain reason', async () => {
+    fake({ portal_schedule_group: { ok: false, code: 'limit', error: 'You already lead 3 upcoming group chats.' } })
+    expect(await remoteGroups.leadSchedule(input)).toEqual({ ok: false, error: 'You already lead 3 upcoming group chats.', code: 'limit' })
+  })
+})
