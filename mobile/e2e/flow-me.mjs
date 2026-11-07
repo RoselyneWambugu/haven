@@ -118,6 +118,11 @@ await step('standing-appeal', async () => {
   await tid('appeal-send').click()
   await page.waitForTimeout(300)
   await shot('56-appeal')
+  await tid('standing-tiers').waitFor()
+  for (const t of ['good', 'warning', 'restricted', 'paused']) await tid(`tier-${t}`).waitFor()
+  await tid('standing-disclaimer').scrollIntoViewIfNeeded()
+  if (!/If your standing isn’t good/.test(await tid('standing-disclaimer').innerText())) throw new Error('the page should end with what to do')
+  await shot('56b-standing-bottom')
 })
 await step('my-plan', async () => {
   await page.goto('http://localhost:8094/me')
