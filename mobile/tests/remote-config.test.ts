@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
 import { remoteConfig, syncAdminConfig, syncConfig } from '../src/backend/remoteConfig'
 import { LIVE } from '../src/data/config'
+import { DEFAULT_SESSION_MONEY, SESSION_MONEY } from '../src/lib/sessionMoney'
 import { freshState, getDb, update } from '../src/store/db'
 import { resetClock } from '../src/lib/clock'
 
@@ -31,6 +32,20 @@ beforeEach(() => {
   update({ ...freshState() } as never)
 })
 afterEach(() => setClient(null))
+
+describe('the session money numbers from the server', () => {
+  it('are applied for everyone and for the Admin screen', async () => {
+    fake({ app_config: { ...APP(), sessionMoney: { ...DEFAULT_SESSION_MONEY, lateCancelFeePct: 40, therapistWaitMinutes: 25 } } })
+    await syncConfig()
+    expect(getDb().content.sessionMoney.lateCancelFeePct).toBe(40)
+    expect(SESSION_MONEY.lateCancelFeePct).toBe(40)
+    expect(SESSION_MONEY.therapistWaitMinutes).toBe(25)
+    fake({ admin_config: { ...APP(), matching: { neighbourFallback: false, softTopicWeight: 0.5, rematchCooldownDays: 7 }, sessionMoney: { ...DEFAULT_SESSION_MONEY, flakePauseAt: 4 } } })
+    await syncAdminConfig()
+    expect(getDb().content.sessionMoney.flakePauseAt).toBe(4)
+    expect(SESSION_MONEY.lateCancelFeePct).toBe(10)
+  })
+})
 
 describe('what members read', () => {
   it('takes the flags, limits, topics and plans from the server and keeps the wording the server doesn’t own', async () => {
@@ -82,6 +97,7 @@ describe('what an Admin does', () => {
     const calls = fake({ admin_propose_plans: { ok: true, proposed: true, id: 'p9' } })
     await remoteConfig.setFlag('forum', false)
     await remoteConfig.setLimits({ graceDays: 5, penNameChangeDays: 20, deletionHoldDays: 10 })
+    await remoteConfig.setSessionMoney({ ...DEFAULT_SESSION_MONEY, lateCancelFeePct: 15 })
     await remoteConfig.setMatching({ neighbourFallback: true, softTopicWeight: 0.25, rematchCooldownDays: 14 })
     await remoteConfig.addTopic('Exams')
     await remoteConfig.renameTopic('Exams', 'Study')
@@ -89,9 +105,10 @@ describe('what an Admin does', () => {
     const r = await remoteConfig.proposePlans(getDb().content.plans)
     expect(r).toEqual({ ok: true, value: { proposed: true } })
     const sent = calls.filter((c) => c.name !== 'admin_config').map((c) => [c.name, c.args])
-    expect(sent.slice(0, 6)).toEqual([
+    expect(sent.slice(0, 7)).toEqual([
       ['admin_set_flag', { p_key: 'forum', p_on: false }],
       ['admin_set_limits', { p_grace: 5, p_pen_name: 20, p_deletion: 10 }],
+      ['admin_set_session_money', { p: { ...DEFAULT_SESSION_MONEY, lateCancelFeePct: 15 } }],
       ['admin_set_matching', { p_neighbours: true, p_weight: 0.25, p_cooldown: 14 }],
       ['admin_add_topic', { p_name: 'Exams' }],
       ['admin_rename_topic', { p_from: 'Exams', p_to: 'Study' }],

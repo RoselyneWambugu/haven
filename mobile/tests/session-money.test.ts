@@ -118,3 +118,43 @@ describe('a therapist who keeps missing sessions', () => {
     expect(flakeNotice(3)).toMatch(/You can appeal/)
   })
 })
+
+import { afterEach } from 'vitest'
+import { changeOutcome } from '../src/lib/booking'
+import { applySessionMoney, DEFAULT_SESSION_MONEY, lastWindow, SESSION_MONEY, validateSessionMoney } from '../src/lib/sessionMoney'
+
+describe('the numbers an Admin can change', () => {
+  afterEach(() => applySessionMoney(DEFAULT_SESSION_MONEY))
+  it('checks them the way the server does', () => {
+    const d = DEFAULT_SESSION_MONEY
+    expect(validateSessionMoney(d)).toBeNull()
+    expect(validateSessionMoney({ ...d, noShowRefundPct: 90, noShowTherapistPct: 20 })).toMatch(/more than 100/)
+    expect(validateSessionMoney({ ...d, lateCancelFeePct: 101 })).toMatch(/0 to 100/)
+    expect(validateSessionMoney({ ...d, therapistWaitMinutes: 2 })).toMatch(/5 to 60/)
+    expect(validateSessionMoney({ ...d, flakeWarnAt: 4, flakePauseAt: 4 })).toMatch(/after the warning/)
+    expect(validateSessionMoney({ ...d, flakeWarnAt: 0, flakePauseAt: 0, flakeDiscountPct: 0 })).toBeNull()
+    expect(validateSessionMoney({ ...d, lateCancelMinutes: 10.5 })).toMatch(/whole/)
+    expect(validateSessionMoney({ ...d, flakeWindowDays: 3 })).toMatch(/7 to 365/)
+  })
+  it('changes what the rules do once applied', () => {
+    applySessionMoney({ lateCancelMinutes: 120, lateCancelFeePct: 20, lateCancelTherapistSharePct: 100, noShowRefundPct: 70, noShowTherapistPct: 10, flakeWarnAt: 3, flakePauseAt: 5, flakeWindowDays: 90, therapistWaitMinutes: 20 })
+    // 90 minutes out is now a late cancellation costing 20%, all of it to the therapist
+    expect(cancelSplit(start, start - 90 * MIN, 2000)).toMatchObject({ kind: 'late-cancel', refundKes: 1600, therapistKes: 400, platformKes: 0 })
+    expect(changeOutcome(start, start - 90 * MIN)).toBe('late')
+    expect(memberNoShowSplit(2000)).toMatchObject({ refundKes: 1400, therapistKes: 200, platformKes: 400 })
+    expect(SESSION_MONEY.noShowPlatformPct).toBe(20)
+    expect(therapistLateAt(start)).toBe(start + 20 * MIN)
+    expect([2, 3, 4, 5].map(flakeStanding)).toEqual(['ok', 'warning', 'warning', 'paused'])
+    expect(flakeNotice(3)).toMatch(/last 90 days/)
+  })
+  it('keeps a starting value for anything missing, and puts the defaults back', () => {
+    applySessionMoney({ lateCancelFeePct: 30, flakePauseAt: Number.NaN } as never)
+    expect(SESSION_MONEY.lateCancelFeePct).toBe(30)
+    expect(SESSION_MONEY.flakePauseAt).toBe(3)
+    applySessionMoney(null)
+    expect(SESSION_MONEY.lateCancelFeePct).toBe(10)
+  })
+  it('names the window in plain words', () => {
+    expect([30, 60, 90, 120].map((m) => lastWindow(m))).toEqual(['the last 30 minutes', 'the last hour', 'the last 90 minutes', 'the last 2 hours'])
+  })
+})

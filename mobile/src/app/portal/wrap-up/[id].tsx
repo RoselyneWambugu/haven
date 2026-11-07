@@ -9,7 +9,7 @@ import { Panel } from '@/components/Portal'
 import { Text } from '@/components/Text'
 import { now } from '@/lib/clock'
 import { go, resetTo } from '@/lib/nav'
-import { canMarkNoShow } from '@/lib/sessionMoney'
+import { canMarkNoShow, SESSION_MONEY } from '@/lib/sessionMoney'
 import { clock, dayAndClock } from '@/lib/time'
 import { colors } from '@/theme'
 import { useDb } from '@/store/db'
@@ -41,7 +41,7 @@ export default function WrapUp() {
         <Field testID="wrap-note" label="Private session note (autosaved)" value={note} onChangeText={setNote} multiline minHeight={150} hint="Only you can see this. Notes are stored encrypted." />
         <Check testID="wrap-follow" checked={follow} label={`Suggest a follow-up on ${dayAndClock(suggested)}`} onPress={() => setFollow((v) => !v)} />
         <Panel tone="lichen">
-          <Text variant="caption">Attendance feeds billing. If the client didn’t come, 85% of what they paid goes back to them and Echo keeps the rest. It isn’t part of your earnings.</Text>
+          <Text variant="caption">Attendance feeds billing. {`If the client didn’t come, ${SESSION_MONEY.noShowRefundPct}% of what they paid goes back to them${SESSION_MONEY.noShowTherapistPct > 0 ? `, ${SESSION_MONEY.noShowTherapistPct}% is yours` : ''} and Echo keeps the rest.${SESSION_MONEY.noShowTherapistPct > 0 ? '' : ' It isn’t part of your earnings.'}`}</Text>
         </Panel>
         <Button
           testID="wrap-save"

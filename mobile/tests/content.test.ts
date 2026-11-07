@@ -5,6 +5,7 @@ import { LIVE } from '../src/data/config'
 import { defaultContent } from '../src/data/content'
 import { canEditConfig, canEditDirectory, isOverdue, ownedBy, slugify, splitSteps, ticketDue, titleAdvice, validateArticle, validateLimits, validateLine, validateMatching, validatePhone, validatePlan, validatePlans, validateTopic, verification, visibleArticles } from '../src/lib/content'
 import { planState, graceEndsAt, planIncludes } from '../src/lib/plan'
+import { SESSION_MONEY } from '../src/lib/sessionMoney'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
 import { applyLimits, freshState, getDb, update } from '../src/store/db'
 
@@ -268,12 +269,26 @@ describe('content api', () => {
     expect(LIVE.graceDays).toBe(7)
   })
 
+  it('changes the session money rules and applies them at once', () => {
+    const cfg = { ...c().sessionMoney, lateCancelFeePct: 25, noShowRefundPct: 60, noShowTherapistPct: 20 }
+    expect(api.config.setSessionMoney(cfg).ok).toBe(true)
+    expect(c().sessionMoney.lateCancelFeePct).toBe(25)
+    expect(SESSION_MONEY.lateCancelFeePct).toBe(25)
+    expect(SESSION_MONEY.noShowPlatformPct).toBe(20)
+    expect(api.config.setSessionMoney({ ...cfg, noShowRefundPct: 90, noShowTherapistPct: 20 })).toMatchObject({ ok: false, code: 'invalid' })
+    expect(c().sessionMoney.noShowRefundPct).toBe(60)
+    update(freshState())
+    applyLimits()
+    expect(SESSION_MONEY.lateCancelFeePct).toBe(10)
+  })
+
   it('keeps configuration to Admin only', () => {
     for (const who of ['T. Njeri', 'Dr. K. Mwende', 'J. Otieno']) {
       as(who)
       expect(api.config.setFlag('forum', false)).toMatchObject({ ok: false, code: 'role' })
       expect(api.config.setMatching({ neighbourFallback: true, softTopicWeight: 0, rematchCooldownDays: 30 })).toMatchObject({ ok: false, code: 'role' })
       expect(api.config.setLimits({ graceDays: 7, penNameChangeDays: 30, deletionHoldDays: 14 })).toMatchObject({ ok: false, code: 'role' })
+      expect(api.config.setSessionMoney(c().sessionMoney)).toMatchObject({ ok: false, code: 'role' })
       expect(api.config.addTopic('Money')).toMatchObject({ ok: false, code: 'role' })
       expect(api.config.addLanguage('Kikuyu')).toMatchObject({ ok: false, code: 'role' })
     }

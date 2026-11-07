@@ -97,11 +97,11 @@ export const ARTICLES: HelpArticle[] = [
     'Choose chat, voice or video, then a time.',
     'Pay for the session. You will get reminders one hour and ten minutes before.',
   ], ['change-session', 'camera-off']),
-  a('change-session', 'therapists', 'Can I change or cancel a session?', 'Yes. It is free until the last hour before the start.', [
+  a('change-session', 'therapists', 'Can I change or cancel a session?', 'Yes. It is free until shortly before the start.', [
     'Open Therapists, then My sessions.',
     'Choose Reschedule or Cancel on the session.',
-    'Cancel more than an hour before and all of it goes back to your M-Pesa number. In the last hour, 10% is kept.',
-    'If you don’t come, 85% goes back. If your therapist hasn’t joined after 15 minutes, you can leave and get all of it back.',
+    'Cancel early enough and all of it goes back to your M-Pesa number. Closer to the start, a small cancellation fee is kept. The cancel screen shows the exact amounts before you confirm.',
+    'If you don’t come, most of it goes back. If your therapist hasn’t joined after a short wait, you can leave and get all of it back.',
   ], ['book-session']),
   a('camera-off', 'therapists', 'Do I have to show my face on a video call?', 'No. Your camera is off by default.', [
     'You appear as your pen name and avatar.',

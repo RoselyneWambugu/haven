@@ -1,3 +1,4 @@
+import { validateSessionMoney } from '@/lib/sessionMoney'
 import { now } from '@/lib/clock'
 import { uid } from '@/lib/id'
 import {
@@ -6,7 +7,7 @@ import {
 import { applyLimits, getDb, update } from '@/store/db'
 import { showToast } from '@/store/toast'
 import { log, me } from './admin'
-import type { ArticleCfg, ContentState, CrisisLineCfg, DepartmentCfg, FlagsCfg, LimitsCfg, MatchingCfg, PlanCfg, Res, SupportOrgCfg } from './types'
+import type { ArticleCfg, ContentState, CrisisLineCfg, DepartmentCfg, FlagsCfg, LimitsCfg, MatchingCfg, PlanCfg, Res, SessionMoneyCfg, SupportOrgCfg } from './types'
 
 function patch(fn: (c: ContentState) => Partial<ContentState>) {
   update((s) => ({ content: { ...s.content, ...fn(s.content) } }))
@@ -241,6 +242,15 @@ export const config = {
     if (!canEditConfig(me().role)) return denied('change feature flags')
     patch((c) => ({ flags: { ...c.flags, [key]: on } }))
     log(on ? 'Turned on feature' : 'Turned off feature', key)
+    return { ok: true, value: undefined }
+  },
+  setSessionMoney(c: SessionMoneyCfg): Res {
+    if (!canEditConfig(me().role)) return denied('change the session money rules')
+    const problem = validateSessionMoney(c)
+    if (problem) return { ok: false, error: problem, code: 'invalid' }
+    patch(() => ({ sessionMoney: { ...c } }))
+    applyLimits()
+    log('Changed session money rules', 'Configuration', `late cancel ${c.lateCancelMinutes} min, ${c.lateCancelFeePct}% (${c.lateCancelTherapistSharePct}% to therapist); no-show ${c.noShowRefundPct}% back, ${c.noShowTherapistPct}% to therapist; wait ${c.therapistWaitMinutes} min; rebook ${c.flakeDiscountPct}% for ${c.flakeDiscountDays} d; warn ${c.flakeWarnAt}, pause ${c.flakePauseAt} in ${c.flakeWindowDays} d`)
     return { ok: true, value: undefined }
   },
   setLimits(l: LimitsCfg): Res {

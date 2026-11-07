@@ -6,6 +6,7 @@ import { defaultContent } from '@/data/content'
 import { seedEvents } from '@/data/events'
 import { seedPosts } from '@/data/seed'
 import { now } from '@/lib/clock'
+import { applySessionMoney } from '@/lib/sessionMoney'
 import type { AppNote } from '@/lib/notifications'
 import { secure } from './secure'
 
@@ -82,6 +83,7 @@ export interface DbState {
 /** Copies the configured limits to where the rules read them. */
 export function applyLimits(): void {
   Object.assign(LIVE, state.content.limits)
+  applySessionMoney(state.content.sessionMoney)
 }
 
 export function emptyRegistration(): RegistrationDraft {

@@ -9,6 +9,7 @@ import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
 import { Panel, PortalPage, Stepper } from '@/components/Portal'
 import { Sheet } from '@/components/Sheet'
+import { SessionMoneyConfig } from '@/components/SessionMoneyConfig'
 import { PlatformFee } from '@/components/PlatformFee'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -16,13 +17,14 @@ import { ALWAYS_ON, FLAGS, HARD_RULES } from '@/lib/content'
 import { useDb } from '@/store/db'
 import { colors } from '@/theme'
 
-type Tab = 'plans' | 'topics' | 'languages' | 'matching' | 'flags' | 'limits'
+type Tab = 'plans' | 'topics' | 'languages' | 'matching' | 'flags' | 'sessions' | 'limits'
 const TABS: { key: Tab; label: string }[] = [
   { key: 'plans', label: 'Plans and entitlements' },
   { key: 'topics', label: 'Topics' },
   { key: 'languages', label: 'Languages' },
   { key: 'matching', label: 'Matching' },
   { key: 'flags', label: 'Feature flags' },
+  { key: 'sessions', label: 'Sessions' },
   { key: 'limits', label: 'Limits' },
 ]
 
@@ -226,6 +228,8 @@ export default function Configuration() {
           </Panel>
         </>
       ) : null}
+
+      {tab === 'sessions' ? <SessionMoneyConfig canEdit={a.role === 'admin'} /> : null}
 
       {tab === 'limits' && REMOTE ? <PlatformFee canEdit={a?.role === 'admin'} /> : null}
 

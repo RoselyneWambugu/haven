@@ -1,3 +1,4 @@
+import { DEFAULT_SESSION_MONEY } from '@/lib/sessionMoney'
 import type { ContentState, DepartmentCfg, PlanCfg } from '@/api/types'
 import { DEFAULT_LANGUAGES, FORUM_TOPICS } from '@/api/types'
 import { ARTICLES, CRISIS_LINES, DEPARTMENTS, EMERGENCY, PLANS, POPULAR, SUPPORT_ORGS } from './help'
@@ -26,5 +27,6 @@ export function defaultContent(): ContentState {
     matching: { neighbourFallback: true, softTopicWeight: 0, rematchCooldownDays: 30 },
     flags: { forum: true, moodCheckin: true, disappearing: true, therapistVideo: true },
     limits: { graceDays: 7, penNameChangeDays: 30, deletionHoldDays: 14 },
+    sessionMoney: { ...DEFAULT_SESSION_MONEY },
   }
 }

@@ -255,6 +255,30 @@ await step('matching-and-limits-save', async () => {
   if (!/Limits updated/.test(await body())) throw new Error('limits not saved')
 })
 
+await step('session-money-rules', async () => {
+  await tid('cf-sessions').click()
+  await tid('session-money-config').waitFor()
+  await shot('119b-session-rules')
+  if (!/cancelled inside the window: KES 1,350 goes back/.test(await body())) throw new Error('the late-cancel example should use the starting 10%')
+  const bump = async (label, times) => {
+    const row = page.getByText(label).first().locator('xpath=..')
+    for (let i = 0; i < times; i++) await row.getByRole('button', { name: '+', exact: true }).click()
+  }
+  // raise the late fee: the example follows before anything is saved
+  await bump('Fee kept for a late cancellation, % of what was paid', 2)
+  if (!/KES 1,200 goes back/.test(await tid('cf-example-late').innerText())) throw new Error('the example should follow the new fee')
+  // a refund and therapist share over 100% can't be saved
+  await bump('% paid to the therapist', 4)
+  await bump('% refunded to the member', 3)
+  if (!(await tid('save-session-money').isDisabled())) throw new Error('a split over 100% should not be saveable')
+  await tid('reset-session-money').click()
+  await bump('Fee kept for a late cancellation, % of what was paid', 2)
+  await tid('save-session-money').click()
+  await page.waitForTimeout(300)
+  if (!/It applies to sessions cancelled or missed from now on/.test(await body())) throw new Error('session rules not saved')
+  await shot('119c-session-rules-saved')
+})
+
 await step('everything-is-in-the-audit-log', async () => {
   await tid('anav-audit').click()
   await tid('admin-audit').waitFor()

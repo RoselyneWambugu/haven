@@ -12,7 +12,7 @@ import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, canJoin, joinOpensAt } from '@/lib/booking'
-import { canReportTherapistLate, flakeOffer, REFUND_NOTE } from '@/lib/sessionMoney'
+import { canReportTherapistLate, flakeOffer, lastWindow, REFUND_NOTE, SESSION_MONEY } from '@/lib/sessionMoney'
 import { now } from '@/lib/clock'
 import { go, goBack } from '@/lib/nav'
 import { clock, dayAndClock, dayLong } from '@/lib/time'
@@ -94,7 +94,7 @@ export default function SessionDetail() {
           {error ? <Banner tone="clay">{error}</Banner> : null}
           {canReportTherapistLate(s.start, s.end, now()) ? (
             <Banner tone="sun" icon="clock" title="Your therapist hasn’t joined">
-              You’ve waited 15 minutes. You can leave now and get all of it back.
+              {`You’ve waited ${SESSION_MONEY.therapistWaitMinutes} minutes. You can leave now and get all of it back.`}
             </Banner>
           ) : null}
           {canReportTherapistLate(s.start, s.end, now()) ? (
@@ -109,8 +109,8 @@ export default function SessionDetail() {
           ) : null}
           <Banner tone={free ? 'green' : 'sun'} icon="cal">
             {free
-              ? 'Free to reschedule or cancel until the last hour. After that, cancelling keeps 10%, and if you don’t come you get 85% back.'
-              : 'It’s within the last hour. Cancelling keeps 10%, and if you don’t come you get 85% back. It can’t be moved now.'}
+              ? `Free to reschedule or cancel until ${lastWindow()}. After that, cancelling keeps ${SESSION_MONEY.lateCancelFeePct}%, and if you don’t come you get ${SESSION_MONEY.noShowRefundPct}% back.`
+              : `It’s within ${lastWindow()}. Cancelling keeps ${SESSION_MONEY.lateCancelFeePct}%, and if you don’t come you get ${SESSION_MONEY.noShowRefundPct}% back. It can’t be moved now.`}
           </Banner>
           {free ? <Button testID="reschedule" variant="quiet" label="Reschedule" onPress={() => go(`/session-change/${s.id}?action=reschedule`)} /> : null}
           <Button testID="cancel-session" variant="dangerGhost" label="Cancel session" onPress={() => go(`/session-change/${s.id}?action=cancel`)} />

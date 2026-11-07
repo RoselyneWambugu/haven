@@ -1,7 +1,7 @@
+import { SESSION_MONEY } from './sessionMoney'
 import { clock, eat, fromEat, isSameEatDay, startOfEatDay } from './time'
 
 /** Booking and change rules (PRD THR-26 to THR-31). A session can be moved or cancelled for free until the last hour; the money rules are in sessionMoney.ts. */
-export const FREE_CHANGE_MINUTES = 60
 export const JOIN_OPENS_MINUTES = 10
 export const SESSION_MINUTES = 45
 export const BOOKING_LEAD_HOURS = 2
@@ -28,7 +28,7 @@ export interface Slot {
 }
 
 export function freeChangeDeadline(start: number): number {
-  return start - FREE_CHANGE_MINUTES * MIN
+  return start - SESSION_MONEY.lateCancelMinutes * MIN
 }
 
 export function changeOutcome(start: number, now: number): 'free' | 'late' {

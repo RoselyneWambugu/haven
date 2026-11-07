@@ -9,7 +9,7 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
 import { changeOutcome, groupSlotsByDay } from '@/lib/booking'
-import { cancelSplit, cancelWords, REFUND_NOTE } from '@/lib/sessionMoney'
+import { cancelSplit, cancelWords, lastWindow, REFUND_NOTE, SESSION_MONEY } from '@/lib/sessionMoney'
 import { useMoney } from '@/store/useMoney'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
@@ -65,7 +65,7 @@ export default function SessionChange() {
           {t.name}, {dayAndClock(s.start)}
         </Text>
         <Banner tone={free ? 'green' : 'sun'} icon={free ? 'check' : 'clock'}>
-          {s.priceKes === null ? (free ? 'There’s no charge.' : 'It’s within the last hour, so a 10% fee is kept.') : cancelWords(split, money)}
+          {s.priceKes === null ? (free ? 'There’s no charge.' : `It’s within ${lastWindow()}, so a ${SESSION_MONEY.lateCancelFeePct}% fee is kept.`) : cancelWords(split, money)}
         </Banner>
         <Text variant="small" muted>
           {REFUND_NOTE}
@@ -96,7 +96,7 @@ export default function SessionChange() {
     >
       <Text variant="title">Pick a new time</Text>
       <Banner tone={free ? 'green' : 'sun'} icon="cal">
-        {free ? 'Free to change until the last hour before it starts.' : 'It’s within the last hour, so it can’t be moved. You can cancel instead, and a 10% fee is kept.'}
+        {free ? `Free to change until ${lastWindow()} before it starts.` : `It’s within ${lastWindow()}, so it can’t be moved. You can cancel instead, and a ${SESSION_MONEY.lateCancelFeePct}% fee is kept.`}
       </Banner>
       {days.map(({ day, slots: list }) => (
         <View key={day} style={{ gap: 8 }}>

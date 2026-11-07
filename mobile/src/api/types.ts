@@ -832,6 +832,24 @@ export interface FlagsCfg {
   therapistVideo: boolean
 }
 
+/** The session money numbers an Admin sets in Configuration. The server holds the same ones. */
+export interface SessionMoneyCfg {
+  /** Cancelling inside this many minutes of the start is a late cancellation (and a session can no longer be moved). */
+  lateCancelMinutes: number
+  lateCancelFeePct: number
+  /** Of the late-cancellation fee, the share that goes to the therapist. */
+  lateCancelTherapistSharePct: number
+  noShowRefundPct: number
+  noShowTherapistPct: number
+  /** How long a member waits for a therapist to join before they may leave with everything back. */
+  therapistWaitMinutes: number
+  flakeDiscountPct: number
+  flakeDiscountDays: number
+  flakeWindowDays: number
+  flakeWarnAt: number
+  flakePauseAt: number
+}
+
 export interface LimitsCfg {
   graceDays: number
   penNameChangeDays: number
@@ -856,6 +874,7 @@ export interface ContentState {
   matching: MatchingCfg
   flags: FlagsCfg
   limits: LimitsCfg
+  sessionMoney: SessionMoneyCfg
 }
 
 export interface StaffAccount {

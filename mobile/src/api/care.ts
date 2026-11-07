@@ -1,7 +1,7 @@
 import { hasPlan } from './access'
 import { canBookTherapist } from '@/lib/limits'
 import { THERAPISTS } from '@/data/seed'
-import { cancelSplit, canReportTherapistLate, discountedKes, FLAKE_DISCOUNT, flakeNotice, flakeOffer, flakeStanding, missedIn, therapistNoShowSplit } from '@/lib/sessionMoney'
+import { cancelSplit, canReportTherapistLate, discountedKes, FLAKE_DISCOUNT, flakeNotice, flakeOffer, flakeStanding, lastWindow, missedIn, SESSION_MONEY, therapistNoShowSplit } from '@/lib/sessionMoney'
 import { changeOutcome, canJoin, SESSION_MINUTES, MIN } from '@/lib/booking'
 import { now } from '@/lib/clock'
 import { slotsFor } from '@/lib/directory'
@@ -132,7 +132,7 @@ export const sessions = {
   reportTherapistLate(id: string): Res<{ refundKes: number }> {
     const s = getDb().sessions.find((x) => x.id === id)
     if (!s || s.status !== 'booked') return { ok: false, error: 'That session can’t be changed.' }
-    if (!canReportTherapistLate(s.start, s.end, now())) return { ok: false, error: 'Please wait 15 minutes after the start for your therapist to join.', code: 'early' }
+    if (!canReportTherapistLate(s.start, s.end, now())) return { ok: false, error: `Please wait ${SESSION_MONEY.therapistWaitMinutes} minutes after the start for your therapist to join.`, code: 'early' }
     const split = therapistNoShowSplit(s.priceKes ?? 0)
     setSession(id, (x) => ({ ...x, status: 'cancelled', lateChargeApplied: false, refundKes: split.refundKes, flaked: true, flakeDiscountPct: FLAKE_DISCOUNT.pct || null, flakeDiscountUntil: now() + FLAKE_DISCOUNT.days * DAY, discountUsed: false }))
     // A therapist who keeps missing sessions is warned, then paused. In the demo this reaches the portal if that therapist is the one signed in.
@@ -150,7 +150,7 @@ export const sessions = {
     const db = getDb()
     const s = db.sessions.find((x) => x.id === id)
     if (!s || s.status !== 'booked') return { ok: false, error: 'That session can’t be changed.' }
-    if (changeOutcome(s.start, now()) === 'late') return { ok: false, error: 'It’s within the last hour, so it can’t be moved. You can cancel instead.', code: 'late' }
+    if (changeOutcome(s.start, now()) === 'late') return { ok: false, error: `It’s within ${lastWindow()}, so it can’t be moved. You can cancel instead.`, code: 'late' }
     const t = therapistOf(s.therapistId)
     if (!t) return { ok: false, error: 'That therapist is not available.' }
     const others = db.sessions.filter((x) => x.id !== id)

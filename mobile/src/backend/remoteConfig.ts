@@ -1,5 +1,5 @@
 import { config as mockConfig } from '@/api/content'
-import type { FlagsCfg, LimitsCfg, MatchingCfg, PlanCfg, Res } from '@/api/types'
+import type { FlagsCfg, LimitsCfg, MatchingCfg, PlanCfg, Res, SessionMoneyCfg } from '@/api/types'
 import { applyLimits, getDb, update } from '@/store/db'
 import { supabase } from './client'
 
@@ -10,6 +10,7 @@ interface ServerPlan { id: string; label: string; days: number; priceKes: number
 interface ConfigReply extends Reply {
   flags?: FlagsCfg
   limits?: LimitsCfg
+  sessionMoney?: SessionMoneyCfg
   matching?: MatchingCfg
   topics?: string[]
   languages?: string[]
@@ -39,7 +40,7 @@ export async function syncConfig(): Promise<void> {
   const d = await call<ConfigReply>('app_config')
   if (!d.ok || !d.flags || !d.limits) return
   update((s) => ({
-    content: { ...s.content, flags: d.flags!, limits: d.limits!, topics: d.topics?.length ? d.topics : s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans: d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans },
+    content: { ...s.content, flags: d.flags!, limits: d.limits!, sessionMoney: d.sessionMoney ?? s.content.sessionMoney, topics: d.topics?.length ? d.topics : s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans: d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans },
   }))
   applyLimits()
 }
@@ -52,7 +53,7 @@ export async function syncAdminConfig(): Promise<void> {
     const plans = d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans
     return {
       content: {
-        ...s.content, flags: d.flags!, limits: d.limits!, matching: d.matching!, topics: d.topics ?? s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans,
+        ...s.content, flags: d.flags!, limits: d.limits!, sessionMoney: d.sessionMoney ?? s.content.sessionMoney, matching: d.matching!, topics: d.topics ?? s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans,
         pendingPlans: d.pendingPlans ? { plans: mergePlans(plans, d.pendingPlans.plans), requestedBy: d.pendingPlans.requestedBy, approvals: [], id: d.pendingPlans.id, mine: d.pendingPlans.mine } : null,
       },
     }
@@ -85,5 +86,6 @@ export const remoteConfig = {
   },
   setMatching: (m: MatchingCfg) => act('admin_set_matching', { p_neighbours: m.neighbourFallback, p_weight: m.softTopicWeight, p_cooldown: m.rematchCooldownDays }),
   setFlag: (key: keyof FlagsCfg, on: boolean) => act('admin_set_flag', { p_key: key, p_on: on }),
+  setSessionMoney: (c: SessionMoneyCfg) => act('admin_set_session_money', { p: c }),
   setLimits: (l: LimitsCfg) => act('admin_set_limits', { p_grace: l.graceDays, p_pen_name: l.penNameChangeDays, p_deletion: l.deletionHoldDays }),
 }
