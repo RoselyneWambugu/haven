@@ -70,7 +70,8 @@ export type AppealStatus = 'none' | 'pending' | 'upheld' | 'reduced' | 'overturn
 
 export interface Notice {
   id: string
-  kind: 'warning' | 'restriction' | 'suspension'
+  /** A removal tells the member that a post or comment of theirs was taken down. It is not a strike. */
+  kind: 'warning' | 'restriction' | 'suspension' | 'removal'
   rule: string
   explanation: string
   at: number
@@ -615,6 +616,9 @@ export interface AdminCase {
   therapistId?: string
   decision: { action: CaseAction; reason: string; by: string; at: number } | null
   escalated: boolean
+  /** What a member report was about, so staff can remove just that post or comment. Live service only. */
+  target?: string | null
+  targetId?: string | null
 }
 
 export interface AdminUser {

@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api, type BreakGlassRequest, type CaseAction } from '@/api'
 import { REMOTE } from '@/backend/client'
+import { remoteAdmin } from '@/backend/remoteAdmin'
 import { Button } from '@/components/Button'
 import { Radio, Segmented } from '@/components/Controls'
 import { Field } from '@/components/Field'
@@ -58,6 +59,9 @@ export default function CaseDetail() {
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [sheet, setSheet] = useState(false)
+  const [rmReason, setRmReason] = useState('')
+  const [rmError, setRmError] = useState<string | null>(null)
+  const [rmDone, setRmDone] = useState(false)
   const [bgReason, setBgReason] = useState<BreakGlassRequest['reasonCode']>('imminent-risk')
   const [bgText, setBgText] = useState('')
   const [bgError, setBgError] = useState<string | null>(null)
@@ -191,6 +195,29 @@ export default function CaseDetail() {
           </View>
         </Panel>
       )}
+
+      {REMOTE && !clinical && (a.role === 'moderator' || a.role === 'admin') && (c.target === 'post' || c.target === 'comment') && c.targetId ? (
+        <Panel title={c.target === 'post' ? 'Remove the reported post' : 'Remove the reported comment'} testID="remove-content">
+          {rmDone ? (
+            <Banner tone="green" icon="check">Removed. The author has been told why and can appeal.</Banner>
+          ) : (
+            <>
+              <Text variant="small" muted>This takes down only this {c.target}. The author is told the reason and can appeal; a different reviewer decides. It is not a strike: use Strike, Restrict or Suspend above for that.</Text>
+              <Field testID="remove-reason" label="Reason (required, the author sees it)" value={rmReason} onChangeText={(v) => { setRmReason(v); setRmError(null) }} error={rmError} />
+              <Button
+                testID="remove-submit"
+                variant="danger"
+                label={c.target === 'post' ? 'Remove this post' : 'Remove this comment'}
+                onPress={async () => {
+                  const r = c.target === 'post' ? await remoteAdmin.removePost(c.targetId!, rmReason) : await remoteAdmin.removeComment(c.targetId!, rmReason)
+                  if (!r.ok) return setRmError(r.error)
+                  setRmDone(true)
+                }}
+              />
+            </>
+          )}
+        </Panel>
+      ) : null}
 
       {clinical && c.decision?.action === 'pause-therapist' && (REMOTE || (portal?.review?.kind === 'paused' && portal.therapistId === c.therapistId)) ? (
         <Panel tone="sun" title="New clients are paused" testID="lift-pause">

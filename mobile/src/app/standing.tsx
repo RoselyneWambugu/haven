@@ -37,7 +37,7 @@ export default function Standing() {
       )}
       {account.notices.map((n) => (
         <Card key={n.id} testID={`notice-${n.id}`}>
-          <Badge tone={n.kind === 'warning' ? 'plain' : 'sun'} label={n.kind === 'warning' ? 'Warning' : n.kind === 'restriction' ? 'Restriction' : 'Suspension'} />
+          <Badge tone={n.kind === 'warning' || n.kind === 'removal' ? 'plain' : 'sun'} label={n.kind === 'warning' ? 'Warning' : n.kind === 'removal' ? 'Removal' : n.kind === 'restriction' ? 'Restriction' : 'Suspension'} />
           <Text variant="h3" style={{ marginTop: 8 }}>
             {n.rule}
           </Text>

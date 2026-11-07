@@ -395,6 +395,16 @@ export const remoteAdmin = {
     return { ok: true, value: { csv: ['When,Who,Role,Action,Target,Reason', ...rows].join('\n') } }
   },
 
+  /** A moderator or Admin removes one post. The author is told why and can appeal. */
+  async removePost(postId: string, reason: string): Promise<Res> {
+    return act('admin_remove_post', { p_post: postId, p_reason: reason })
+  },
+
+  /** A moderator or Admin removes one comment. The author is told why and can appeal. */
+  async removeComment(commentId: string, reason: string): Promise<Res> {
+    return act('admin_remove_comment', { p_comment: commentId, p_reason: reason })
+  },
+
   /** A moderator approves or removes a post that was held for review. */
   async reviewPost(postId: string, approve: boolean, reason = ''): Promise<Res> {
     const r = await act('admin_review_post', { p_post: postId, p_approve: approve, p_reason: reason })

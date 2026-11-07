@@ -169,6 +169,14 @@ describe('actions', () => {
     expect(f.calls[0]).toEqual({ name: 'admin_review_post', args: { p_post: 'p1', p_approve: false, p_reason: 'Breaks the guidelines' } })
   })
 
+  it('removes one post or comment with a reason', async () => {
+    const f = fake()
+    await remoteAdmin.removePost('p1', 'Contains a rumour about a named person')
+    await remoteAdmin.removeComment('c1', 'Mocks another member')
+    expect(f.calls.find((c) => c.name === 'admin_remove_post')?.args).toEqual({ p_post: 'p1', p_reason: 'Contains a rumour about a named person' })
+    expect(f.calls.find((c) => c.name === 'admin_remove_comment')?.args).toEqual({ p_comment: 'c1', p_reason: 'Mocks another member' })
+  })
+
   it('only lets an Admin export the audit log', async () => {
     fake()
     await syncAdmin()

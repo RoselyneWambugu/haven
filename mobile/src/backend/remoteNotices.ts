@@ -1,5 +1,6 @@
 import type { Notice, Res } from '@/api/types'
 import { getDb, updateAccount } from '@/store/db'
+import { notify } from '@/api/notify'
 import { supabase } from './client'
 
 const OFFLINE = 'We couldn’t reach Echo. Check your connection and try again.'
@@ -24,7 +25,9 @@ export async function syncNotices(): Promise<void> {
   const acct = await supabase().rpc('my_account')
   const standing = (acct.data as { standing?: 'good' | 'restricted' | 'paused' } | null)?.standing
   const notices = d.notices.map((n): Notice => ({ id: n.id, kind: n.kind, rule: n.rule, explanation: n.explanation, at: n.at, expiresAt: n.expires_at, appeal: n.appeal, appealText: n.appeal_text ?? undefined }))
+  const known = new Set((getDb().account?.notices ?? []).map((n) => n.id))
   updateAccount((a) => ({ ...a, notices, standing: standing ?? a.standing }))
+  for (const n of notices) if (n.kind === 'removal' && !known.has(n.id) && Date.now() - n.at < 3 * 3600_000) notify.push('safety', `notice:${n.id}`, n.rule, n.explanation, '/standing')
 }
 
 /** A member appeals a notice. The server records it for a reviewer who did not make the original decision. */
