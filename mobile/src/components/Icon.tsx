@@ -43,6 +43,7 @@ const P: Record<string, string[]> = {
   archive: ['M4 7h16v4H4z', 'M6 11v8h12v-8M10 15h4'],
   external: ['M14 4h6v6M20 4l-9 9M18 14v5H5V6h5'],
   copy: ['M9 9h10v11H9z', 'M5 15V4h10'],
+  play: ['M8 5l11 7-11 7z'],
 }
 
 export type IconName = keyof typeof P | 'dots'

@@ -154,10 +154,11 @@ interface TabBarProps {
   }
 }
 
-const TABS: Record<string, { label: string; icon: 'home' | 'chats' | 'forum' | 'heart' | 'help' }> = {
+const TABS: Record<string, { label: string; icon: 'home' | 'chats' | 'forum' | 'heart' | 'help' | 'video' }> = {
   home: { label: 'Home', icon: 'home' },
   chats: { label: 'Chats', icon: 'chats' },
   forum: { label: 'Community', icon: 'forum' },
+  watch: { label: 'Watch', icon: 'video' },
   therapists: { label: 'Therapists', icon: 'heart' },
   help: { label: 'Help', icon: 'help' },
 }

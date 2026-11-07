@@ -10,6 +10,7 @@ import { remoteChat, remoteMatch, remoteReport } from '@/backend/remoteChat'
 import { remoteBilling } from '@/backend/remoteBilling'
 import { remoteConfig } from '@/backend/remoteConfig'
 import { remoteEvents } from '@/backend/remoteEvents'
+import { remoteEpisodes } from '@/backend/remoteEpisodes'
 import { remoteGroups } from '@/backend/remoteGroups'
 import { remoteResources, remoteSuggestService, remoteTickets } from '@/backend/remoteHelp'
 import { remoteFeedback } from '@/backend/remoteFeedback'
@@ -25,6 +26,7 @@ import { notify } from './notify'
 import { feedback as mockFeedback } from './feedback'
 import { admin as mockAdmin } from './admin'
 import { events as mockEvents } from './events'
+import { episodes as mockEpisodes } from './episodes'
 import { config as mockConfig, resources as mockResources, suggestService as mockSuggestService } from './content'
 import { applyPortalToDirectory, applyStandingToDirectory, portal as mockPortal } from './portal'
 import { chat as mockChat, forum as mockForum, match as mockMatch, report as mockReport } from './social'
@@ -55,6 +57,7 @@ const team = (REMOTE ? remoteTeam : mockTeam) as typeof mockTeam
 const admin = (REMOTE ? remoteAdmin : mockAdmin) as typeof mockAdmin
 const groups = (REMOTE ? remoteGroups : mockGroups) as typeof mockGroups
 const events = (REMOTE ? remoteEvents : mockEvents) as typeof mockEvents
+const episodes = (REMOTE ? remoteEpisodes : mockEpisodes) as typeof mockEpisodes
 const therapistAppeals = (REMOTE ? remoteTherapistAppeals : mockTherapistAppeals) as typeof mockTherapistAppeals
 const report = (REMOTE ? remoteReport : mockReport) as typeof mockReport
 
@@ -74,7 +77,7 @@ const account: typeof mockAccount = REMOTE
     }
   : mockAccount
 
-export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals, spaces, groups, events }
+export const api = { auth, match, chat, report, forum, billing, sessions, tickets, account, demo, portal, admin, resources, config, suggestService, team, feedback, notify, therapistAppeals, spaces, groups, events, episodes }
 
 /** Restarts timers for anything that was in progress when the app last closed. */
 export function resumeBackground(): void {

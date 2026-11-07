@@ -103,6 +103,14 @@ await step('a-clinical-reviewer-schedules-and-cancels-an-event', async () => {
   await shot('196-event-cancelled')
   await page.waitForTimeout(500)
 })
+await step('episodes-module', async () => {
+  await tid('anav-episodes').click()
+  await tid('admin-episodes').waitFor()
+  const t = await tid('admin-episodes').innerText()
+  if (!/Talking to your parents/.test(t) || !/Published/.test(t)) throw new Error('the sample episodes should be listed')
+  if (await tid('add-episode').count()) throw new Error('the demo should not offer uploads')
+  await shot('192-episodes')
+})
 await step('a-reviewer-decides-therapist-proposals', async () => {
   await page.evaluate(() => {
     window.__echo.portal.signIn()

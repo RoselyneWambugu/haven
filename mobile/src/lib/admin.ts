@@ -4,7 +4,7 @@ import type { AdminCase, Severity, StaffRole } from '@/api/types'
 // Roles and modules (PRD §3.2, §6.11). Each role sees only its own modules.
 // ---------------------------------------------------------------------------
 
-export type Module = 'overview' | 'cases' | 'users' | 'appeals' | 'therapists' | 'billing' | 'moderation' | 'analytics' | 'resources' | 'configuration' | 'roles' | 'wellbeing' | 'feedback' | 'groups' | 'events' | 'audit'
+export type Module = 'overview' | 'cases' | 'users' | 'appeals' | 'therapists' | 'billing' | 'moderation' | 'analytics' | 'resources' | 'configuration' | 'roles' | 'wellbeing' | 'feedback' | 'groups' | 'events' | 'episodes' | 'audit'
 
 export const MODULES: { key: Module; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -19,6 +19,7 @@ export const MODULES: { key: Module; label: string }[] = [
   { key: 'feedback', label: 'Feedback' },
   { key: 'groups', label: 'Group chats' },
   { key: 'events', label: 'Events' },
+  { key: 'episodes', label: 'Episodes' },
   { key: 'configuration', label: 'Config' },
   { key: 'roles', label: 'Roles' },
   { key: 'wellbeing', label: 'Wellbeing' },
@@ -27,9 +28,9 @@ export const MODULES: { key: Module; label: string }[] = [
 
 const ACCESS: Record<StaffRole, Module[]> = {
   moderator: ['overview', 'cases', 'users', 'moderation', 'appeals', 'analytics', 'resources', 'wellbeing', 'groups'],
-  clinical: ['overview', 'cases', 'appeals', 'therapists', 'analytics', 'resources', 'wellbeing', 'groups', 'events', 'audit'],
+  clinical: ['overview', 'cases', 'appeals', 'therapists', 'analytics', 'resources', 'wellbeing', 'groups', 'events', 'episodes', 'audit'],
   billing: ['overview', 'users', 'billing', 'analytics', 'resources', 'feedback'],
-  admin: ['overview', 'cases', 'users', 'moderation', 'appeals', 'therapists', 'billing', 'analytics', 'resources', 'feedback', 'groups', 'events', 'configuration', 'roles', 'wellbeing', 'audit'],
+  admin: ['overview', 'cases', 'users', 'moderation', 'appeals', 'therapists', 'billing', 'analytics', 'resources', 'feedback', 'groups', 'events', 'episodes', 'configuration', 'roles', 'wellbeing', 'audit'],
 }
 
 export const canAccess = (role: StaffRole, module: Module): boolean => ACCESS[role].includes(module)

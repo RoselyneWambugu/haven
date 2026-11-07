@@ -923,3 +923,38 @@ export interface RotaWeek {
 
 /** Where to go after signing in: signed in, or on to the next registration step. 'redirecting' means the browser page is leaving for Google. */
 export type SignInNext = 'trust-device' | 'consent' | 'register' | 'apply' | 'reauth-ok' | 'linked' | 'portal' | 'admin' | 'mobile-app' | 'redirecting'
+
+// ---------- watch (podcast video episodes) ----------
+
+/** A published episode, as a member sees it. */
+export interface Episode {
+  id: string
+  title: string
+  blurb: string
+  durationSec: number | null
+  publishedAt: number
+  /** A short-lived picture link. Null when the episode has no picture. */
+  posterUrl: string | null
+}
+
+/** What a member needs to play one episode. The video link stops working after a couple of hours. */
+export interface EpisodePlay {
+  title: string
+  blurb: string
+  durationSec: number | null
+  videoUrl: string
+  posterUrl: string | null
+}
+
+/** An episode as staff see it, published or not. */
+export interface StaffEpisode {
+  id: string
+  title: string
+  blurb: string
+  status: 'draft' | 'published'
+  durationSec: number | null
+  sizeBytes: number | null
+  publishedAt: number | null
+  createdBy: string
+  createdAt: number
+}
