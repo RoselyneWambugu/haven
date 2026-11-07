@@ -146,3 +146,42 @@ describe('a session whose bell is off', () => {
     expect(withoutMuted([a, b], [])).toHaveLength(2)
   })
 })
+
+import { fromEat } from '../src/lib/time'
+describe('the notification settings on alarms', () => {
+  it('neutral notifications hide the title and the text on the lock screen', () => {
+    const plan = planAlarms(items([session('a', 120)]), T, { hideTextOnLockScreen: false, neutralNotifications: true })
+    expect(plan.length).toBe(2)
+    for (const a of plan) {
+      expect(a.title).toBe('You have a new update')
+      expect(a.body).toBe('Open the app to see it.')
+    }
+  })
+  it('without neutral notifications the alarm says what it is', () => {
+    const plan = planAlarms(items([session('a', 120)]), T, { hideTextOnLockScreen: false, neutralNotifications: false })
+    expect(plan[0].title).toBe('Coming up in an hour')
+  })
+  describe('quiet hours', () => {
+    // An event at 06:30 EAT: its hour-before heads-up would be at 05:30, in quiet hours.
+    const start = fromEat(2026, 9, 21, 6, 30)
+    const before = start - 3 * 3600_000
+    const ev = (startAt: number): AlarmItem => ({ id: 'e:1', kind: 'event', start: startAt, who: 'Grief walk', route: '/events/1' })
+    it('hold an event heads-up until 7am, or drop it when the event starts first', () => {
+      expect(planAlarms([ev(start)], before, { hideTextOnLockScreen: false, quietHours: true })).toEqual([])
+      const later = fromEat(2026, 9, 21, 9, 0)
+      const held = planAlarms([ev(later)], before, { hideTextOnLockScreen: false, quietHours: true })
+      expect(held).toHaveLength(1)
+      expect(held[0].at).toBe(fromEat(2026, 9, 21, 8, 0)) // an hour before 9:00 is outside quiet hours, so it is left alone
+      const tight = planAlarms([ev(fromEat(2026, 9, 21, 7, 30))], before, { hideTextOnLockScreen: false, quietHours: true })
+      expect(tight[0].at).toBe(fromEat(2026, 9, 21, 7, 0)) // 6:30 is quiet, so it moves to 7:00
+    })
+    it('leave an event alone when quiet hours are off', () => {
+      expect(planAlarms([ev(start)], before, { hideTextOnLockScreen: false, quietHours: false })[0].at).toBe(start - 3600_000)
+    })
+    it('never silence a booked session or group chat', () => {
+      const s: AlarmItem = { id: 's:1', kind: 'session', start, who: 'Dr. Amina', route: '/sessions/1' }
+      const plan = planAlarms([s], before, { hideTextOnLockScreen: false, quietHours: true })
+      expect(plan.map((a) => a.at)).toEqual([start - 3600_000, start - 600_000])
+    })
+  })
+})

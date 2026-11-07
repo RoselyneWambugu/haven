@@ -34,7 +34,7 @@ export default function Notifications() {
       {REMOTE ? <ToggleRow testID="sms-reminders" label="Text reminders" sub="One text an hour before a session. It says nothing about who it is with. Standard SMS rates may apply." on={s.smsReminders} onChange={(v) => set({ smsReminders: v })} /> : null}
       <ToggleRow label="Community replies" on={s.notifyForum} onChange={(v) => set({ notifyForum: v })} />
       <ToggleRow label="Plan and payment" on={s.notifyPlan} onChange={(v) => set({ notifyPlan: v })} />
-      <ToggleRow label="Quiet hours" sub="No notifications from 10pm to 7am" on={s.quietHours} onChange={(v) => set({ quietHours: v })} />
+      <ToggleRow label="Quiet hours" sub="Nothing from 10pm to 7am, except alarms for sessions and group chats you booked, and safety and account notices" on={s.quietHours} onChange={(v) => set({ quietHours: v })} />
       <Text variant="h3">Privacy on your lock screen</Text>
       <ToggleRow label="Hide message text" on={s.hideTextOnLockScreen} onChange={(v) => set({ hideTextOnLockScreen: v })} />
       <ToggleRow label="Neutral notifications" sub="Shows “You have a new update” instead of mentioning Echo" on={s.neutralNotifications} onChange={(v) => set({ neutralNotifications: v })} />

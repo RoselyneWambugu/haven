@@ -39,6 +39,8 @@ export function SessionAlarmHost() {
   const therapistIn = useDb((s) => s.portal?.signedIn === true)
   const remind = useDb((s) => s.account?.settings.notifySessions ?? true)
   const hide = useDb((s) => s.account?.settings.hideTextOnLockScreen ?? true)
+  const neutral = useDb((s) => s.account?.settings.neutralNotifications ?? true)
+  const quiet = useDb((s) => s.account?.settings.quietHours ?? true)
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set())
   const shown = useRef<string | null>(null)
 
@@ -63,9 +65,9 @@ export function SessionAlarmHost() {
   const on = memberIn || therapistIn
 
   // Out of the app: give the phone the plan. A change in what is booked, or in the settings, replaces the old plan.
-  const planKey = useMemo(() => JSON.stringify(on ? planAlarms(items, t, { hideTextOnLockScreen: hide }).map((a) => [a.id, a.at, a.body]) : []), [on, items, hide, t])
+  const planKey = useMemo(() => JSON.stringify(on ? planAlarms(items, t, { hideTextOnLockScreen: hide, neutralNotifications: neutral, quietHours: quiet }).map((a) => [a.id, a.at, a.body]) : []), [on, items, hide, neutral, quiet, t])
   useEffect(() => {
-    const plan = on ? planAlarms(items, t, { hideTextOnLockScreen: hide }) : []
+    const plan = on ? planAlarms(items, t, { hideTextOnLockScreen: hide, neutralNotifications: neutral, quietHours: quiet }) : []
     void (async () => {
       // The first time there is something to be alarmed about, ask the phone once. After that the person decides in Settings.
       if (plan.length > 0 && Platform.OS !== 'web' && !asked) {

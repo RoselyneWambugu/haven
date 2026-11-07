@@ -1,5 +1,6 @@
 import type { CommunityEvent, GroupChat, PortalSession, Session, Settings } from '@/api/types'
 import { isLive } from './events'
+import { inQuietHours, quietEnds } from './notifications'
 
 const MIN = 60_000
 
@@ -59,17 +60,25 @@ const words = (leadMin: number): string => (leadMin >= 60 ? `${leadMin / 60 === 
  * The alarms to hand to the phone: one per lead time per item, for those still in the future. The phone fires them even when Echo is closed.
  * When the member hides text on the lock screen, the alarm says only that something is starting, not who it is with.
  */
-export function planAlarms(items: AlarmItem[], t: number, settings: Pick<Settings, 'hideTextOnLockScreen'>, horizonMs = 14 * 24 * 60 * MIN): PlannedAlarm[] {
+export function planAlarms(items: AlarmItem[], t: number, settings: Pick<Settings, 'hideTextOnLockScreen'> & Partial<Pick<Settings, 'neutralNotifications' | 'quietHours'>>, horizonMs = 14 * 24 * 60 * MIN): PlannedAlarm[] {
   const out: PlannedAlarm[] = []
   for (const it of items) {
     // An event gets one reminder, an hour before. A session or a group chat gets two.
     for (const lead of it.kind === 'event' ? [60 * MIN] : ALARM_LEADS) {
-      const at = it.start - lead
+      let at = it.start - lead
       if (at <= t || at > t + horizonMs) continue
+      // An event heads-up isn't urgent, so quiet hours hold it until 7am, or drop it if the event would already have started.
+      // A session or group chat alarm still rings, so nobody misses something they booked.
+      if (it.kind === 'event' && settings.quietHours && inQuietHours(at)) {
+        at = quietEnds(at)
+        if (at >= it.start) continue
+      }
       const leadMin = lead / MIN
       const what = it.kind === 'group' ? 'Your group chat' : it.kind === 'client' ? 'Your session' : 'Your session'
-      const title = lead <= 10 * MIN ? 'Time to get ready' : it.kind === 'event' ? 'An event is coming up' : 'Coming up in an hour'
-      const body = settings.hideTextOnLockScreen
+      const title = settings.neutralNotifications ? 'You have a new update' : lead <= 10 * MIN ? 'Time to get ready' : it.kind === 'event' ? 'An event is coming up' : 'Coming up in an hour'
+      const body = settings.neutralNotifications
+        ? 'Open the app to see it.'
+        : settings.hideTextOnLockScreen
         ? `Something is starting in ${words(leadMin)}. Open Echo.`
         : it.kind === 'event'
           ? `${it.who} starts in ${words(leadMin)}.`
