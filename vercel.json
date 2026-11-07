@@ -2,5 +2,21 @@
   "installCommand": "cd mobile && npm install",
   "buildCommand": "cd mobile && npx expo export --platform web",
   "outputDirectory": "mobile/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
 }

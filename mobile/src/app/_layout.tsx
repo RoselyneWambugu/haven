@@ -133,7 +133,10 @@ export default function RootLayout() {
   useEffect(() => {
     // With the mock backend the browser tests can drive it directly. The real service is never exposed this way.
     if (Platform.OS === 'web' && !REMOTE) (globalThis as { __echo?: typeof api }).__echo = api
-    loadDb().then(() => (REMOTE ? restoreSession().catch(() => undefined) : undefined)).then(() => {
+    // Without internet the saved account and chats still open: waiting for the live service is cut off after a few seconds and carries on in the background.
+    const patient = (p: Promise<unknown>) => Promise.race([p.catch(() => undefined), new Promise((r) => setTimeout(r, 3500))])
+    if (Platform.OS === 'web' && 'serviceWorker' in navigator && !__DEV__) void navigator.serviceWorker.register('/sw.js').catch(() => undefined)
+    loadDb().then(() => (REMOTE ? patient(restoreSession()) : undefined)).then(() => {
       resumeBackground()
       setReady(true)
     })
