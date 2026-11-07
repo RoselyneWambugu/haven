@@ -9,11 +9,13 @@ import { Panel } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { REMOTE } from '@/backend/client'
+import { ApplyProgress } from '@/components/ApplyProgress'
 import { RemoteApply } from '@/components/RemoteApply'
+import { normaliseKenyanPhone } from '@/lib/identity'
 import { useDb } from '@/store/db'
-import { colors } from '@/theme'
 
-const STEPS = ['Submitted', 'Under review', 'Decision'] as const
+/** The code the demo shows on screen, since no text is really sent. */
+const DEMO_CODE = '135790'
 
 /** Application and verification (PRD THR-1, THR-2). Documents are for reviewers only. The profile is public, and consent says so. */
 export default function Apply() {
@@ -29,24 +31,19 @@ function MockApply() {
   const [name, setName] = useState('')
   const [licence, setLicence] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // Step 1: the phone number the therapist will sign in with. The demo sends no real text; it shows the code.
+  const [phone, setPhone] = useState('')
+  const [code, setCode] = useState('')
+  const [sent, setSent] = useState(false)
+  const [verified, setVerified] = useState(false)
   const toggle = (d: string) => setDocs((x) => (x.includes(d) ? x.filter((y) => y !== d) : [...x, d]))
 
   if (app !== 'none') {
-    const stepIndex = app === 'submitted' ? 1 : app === 'more-info' ? 1 : 2
     return (
       <View testID="apply-status" style={{ flex: 1, alignItems: 'center', padding: 24 }}>
         <View style={{ width: '100%', maxWidth: 560, gap: 16 }}>
           <Text variant="title">Application status</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {STEPS.map((s, i) => (
-              <View key={s} style={{ flex: 1, gap: 6 }}>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: i <= stepIndex ? colors.moss : colors.lichenDeep }} />
-                <Text variant="caption" bold={i === stepIndex}>
-                  {s}
-                </Text>
-              </View>
-            ))}
-          </View>
+          <ApplyProgress step={app === 'submitted' || app === 'more-info' ? 3 : 4} />
           {app === 'submitted' ? (
             <Banner tone="green" icon="clock" title="Under review">
               The clinical team is checking your licence with the regulator. Typical review time: ___ working days (placeholder).
@@ -72,6 +69,49 @@ function MockApply() {
     )
   }
 
+  function sendCode() {
+    if (!normaliseKenyanPhone(phone)) return setError('Enter a Kenyan mobile number, like 0712 345 678.')
+    setError(null)
+    setSent(true)
+  }
+  function verifyCode() {
+    if (code !== DEMO_CODE) return setError('That code doesn’t match.')
+    setError(null)
+    setVerified(true)
+  }
+
+  if (!verified) {
+    return (
+      <View testID="apply-signin" style={{ flex: 1, alignItems: 'center', padding: 24 }}>
+        <View style={{ width: '100%', maxWidth: 520, gap: 16 }}>
+          <ApplyProgress step={1} />
+          <Text variant="title">Apply to join Echo</Text>
+          <Text variant="body" muted>
+            Echo is for licensed therapists. Start by confirming your phone number. It is the number you will use to sign in to the portal.
+          </Text>
+          <Panel>
+            {sent ? (
+              <>
+                <Banner tone="sun" icon="lock" title="Demo code">
+                  {DEMO_CODE}
+                </Banner>
+                <Field testID="apply-code" label="Code" value={code} onChangeText={(v) => { setCode(v.replace(/\D/g, '').slice(0, 6)); setError(null) }} keyboardType="number-pad" maxLength={6} error={error} />
+                <Button testID="apply-verify" label="Continue" disabled={code.length < 6} onPress={verifyCode} />
+                <Button variant="ghost" label="Use a different number" onPress={() => { setSent(false); setCode(''); setError(null) }} />
+              </>
+            ) : (
+              <>
+                <Field testID="apply-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={(v) => { setPhone(v); setError(null) }} keyboardType="phone-pad" error={error} />
+                <Button testID="apply-send-code" label="Send code" onPress={sendCode} />
+              </>
+            )}
+          </Panel>
+          <Button variant="ghost" label="Back" onPress={() => router.replace('/portal/sign-in' as never)} />
+        </View>
+      </View>
+    )
+  }
+
   function submit() {
     if (!name.trim() || !licence.trim()) return setError('Add your name and licence number.')
     if (!docs.includes('licence') || !docs.includes('id') || !docs.includes('qualification')) return setError('Add your licence, national ID and qualification certificate.')
@@ -82,9 +122,7 @@ function MockApply() {
   return (
     <View testID="apply" style={{ flex: 1, alignItems: 'center' }}>
       <View style={{ width: '100%', maxWidth: 560, padding: 24, gap: 16 }}>
-        <Text variant="caption" muted>
-          Step 2 of 4
-        </Text>
+        <ApplyProgress step={2} />
         <Text variant="title">Professional details and documents</Text>
         <Field testID="apply-name" label="Full name (shown publicly)" value={name} onChangeText={setName} />
         <Text variant="small" muted>

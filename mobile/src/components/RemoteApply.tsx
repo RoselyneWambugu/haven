@@ -10,11 +10,9 @@ import { Text } from '@/components/Text'
 import { applicantRequestOtp, applicantVerifyOtp, openPortalAfterApproval, parseExpiry, refreshApplication, submitApplication } from '@/backend/remoteApplication'
 import { supabase } from '@/backend/client'
 import { normaliseKenyanPhone } from '@/lib/identity'
+import { ApplyProgress } from '@/components/ApplyProgress'
 import { DocumentUpload } from '@/components/DocumentUpload'
 import { useDb } from '@/store/db'
-import { colors } from '@/theme'
-
-const STEPS = ['Submitted', 'Under review', 'Decision'] as const
 
 /** Applying to join Echo as a therapist, on the real backend: sign in with a phone, send the details, and follow the decision. */
 export function RemoteApply() {
@@ -76,6 +74,7 @@ export function RemoteApply() {
     return (
       <View testID="apply-signin" style={{ flex: 1, alignItems: 'center', padding: 24 }}>
         <View style={{ width: '100%', maxWidth: 520, gap: 16 }}>
+          <ApplyProgress step={1} />
           <Text variant="title">Apply to join Echo</Text>
           <Text variant="body" muted>
             Echo is for licensed therapists. Start by confirming your phone number. It is the number you will use to sign in to the portal.
@@ -102,21 +101,11 @@ export function RemoteApply() {
 
   const status = app?.status ?? 'none'
   if (status !== 'none' && !editing) {
-    const stepIndex = status === 'pending' || status === 'info' ? 1 : 2
     return (
       <View testID="apply-status" style={{ flex: 1, alignItems: 'center', padding: 24 }}>
         <View style={{ width: '100%', maxWidth: 560, gap: 16 }}>
           <Text variant="title">Application status</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {STEPS.map((s, i) => (
-              <View key={s} style={{ flex: 1, gap: 6 }}>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: i <= stepIndex ? colors.moss : colors.lichenDeep }} />
-                <Text variant="caption" bold={i === stepIndex}>
-                  {s}
-                </Text>
-              </View>
-            ))}
-          </View>
+          <ApplyProgress step={status === 'pending' || status === 'info' ? 3 : 4} />
           {status === 'pending' ? (
             <Banner tone="green" icon="clock" title="Under review">
               The clinical team is checking your licence with the regulator. We will show the decision here.
@@ -152,6 +141,7 @@ export function RemoteApply() {
   return (
     <View testID="apply" style={{ flex: 1, alignItems: 'center' }}>
       <View style={{ width: '100%', maxWidth: 560, padding: 24, gap: 16 }}>
+        <ApplyProgress step={2} />
         <Text variant="title">Professional details</Text>
         <Field testID="apply-name" label="Full name (shown publicly)" value={name} onChangeText={setName} />
         <Field testID="apply-title" label="Title, for example Counsellor or Psychologist" value={title} onChangeText={setTitle} />
