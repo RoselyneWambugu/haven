@@ -7,13 +7,15 @@ import { Icon, type IconName } from '@/components/Icon'
 import { Screen, TopBar } from '@/components/Layout'
 import { Text } from '@/components/Text'
 import { THERAPISTS } from '@/data/seed'
+import { LiveCall } from '@/components/LiveCall'
+import { REMOTE } from '@/backend/client'
 import { replace } from '@/lib/nav'
 import { useDb } from '@/store/db'
 import { colors } from '@/theme'
 
 /**
- * A simulated voice or video call, so the flow can be tried without a real connection.
- * Real audio and video need a provider (open decision), and nothing is recorded.
+ * A voice or video session. On the real backend it opens a private Daily room (see call-join). In the demo it is simulated, so the flow can
+ * be tried without a connection. Nothing is ever recorded.
  */
 export default function Call() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -54,9 +56,9 @@ export default function Call() {
       scroll={false}
       footer={
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 18 }}>
-          {ctl(muted ? 'micoff' : 'mic', muted ? 'Unmute' : 'Mute', muted, () => setMuted((v) => !v), 'call-mute')}
-          {video ? ctl(camOff ? 'videooff' : 'video', camOff ? 'Turn camera on' : 'Turn camera off', camOff, () => setCamOff((v) => !v), 'call-camera') : null}
-          {ctl('spk', 'Speaker', speaker, () => setSpeaker((v) => !v), 'call-speaker')}
+          {REMOTE ? null : ctl(muted ? 'micoff' : 'mic', muted ? 'Unmute' : 'Mute', muted, () => setMuted((v) => !v), 'call-mute')}
+          {REMOTE ? null : video ? ctl(camOff ? 'videooff' : 'video', camOff ? 'Turn camera on' : 'Turn camera off', camOff, () => setCamOff((v) => !v), 'call-camera') : null}
+          {REMOTE ? null : ctl('spk', 'Speaker', speaker, () => setSpeaker((v) => !v), 'call-speaker')}
           <Pressable
             testID="call-end"
             accessibilityRole="button"
@@ -72,6 +74,14 @@ export default function Call() {
         </View>
       }
     >
+      {REMOTE ? (
+        <View style={{ flex: 1, gap: 10 }}>
+          <Text variant="h3" color={colors.paper} align="center">
+            {t.name}
+          </Text>
+          <LiveCall sessionId={s.id} mode={s.mode} />
+        </View>
+      ) : (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
         <View style={{ width: 240, height: 240, alignItems: 'center', justifyContent: 'center' }}>
           {connected ? <Ripple size={150} color="rgba(221,231,203,0.5)" /> : null}
@@ -87,6 +97,7 @@ export default function Call() {
           Demo call. No audio or video is sent or recorded.
         </Text>
       </View>
+      )}
     </Screen>
   )
 }

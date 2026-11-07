@@ -10,6 +10,8 @@ import { Panel, useWide } from '@/components/Portal'
 import { Text } from '@/components/Text'
 import { api } from '@/api'
 import { go, goBack } from '@/lib/nav'
+import { LiveCall } from '@/components/LiveCall'
+import { REMOTE } from '@/backend/client'
 import { useDb } from '@/store/db'
 import type { Mode } from '@/api'
 import { colors } from '@/theme'
@@ -19,7 +21,7 @@ const STEP_DOWN: Record<Mode, Mode> = { video: 'voice', voice: 'chat', chat: 'ch
 
 /**
  * The live session: the call on one side, private notes on the other. Notes autosave and only the therapist sees them (THR-17).
- * "Not recorded" and "Raise a concern" stay visible. The call is simulated.
+ * "Not recorded" and "Raise a concern" stay visible. On the real backend a voice or video session is a real private call (see call-join); in the demo it is simulated.
  */
 export default function LiveSession() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -78,17 +80,23 @@ export default function LiveSession() {
             {mm}:{ss}
           </Text>
         </View>
-        <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center' }}>
-          <Ripple size={140} color="rgba(221,231,203,0.5)" />
-          <Avatar kind={s.clientAvatar} size={96} />
-        </View>
-        <Text variant="small" color={colors.lichen} align="center">
-          {mode === 'video' ? 'Camera off · pen name and avatar shown' : mode === 'voice' ? 'Voice call' : 'Chat session'}
-        </Text>
+        {REMOTE && s.mode !== 'chat' ? (
+          <LiveCall sessionId={s.id} mode={s.mode} />
+        ) : (
+          <>
+            <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center' }}>
+              <Ripple size={140} color="rgba(221,231,203,0.5)" />
+              <Avatar kind={s.clientAvatar} size={96} />
+            </View>
+            <Text variant="small" color={colors.lichen} align="center">
+              {mode === 'video' ? 'Camera off · pen name and avatar shown' : mode === 'voice' ? 'Voice call' : 'Chat session'}
+            </Text>
+          </>
+        )}
         <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-          {ctl(muted ? 'micoff' : 'mic', muted ? 'Unmute' : 'Mute', muted, () => setMuted((v) => !v), 'live-mute')}
-          {mode === 'video' ? ctl(cam ? 'video' : 'videooff', cam ? 'Turn camera off' : 'Turn camera on', !cam, () => setCam((v) => !v), 'live-camera') : null}
-          {mode !== 'chat' ? ctl('chats', `Switch to ${MODE_LABEL[STEP_DOWN[mode]].toLowerCase()}`, false, () => setMode(STEP_DOWN[mode]), 'live-switch') : null}
+          {REMOTE ? null : ctl(muted ? 'micoff' : 'mic', muted ? 'Unmute' : 'Mute', muted, () => setMuted((v) => !v), 'live-mute')}
+          {REMOTE ? null : mode === 'video' ? ctl(cam ? 'video' : 'videooff', cam ? 'Turn camera off' : 'Turn camera on', !cam, () => setCam((v) => !v), 'live-camera') : null}
+          {REMOTE ? null : mode !== 'chat' ? ctl('chats', `Switch to ${MODE_LABEL[STEP_DOWN[mode]].toLowerCase()}`, false, () => setMode(STEP_DOWN[mode]), 'live-switch') : null}
           <Pressable testID="live-end" accessibilityRole="button" accessibilityLabel="End session" onPress={() => go(`/portal/wrap-up/${s.id}`)} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.clay, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="end" size={22} color={colors.white} />
           </Pressable>
