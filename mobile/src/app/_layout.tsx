@@ -13,6 +13,7 @@ import { AtkinsonHyperlegibleNext_600SemiBold } from '@expo-google-fonts/atkinso
 import { AtkinsonHyperlegibleNext_700Bold } from '@expo-google-fonts/atkinson-hyperlegible-next/700Bold'
 import { api, resumeBackground } from '@/api'
 import { SecurityAlert } from '@/components/SecurityAlert'
+import { HelpFab } from '@/components/HelpFab'
 import { ToastHost } from '@/components/ToastHost'
 import { REMOTE } from '@/backend/client'
 import { restoreSession } from '@/backend/remoteAuth'
@@ -153,6 +154,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <Shell>
         <Gate />
+        <HelpFab />
         <Notifier />
         <SessionAlarmHost />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper }, animation: 'fade' }} />

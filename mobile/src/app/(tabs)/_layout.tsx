@@ -9,7 +9,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="forum" />
       <Tabs.Screen name="watch" />
       <Tabs.Screen name="therapists" />
-      <Tabs.Screen name="help" />
     </Tabs>
   )
 }

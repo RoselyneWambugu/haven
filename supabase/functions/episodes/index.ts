@@ -37,11 +37,11 @@ Deno.serve(async (req) => {
   }
 
   if (body.action === 'play' && body.id) {
-    const r = (await asUser.rpc('episode_access', { p_id: body.id })).data as { ok: boolean; code?: string; error?: string; title?: string; blurb?: string; video_path?: string; poster_path?: string | null; duration_sec?: number | null } | null
+    const r = (await asUser.rpc('episode_access', { p_id: body.id })).data as { ok: boolean; code?: string; error?: string; title?: string; blurb?: string; video_path?: string; poster_path?: string | null; duration_sec?: number | null; likes?: number; comments?: number; my_reaction?: number } | null
     if (!r?.ok) return reply({ ok: false, code: r?.code ?? 'gone', error: r?.error ?? 'That episode isn’t available.' })
     const video_url = await sign(r.video_path, 2 * HOURS)
     if (!video_url) return reply({ ok: false, code: 'file', error: 'We couldn’t open the video. Try again in a moment.' })
-    return reply({ ok: true, title: r.title, blurb: r.blurb, duration_sec: r.duration_sec ?? null, video_url, poster_url: await sign(r.poster_path, 2 * HOURS) })
+    return reply({ ok: true, title: r.title, blurb: r.blurb, duration_sec: r.duration_sec ?? null, likes: r.likes ?? 0, comments: r.comments ?? 0, my_reaction: r.my_reaction ?? 0, video_url, poster_url: await sign(r.poster_path, 2 * HOURS) })
   }
 
   return reply({ ok: false, code: 'action', error: 'Nothing to do.' })

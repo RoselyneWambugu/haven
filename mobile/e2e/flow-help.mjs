@@ -47,7 +47,7 @@ await step('register', async () => {
   await tid('home').waitFor()
 })
 await step('help-search-and-article', async () => {
-  await tid('tab-help').click()
+  await tid('open-help').click()
   await tid('help').waitFor()
   await shot('42-help')
   await tid('help-search').fill('refund')

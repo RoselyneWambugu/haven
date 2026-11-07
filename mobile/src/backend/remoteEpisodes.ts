@@ -1,5 +1,5 @@
 import { episodes as mockEpisodes, type NewEpisode } from '@/api/episodes'
-import type { Episode, EpisodePlay, Res, StaffEpisode } from '@/api/types'
+import type { Episode, EpisodeComment, EpisodePlay, ReportReason, Res, StaffEpisode, AvatarKind } from '@/api/types'
 import { supabase } from './client'
 
 const OFFLINE = 'We couldn’t reach Echo. Check your connection and try again.'
@@ -58,25 +58,51 @@ export const remoteEpisodes = {
   ...mockEpisodes,
 
   async list(): Promise<Res<Episode[]>> {
-    const d = await asMember<{ episodes?: { id: string; title: string; blurb: string; duration_sec: number | null; published_at: number; poster_url: string | null }[] }>({ action: 'list' })
+    const d = await asMember<{ episodes?: { id: string; title: string; blurb: string; duration_sec: number | null; published_at: number; poster_url: string | null; likes?: number; comments?: number; my_reaction?: number }[] }>({ action: 'list' })
     if (!d) return { ok: false, error: OFFLINE, code: 'network' }
     if (!d.ok) return { ok: false, error: d.error ?? OFFLINE, code: d.code }
-    return { ok: true, value: (d.episodes ?? []).map((e) => ({ id: e.id, title: e.title, blurb: e.blurb, durationSec: e.duration_sec, publishedAt: e.published_at, posterUrl: e.poster_url })) }
+    return { ok: true, value: (d.episodes ?? []).map((e) => ({ id: e.id, title: e.title, blurb: e.blurb, durationSec: e.duration_sec, publishedAt: e.published_at, posterUrl: e.poster_url, likes: e.likes ?? 0, comments: e.comments ?? 0, myReaction: (e.my_reaction ?? 0) as -1 | 0 | 1 })) }
   },
 
   async play(id: string): Promise<Res<EpisodePlay>> {
-    const d = await asMember<{ title?: string; blurb?: string; duration_sec?: number | null; video_url?: string; poster_url?: string | null }>({ action: 'play', id })
+    const d = await asMember<{ title?: string; blurb?: string; duration_sec?: number | null; video_url?: string; poster_url?: string | null; likes?: number; comments?: number; my_reaction?: number }>({ action: 'play', id })
     if (!d) return { ok: false, error: OFFLINE, code: 'network' }
     if (!d.ok || !d.video_url) return { ok: false, error: d.error ?? 'That episode isn’t available.', code: d.code }
-    return { ok: true, value: { title: d.title ?? '', blurb: d.blurb ?? '', durationSec: d.duration_sec ?? null, videoUrl: d.video_url, posterUrl: d.poster_url ?? null } }
+    return { ok: true, value: { title: d.title ?? '', blurb: d.blurb ?? '', durationSec: d.duration_sec ?? null, videoUrl: d.video_url, posterUrl: d.poster_url ?? null, likes: d.likes ?? 0, comments: d.comments ?? 0, myReaction: (d.my_reaction ?? 0) as -1 | 0 | 1 } }
+  },
+
+  async react(id: string, value: -1 | 0 | 1): Promise<Res<{ likes: number; myReaction: -1 | 0 | 1 }>> {
+    const r = await rpc<Reply & { likes?: number; my_reaction?: number }>('episode_react', { p_id: id, p_value: value })
+    return r.ok ? { ok: true, value: { likes: r.likes ?? 0, myReaction: (r.my_reaction ?? 0) as -1 | 0 | 1 } } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+
+  async comments(id: string): Promise<Res<EpisodeComment[]>> {
+    const r = await rpc<Reply & { comments?: { id: string; author_name: string; author_avatar: AvatarKind; author_key: string; text: string; at: number; mine: boolean }[] }>('episode_comments', { p_id: id })
+    if (!r.ok) return { ok: false, error: r.error ?? OFFLINE, code: r.code }
+    return { ok: true, value: (r.comments ?? []).map((c) => ({ id: c.id, authorName: c.author_name, authorAvatar: c.author_avatar, authorKey: c.author_key, text: c.text, at: c.at, mine: c.mine })) }
+  },
+
+  async addComment(id: string, text: string): Promise<Res<void>> {
+    const r = await rpc('episode_comment_add', { p_id: id, p_text: text })
+    return r.ok ? { ok: true, value: undefined } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+
+  async removeComment(commentId: string): Promise<Res<void>> {
+    const r = await rpc('episode_comment_remove_own', { p_comment: commentId })
+    return r.ok ? { ok: true, value: undefined } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
+  },
+
+  async reportComment(commentId: string, reason: ReportReason): Promise<Res<void>> {
+    const r = await rpc('episode_comment_report', { p_comment: commentId, p_reason: reason, p_note: '' })
+    return r.ok ? { ok: true, value: undefined } : { ok: false, error: r.error ?? OFFLINE, code: r.code }
   },
 
   async staffList(): Promise<Res<StaffEpisode[]>> {
-    const d = await rpc<Reply & { episodes?: { id: string; title: string; blurb: string; status: 'draft' | 'published'; duration_sec: number | null; size_bytes: number | null; published_at: number | null; created_by: string; created_at: number }[] }>('admin_episodes')
+    const d = await rpc<Reply & { episodes?: { id: string; title: string; blurb: string; status: 'draft' | 'published'; duration_sec: number | null; size_bytes: number | null; published_at: number | null; created_by: string; created_at: number; likes?: number; dislikes?: number; comments?: number }[] }>('admin_episodes')
     if (!d.ok) return { ok: false, error: d.error ?? OFFLINE, code: d.code }
     return {
       ok: true,
-      value: (d.episodes ?? []).map((e) => ({ id: e.id, title: e.title, blurb: e.blurb, status: e.status, durationSec: e.duration_sec, sizeBytes: e.size_bytes, publishedAt: e.published_at, createdBy: e.created_by, createdAt: e.created_at })),
+      value: (d.episodes ?? []).map((e) => ({ id: e.id, title: e.title, blurb: e.blurb, status: e.status, durationSec: e.duration_sec, sizeBytes: e.size_bytes, publishedAt: e.published_at, createdBy: e.created_by, createdAt: e.created_at, likes: e.likes ?? 0, dislikes: e.dislikes ?? 0, comments: e.comments ?? 0 })),
     }
   },
 

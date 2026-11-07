@@ -33,6 +33,17 @@ function Bell() {
   )
 }
 
+/** The Help icon: Help is no longer a tab, so it sits in the top bar of Home and floats at the bottom of every other page. */
+export function HelpIcon() {
+  const unread = useDb((s) => s.tickets.filter((x) => x.unread).length)
+  return (
+    <Pressable testID="open-help" accessibilityRole="button" accessibilityLabel={unread ? `Help, ${unread} new` : 'Help'} onPress={() => go('/help')} hitSlop={8} style={styles.iconBtn}>
+      <Icon name="help" size={22} color={colors.ink} />
+      {unread ? <View style={{ position: 'absolute', top: 6, right: 6, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.sun }} /> : null}
+    </Pressable>
+  )
+}
+
 export function TopBar({
   title, back, avatar, logo, urgent = false, dark, right, onBack,
 }: {
@@ -160,7 +171,6 @@ const TABS: Record<string, { label: string; icon: 'home' | 'chats' | 'forum' | '
   forum: { label: 'Community', icon: 'forum' },
   watch: { label: 'Watch', icon: 'video' },
   therapists: { label: 'Therapists', icon: 'heart' },
-  help: { label: 'Help', icon: 'help' },
 }
 
 export function TabBar({ state, navigateToTab, navigation }: TabBarProps) {
@@ -172,7 +182,6 @@ export function TabBar({ state, navigateToTab, navigation }: TabBarProps) {
   const t = useT()
   const insets = useSafeAreaInsets()
   const unreadChats = useDb((s) => s.conversations.reduce((n, c) => n + (c.archived ? 0 : c.unread), 0))
-  const unreadHelp = useDb((s) => s.tickets.filter((x) => x.unread).length)
   const sub = useDb((s) => s.sessions.filter((x) => x.status === 'booked').length)
   return (
     <View pointerEvents="box-none" style={[styles.dockWrap, { paddingBottom: Math.max(insets.bottom, 10) }]}>
@@ -181,7 +190,7 @@ export function TabBar({ state, navigateToTab, navigation }: TabBarProps) {
           const meta = TABS[r.name]
           if (!meta) return null
           const on = state.index === i
-          const badge = r.name === 'chats' ? unreadChats : r.name === 'help' ? unreadHelp : r.name === 'therapists' ? 0 : 0
+          const badge = r.name === 'chats' ? unreadChats : 0
           const label = t(meta.label)
           return (
             <Pressable

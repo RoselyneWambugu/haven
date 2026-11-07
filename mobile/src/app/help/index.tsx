@@ -22,7 +22,7 @@ export default function Help() {
   const popular = c.popular.map((id) => articles.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x)
   const searching = q.trim().length > 0
   return (
-    <Screen tab testID="help" header={<TopBar avatar />}>
+    <Screen testID="help" header={<TopBar back title="Help" />}>
       <Text variant="title">Help</Text>
       <Field testID="help-search" label="Search help" hideLabel placeholder="Search for an answer" value={q} onChangeText={setQ} />
       {searching ? (

@@ -63,7 +63,7 @@ export default function Watch() {
           <Text variant="h3">{latest.title}</Text>
           <Text variant="small" muted numberOfLines={3}>{latest.blurb}</Text>
           <Text variant="caption" muted>
-            {[durationLabel(latest.durationSec), relative(latest.publishedAt, now())].filter(Boolean).join(' · ')}
+            {[durationLabel(latest.durationSec), relative(latest.publishedAt, now()), `${latest.likes} likes`, `${latest.comments} comments`].filter(Boolean).join(' · ')}
           </Text>
         </Pressable>
       ) : null}
@@ -77,7 +77,7 @@ export default function Watch() {
               <View style={{ flex: 1, gap: 2 }}>
                 <Text variant="label" numberOfLines={2}>{e.title}</Text>
                 <Text variant="caption" muted>
-                  {[durationLabel(e.durationSec), relative(e.publishedAt, now())].filter(Boolean).join(' · ')}
+                  {[durationLabel(e.durationSec), relative(e.publishedAt, now()), `${e.likes} likes`].filter(Boolean).join(' · ')}
                 </Text>
               </View>
             </Pressable>

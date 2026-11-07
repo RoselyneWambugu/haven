@@ -115,7 +115,7 @@ export default function Episodes() {
               <Badge label={e.status === 'published' ? 'Published' : 'Draft'} tone={e.status === 'published' ? 'green' : 'plain'} />
             </View>
             <Text variant="small" muted>
-              {[durationLabel(e.durationSec), sizeLabel(e.sizeBytes), e.publishedAt ? `published ${dayLong(e.publishedAt)}` : `added ${dayLong(e.createdAt)}`, `by ${e.createdBy}`].filter(Boolean).join(' · ')}
+              {[durationLabel(e.durationSec), sizeLabel(e.sizeBytes), e.publishedAt ? `published ${dayLong(e.publishedAt)}` : `added ${dayLong(e.createdAt)}`, `by ${e.createdBy}`, `${e.likes} likes, ${e.dislikes} dislikes, ${e.comments} comments`].filter(Boolean).join(' · ')}
             </Text>
             {editing === e.id ? (
               <View style={{ gap: 8 }}>

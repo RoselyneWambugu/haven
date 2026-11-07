@@ -44,6 +44,8 @@ const P: Record<string, string[]> = {
   external: ['M14 4h6v6M20 4l-9 9M18 14v5H5V6h5'],
   copy: ['M9 9h10v11H9z', 'M5 15V4h10'],
   play: ['M8 5l11 7-11 7z'],
+  thumbup: ['M7 11v9H4v-9z', 'M7 11l4-7c1.5 0 2.5 1.2 2.2 2.7L12.7 9H19a2 2 0 0 1 2 2.4l-1.3 6.4A2 2 0 0 1 17.8 19H7'],
+  thumbdown: ['M7 13V4H4v9z', 'M7 13l4 7c1.5 0 2.5-1.2 2.2-2.7L12.7 15H19a2 2 0 0 0 2-2.4l-1.3-6.4A2 2 0 0 0 17.8 5H7'],
 }
 
 export type IconName = keyof typeof P | 'dots'

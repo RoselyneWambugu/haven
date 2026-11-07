@@ -4,7 +4,7 @@ import { Avatar, Face, type Mood } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge } from '@/components/Controls'
 import { Icon } from '@/components/Icon'
-import { Screen, TopBar } from '@/components/Layout'
+import { HelpIcon, Screen, TopBar } from '@/components/Layout'
 import { Banner, Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { now } from '@/lib/clock'
@@ -46,7 +46,7 @@ export default function Home() {
   const mood = account?.mood && now() - account.mood.at < 24 * 3600_000 ? account.mood.value : null
 
   return (
-    <Screen tab testID="home" header={<TopBar avatar urgent={false} />}>
+    <Screen tab testID="home" header={<TopBar avatar urgent={false} right={<HelpIcon />} />}>
       <View>
         <Text variant="title">
           {greeting()}, {account?.public.penName ?? ''}

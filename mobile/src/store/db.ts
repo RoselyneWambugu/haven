@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Account, Conversation, Device, CommunityEvent, FeedbackItem, PortalNote, ForumPost, GroupChat, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState } from '@/api/types'
+import type { Account, Conversation, Device, CommunityEvent, FeedbackItem, PortalNote, ForumPost, GroupChat, ReportRecord, MatchState, Peer, Session, Subscription, Ticket, CheckoutItem, PortalState, AdminState, ContentState, EpisodeComment } from '@/api/types'
 import { LIVE } from '@/data/config'
 import { defaultContent } from '@/data/content'
 import { seedEvents } from '@/data/events'
@@ -52,6 +52,8 @@ export interface DbState {
   posts: ForumPost[]
   hiddenPostIds: string[]
   mutedAuthors: string[]
+  /** The demo's Watch reactions and comments (the live service keeps these on the server). */
+  episodeSocial: { reactions: Record<string, -1 | 0 | 1>; comments: EpisodeComment[] }
   sessions: Session[]
   subscription: Subscription | null
   checkout: { id: string; item: CheckoutItem; amountKes: number | null; createdAt: number } | null
@@ -107,6 +109,7 @@ export function freshState(): DbState {
     posts: seedPosts(now()),
     hiddenPostIds: [],
     mutedAuthors: [],
+    episodeSocial: { reactions: {}, comments: [] },
     sessions: [],
     subscription: null,
     checkout: null,

@@ -49,6 +49,7 @@ export default function Me() {
         <Row icon="help" title="Help" onPress={() => go('/help')} />
         {!REMOTE ? <Row icon="rocket" title="Demo tools" sub="For reviewers" onPress={() => go('/demo')} /> : null}
         <Row icon="external" title="About Echo" onPress={() => go('/about')} />
+        <Row testID="me-delete-account" icon="trash" title="Delete account" sub="Remove your account and what goes with it" danger onPress={() => go('/settings/delete')} />
         <Row
           testID="sign-out"
           icon="back"

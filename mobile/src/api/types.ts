@@ -935,6 +935,11 @@ export interface Episode {
   publishedAt: number
   /** A short-lived picture link. Null when the episode has no picture. */
   posterUrl: string | null
+  /** How many members liked it. Dislikes are never shown to members. */
+  likes: number
+  comments: number
+  /** This member's own reaction: 1 like, -1 dislike, 0 none. */
+  myReaction: -1 | 0 | 1
 }
 
 /** What a member needs to play one episode. The video link stops working after a couple of hours. */
@@ -944,6 +949,21 @@ export interface EpisodePlay {
   durationSec: number | null
   videoUrl: string
   posterUrl: string | null
+  likes: number
+  comments: number
+  myReaction: -1 | 0 | 1
+}
+
+/** A comment under an episode. */
+export interface EpisodeComment {
+  id: string
+  authorName: string
+  authorAvatar: AvatarKind
+  /** An opaque key for the author ("me" for this member), so the pen name can be tapped for the light card. */
+  authorKey: string
+  text: string
+  at: number
+  mine: boolean
 }
 
 /** An episode as staff see it, published or not. */
@@ -957,4 +977,8 @@ export interface StaffEpisode {
   publishedAt: number | null
   createdBy: string
   createdAt: number
+  likes: number
+  /** Only staff see this. */
+  dislikes: number
+  comments: number
 }
