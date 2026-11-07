@@ -42,7 +42,7 @@ export default function Roles() {
   return (
     <PortalPage testID="admin-roles" title="Roles and permissions" sub="Who is on the team, what each role may do, and what it can see.">
       <Banner tone="green" icon="lock" title="Everyone signs in with a second factor">
-        {REMOTE ? 'Every action is written to the audit log. Changes to the team need a second Admin to approve (until there is a second Admin). You can’t change your own account.' : 'This can’t be turned off for any account (RBAC-2). Every action is written to the audit log. Changes to the team need a second Admin to approve.'}
+        {REMOTE ? 'After the usual sign-in, each person also enters the 6-digit code from their authenticator app, and the server refuses everything until they do. Every action is written to the audit log. Changes to the team need a second Admin to approve (until there is a second Admin). You can’t change your own account.' : 'This can’t be turned off for any account (RBAC-2). Every action is written to the audit log. Changes to the team need a second Admin to approve.'}
       </Banner>
       {error ? <Banner tone="clay">{error}</Banner> : null}
       {ok ? (

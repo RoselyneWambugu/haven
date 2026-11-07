@@ -57,6 +57,7 @@ function RealEmailLogin() {
     setBusy(false)
     if (!r.ok) {
       if (r.code === 'setup') return replace('/staff/sign-in?setup=1')
+      if (r.code === 'mfa') return replace('/staff/sign-in?mfa=1')
       return setError(r.error)
     }
     const next = r.value.next

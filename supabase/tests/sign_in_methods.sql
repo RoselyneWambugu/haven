@@ -7,14 +7,14 @@ declare
 begin
   insert into auth.users (id, instance_id, aud, role, phone, phone_confirmed_at, created_at, updated_at)
     values (a, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254713000051', now(), now(), now());
-  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Amina Wairimu', date '1996-06-06', null, 'RiverMoss', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
   r := public.my_account();
   if coalesce(r->'private'->>'email', '') <> '' then bad := array_append(bad, 'email should start empty'); end if;
   reset role;
   update auth.users set email = 'link.tester@example.com', email_confirmed_at = now() where id = a;
-  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.sync_sign_in_methods();
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, 'sync: ' || r::text); end if;
   r := public.my_account();

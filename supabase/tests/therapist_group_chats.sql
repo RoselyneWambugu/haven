@@ -18,12 +18,12 @@ begin
   update private.therapists set account_id = tuid where id = tid;
 
   -- a member can't schedule
-  perform set_config('request.jwt.claims', json_build_object('sub', muid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', muid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_schedule_group('Evenings that feel heavy', 'A calm hour to talk about long evenings.', st, 60, 10);
   if r->>'code' is distinct from 'not-therapist' then bad := bad || ('member: ' || r::text); end if;
 
   -- the therapist can
-  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   r := public.portal_schedule_group('Evenings that feel heavy', 'A calm hour to talk about long evenings.', st, 60, 10);
   if r->>'ok' is distinct from 'true' then bad := bad || ('schedule: ' || r::text); end if;
   gid := r->>'id';
@@ -55,7 +55,7 @@ begin
   reset role;
   insert into private.group_members (group_id, account_id) select gid, muid;
   insert into private.group_members (group_id, account_id) select gid, tuid;
-  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_edit_group(gid, 'Evenings that feel heavy', 'Now with a better description of the hour.', st, 45, 4);
   if r->>'ok' is distinct from 'true' then bad := bad || ('edit at count: ' || r::text); end if;
   r := public.portal_edit_group(gid, 'Evenings that feel heavy', 'Now with a better description of the hour.', st, 45, 4);
@@ -64,13 +64,13 @@ begin
   if n <> 2 then bad := bad || 'members kept'; end if;
 
   -- another therapist can't touch it
-  perform set_config('request.jwt.claims', json_build_object('sub', muid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', muid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_cancel_group(gid, 'Not mine to cancel');
   if r->>'ok' = 'true' then bad := bad || 'stranger cancelled'; end if;
   reset role;
 
   -- cancel: needs a reason, then works, then can't repeat
-  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_cancel_group(gid2, 'no');
   if r->>'code' is distinct from 'reason' then bad := bad || ('reason: ' || r::text); end if;
   r := public.portal_cancel_group(gid2, 'I am unwell that day');
@@ -82,7 +82,7 @@ begin
 
   -- a paused therapist can't schedule
   update private.therapists set paused = true where id = tid;
-  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', tuid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_schedule_group('Fifth quiet hour', 'A calm hour to talk about long evenings.', st + interval '5 days', 60, 10);
   if r->>'code' is distinct from 'paused' then bad := bad || ('paused: ' || r::text); end if;
   reset role;

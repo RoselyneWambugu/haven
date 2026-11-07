@@ -9,17 +9,17 @@ begin
   end loop;
   insert into private.staff (account_id, name, role) values (ids[1], 'A. Admin', 'admin'), (ids[2], 'M. Mod', 'moderator');
 
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Amina Wairimu', date '1996-06-06', null, 'RiverMoss', 'moon', array['Kikuyu'], array[]::text[], 'v1');
   if r->>'code' is distinct from 'languages' then bad := array_append(bad, 'unlisted language accepted: ' || r::text); end if;
   r := public.app_config();
   if r->'languages' is distinct from '["English", "Kiswahili"]'::jsonb then bad := array_append(bad, 'members do not see the list: ' || coalesce(r->>'languages', 'null')); end if;
   reset role;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_add_language('Kikuyu');
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator added a language'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_add_language('ke');
   if r->>'code' is distinct from 'invalid' then bad := array_append(bad, 'short name accepted'); end if;
   r := public.admin_add_language('kikuyu');
@@ -37,7 +37,7 @@ begin
   reset role;
   if not exists (select 1 from private.audit where action = 'Added language' and target = 'Kikuyu' and actor = 'A. Admin') then bad := array_append(bad, 'not logged'); end if;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Amina Wairimu', date '1996-06-06', null, 'RiverMoss', 'moon', array['English', 'Kikuyu'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, 'member cannot choose the new language: ' || r::text); end if;
   r := public.update_profile(null, array['Sheng'], null, null);

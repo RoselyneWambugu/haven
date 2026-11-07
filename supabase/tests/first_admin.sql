@@ -10,7 +10,7 @@ begin
     (ids[2], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254712000092', now(), now());
   insert into private.setup (id, code_hash) values (1, encode(sha256(convert_to('ABCD1234EFGH5678', 'utf8')), 'hex'))
     on conflict (id) do update set code_hash = excluded.code_hash, attempts = 0, used_at = null;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.setup_open();
   if (r->>'open')::boolean is distinct from true then bad := array_append(bad, 'setup not open'); end if;
   r := public.claim_first_admin('First Admin', 'WRONGWRONG');
@@ -23,14 +23,14 @@ begin
   if r->>'role' is distinct from 'admin' then bad := array_append(bad, 'not an admin after claim'); end if;
   r := public.setup_open();
   if (r->>'open')::boolean then bad := array_append(bad, 'setup still open'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.claim_first_admin('Second Admin', 'ABCD1234EFGH5678');
   if r->>'code' is distinct from 'closed' then bad := array_append(bad, ('claimed twice: ' || r::text)); end if;
   -- Locking after 5 wrong tries.
   reset role;
   update private.staff set active = false where role = 'admin';
   update private.setup set used_at = null, attempts = 0 where id = 1;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   for i in 1..5 loop r := public.claim_first_admin('Second Admin', 'NOPE' || i); end loop;
   r := public.claim_first_admin('Second Admin', 'ABCD1234EFGH5678');
   if r->>'code' is distinct from 'locked' then bad := array_append(bad, ('not locked: ' || r::text)); end if;

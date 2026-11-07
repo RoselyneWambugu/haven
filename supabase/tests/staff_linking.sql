@@ -9,12 +9,12 @@ begin
     (ids[2], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254712000082', now(), now()),
     (ids[3], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254712000083', now(), now());
   insert into private.staff (account_id, name, role) values (ids[1], 'A. Admin One', 'admin'), (ids[2], 'M. Mod Two', 'moderator');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_add_staff('New Person', 'moderator', '0712000084');
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator added staff'); end if;
   r := public.admin_set_staff(ids[1], 'moderator', null, null);
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator changed staff'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_add_staff('NP', 'moderator', '0712000084');
   if r->>'code' is distinct from 'name' then bad := array_append(bad, 'short name'); end if;
   r := public.admin_add_staff('New Person', 'janitor', '0712000084');
@@ -35,7 +35,7 @@ begin
   if not exists (select 1 from private.staff where account_id = ids[3] and role = 'billing') then bad := array_append(bad, 'existing user not staff'); end if;
   insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at) values (ids[4], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254712000085', now(), now());
   if not exists (select 1 from private.staff where account_id = ids[4] and role = 'clinical' and name = 'Invited Person') then bad := array_append(bad, 'invite not applied on sign-up'); end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_staff_invites();
   if jsonb_array_length(r->'invites') <> 0 then bad := array_append(bad, 'used invite still listed'); end if;
   r := public.admin_set_staff(ids[1], 'moderator', null, null);
@@ -48,7 +48,7 @@ begin
   if (select active from private.staff where account_id = ids[2]) then bad := array_append(bad, 'not deactivated'); end if;
   if (private.staff_of(ids[2])).account_id is not null then bad := array_append(bad, 'deactivated person still staff'); end if;
   -- Only one active Admin: promoting a second then demoting is allowed, but the last two cannot both go.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_add_staff('Cancel Me', 'moderator', '0712000086');
   r := public.admin_cancel_invite('cancel me');
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('cancel invite: ' || r::text)); end if;

@@ -210,6 +210,8 @@ export async function enterAdmin(via: 'number' | 'email'): Promise<Res> {
   stopPortalPolling()
   update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [], portal: null })
   const me = await call('staff_me')
+  // Signed in, and staff, but the authenticator code is still to come. The sign-in is kept so the code can be entered.
+  if (!me.ok && me.code === 'mfa') return { ok: false, error: 'Enter the code from your authenticator app.', code: 'mfa' }
   if (!me.ok || !(await syncAdmin())) {
     if (me.code === 'not-staff' && (await setupOpen())) return { ok: false, error: 'Setup is open. Enter your name and the setup code.', code: 'setup' }
     await supabase().auth.signOut()
@@ -220,9 +222,33 @@ export async function enterAdmin(via: 'number' | 'email'): Promise<Res> {
   return { ok: true, value: undefined }
 }
 
+/** The authenticator app a staff member has already set up, if any. */
+export async function adminMfaFactor(): Promise<{ factorId: string } | null> {
+  const { data } = await supabase().auth.mfa.listFactors()
+  const f = data?.totp?.[0]
+  return f ? { factorId: f.id } : null
+}
+
+/** Starts setting up an authenticator app: a QR code and a key to type in by hand. Anything half set up before is cleared first. */
+export async function adminMfaEnroll(): Promise<Res<{ factorId: string; qr: string; secret: string }>> {
+  const all = await supabase().auth.mfa.listFactors()
+  for (const f of all.data?.all ?? []) if (f.status === 'unverified') await supabase().auth.mfa.unenroll({ factorId: f.id })
+  const { data, error } = await supabase().auth.mfa.enroll({ factorType: 'totp', friendlyName: `Echo staff ${new Date().toISOString().slice(0, 10)}` })
+  if (error || !data) return { ok: false, error: 'We couldn’t start the setup. Try again.' }
+  return { ok: true, value: { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret } }
+}
+
+/** Checks the 6-digit code. If it is right the sign-in becomes a full one and the dashboard opens. */
+export async function adminMfaVerify(factorId: string, code: string): Promise<Res> {
+  const { error } = await supabase().auth.mfa.challengeAndVerify({ factorId, code: code.trim() })
+  if (error) return { ok: false, error: 'That code doesn’t match. Codes change every 30 seconds, so try the newest one.', code: 'wrong' }
+  return enterAdmin('number')
+}
+
 /** True when whoever is signed in with Supabase is staff. Changes nothing, so a person who is not staff can carry on elsewhere. */
 export async function isStaff(): Promise<boolean> {
-  return (await call('staff_me')).ok
+  const me = await call('staff_me')
+  return me.ok || me.code === 'mfa'
 }
 
 async function setupOpen(): Promise<boolean> {
@@ -237,7 +263,8 @@ export async function claimFirstAdmin(name: string, code: string): Promise<Res> 
     if (r.code === 'closed' || r.code === 'locked') await supabase().auth.signOut()
     return res(r)
   }
-  await call('staff_me')
+  const me = await call('staff_me')
+  if (!me.ok && me.code === 'mfa') return { ok: false, error: 'Now set up your authenticator app.', code: 'mfa' }
   if (!(await syncAdmin())) return { ok: false, error: OFFLINE }
   startAdminPolling()
   return { ok: true, value: undefined }

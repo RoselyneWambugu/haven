@@ -17,7 +17,7 @@ begin
     reset role;
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at)
       values (ids[i], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', phones[i], now(), now());
-    reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated')::text, true); set local role authenticated;
+    reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
     r := public.register_member(names[i], dobs[i], null, pens[i], 'moon', array['English'], array[]::text[], 'v1');
     if r->>'ok' is distinct from 'true' then bad := bad || ('register ' || i || ': ' || r::text); end if;
   end loop;
@@ -26,25 +26,25 @@ begin
   insert into private.subscriptions (account_id, plan_id, ends_at, method, receipt_no) select x, 'monthly', now() + interval '30 days', 'mpesa', 'T-1' from unnest(ids) x;
 
   -- 1. A first post is checked before it goes live, and only its author sees it meanwhile.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.create_post('Grief', 'Lost my dad last month', 'I do not know how to explain it to people at work.');
   if r->>'ok' is distinct from 'true' or (r->>'pending')::boolean is distinct from true then bad := bad || ('first post pending: ' || r::text); end if;
   p1 := (r->>'post_id')::uuid;
   r := public.forum_feed();
   if jsonb_array_length(r->'posts') <> 1 or r->'posts'->0->>'status' <> 'pending' or (r->'posts'->0->>'mine')::boolean is not true then bad := bad || ('author sees pending: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.forum_feed();
   if jsonb_array_length(r->'posts') <> 0 then bad := bad || ('B sees pending: ' || r::text); end if;
   reset role;
   update private.posts set publish_after = now() - interval '1 second' where id = p1;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.forum_feed();
   if jsonb_array_length(r->'posts') <> 1 or r->'posts'->0->>'status' <> 'published' then bad := bad || ('B sees live post: ' || r::text); end if;
   if r->'posts'->0->>'author_name' <> 'QuietPine' or r->'posts'->0->>'author_key' = 'me' then bad := bad || ('author shown: ' || r::text); end if;
   if r::text like '%' || ids[1]::text || '%' or r::text like '%254712%' or r::text like '%Kamau%' then bad := bad || 'feed shows private details'; end if;
 
   -- 2. The second post goes straight up; the rules are checked.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.create_post('Wellbeing', 'Small win today', 'I went for a walk for the first time in weeks.');
   if r->>'ok' is distinct from 'true' or (r->>'pending')::boolean is not false then bad := bad || ('second post live: ' || r::text); end if;
   p2 := (r->>'post_id')::uuid;
@@ -58,7 +58,7 @@ begin
   if r->>'code' is distinct from 'topic' then bad := bad || ('topic: ' || r::text); end if;
 
   -- 3. Comments and support.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.add_comment(p1, 'I am so sorry. You do not have to be strong here.');
   if r->>'ok' is distinct from 'true' then bad := bad || ('comment: ' || r::text); end if;
   c1 := (r->>'comment_id')::uuid;
@@ -70,18 +70,18 @@ begin
   if (r->>'supported')::boolean is not true or (r->>'supports')::int <> 1 then bad := bad || ('support on: ' || r::text); end if;
   r := public.toggle_support(p1);
   if (r->>'supported')::boolean is not false or (r->>'supports')::int <> 0 then bad := bad || ('support off: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.create_post('Anxiety', 'First post nerves', 'This is my very first post here, be gentle.');
   pc := (r->>'post_id')::uuid;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.add_comment(pc, 'Welcome!');
   if r->>'code' is distinct from 'gone' then bad := bad || ('comment on someone else pending post: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.add_comment(pc, 'Commenting on my own pending post');
   if r->>'code' is distinct from 'pending' then bad := bad || ('own pending comment: ' || r::text); end if;
 
   -- 4. A sensitive space is checked, and readable only by those who joined.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.create_post('x', 'Trying a space', 'I have not joined this space yet.', 'ptsd');
   if r->>'code' is distinct from 'not-joined' then bad := bad || ('post without joining: ' || r::text); end if;
   r := public.join_space('ptsd');
@@ -93,7 +93,7 @@ begin
   pp := (r->>'post_id')::uuid;
   reset role;
   update private.posts set publish_after = now() - interval '1 second' where id = pp;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.forum_feed();
   if exists (select 1 from jsonb_array_elements(r->'posts') x where x->>'space' = 'ptsd') then bad := bad || 'non-member sees sensitive space'; end if;
   perform public.join_space('ptsd');
@@ -108,28 +108,28 @@ begin
   if r->>'code' is distinct from 'gone' then bad := bad || ('report unreadable post: ' || r::text); end if;
 
   -- 5. Editing is for the author, for 15 minutes.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.edit_post(p2, 'Small win today!', 'I went for a walk for the first time in weeks, and it felt good.');
   if r->>'ok' is distinct from 'true' then bad := bad || ('edit: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.edit_post(p2, 'Hijacked', 'Someone else is editing this post now.');
   if r->>'code' is distinct from 'gone' then bad := bad || ('edit other: ' || r::text); end if;
   reset role;
   update private.posts set created_at = now() - interval '20 minutes' where id = p2;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.edit_post(p2, 'Too late', 'This edit comes after the fifteen minutes are up.');
   if r->>'code' is distinct from 'window' then bad := bad || ('edit window: ' || r::text); end if;
 
   -- 6. Reports keep what was said, as it was.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.report_post(p2, 'other', 'x');
   if r->>'ok' is distinct from 'true' then bad := bad || ('report post: ' || r::text); end if;
   r := public.report_post(p2, 'nonsense', '');
   if r->>'code' is distinct from 'invalid' then bad := bad || ('report reason: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.add_comment(p1, 'Thank you for sharing this.');
   c2 := (r->>'comment_id')::uuid;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.report_comment(c2, 'harassment', '');
   if r->>'ok' is distinct from 'true' then bad := bad || ('report comment: ' || r::text); end if;
   r := public.report_post(p2, 'other', '');
@@ -141,9 +141,9 @@ begin
   if n <> 1 then bad := bad || 'comment report snapshot'; end if;
 
   -- 7. A post can be taken down by its author, with its comments.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.remove_post(p1);
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.forum_feed();
   if exists (select 1 from jsonb_array_elements(r->'posts') x where x->>'id' = p1::text) then bad := bad || 'removed post still shown'; end if;
   reset role;
@@ -151,7 +151,7 @@ begin
 
   -- 8. Too many posts in an hour.
   insert into private.posts (author_id, topic, title, body) select ids[3], 'Wellbeing', 'filler ' || g, 'filler body for the rate check' from generate_series(1, 10) g;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.create_post('Wellbeing', 'One more', 'This one should be turned away for now.');
   if r->>'code' is distinct from 'rate' then bad := bad || ('post rate: ' || r::text); end if;
 

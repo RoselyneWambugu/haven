@@ -11,7 +11,7 @@ begin
   update private.therapists set account_id = null, link_phone = null where id = 't-amina';
 
   -- A clinical reviewer links a therapist by an email that has not signed in yet.
-  perform set_config('request.jwt.claims', json_build_object('sub', clin, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', clin, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_link_therapist_email('t-amina', 'not-an-email');
   if r->>'code' is distinct from 'email' then bad := array_append(bad, 'bad email accepted'); end if;
   r := public.admin_link_therapist_email('t-amina', 'Amina.Therapist@Example.com');
@@ -38,7 +38,7 @@ begin
   if (select account_id from private.therapists where id = 't-amina') is distinct from late then bad := array_append(bad, 'not linked once confirmed'); end if;
 
   -- An Admin adds a team member by email; with one Admin it applies at once and waits for the first sign-in.
-  perform set_config('request.jwt.claims', json_build_object('sub', admin_id, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', admin_id, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_add_staff_email('T. Moderator', 'moderator', 'mod.person@example.com');
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, 'add staff: ' || r::text); end if;
   r := public.admin_add_staff_email('T. Moderator', 'moderator', 'someone.else@example.com');
@@ -53,7 +53,7 @@ begin
 
   -- A therapist link to a staff member's email is refused.
   update private.therapists set account_id = null, link_email = null where id = 't-amina';
-  perform set_config('request.jwt.claims', json_build_object('sub', clin, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', clin, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_link_therapist_email('t-amina', 'mod.person@example.com');
   if r->>'code' is distinct from 'staff' then bad := array_append(bad, 'staff email linked as therapist: ' || r::text); end if;
   reset role;

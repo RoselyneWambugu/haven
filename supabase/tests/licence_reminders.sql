@@ -21,7 +21,7 @@ begin
   if not exists (select 1 from private.licence_reminders where therapist_id = 't-amina' and stage = 7) then bad := array_append(bad, 'no 7 day reminder'); end if;
   if private.licence_stage(td + 90) is not null then bad := array_append(bad, 'stage far away'); end if;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_licence();
   if (r->>'stage')::int <> 7 or jsonb_array_length(r->'reminders') <> 1 then bad := array_append(bad, ('portal_licence: ' || r::text)); end if;
   reset role;
@@ -29,7 +29,7 @@ begin
   -- Expired: hidden from the directory and from booking.
   update private.therapists set licence_valid_to = td - 1 where id = 't-amina';
   perform private.tick_licences();
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.therapist_directory();
   if exists (select 1 from jsonb_array_elements(r->'therapists') x where x->>'id' = 't-amina') then bad := array_append(bad, 'expired still listed'); end if;
   reset role;
@@ -37,7 +37,7 @@ begin
 
   -- Renewal rules. (A renewal needs the renewed certificate, so one has been sent.)
   insert into private.application_documents (account_id, kind, path, name, size) values (ids[3], 'renewal', ids[3]::text || '/r.pdf', 'r.pdf', 100);
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_submit_renewal('', td + 400);
   if r->>'code' is distinct from 'licence' then bad := array_append(bad, 'empty number'); end if;
   r := public.portal_submit_renewal('CPB-1', td - 5);
@@ -50,10 +50,10 @@ begin
   if r->>'code' is distinct from 'pending' then bad := array_append(bad, 'two pending'); end if;
 
   -- Only clinical reviewers and Admins see and decide.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_licences();
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator saw licences'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_licences();
   select (x->'renewal'->>'id')::uuid into rid from jsonb_array_elements(r->'licences') x where x->>'id' = 't-amina';
   if rid is null then bad := array_append(bad, 'renewal not listed'); end if;
@@ -66,7 +66,7 @@ begin
   if r->>'code' is distinct from 'decided' then bad := array_append(bad, 'decided twice'); end if;
   reset role;
   if (select licence_valid_to from private.therapists where id = 't-amina') <> td + 400 then bad := array_append(bad, 'expiry not extended'); end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.therapist_directory();
   if not exists (select 1 from jsonb_array_elements(r->'therapists') x where x->>'id' = 't-amina') then bad := array_append(bad, 'renewed not listed'); end if;
 

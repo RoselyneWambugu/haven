@@ -127,6 +127,7 @@ export const remoteAuth = {
       } else if (await isStaff()) {
         const r = await enterAdmin('number')
         if (r.ok) return { ok: true, value: { next: 'admin' } }
+        if (r.code === 'mfa') return { ok: false, error: 'Use the staff sign-in page to finish: it asks for your authenticator code.', code: 'mfa' }
       }
       await supabase().auth.signOut()
       return { ok: true, value: { next: 'no-account' } }
@@ -437,6 +438,7 @@ async function afterSignIn(purpose: GooglePurpose | 'portal' | 'admin'): Promise
   } else if (await isStaff()) {
     const r = await enterAdmin('email')
     if (r.ok) return { ok: true, value: { next: 'admin' } }
+    if (r.code === 'mfa') return { ok: false, error: 'Use the staff sign-in page to finish: it asks for your authenticator code.', code: 'mfa' }
   }
   const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string }
   update((s) => ({

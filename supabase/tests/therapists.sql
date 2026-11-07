@@ -18,7 +18,7 @@ begin
     reset role;
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at)
       values (ids[i], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', phones[i], now(), now());
-    reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated')::text, true); set local role authenticated;
+    reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
     r := public.register_member(names[i], dobs[i], null, pens[i], 'moon', array['English'], array[]::text[], 'v1');
     if r->>'ok' is distinct from 'true' then bad := bad || ('register ' || i || ': ' || r::text); end if;
   end loop;
@@ -28,7 +28,7 @@ begin
   insert into private.subscriptions (account_id, plan_id, ends_at, method, receipt_no) select x, 'monthly', now() + interval '30 days', 'mpesa', 'T-1' from unnest(ids) x;
 
   -- 1. The directory.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.therapist_directory();
   if jsonb_array_length(r->'therapists') <> 6 then bad := bad || ('directory size: ' || jsonb_array_length(r->'therapists')); end if;
   if not exists (select 1 from jsonb_array_elements(r->'therapists') x where x->>'id' = 't-amina' and jsonb_array_length(x->'availability') = 5 and (x->>'price_kes')::int = 1500 and (x->>'rating_count')::int = 0) then bad := bad || 'amina record'; end if;
@@ -48,7 +48,7 @@ begin
   if s2 is null or s3 is null or s4 is null then raise exception 'NOT ENOUGH SLOTS for t-amina: % % %', s2, s3, s4; end if;
 
   -- 3. Checkout rules.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_session_checkout('t-nobody', 'chat', s1);
   if r->>'code' is distinct from 'therapist' then bad := bad || ('unknown therapist: ' || r::text); end if;
   r := public.start_session_checkout('t-james', 'video', s1);
@@ -73,36 +73,36 @@ begin
   -- 4. One therapist at a time; no double booking.
   r := public.start_session_checkout('t-james', 'chat', s1 + interval '1 day');
   if r->>'code' is distinct from 'one-therapist' then bad := bad || ('one therapist: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_session_checkout('t-amina', 'chat', s1);
   if r->>'code' is distinct from 'taken' then bad := bad || ('double booking: ' || r::text); end if;
   r := public.start_session_checkout('t-amina', 'chat', s3);
   o := (r->>'order_id')::uuid;
   reset role;
   insert into private.sessions (member_id, therapist_id, mode, start_at, end_at) values (ids[1], 't-amina', 'chat', s3, s3 + interval '45 minutes');
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.simulate_payment(o, 'mpesa', 'success');
   if r->>'code' is distinct from 'taken' then bad := bad || ('slot lost while paying: ' || r::text); end if;
   reset role;
   select count(*) into n from private.sessions where member_id = ids[2]; if n <> 0 then bad := bad || 'session booked after slot was lost'; end if;
 
   -- 5. Joining and finishing.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.join_session(sess1);
   if r->>'code' is distinct from 'early' then bad := bad || ('join early: ' || r::text); end if;
   r := public.complete_session(sess1);
   if r->>'code' is distinct from 'early' then bad := bad || ('complete early: ' || r::text); end if;
   reset role;
   update private.sessions set start_at = now() + interval '5 minutes', end_at = now() + interval '50 minutes' where id = sess1;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.join_session(sess1);
   if r->>'ok' is distinct from 'true' then bad := bad || ('join open: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.join_session(sess1);
   if r->>'code' is distinct from 'gone' then bad := bad || ('someone else joined: ' || r::text); end if;
   reset role;
   update private.sessions set start_at = now() - interval '10 minutes', end_at = now() + interval '35 minutes' where id = sess1;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.rate_session(sess1, 5, 'x');
   if r->>'code' is distinct from 'gone' then bad := bad || ('rate before finishing: ' || r::text); end if;
   r := public.complete_session(sess1);
@@ -123,14 +123,14 @@ begin
   sess2 := (r->>'session_id')::uuid;
   reset role;
   update private.sessions set start_at = now() + interval '5 hours', end_at = now() + interval '5 hours 45 minutes' where id = sess2;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.reschedule_session(sess2, s3);
   if r->>'code' is distinct from 'taken' then bad := bad || ('reschedule onto a taken time: ' || r::text); end if;
   r := public.reschedule_session(sess2, s4);
   if r->>'ok' is distinct from 'true' or r->>'outcome' <> 'late' then bad := bad || ('late reschedule: ' || r::text); end if;
   reset role;
   update private.sessions set start_at = now() + interval '3 days', end_at = now() + interval '3 days 45 minutes' where id = sess2;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.cancel_session(sess2);
   if r->>'ok' is distinct from 'true' or r->>'outcome' <> 'free' then bad := bad || ('free cancel: ' || r::text); end if;
   r := public.cancel_session(sess2);
@@ -140,14 +140,14 @@ begin
   reset role;
   select count(*) into n from public.conversations where id = conv and expires_at >= (select max(end_at) from private.sessions where member_id = ids[1] and status = 'completed') + interval '23 hours'; if n <> 1 then bad := bad || 'chat expiry'; end if;
   update private.subscriptions set ends_at = now() - interval '1 minute' where account_id = ids[1];
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.send_message(conv, 'Thank you for today.');
   if r->>'ok' is distinct from 'true' then bad := bad || ('therapist chat after plan ended: ' || r::text); end if;
   r := public.send_message(conv, 'my number is 0712 345 678');
   if r->>'code' is distinct from 'blocked' then bad := bad || ('phone in therapist chat: ' || r::text); end if;
   reset role;
   update public.conversations set expires_at = now() + interval '10 hours' where id = conv;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.my_chats(); r := public.my_chats();
   if (select count(*) from jsonb_array_elements(r->'conversations'->0->'messages') x where x->>'text' like 'This chat ends in about a day%') <> 1 then bad := bad || 'a-day-left note not exactly once'; end if;
 
@@ -160,7 +160,7 @@ begin
   if r->>'code' is distinct from 'invalid' then bad := bad || ('report reason: ' || r::text); end if;
   r := public.report_session(sess1, 'therapist-boundaries', 'It felt wrong.');
   if r->>'ok' is distinct from 'true' then bad := bad || ('report session: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.report_session(sess1, 'other', '');
   if r->>'code' is distinct from 'gone' then bad := bad || ('report someone else session: ' || r::text); end if;
   reset role;
@@ -168,7 +168,7 @@ begin
   select count(*) into n from public.conversations where id = conv and reported_at is not null; if n <> 1 then bad := bad || 'reported chat not marked'; end if;
 
   -- 9. Privacy.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_sessions();
   if jsonb_array_length(r->'sessions') <> 0 then bad := bad || ('B sees A sessions: ' || r::text); end if;
   begin perform 1 from private.sessions; bad := bad || 'member read sessions directly'; exception when insufficient_privilege then null; end;

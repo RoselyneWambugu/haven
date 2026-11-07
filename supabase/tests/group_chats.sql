@@ -10,10 +10,10 @@ begin
   -- 1 clinical, 2 moderator, 3 therapist (t-amina), 4 member A, 5 member B
   insert into private.staff (account_id, name, role) values (ids[1], 'C. Clin', 'clinical'), (ids[2], 'M. Mod', 'moderator');
   update private.therapists set account_id = ids[3] where id = 't-amina';
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Group A', date '1996-06-06', null, 'RiverStone', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Group B', date '1996-06-06', null, 'CedarLeaf', 'sun', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
   reset role;
@@ -24,7 +24,7 @@ begin
   select id into gid from private.group_chats where template_key = 'grief' and starts_at > now() and cancelled_at is null limit 1;
 
   -- Registration needs a plan.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_register(gid);
   if r->>'code' is distinct from 'plan' then bad := array_append(bad, 'registered without plan'); end if;
   reset role;
@@ -43,14 +43,14 @@ begin
   -- Capacity.
   reset role; update private.group_chats set capacity = 4 where id = gid;
   insert into private.group_members (group_id, account_id) select gid, id from auth.users where id = any(ids[1:3]);
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_register(gid);
   if r->>'code' is distinct from 'closed' then bad := array_append(bad, ('full room: ' || r::text)); end if;
   reset role; update private.group_members set left_at = now() where group_id = gid and account_id = any(ids[1:3]);
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_register(gid);
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('B register: ' || r::text)); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
 
   -- Not open yet: cannot write.
   r := public.group_send(gid, 'hello everyone');
@@ -58,7 +58,7 @@ begin
 
   -- Open the room.
   reset role; update private.group_chats set starts_at = now() - interval '5 minutes' where id = gid;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_register(gid);
   r := public.group_send(gid, 'hello everyone');
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('send: ' || r::text)); end if;
@@ -68,17 +68,17 @@ begin
   if r->>'code' is distinct from 'long' then bad := array_append(bad, 'long'); end if;
 
   -- Facilitator writes through the portal.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_groups();
   if not exists (select 1 from jsonb_array_elements(r->'groups') g where g->>'id' = gid and g->>'status' = 'open') then bad := array_append(bad, ('portal_groups: ' || left(r::text, 200))); end if;
   r := public.portal_group_send(gid, 'Welcome. Take your time.');
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('facilitator send: ' || r::text)); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_group_send(gid, 'I am not a therapist');
   if r->>'code' is distinct from 'not-therapist' then bad := array_append(bad, 'member used portal'); end if;
 
   -- Member B (registered) sees A's message and reports it.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_list();
   select (m->>'id')::uuid into mid from jsonb_array_elements((select g->'messages' from jsonb_array_elements(r->'groups') g where g->>'id' = gid)) m where m->>'text' = 'hello everyone';
   if mid is null then bad := array_append(bad, 'B cannot see A message'); end if;
@@ -89,7 +89,7 @@ begin
   if (select retained_at from private.group_chats where id = gid) is null then bad := array_append(bad, 'reported room not retained'); end if;
 
   -- Moderator removes A.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_groups();
   if not exists (select 1 from jsonb_array_elements(r->'groups') g where g->>'id' = gid and g->'roster' ? 'RiverStone') then bad := array_append(bad, ('roster: ' || left(r::text, 300))); end if;
   r := public.admin_remove_from_group(gid, 'RiverStone', 'abuse');
@@ -98,17 +98,17 @@ begin
   if r->>'code' is distinct from 'already' then bad := array_append(bad, 'remove twice'); end if;
   r := public.admin_schedule_group('A topic long enough', 'A description that is long enough to pass', 't-amina', now() + interval '3 days', 60, 10);
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator scheduled'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_send(gid, 'still here');
   if r->>'code' is distinct from 'removed' then bad := array_append(bad, ('removed can send: ' || r::text)); end if;
   r := public.group_register(gid);
   if r->>'code' is distinct from 'removed' then bad := array_append(bad, 'removed re-registered'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_list();
   if exists (select 1 from jsonb_array_elements((select g->'messages' from jsonb_array_elements(r->'groups') g where g->>'id' = gid)) m where m->>'text' = 'hello everyone') then bad := array_append(bad, 'removed member lines still visible'); end if;
 
   -- Clinical schedules and cancels.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_schedule_group('Short', 'A description that is long enough to pass', 't-amina', now() + interval '3 days', 60, 10);
   if r->>'code' is distinct from 'invalid' then bad := array_append(bad, 'short topic accepted'); end if;
   r := public.admin_schedule_group('A topic long enough', 'A description that is long enough to pass', 't-amina', now() + interval '10 minutes', 60, 10);

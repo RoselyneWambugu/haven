@@ -11,17 +11,17 @@ begin
   update private.therapists set account_id = ids[1] where id = 't-amina';
   select name into tname from private.therapists where id = 't-amina';
   insert into private.staff (account_id, name, role) values (ids[2], 'C. Reviewer', 'clinical'), (ids[3], 'M. Mod', 'moderator');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Peter Ochieng', date '1996-06-06', null, 'CedarFern', 'sun', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
   reset role;
   insert into private.subscriptions (account_id, plan_id, ends_at, method, receipt_no) values (ids[4], 'monthly', now() + interval '30 days', 'mpesa', 'P-1');
 
   -- a member cannot propose; the therapist can, with enough notice
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_propose_event('A slow evening walk', 'An easy group walk with a therapist alongside.', 'walk', 'in-person', 'Karura Forest, main gate', now() + interval '6 days', 90);
   if r->>'code' is distinct from 'not-therapist' then bad := array_append(bad, 'member proposed: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_propose_event('A slow evening walk', 'An easy group walk with a therapist alongside.', 'walk', 'in-person', 'Karura Forest, main gate', now() + interval '1 day', 90);
   if r->>'code' is distinct from 'invalid' then bad := array_append(bad, 'too soon accepted'); end if;
   r := public.portal_propose_event('A slow evening walk', 'An easy group walk with a therapist alongside.', 'walk', 'in-person', 'Karura Forest, main gate', now() + interval '6 days', 90);
@@ -39,7 +39,7 @@ begin
   reset role;
 
   -- members see no proposal, and cannot be interested in one
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.event_list();
   if exists (select 1 from jsonb_array_elements(r->'events') x where x->>'id' in (e1, e2, e3)) then bad := array_append(bad, 'member sees a proposal'); end if;
   r := public.event_toggle_interest(e1::uuid);
@@ -47,10 +47,10 @@ begin
   reset role;
 
   -- a moderator cannot decide; the reviewer approves one and declines another (with a reason)
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide_event(e1::uuid, true, null);
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator decided'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_events();
   if not exists (select 1 from jsonb_array_elements(r->'events') x where x->>'id' = e1 and x->>'status' = 'pending' and x->>'proposedBy' = tname) then bad := array_append(bad, 'staff do not see the proposal'); end if;
   r := public.admin_cancel_event(e1::uuid, 'Cancelling a proposal');
@@ -67,13 +67,13 @@ begin
   if not exists (select 1 from private.audit where action = 'Approved event proposal' and actor = 'C. Reviewer') then bad := array_append(bad, 'approval not logged'); end if;
 
   -- the approved event is now live for members, with the therapist as host; the declined one gives the therapist the reason
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.event_list();
   if not exists (select 1 from jsonb_array_elements(r->'events') x where x->>'id' = e1 and x->>'host' = tname and x->>'proposedBy' = tname) then bad := array_append(bad, 'approved event not live'); end if;
   if exists (select 1 from jsonb_array_elements(r->'events') x where x->>'id' = e2) then bad := array_append(bad, 'declined event shown'); end if;
   r := public.event_toggle_interest(e1::uuid);
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, 'cannot be interested in approved'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_events();
   if not exists (select 1 from jsonb_array_elements(r->'events') x where x->>'id' = e2 and x->>'status' = 'declined' and x->>'declineReason' like 'We already have%') then bad := array_append(bad, 'therapist cannot read the reason'); end if;
   r := public.portal_withdraw_event(e1::uuid);

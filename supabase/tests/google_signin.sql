@@ -8,7 +8,7 @@ declare
 begin
   insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at)
     values (u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'g.member@example.com', now(), now(), now());
-  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Google Member', date '1996-06-06', null, 'GoogleLeaf', 'moon', array['English'], array[]::text[], 'v1');
   if optional then
     if r->>'ok' is distinct from 'true' then bad := array_append(bad, 'google register: ' || r::text); end if;
@@ -24,7 +24,7 @@ begin
   u := gen_random_uuid();
   insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at)
     values (u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'unconfirmed@example.com', now(), now());
-  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('No Proof', date '1996-06-06', null, 'NoProofLeaf', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'code' is distinct from 'phone' then bad := array_append(bad, 'unconfirmed email accepted: ' || r::text); end if;
   reset role;

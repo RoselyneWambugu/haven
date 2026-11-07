@@ -8,12 +8,12 @@ begin
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at) values (ids[i], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '25472400027' || i, now(), now());
   end loop;
   insert into private.staff (account_id, name, role) values (ids[1], 'A. Admin', 'admin'), (ids[2], 'M. Mod', 'moderator');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_launch();
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator saw checklist'); end if;
   r := public.admin_launch_signoff('mpesa', true, 'done');
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator signed off'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_launch();
   if (r->>'ready')::boolean then bad := array_append(bad, 'ready when it should not be'); end if;
   r := public.admin_launch_signoff('nonsense', true, 'checked it');

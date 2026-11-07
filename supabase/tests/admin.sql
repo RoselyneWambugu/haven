@@ -16,10 +16,10 @@ begin
   -- ids: 1 moderator, 2 heavy-queue moderator, 3 clinical reviewer, 4 member (reporter), 5 member (reported), 6 other moderator
   insert into private.staff (account_id, name, role, heavy) values
     (ids[1], 'M. Test One', 'moderator', false), (ids[2], 'M. Test Two', 'moderator', true), (ids[3], 'C. Test Three', 'clinical', false), (ids[6], 'M. Test Six', 'moderator', false);
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Reporter Member', date '1996-06-06', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED A: %', r; end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Reported Member', date '1995-05-05', null, 'LoudRiver', 'sun', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED B: %', r; end if;
   reset role;
@@ -30,7 +30,7 @@ begin
   insert into private.concerns (therapist_id, danger, type, detail) values ('t-amina', true, 'self-harm', 'a client said so') returning id into concern;
 
   -- A member who is not staff is turned away.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_state();
   if r->>'code' is distinct from 'not-staff' then bad := bad || 'member got admin state'; end if;
   r := public.staff_me();
@@ -39,7 +39,7 @@ begin
   if r->>'ok' = 'true' then bad := bad || 'member decided a case'; end if;
 
   -- A moderator signs in and sees member cases but not therapist concerns.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.staff_me();
   if r->>'role' is distinct from 'moderator' then bad := bad || 'moderator sign-in'; end if;
   r := public.admin_state();
@@ -56,12 +56,12 @@ begin
   if r->>'code' is distinct from 'rota' then bad := bad || ('s1 rota: ' || r::text); end if;
   r := public.admin_claim('C-r:' || rep_s2);
   if r->>'ok' is distinct from 'true' then bad := bad || ('claim s2: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_claim('C-r:' || rep_s2);
   if r->>'code' is distinct from 'taken' then bad := bad || ('double claim: ' || r::text); end if;
 
   -- Deciding needs a reason, and the strike ladder runs warning, restriction, suspension.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide('C-r:' || rep_s2, 'strike', 'ok');
   if r->>'code' is distinct from 'reason' then bad := bad || 'short reason accepted'; end if;
   r := public.admin_decide('C-r:' || rep_s2, 'strike', 'Harassing another member');
@@ -70,12 +70,12 @@ begin
   select count(*) into n from private.notices where account_id = ids[5] and kind = 'warning';
   if n <> 1 then bad := bad || 'first strike is not a warning'; end if;
   if (select standing from public.accounts where account_id = ids[5]) <> 'good' then bad := bad || 'warning changed standing'; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide('C-r:' || rep_s2, 'dismiss', 'second try');
   if r->>'code' is distinct from 'closed' then bad := bad || 'closed case decided twice'; end if;
 
   -- Severity 1 on the rota: suspension straight away, and the member is paused.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_claim('C-r:' || rep_s1);
   if r->>'ok' is distinct from 'true' then bad := bad || ('rota claim: ' || r::text); end if;
   r := public.admin_decide('C-r:' || rep_s1, 'strike', 'Credible threat of harm');
@@ -85,7 +85,7 @@ begin
   select id into notice from private.notices where account_id = ids[5] and kind = 'suspension';
 
   -- The member sees both notices and appeals the suspension.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_notices();
   if jsonb_array_length(r->'notices') <> 2 then bad := bad || 'member notices'; end if;
   r := public.appeal_notice(notice, 'short');
@@ -96,15 +96,15 @@ begin
   if r->>'code' is distinct from 'appealed' then bad := bad || 'double appeal'; end if;
 
   -- The person who made the decision cannot review the appeal. Someone else can.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide_appeal(notice, 'reduced', 'Looked again at this');
   if r->>'code' is distinct from 'same-reviewer' then bad := bad || ('same reviewer: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide_appeal(notice, 'reduced', 'The threat was not credible on review');
   if r->>'ok' is distinct from 'true' then bad := bad || ('appeal decided: ' || r::text); end if;
   reset role;
   if (select standing from public.accounts where account_id = ids[5]) <> 'restricted' then bad := bad || 'reduced suspension is not a restriction'; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide_appeal(notice, 'overturned', 'Trying to decide twice');
   if r->>'code' is distinct from 'decided' then bad := bad || 'appeal decided twice'; end if;
 
@@ -113,7 +113,7 @@ begin
   if r->>'ok' is distinct from 'true' then bad := bad || ('restore: ' || r::text); end if;
   reset role;
   if (select standing from public.accounts where account_id = ids[5]) <> 'good' then bad := bad || 'restore did not restore'; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_user_action(ids[5], 'suspend', 'Clinical cannot do this');
   if r->>'code' is distinct from 'role' then bad := bad || 'clinical suspended a user'; end if;
 
@@ -126,7 +126,7 @@ begin
   if r->>'ok' is distinct from 'true' then bad := bad || ('pause: ' || r::text); end if;
   reset role;
   if not (select paused from private.therapists where id = 't-amina') then bad := bad || 'therapist not paused'; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_lift_pause('t-amina', 'Reviewed and fine');
   if r->>'ok' is distinct from 'true' then bad := bad || ('lift: ' || r::text); end if;
   r := public.admin_suspend_therapist('t-amina', 'Serious breach of standards');
@@ -135,31 +135,31 @@ begin
   if r->>'code' is distinct from 'already' then bad := bad || 'suspended twice'; end if;
   reset role;
   if not (select suspended from private.therapists where id = 't-amina') then bad := bad || 'therapist not suspended'; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_reinstate_therapist('t-amina', 'Moderator cannot');
   if r->>'code' is distinct from 'role' then bad := bad || 'moderator reinstated a therapist'; end if;
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_reinstate_therapist('t-amina', 'Appeal succeeded on review');
   if r->>'ok' is distinct from 'true' then bad := bad || ('reinstate: ' || r::text); end if;
 
   -- A held post waits for a moderator.
   reset role;
   insert into private.posts (author_id, topic, title, body, status, publish_after) values (ids[5], 'Anxiety', 'A held post', 'This post is waiting for review', 'pending', now() + interval '1 day') returning id into post;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_state();
   if jsonb_array_length(r->'held') <> 1 then bad := bad || 'held post not listed'; end if;
   r := public.admin_review_post(post, false, 'Breaks the guidelines');
   if r->>'ok' is distinct from 'true' then bad := bad || ('review post: ' || r::text); end if;
   reset role;
   if (select status from private.posts where id = post) <> 'hidden' then bad := bad || 'removed post not hidden'; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_review_post(post, true, 'clinical cannot');
   if r->>'code' is distinct from 'role' then bad := bad || 'clinical reviewed a post'; end if;
 
   -- Revealing is limited to 20 a day.
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   for i in 1..20 loop
     r := public.admin_reveal('C-r:' || rep_s1, 'e' || i);
     if r->>'ok' is distinct from 'true' then bad := bad || ('reveal ' || i || ': ' || r::text); end if;
@@ -173,7 +173,7 @@ begin
   reset role;
   select count(*) into n from private.audit;
   if n < 15 then bad := bad || ('audit rows ' || n); end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_state();
   if jsonb_array_length(r->'audit') < 15 then bad := bad || 'clinical cannot read audit'; end if;
 

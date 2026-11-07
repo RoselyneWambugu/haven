@@ -66,7 +66,7 @@ begin
   -- 2. Register everyone.
   for i in 1..6 loop
     reset role;
-    perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated')::text, true);
+    perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated', 'aal', 'aal2')::text, true);
     set local role authenticated;
     r := public.register_member(names[i], dobs[i], null, pens[i], 'moon', string_to_array(langs[i], ','), array[]::text[], 'v1');
     if r->>'ok' is distinct from 'true' then bad := bad || ('register ' || i || ': ' || r::text); end if;
@@ -76,16 +76,16 @@ begin
   insert into private.subscriptions (account_id, plan_id, ends_at, method, receipt_no) select x, 'monthly', now() + interval '30 days', 'mpesa', 'T-1' from unnest(ids) x;
 
   -- 3. Two people with the same age range and a language are matched.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'state' is distinct from 'searching' then bad := bad || ('A should wait: ' || r::text); end if;
   r := public.start_matching();
   if r->>'state' is distinct from 'searching' then bad := bad || ('A asking twice: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'state' is distinct from 'found' then bad := bad || ('B should match A: ' || r::text); end if;
   conv := (r->>'conversation_id')::uuid;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.match_status();
   if r->>'state' is distinct from 'found' or (r->>'conversation_id')::uuid is distinct from conv then bad := bad || ('A should see the match: ' || r::text); end if;
   r := public.match_status();
@@ -103,7 +103,7 @@ begin
   if r->>'code' is distinct from 'empty' then bad := bad || ('empty: ' || r::text); end if;
   r := public.send_message(conv, repeat('a', 2001));
   if r->>'code' is distinct from 'too-long' then bad := bad || ('too long: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_chats();
   if (r->'conversations'->0->>'unread')::int < 1 or r->'conversations'->0->'messages'->-1->>'from' is distinct from 'them' then bad := bad || ('B sees A message: ' || r::text); end if;
   perform public.mark_read(conv);
@@ -111,7 +111,7 @@ begin
   if (r->'conversations'->0->>'unread')::int <> 0 then bad := bad || ('unread after read: ' || r::text); end if;
 
   -- 5. A third person sees nothing and can do nothing in that chat.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   select count(*) into n from public.conversations; if n <> 0 then bad := bad || 'C sees conversations'; end if;
   select count(*) into n from public.messages; if n <> 0 then bad := bad || 'C sees messages'; end if;
   select count(*) into n from public.conversation_members; if n <> 0 then bad := bad || 'C sees members'; end if;
@@ -129,47 +129,47 @@ begin
   exception when insufficient_privilege then null; end;
 
   -- 6. The same two are not paired again soon, even after the chat ends.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.end_conversation(conv);
   r := public.send_message(conv, 'still there?');
   if r->>'code' is distinct from 'ended' then bad := bad || ('send after end: ' || r::text); end if;
   r := public.start_matching();
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'state' is distinct from 'searching' then bad := bad || ('rematch too soon: ' || r::text); end if;
   perform public.cancel_matching();
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.cancel_matching();
   r := public.match_status();
   if r->>'state' is distinct from 'idle' then bad := bad || ('cancel: ' || r::text); end if;
 
   -- 7. A neighbouring age range is used when nobody fits exactly; no shared language means no match.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'state' is distinct from 'searching' then bad := bad || ('C waits: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'state' is distinct from 'searching' then bad := bad || ('D has nobody: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'state' is distinct from 'found' then bad := bad || ('E should match C by neighbouring age: ' || r::text); end if;
   conv2 := (r->>'conversation_id')::uuid;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.cancel_matching();
 
   -- 8. Blocking and reporting.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.send_message(conv2, 'first');
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.send_message(conv2, 'you there');
   perform public.send_message(conv2, 'second');
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.block_peer(conv2, true);
   if r->>'ok' is distinct from 'true' then bad := bad || ('block: ' || r::text); end if;
   r := public.my_chats();
   if jsonb_array_length(r->'conversations') <> 0 then bad := bad || ('blocked chat still shown: ' || r::text); end if;
   if r->'blocked'->0->>'pen_name' is distinct from 'BrightLeaf' then bad := bad || ('blocked list: ' || r::text); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_chats();
   if (r->'conversations'->0->>'ended')::boolean is distinct from true then bad := bad || ('other side sees end: ' || r::text); end if;
   reset role;
@@ -177,7 +177,7 @@ begin
   if n <> 1 then bad := bad || 'report snapshot missing'; end if;
   select count(*) into n from private.reports where conversation_id = conv2 and (snapshot->2->>'reported')::boolean and not (snapshot->0->>'reported')::boolean;
   if n <> 1 then bad := bad || 'reported lines wrong'; end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_chats();
   perform public.unblock_peer((r->'blocked'->0->>'id')::uuid);
   r := public.my_chats();
@@ -189,7 +189,7 @@ begin
     insert into public.conversations (expires_at) values (now() + interval '5 hours') returning id into conv;
     insert into public.conversation_members (conversation_id, account_id) values (conv, ids[6]);
   end loop;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[6], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'code' is distinct from 'chat-limit' then bad := bad || ('limit: ' || r::text); end if;
 

@@ -9,7 +9,7 @@ begin
   foreach u in array array[mod1, mod2, clin, au, ob] loop
     n := n + 1;
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at) values (u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '2547120000' || n, now(), now());
-    perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true); set local role authenticated;
+    perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
     r := public.register_member('Test Person', date '1995-05-05', null, 'Pen' || n, 'moon', array['English'], array[]::text[], 'v1');
     if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED %', r::text; end if;
     reset role;
@@ -20,12 +20,12 @@ begin
   insert into private.comments (post_id, author_id, body) values (pid, au, 'A second comment that stays in place.') returning id into cid2;
   insert into private.comments (post_id, author_id, therapist_id, body) values (pid, ob, 't-amina', 'General information only, from a therapist.') returning id into tcid;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', clin, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', clin, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_remove_post(pid, 'Breaks the guidelines');
   if r->>'code' is distinct from 'role' then bad := bad || ('clinical removed: ' || r::text); end if;
   reset role;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', mod1, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', mod1, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_remove_post(pid, 'no');
   if r->>'code' is distinct from 'reason' then bad := bad || ('short reason: ' || r::text); end if;
   r := public.admin_remove_comment(tcid, 'Breaks the guidelines');
@@ -45,7 +45,7 @@ begin
   if exists (select 1 from private.comments where id = cid2 and hidden_at is not null) then bad := bad || 'other comment hidden'; end if;
   if (select count(*) from private.audit where action in ('Removed post', 'Removed comment')) <> 2 then bad := bad || 'audit'; end if;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', au, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', au, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_notices();
   select count(*) into k from jsonb_array_elements(r->'notices') e where e->>'kind' = 'removal';
   if k <> 2 then bad := bad || ('notices: ' || r::text); end if;
@@ -53,15 +53,15 @@ begin
   if private.strike_count(au) <> 0 then bad := bad || 'removal counted as a strike'; end if;
   select id into nid from private.notices where account_id = au and target = 'post';
 
-  perform set_config('request.jwt.claims', json_build_object('sub', au, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', au, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.appeal_notice(nid, 'This was a story about my own family, not a rumour at all');
   if r->>'ok' is distinct from 'true' then bad := bad || ('appeal: ' || r::text); end if;
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', mod1, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', mod1, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide_appeal(nid, 'overturned', 'Read again, it is fine to stay up.');
   if r->>'code' is distinct from 'same-reviewer' then bad := bad || ('same reviewer: ' || r::text); end if;
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', mod2, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', mod2, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide_appeal(nid, 'overturned', 'Read again, it is fine to stay up.');
   if r->>'ok' is distinct from 'true' then bad := bad || ('overturn: ' || r::text); end if;
   reset role;

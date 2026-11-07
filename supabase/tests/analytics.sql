@@ -8,19 +8,19 @@ begin
     (ids[1], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254712000131', now(), now()),
     (ids[2], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254712000132', now(), now());
   insert into private.staff (account_id, name, role) values (ids[1], 'A. Analyst', 'billing');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_analytics();
   if r->>'code' is distinct from 'not-staff' then bad := array_append(bad, 'member read analytics'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_analytics();
   if jsonb_array_length(r->'days') <> 180 then bad := array_append(bad, ('days ' || jsonb_array_length(r->'days'))); end if;
   reg_before := (r->'days'->179->>'registered')::int;
   if (r->'days'->179) ? 'refunds' is not true or (r->'days'->179) ? 't' is not true then bad := array_append(bad, 'day keys'); end if;
   if jsonb_array_length(r->'cohorts') <> 8 then bad := array_append(bad, 'cohorts'); end if;
   if jsonb_array_length(r->'who'->'cells') <> 5 or jsonb_array_length(r->'who'->'cells'->0) <> 5 then bad := array_append(bad, 'who'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Counted Member', date '1996-06-06', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_analytics();
   reg_after := (r->'days'->179->>'registered')::int;
   if reg_after <> reg_before + 1 then bad := array_append(bad, ('registered ' || reg_before || ' -> ' || reg_after)); end if;

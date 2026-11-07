@@ -11,7 +11,7 @@ declare
 begin
   insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at)
     values (uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254712000051', now(), now());
-  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Wanjiru Kamau', date '1995-05-05', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED %', r::text; end if;
   reset role;
@@ -28,7 +28,7 @@ begin
   insert into private.sessions (member_id, therapist_id, mode, start_at, end_at, price_kes, receipt_no, order_id) values (uid, 't-amina', 'chat', now() - interval '20 minutes', now() + interval '25 minutes', 2000, 'T-4', o4) returning id into s4;
   insert into private.sessions (member_id, therapist_id, mode, start_at, end_at, price_kes, receipt_no, order_id, started_at) values (uid, 't-amina', 'chat', now() - interval '20 minutes', now() + interval '25 minutes', 2000, 'T-5', o5, now() - interval '18 minutes') returning id into s5;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
 
   -- 1. More than an hour before: everything goes back.
   r := public.cancel_session(s1);
@@ -39,7 +39,7 @@ begin
   if not exists (select 1 from private.refunds where order_id = o1 and amount_kes = 2000 and status = 'approved' and automatic) then bad := bad || 'free cancel refund record'; end if;
 
   -- 2. In the last hour: 10% kept, half of it to the therapist.
-  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.cancel_session(s2);
   if r->>'outcome' <> 'late' or (r->>'refundKes')::int <> 1800 then bad := bad || ('late cancel: ' || r::text); end if;
   reset role;
@@ -53,7 +53,7 @@ begin
   if not exists (select 1 from private.refunds where order_id = o3 and amount_kes = 1700) then bad := bad || 'no-show refund record'; end if;
 
   -- 4. The therapist has not joined 15 minutes in: everything goes back and the therapist earns nothing.
-  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.report_therapist_late(s4);
   if r->>'ok' is distinct from 'true' or (r->>'refundKes')::int <> 2000 then bad := bad || ('therapist late: ' || r::text); end if;
   r := public.report_therapist_late(s4);
@@ -66,7 +66,7 @@ begin
   if x.status <> 'cancelled' or x.gross_kes is not null then bad := bad || 'therapist late row'; end if;
 
   -- 6. The member cannot move a session in the last hour.
-  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.reschedule_session(s5, now() + interval '5 days');
   if r->>'code' is distinct from 'late' then bad := bad || ('reschedule in the last hour: ' || r::text); end if;
   reset role;

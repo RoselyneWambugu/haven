@@ -8,10 +8,10 @@ begin
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at) values (ids[i], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '25471400017' || i, now(), now());
   end loop;
   insert into private.staff (account_id, name, role) values (ids[1], 'M. Mod', 'moderator'), (ids[2], 'B. Bill', 'billing');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Flag A', date '1996-06-06', null, 'AngryBird', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Flag B', date '1996-06-06', null, 'CalmRiver', 'sun', array['English'], array[]::text[], 'v1');
   reset role;
 
@@ -50,7 +50,7 @@ begin
   if exists (select 1 from private.flags where account_id is null and created_at > now() - interval '1 minute') then bad := array_append(bad, 'facilitator line flagged'); end if;
 
   -- The moderator sees AI-flag cases with the model, named as an automated check.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_state();
   select x->>'id' into c1 from jsonb_array_elements(r->'cases') x where x->>'source' = 'ai-flag' and x->>'type' = 'Harassment' limit 1;
   select x->>'id' into c2 from jsonb_array_elements(r->'cases') x where x->>'source' = 'ai-flag' and x->>'type' = 'Scam or solicitation' limit 1;
@@ -68,7 +68,7 @@ begin
   if exists (select 1 from jsonb_array_elements(r->'flags') f where f::text like '%stupid%' or f::text like '%mpesa%') then bad := array_append(bad, 'flag log shows message text'); end if;
 
   -- Billing staff can't read the flag log.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_flags();
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'billing read flags'); end if;
 

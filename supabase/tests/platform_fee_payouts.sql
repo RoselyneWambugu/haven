@@ -10,7 +10,7 @@ begin
   -- 1 and 2 Admins, 3 billing, 4 the therapist (t-amina), 5 a member
   insert into private.staff (account_id, name, role) values (ids[1], 'A. Admin', 'admin'), (ids[2], 'B. Admin', 'admin'), (ids[3], 'C. Bill', 'billing');
   update private.therapists set account_id = ids[4], payout_method = '' where id = 't-amina';
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[5], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Fee Member', date '1996-06-06', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
   reset role;
@@ -21,7 +21,7 @@ begin
   if private.platform_fee_pct() <> 15 then bad := array_append(bad, 'default fee ' || private.platform_fee_pct()); end if;
 
   -- The fee is fixed on each session when it is completed; a no-show earns nothing.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_wrap_up(sa, 'attended', 'ok note', null);
   r := public.portal_wrap_up(sb, 'attended', 'ok note', null);
   r := public.portal_wrap_up(sc, 'no-show', '', null);
@@ -30,7 +30,7 @@ begin
   if (select fee_kes from private.sessions where id = sc) is not null then bad := array_append(bad, 'no-show has a fee'); end if;
 
   -- Available after the 24 hour hold, pending before it.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_earnings();
   if (r->>'availableNet')::int <> 850 or (r->>'pendingNet')::int <> 1700 or (r->>'feePct')::int <> 15 then bad := array_append(bad, ('earnings: ' || r::text)); end if;
   r := public.my_portal();
@@ -40,7 +40,7 @@ begin
   r := public.portal_request_payout();
   if r->>'code' is distinct from 'method' then bad := array_append(bad, ('no method: ' || r::text)); end if;
   reset role; update private.therapists set payout_method = 'M-Pesa 0722 000 114' where id = 't-amina';
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_request_payout();
   if r->>'ok' is distinct from 'true' or (r->>'netKes')::int <> 850 then bad := array_append(bad, ('payout: ' || r::text)); end if;
   pid := r->>'id';
@@ -50,7 +50,7 @@ begin
   if (r->>'availableNet')::int <> 0 or jsonb_array_length(r->'payouts') <> 1 or r->'payouts'->0->>'status' <> 'requested' then bad := array_append(bad, ('after payout: ' || r::text)); end if;
 
   -- The fee changes with a second Admin; past sessions keep theirs.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_propose_fee(60);
   if r->>'code' is distinct from 'range' then bad := array_append(bad, 'range'); end if;
   r := public.admin_propose_fee(20);
@@ -58,10 +58,10 @@ begin
   fid := (r->>'id')::uuid;
   r := public.admin_decide_fee(fid, true);
   if r->>'code' is distinct from 'second-person' then bad := array_append(bad, 'proposer approved own'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_decide_fee(fid, true);
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'billing decided fee'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_fee();
   if (r->'pending'->>'pct')::int <> 20 or (r->'pending'->>'mine')::boolean then bad := array_append(bad, ('admin_fee: ' || r::text)); end if;
   r := public.admin_decide_fee(fid, true);
@@ -70,16 +70,16 @@ begin
   if private.platform_fee_pct() <> 20 then bad := array_append(bad, 'fee not changed'); end if;
   if (select fee_kes from private.sessions where id = sa) <> 150 then bad := array_append(bad, 'past fee changed'); end if;
   insert into private.sessions (member_id, therapist_id, mode, start_at, end_at, price_kes) values (ids[5], 't-amina', 'chat', now() - interval '3 hours', now() - interval '2 hours', 1000) returning id into sd;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_wrap_up(sd, 'attended', 'ok note', null);
   reset role;
   if (select fee_kes from private.sessions where id = sd) <> 200 then bad := array_append(bad, 'new fee not applied'); end if;
 
   -- Billing marks the payout paid, with a reference.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_mark_payout_paid(pid, 'MPESA123');
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'therapist marked paid'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_payouts();
   if r->'payouts'->0->>'therapist' is null or r->'payouts'->0->>'status' <> 'requested' then bad := array_append(bad, ('admin_payouts: ' || r::text)); end if;
   r := public.admin_mark_payout_paid(pid, 'x');

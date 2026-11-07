@@ -9,7 +9,7 @@ begin
   end loop;
   -- 1 clinical, 2 moderator, 3 member with a plan
   insert into private.staff (account_id, name, role) values (ids[1], 'C. Clin', 'clinical'), (ids[2], 'M. Mod', 'moderator');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Rule Member', date '1996-06-06', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
   reset role;
@@ -20,7 +20,7 @@ begin
 
   -- A blocked message is counted without keeping its words.
   select count(*) into n0 from private.filter_blocks;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.group_send(gid, 'call me on 0712345678 please');
   if r->>'code' is distinct from 'blocked' then bad := array_append(bad, ('not blocked: ' || r::text)); end if;
   reset role;
@@ -29,7 +29,7 @@ begin
   if not exists (select 1 from private.filter_blocks where account_id = ids[3] and 'phone' = any (reasons)) then bad := array_append(bad, 'block not attributed'); end if;
 
   -- Who can see and change the rules.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_flag_rules();
   if jsonb_array_length(r->'rules') < 9 or (r->>'blocked24h')::int < 1 or (r->'blockedByKind'->>'phone')::int < 1 then bad := array_append(bad, ('rules view: ' || left(r::text, 200))); end if;
   r := public.admin_save_flag_rule(null, 'Test rule', 'scam', 'free airtime', 0.7, true);
@@ -40,7 +40,7 @@ begin
   if (r->>'flagged')::boolean then bad := array_append(bad, 'kind words flagged'); end if;
 
   -- Validation, then add, change, switch off.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_save_flag_rule(null, 'Test rule', 'scam', '(', 0.7, true);
   if r->>'code' is distinct from 'pattern' then bad := array_append(bad, 'invalid pattern accepted'); end if;
   r := public.admin_save_flag_rule(null, 'Test rule', 'scam', '.*', 0.7, true);

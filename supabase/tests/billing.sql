@@ -19,14 +19,14 @@ begin
     reset role;
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at)
       values (ids[i], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', phones[i], now(), now());
-    reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated')::text, true); set local role authenticated;
+    reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[i], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
     r := public.register_member(names[i], dobs[i], null, pens[i], 'moon', array['English'], array[]::text[], 'v1');
     if r->>'ok' is distinct from 'true' then bad := bad || ('register ' || i || ': ' || r::text); end if;
   end loop;
   if cardinality(bad) > 0 then raise exception 'SETUP FAILED: %', array_to_string(bad, ' | '); end if;
 
   -- 1. Without a plan, matching, the community and spaces are closed.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'code' is distinct from 'needs-plan' then bad := bad || ('match without plan: ' || r::text); end if;
   r := public.create_post('Grief', 'A title', 'A long enough body for this post.');
@@ -49,14 +49,14 @@ begin
   reset role;
   select count(*) into n from private.orders where account_id = ids[1] and status = 'pending'; if n <> 1 then bad := bad || format('pending orders: %s', n); end if;
   select count(*) into n from private.orders where id = o2 and not auto_renew; if n <> 1 then bad := bad || 'daily plan renews'; end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.simulate_payment(o2, 'mpesa', 'success');
   if r->>'code' is distinct from 'unavailable' then bad := bad || ('simulated payment for a normal member: ' || r::text); end if;
 
   -- 3. Test payments: a failed one, then a good one.
   reset role;
   insert into private.payment_test_phones (phone) values ('+254712000021');
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.simulate_payment(o2, 'mpesa', 'timeout');
   if r->>'code' is distinct from 'timeout' then bad := bad || ('timeout: ' || r::text); end if;
   r := public.my_plan();
@@ -85,7 +85,7 @@ begin
   if ends2 < ends1 + interval '364 days 23 hours' or ends2 > ends1 + interval '365 days 1 hour' then bad := bad || ('yearly adds to monthly: ' || ends1::text || ' -> ' || ends2::text); end if;
 
   -- 5. The payment provider confirms an order, never the app; confirming twice changes nothing.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_checkout('monthly', true);
   ob := (r->>'order_id')::uuid;
   begin
@@ -99,13 +99,13 @@ begin
   r := public.confirm_payment(ob, 'mp-1', 'mpesa');
   if r->>'receipt_no' is distinct from rc then bad := bad || ('confirm twice: ' || r::text); end if;
   select count(*) into n from private.subscriptions where account_id = ids[2] and ends_at < now() + interval '30 days 1 hour'; if n <> 1 then bad := bad || 'confirm twice extended the plan'; end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.start_matching();
   if r->>'state' is distinct from 'found' then bad := bad || ('B matches A: ' || r::text); end if;
   conv := (r->>'conversation_id')::uuid;
 
   -- 6. Cancelling and renewing.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   perform public.cancel_plan();
   r := public.my_plan();
   if (r->'subscription'->>'auto_renew')::boolean is not false or r->'subscription'->>'cancelled_at' is null then bad := bad || ('cancel plan: ' || r::text); end if;
@@ -116,7 +116,7 @@ begin
   -- 7. When the plan ends, chats become read-only and the rest closes.
   reset role;
   update private.subscriptions set ends_at = now() - interval '1 minute' where account_id = ids[1];
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.send_message(conv, 'hello');
   if r->>'code' is distinct from 'read-only' then bad := bad || ('send after plan ended: ' || r::text); end if;
   r := public.my_chats();

@@ -14,10 +14,10 @@ begin
   wk := private.week_ms(private.week_start(now()));
 
   -- Limits can only be set by an Admin, within range.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_set_wellbeing(10, 4, 5);
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator set limits'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_set_wellbeing(3, 2, 5);
   if r->>'code' is distinct from 'invalid' then bad := array_append(bad, 'daily limit range'); end if;
   r := public.admin_set_wellbeing(10, 20, 5);
@@ -26,7 +26,7 @@ begin
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('set limits: ' || r::text)); end if;
 
   -- The daily limit and breaks.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   for i in 1..10 loop
     r := public.admin_reveal('C-r:' || rep2, 'e' || i);
     if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('reveal ' || i || ': ' || r::text)); end if;
@@ -47,17 +47,17 @@ begin
   -- The rota decides who takes Severity 1. With no rota yet, the heavy flag decides.
   r := public.admin_claim('C-r:' || rep1);
   if r->>'code' is distinct from 'rota' then bad := array_append(bad, ('s1 without rota or flag: ' || r::text)); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_set_rota(wk, array['M. Alpha', 'Nobody Here']);
   if r->>'code' is distinct from 'invalid' then bad := array_append(bad, 'unknown moderator on rota'); end if;
   r := public.admin_set_rota(wk, array[]::text[]);
   if r->>'code' is distinct from 'invalid' then bad := array_append(bad, 'empty rota'); end if;
   r := public.admin_set_rota(wk, array['M. Bravo']);
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('set rota: ' || r::text)); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_claim('C-r:' || rep1);
   if r->>'code' is distinct from 'rota' then bad := array_append(bad, 'off-rota moderator took S1'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_claim('C-r:' || rep1);
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('on-rota moderator: ' || r::text)); end if;
   -- Handing a case on.
@@ -68,7 +68,7 @@ begin
   r := public.admin_ask_support();
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, 'ask support'); end if;
   -- The rota can't repeat the same people two weeks running.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_set_rota(wk + 7 * 86400000, array['M. Bravo']);
   if r->>'code' is distinct from 'rotate' then bad := array_append(bad, ('repeat rota: ' || r::text)); end if;
   r := public.admin_set_rota(wk + 7 * 86400000, array['M. Alpha']);

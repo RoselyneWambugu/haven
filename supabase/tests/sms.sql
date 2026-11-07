@@ -9,14 +9,14 @@ begin
   end loop;
   -- 1 therapist (t-amina), 2 member who opts in, 3 member who does not
   update private.therapists set account_id = ids[1] where id = 't-amina';
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Sms A', date '1996-06-06', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
   r := public.update_settings('{"smsReminders": true}'::jsonb);
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('setting rejected: ' || r::text)); end if;
   r := public.update_settings('{"smsReminders": "yes"}'::jsonb);
   if r->>'ok' is not distinct from 'true' then bad := array_append(bad, 'non-boolean accepted'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Sms B', date '1996-06-06', null, 'CedarLeaf', 'sun', array['English'], array[]::text[], 'v1');
   reset role;
   if (select settings->>'smsReminders' from public.accounts where account_id = ids[2]) is distinct from 'true' then bad := array_append(bad, 'setting not saved'); end if;
@@ -63,7 +63,7 @@ begin
   if (select status from private.sms_outbox where id = (msgs->1->>'id')::bigint) <> 'sent' then bad := array_append(bad, 'sent not recorded'); end if;
 
   -- Members can't touch the queue.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   begin
     perform public.sms_claim(5);
     bad := array_append(bad, 'member claimed sms');

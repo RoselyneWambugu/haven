@@ -7,10 +7,10 @@ begin
   for i in 1..2 loop
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at) values (ids[i], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '25471800021' || i, now(), now());
   end loop;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Grace A', date '1996-06-06', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Grace B', date '1996-06-06', null, 'CedarLeaf', 'sun', array['English'], array[]::text[], 'v1');
   reset role;
   insert into public.conversations (kind, expires_at) values ('peer', now() + interval '12 hours') returning id into conv;
@@ -18,28 +18,28 @@ begin
 
   -- Plan ended 3 days ago, grace is 7: still readable.
   insert into private.subscriptions (account_id, plan_id, ends_at, method, receipt_no) values (ids[1], 'monthly', now() - interval '3 days', 'mpesa', 'G-1');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_chats();
   if jsonb_array_length(r->'conversations') <> 1 then bad := array_append(bad, 'in grace but hidden'); end if;
   reset role;
 
   -- Ended 10 days ago: hidden.
   update private.subscriptions set ends_at = now() - interval '10 days' where account_id = ids[1];
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_chats();
   if jsonb_array_length(r->'conversations') <> 0 then bad := array_append(bad, 'past grace but visible'); end if;
   reset role;
 
   -- A longer grace brings it back.
   update private.config set value = jsonb_set(value, '{graceDays}', '14') where key = 'limits';
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_chats();
   if jsonb_array_length(r->'conversations') <> 1 then bad := array_append(bad, 'longer grace ignored'); end if;
   reset role;
 
   -- The other member, whose plan is active, is unaffected.
   insert into private.subscriptions (account_id, plan_id, ends_at, method, receipt_no) values (ids[2], 'monthly', now() + interval '20 days', 'mpesa', 'G-2');
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_chats();
   if jsonb_array_length(r->'conversations') <> 1 then bad := array_append(bad, 'active plan hidden'); end if;
   reset role;

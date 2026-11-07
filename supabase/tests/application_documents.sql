@@ -11,7 +11,7 @@ begin
   -- 1 clinical, 2 moderator, 3 applicant, 4 another applicant
   insert into private.staff (account_id, name, role) values (ids[1], 'C. Clin', 'clinical'), (ids[2], 'M. Mod', 'moderator');
 
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.submit_application('Dr. Test Applicant', 'Counsellor', 'woman', 'CPB-77', current_date + 400, true, true);
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
 
@@ -43,19 +43,19 @@ begin
   if jsonb_array_length(r->'documents') <> 1 then bad := array_append(bad, ('my_documents: ' || r::text)); end if;
 
   -- The other applicant sees nothing of it.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[4], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.my_documents();
   if jsonb_array_length(r->'documents') <> 0 then bad := array_append(bad, 'saw another applicant files'); end if;
   select count(*) into n from storage.objects where bucket_id = 'applications';
   if n <> 0 then bad := array_append(bad, 'storage readable by another applicant: ' || n); end if;
 
   -- A moderator can't see files; a clinical reviewer can.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   select count(*) into n from storage.objects where bucket_id = 'applications';
   if n <> 0 then bad := array_append(bad, 'moderator reads storage'); end if;
   r := public.admin_documents(null, null);
   if r->>'code' is distinct from 'role' then bad := array_append(bad, 'moderator listed documents'); end if;
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   select count(*) into n from storage.objects where bucket_id = 'applications';
   if n <> 1 then bad := array_append(bad, 'clinical cannot read storage: ' || n); end if;
   r := public.admin_applicants();
@@ -70,17 +70,17 @@ begin
 
   -- Approval needs a licence document.
   update private.application_documents set kind = 'id' where id = docid;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_verify_applicant(appid, 'approved', 'All checks done', chk);
   if r->>'code' is distinct from 'document' then bad := array_append(bad, ('approved without licence file: ' || r::text)); end if;
   reset role; update private.application_documents set kind = 'licence' where id = docid;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.admin_verify_applicant(appid, 'approved', 'All checks done', chk);
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('approve: ' || r::text)); end if;
 
   -- A therapist's renewal needs the renewed certificate.
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[3], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.portal_submit_renewal('CPB-78', current_date + 800);
   if r->>'code' is distinct from 'document' then bad := array_append(bad, ('renewal without file: ' || r::text)); end if;
   insert into storage.objects (bucket_id, name, owner) values ('applications', ids[3]::text || '/renewal-1.pdf', ids[3]);

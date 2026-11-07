@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { go } from '@/lib/nav'
 import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { api } from '@/api'
-import { REMOTE } from '@/backend/client'
+import { REMOTE, supabase } from '@/backend/client'
 import { adminRequestOtp, adminVerifyOtp, claimFirstAdmin } from '@/backend/remoteAdmin'
 import { normaliseKenyanPhone } from '@/lib/identity'
 import { DEMO_MFA, STAFF } from '@/api/admin'
@@ -13,6 +13,7 @@ import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { GoogleButton } from '@/components/GoogleButton'
+import { StaffMfa } from '@/components/StaffMfa'
 import { Panel } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -29,6 +30,8 @@ export default function StaffSignIn() {
   // Coming back from an email or Google sign-in with no Admin yet opens the setup form straight away.
   const { setup: setupParam } = useLocalSearchParams<{ setup?: string }>()
   const [setup, setSetup] = useState(setupParam === '1')
+  const { mfa: mfaParam } = useLocalSearchParams<{ mfa?: string }>()
+  const [mfa, setMfa] = useState(mfaParam === '1')
   const [setupName, setSetupName] = useState('')
   const [setupCode, setSetupCode] = useState('')
   const roster = useDb((s) => s.admin?.staff) ?? STAFF.map((s, i) => ({ id: `st${i}`, ...s, active: true, lastSignInAt: null }))
@@ -56,6 +59,7 @@ export default function StaffSignIn() {
     const r = await adminVerifyOtp(code)
     setBusy(false)
     if (!r.ok && r.code === 'setup') { setError(null); return setSetup(true) }
+    if (!r.ok && r.code === 'mfa') { setError(null); return setMfa(true) }
     if (!r.ok) return setError(r.error)
     router.replace('/staff/overview' as never)
   }
@@ -65,10 +69,25 @@ export default function StaffSignIn() {
     const r = await claimFirstAdmin(setupName, setupCode)
     setBusy(false)
     if (!r.ok) {
+      if (r.code === 'mfa') { setError(null); setSetup(false); return setMfa(true) }
       if (r.code === 'closed' || r.code === 'locked') { setSetup(false); setSent(false); setCode('') }
       return setError(r.error)
     }
     router.replace('/staff/overview' as never)
+  }
+
+  if (REMOTE && mfa) {
+    return (
+      <View testID="admin-sign-in" style={{ flex: 1, alignItems: 'center', padding: 24, paddingTop: 40 }}>
+        <View style={{ width: '100%', maxWidth: 480, gap: 16 }}>
+          <Text variant="display">One more step</Text>
+          <Text variant="body" muted>
+            A password or phone code isn’t enough for the staff dashboard. It also needs the code from your authenticator app.
+          </Text>
+          <StaffMfa onDone={() => router.replace('/staff/overview' as never)} onCancel={() => { setMfa(false); setSent(false); setCode(''); void supabase().auth.signOut() }} />
+        </View>
+      </View>
+    )
   }
 
   if (REMOTE && setup) {
@@ -115,7 +134,7 @@ export default function StaffSignIn() {
             )}
           </Panel>
           <Panel title="Or sign in with your email">
-            <GoogleButton testID="admin-google" purpose="admin" label="Sign in with Google" onFail={(code) => { if (code === 'setup') { setError(null); setSetup(true); return true } }} onNext={() => router.replace('/staff/overview' as never)} />
+            <GoogleButton testID="admin-google" purpose="admin" label="Sign in with Google" onFail={(code) => { if (code === 'mfa') { setError(null); setMfa(true); return true } if (code === 'setup') { setError(null); setSetup(true); return true } }} onNext={() => router.replace('/staff/overview' as never)} />
             <Button testID="admin-email-signin" variant="quiet" label="Sign in with email and password" onPress={() => go('/login-email?for=admin')} />
           </Panel>
           <Banner tone="green" icon="lock">

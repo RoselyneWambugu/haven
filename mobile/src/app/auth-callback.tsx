@@ -23,7 +23,7 @@ export default function AuthCallback() {
       if (!r.ok) {
         if (r.code !== 'stale' && r.code !== 'unavailable') showToast(r.error)
         // A therapist or staff sign-in that did not match goes back to where it started; a bad email link goes to ask for a new one.
-        return router.replace((r.code === 'link' ? '/forgot-password' : r.code === 'not-therapist' ? '/portal/sign-in' : r.code === 'not-staff' ? '/staff/sign-in' : r.code === 'setup' ? '/staff/sign-in?setup=1' : '/') as never)
+        return router.replace((r.code === 'link' ? '/forgot-password' : r.code === 'not-therapist' ? '/portal/sign-in' : r.code === 'not-staff' ? '/staff/sign-in' : r.code === 'setup' ? '/staff/sign-in?setup=1' : r.code === 'mfa' ? '/staff/sign-in?mfa=1' : '/') as never)
       }
       const to = { 'trust-device': '/trust-device', apply: '/portal/apply', consent: registrationRoute(getDb().reg), register: registrationRoute(getDb().reg), 'reauth-ok': '/me/profiles', 'reset-password': '/reset-password', linked: '/settings/sign-in-methods', portal: '/portal/today', 'mobile-app': '/mobile-app?done=email', admin: '/staff/overview', redirecting: '/' }[r.value.next]
       router.replace(to as never)

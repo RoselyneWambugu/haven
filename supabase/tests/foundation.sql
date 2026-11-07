@@ -14,7 +14,7 @@ begin
            (b, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '254722345678', now(), now());
 
   -- Act as member A.
-  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
 
   r := public.register_member('Wanjiru Kamau', date '2010-01-01', null, 'QuietPine', 'moon', array['English'], array['Grief'], 'v1');
@@ -55,7 +55,7 @@ begin
 
   -- Act as member B.
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
 
   r := public.register_member('Achieng Otieno', date '1990-01-01', 'a@b.co', 'quietpine2', 'leaf', array['English'], array[]::text[], 'v1');

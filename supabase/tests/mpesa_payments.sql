@@ -7,7 +7,7 @@ begin
   for i in 1..2 loop
     insert into auth.users (id, instance_id, aud, role, phone, created_at, updated_at) values (ids[i], '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '25472200025' || i, now(), now());
   end loop;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.register_member('Pay A', date '1996-06-06', null, 'QuietPine', 'moon', array['English'], array[]::text[], 'v1');
   if r->>'ok' is distinct from 'true' then raise exception 'SETUP FAILED: %', r; end if;
   reset role;
@@ -15,7 +15,7 @@ begin
   insert into private.orders (account_id, plan_id, amount_kes, status) values (ids[1], 'daily', 100, 'pending') returning id into oid2;
 
   -- Members can't call the provider-side functions.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   begin
     perform public.payment_fail(oid, 'timeout');
     bad := array_append(bad, 'member called payment_fail');
@@ -43,7 +43,7 @@ begin
   if not exists (select 1 from private.payment_events where kind = 'unknown_callback') then bad := array_append(bad, 'event not kept'); end if;
 
   -- The member sees it pending, then paid once the provider confirms it.
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.order_status(oid);
   if r->>'status' <> 'pending' then bad := array_append(bad, 'not pending'); end if;
   r := public.order_status(oid2);
@@ -53,13 +53,13 @@ begin
   if r->>'ok' is distinct from 'true' then bad := array_append(bad, ('confirm: ' || r::text)); end if;
   r := public.payment_fail(oid2, 'insufficient');
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated')::text, true); set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', ids[1], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   r := public.order_status(oid);
   if r->>'status' <> 'paid' or r->>'receipt_no' is null then bad := array_append(bad, ('paid: ' || r::text)); end if;
   r := public.order_status(oid2);
   if r->>'status' <> 'failed' or r->>'failure' <> 'insufficient' then bad := array_append(bad, ('failed: ' || r::text)); end if;
   -- Someone else can't read it.
-  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated')::text, true); set local role authenticated;
+  reset role; perform set_config('request.jwt.claims', json_build_object('sub', ids[2], 'role', 'authenticated', 'aal', 'aal2')::text, true); set local role authenticated;
   begin
     r := public.order_status(oid);
     if r->>'code' is distinct from 'gone' then bad := array_append(bad, 'read someone else order'); end if;
