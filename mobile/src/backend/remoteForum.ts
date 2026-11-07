@@ -13,7 +13,7 @@ import { detectNames, explainNames, GOSSIP_SPACE, GOSSIP_TOPIC, isGossip } from 
 import { cleanOptions, isPoll, validatePoll } from '@/lib/polls'
 import type { PollState } from '@/api/types'
 
-interface RemoteComment { id: string; author_name: string; author_avatar: AvatarKind; text: string; at: string; mine: boolean }
+interface RemoteComment { id: string; author_name: string; author_avatar: AvatarKind; author_key?: string; text: string; at: string; mine: boolean }
 interface RemotePost {
   id: string
   author_name: string
@@ -42,7 +42,7 @@ async function rpc(name: string, args?: Record<string, unknown>): Promise<Reply>
 }
 
 const toComment = (c: RemoteComment): ForumComment => ({
-  id: c.id, authorName: c.author_name, authorAvatar: c.author_avatar, therapistId: null, therapistName: null, text: c.text, at: ms(c.at), hiddenReason: null, mine: c.mine,
+  id: c.id, authorName: c.author_name, authorAvatar: c.author_avatar, authorKey: c.author_key, therapistId: null, therapistName: null, text: c.text, at: ms(c.at), hiddenReason: null, mine: c.mine,
 })
 
 const toPost = (p: RemotePost): ForumPost => ({
@@ -95,6 +95,12 @@ const needsPlan = (): Res | null => {
 
 export const remoteForum = {
   ...mockForum,
+
+  /** The light card for a pen name: how long they have been here, to the month. */
+  async memberCard(key: string): Promise<{ since: number } | null> {
+    const r = await rpc('member_card', { p_key: key })
+    return r.ok && typeof r.since === 'number' ? { since: r.since } : null
+  },
 
   async create(input: { topic: string; title: string; body: string; space?: string }): Promise<Res<{ post: ForumPost; pending: boolean }>> {
     const gate = needsPlan()

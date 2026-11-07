@@ -65,7 +65,7 @@ function mk(space: Space, n: number, p: Pick<ForumPost, 'authorName' | 'authorAv
 }
 
 const reply = (id: string, name: string, avatar: ForumComment['authorAvatar'], text: string, now: number, hoursAgo: number): ForumComment => ({
-  id, authorName: name, authorAvatar: avatar, text, at: now - hoursAgo * H, hiddenReason: null, mine: false, therapistId: null, therapistName: null,
+  id, authorName: name, authorAvatar: avatar, authorKey: `peer-${name}`, text, at: now - hoursAgo * H, hiddenReason: null, mine: false, therapistId: null, therapistName: null,
 })
 
 /** A few starter posts per space, so a new space is never empty. A real service has real members. */

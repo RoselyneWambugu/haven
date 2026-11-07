@@ -184,6 +184,8 @@ export interface ForumComment {
   at: number
   hiddenReason: 'contact' | null
   mine: boolean
+  /** An opaque key for the author, so their pen name can be tapped for a light card. Not set for therapists. */
+  authorKey?: string
 }
 
 export interface ForumPost {

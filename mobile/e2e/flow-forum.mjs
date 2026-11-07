@@ -70,6 +70,17 @@ await step('post-detail', async () => {
   await page.waitForTimeout(300)
   if (!/Thank you for sharing this/.test(await page.locator('body').innerText())) throw new Error('comment missing')
 })
+await step('light-card-for-a-pen-name', async () => {
+  await tid('post-detail').locator('[data-testid="person-tap"]').first().click()
+  await tid('person-card').waitFor()
+  const t = await tid('person-card').innerText()
+  if (!/Here since/.test(t)) throw new Error('the card should say how long they have been here')
+  if (!/Mute /.test(t) || !/Report/.test(t)) throw new Error('the card should offer Mute and Report')
+  await page.waitForTimeout(700)
+  await shot('22b-person-card')
+  await page.getByLabel('Close').last().click()
+  await tid('person-card').waitFor({ state: 'hidden' })
+})
 await step('composer', async () => {
   await page.getByRole('button', { name: 'Back' }).click()
   await tid('forum-new').click()

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { api } from '@/api'
+import { PersonTap } from '@/components/PersonCard'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Badge, Check } from '@/components/Controls'
@@ -110,13 +111,15 @@ export default function PostDetail() {
       }
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Avatar kind={post.authorAvatar} size={38} />
-        <View style={{ flex: 1 }}>
-          <Text variant="label">{post.authorName}</Text>
-          <Text variant="caption" muted>
-            {relative(post.createdAt, now())} · {post.topic}
-          </Text>
-        </View>
+        <PersonTap name={post.authorName} avatar={post.authorAvatar} authorKey={post.authorKey} disabled={isGossip(post)} onReport={() => setReporting({ target: 'post', id: post.id })} onMuted={() => goBack('/forum')}>
+          <Avatar kind={post.authorAvatar} size={38} />
+          <View style={{ flexShrink: 1 }}>
+            <Text variant="label">{post.authorName}</Text>
+          </View>
+        </PersonTap>
+        <Text variant="caption" muted style={{ flex: 1 }}>
+          {relative(post.createdAt, now())} · {post.topic}
+        </Text>
       </View>
       {isPoll(post) && post.poll ? <PollCard post={post} open={false} /> : <Text variant="title">{post.title}</Text>}
       {isPoll(post) ? null : <Text variant="body">{post.body}</Text>}
@@ -159,10 +162,21 @@ export default function PostDetail() {
         return (
           <Card key={c.id} tone={th ? 'lichen' : 'milk'}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {th ? <Icon name="shield" size={18} color={colors.mossDeep} /> : <Avatar kind={c.authorAvatar} size={26} ring={false} />}
-              <Text variant="small" bold style={{ flexShrink: 1 }}>
-                {c.authorName}
-              </Text>
+              {th ? (
+                <>
+                  <Icon name="shield" size={18} color={colors.mossDeep} />
+                  <Text variant="small" bold style={{ flexShrink: 1 }}>
+                    {c.authorName}
+                  </Text>
+                </>
+              ) : (
+                <PersonTap name={c.authorName} avatar={c.authorAvatar} authorKey={c.authorKey} onReport={() => setReporting({ target: 'comment', id: c.id })}>
+                  <Avatar kind={c.authorAvatar} size={26} ring={false} />
+                  <Text variant="small" bold style={{ flexShrink: 1 }}>
+                    {c.authorName}
+                  </Text>
+                </PersonTap>
+              )}
               {th ? <Badge icon="check" label="Verified therapist" /> : null}
               <View style={{ flex: 1 }} />
               <Text variant="caption" muted>

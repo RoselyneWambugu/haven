@@ -219,3 +219,24 @@ describe('polls on the server', () => {
     expect(await remoteForum.comment('pl1', 'Nice one')).toMatchObject({ ok: false, code: 'gossip' })
   })
 })
+
+describe('the light card', () => {
+  it('asks the server only for the date, and keeps the commenter’s key', async () => {
+    const calls: { name: string; args?: Record<string, unknown> }[] = []
+    setClient({
+      rpc: async (name: string, args?: Record<string, unknown>) => {
+        calls.push({ name, args })
+        if (name === 'member_card') return { data: { ok: true, since: 1759276800000 }, error: null }
+        return { data: { ok: true, posts: [{ ...POST, comments: [{ ...POST.comments[0], author_key: 'k-2' }] }], spaces: [] }, error: null }
+      },
+    } as unknown as SupabaseClient)
+    expect(await remoteForum.memberCard('k-1')).toEqual({ since: 1759276800000 })
+    expect(calls[0]).toEqual({ name: 'member_card', args: { p_key: 'k-1' } })
+    await syncForum()
+    expect(getDb().posts[0].comments[0].authorKey).toBe('k-2')
+  })
+  it('shows no card when the server says the person isn’t there', async () => {
+    setClient({ rpc: async () => ({ data: { ok: false, code: 'gone', error: 'This person isn’t here.' }, error: null }) } as unknown as SupabaseClient)
+    expect(await remoteForum.memberCard('nope')).toBeNull()
+  })
+})

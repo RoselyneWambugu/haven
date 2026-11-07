@@ -15,6 +15,7 @@ import { chatSnapshot, commentSnapshot, groupSnapshot, postSnapshot, priorReport
 import { dayAndClock } from '@/lib/time'
 import { spaceById } from '@/data/spaces'
 import { needsCheck } from '@/lib/spaces'
+import { demoSince } from '@/lib/personCard'
 import { detectNames, explainNames, GOSSIP_SPACE, GOSSIP_TOPIC, isGossip } from '@/lib/gossip'
 import { cleanOptions, isPoll, POLL_DAYS, POLL_SPACE, POLL_TOPIC, pollOpen, validatePoll } from '@/lib/polls'
 import type { AvatarKind, Conversation, EvidenceLine, ReportRecord, ForumComment, ForumPost, Message, Peer, ReportReason, ReportTarget, Res } from './types'
@@ -329,7 +330,7 @@ function addReply(id: string, kind: 'peer' | 'therapist') {
   const { text, peer } = postReply(kind, p.title, p.body)
   const th = THERAPISTS.find((x) => x.id === spaceById(p.space)?.facilitatorId) ?? THERAPISTS[0]
   const c: ForumComment = {
-    id: uid('cm'), authorName: kind === 'therapist' ? th.name : peer.name, authorAvatar: kind === 'therapist' ? 'leaf' : peer.avatar,
+    id: uid('cm'), authorName: kind === 'therapist' ? th.name : peer.name, authorAvatar: kind === 'therapist' ? 'leaf' : peer.avatar, authorKey: kind === 'therapist' ? undefined : `peer-${peer.name}`,
     therapistId: kind === 'therapist' ? th.id : null, therapistName: kind === 'therapist' ? th.name : null, text, at: now(), hiddenReason: null, mine: false,
   }
   setPost(id, (x) => ({ ...x, comments: [...x.comments, c] }))
@@ -466,6 +467,10 @@ export const forum = {
 
   hide(id: string): void {
     update((s) => ({ hiddenPostIds: [...s.hiddenPostIds, id] }))
+  },
+  /** The light card for a pen name. In the demo the date is made up from the key, the same each time. */
+  async memberCard(key: string): Promise<{ since: number } | null> {
+    return { since: demoSince(key, now()) }
   },
   muteAuthor(authorKey: string): void {
     update((s) => ({ mutedAuthors: s.mutedAuthors.includes(authorKey) ? s.mutedAuthors : [...s.mutedAuthors, authorKey] }))

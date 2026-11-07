@@ -71,7 +71,7 @@ export const THERAPISTS: Therapist[] = [
 ]
 
 const c = (id: string, name: string, avatar: ForumComment['authorAvatar'], text: string, hoursAgo: number, now: number, th?: Therapist): ForumComment => ({
-  id, authorName: name, authorAvatar: avatar, text, at: now - hoursAgo * H, hiddenReason: null, mine: false,
+  id, authorName: name, authorAvatar: avatar, authorKey: th ? undefined : `peer-${name}`, text, at: now - hoursAgo * H, hiddenReason: null, mine: false,
   therapistId: th?.id ?? null, therapistName: th?.name ?? null,
 })
 

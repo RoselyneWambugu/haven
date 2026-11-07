@@ -2,6 +2,7 @@ import { View } from 'react-native'
 import { Avatar } from './Art'
 import { Badge } from './Controls'
 import { Icon } from './Icon'
+import { PersonTap } from './PersonCard'
 import { Card } from './Surfaces'
 import { Text } from './Text'
 import { now } from '@/lib/clock'
@@ -17,10 +18,12 @@ export function PostCard({ post, showTopic = true }: { post: ForumPost; showTopi
   return (
     <Card testID={`post-${post.id}`} onPress={() => go(`/forum/${post.id}`)} accessibilityLabel={`${post.title}, by ${post.authorName}`}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Avatar kind={post.authorAvatar} size={30} ring={false} />
-        <Text variant="small" bold style={{ flexShrink: 1 }} numberOfLines={1}>
-          {post.authorName}
-        </Text>
+        <PersonTap name={post.authorName} avatar={post.authorAvatar} authorKey={post.authorKey} disabled={isGossip(post)}>
+          <Avatar kind={post.authorAvatar} size={30} ring={false} />
+          <Text variant="small" bold style={{ flexShrink: 1 }} numberOfLines={1}>
+            {post.authorName}
+          </Text>
+        </PersonTap>
         <Text variant="caption" muted>
           {relative(post.createdAt, now())}
         </Text>

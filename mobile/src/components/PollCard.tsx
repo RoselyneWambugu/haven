@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { api } from '@/api'
+import { PersonTap } from './PersonCard'
 import { Avatar } from './Art'
 import { Badge } from './Controls'
 import { Icon } from './Icon'
@@ -35,10 +36,12 @@ export function PollCard({ post, open = true }: { post: ForumPost; open?: boolea
   return (
     <Card testID={`poll-${post.id}`} accessibilityLabel={`Poll: ${post.title}`}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Avatar kind={post.authorAvatar} size={30} ring={false} />
-        <Text variant="small" bold style={{ flexShrink: 1 }} numberOfLines={1}>
-          {post.authorName}
-        </Text>
+        <PersonTap name={post.authorName} avatar={post.authorAvatar} authorKey={post.authorKey}>
+          <Avatar kind={post.authorAvatar} size={30} ring={false} />
+          <Text variant="small" bold style={{ flexShrink: 1 }} numberOfLines={1}>
+            {post.authorName}
+          </Text>
+        </PersonTap>
         <Text variant="caption" muted>
           {relative(post.createdAt, t)}
         </Text>
