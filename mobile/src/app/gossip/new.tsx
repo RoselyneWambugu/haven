@@ -13,6 +13,7 @@ import { useDb } from '@/store/db'
 
 /** Share a piece of gossip. Names are stopped before it is sent, and so are contact details. Everyone can react; nobody can reply. */
 export default function NewGossip() {
+  const first = useDb((s) => !s.account?.hasPostedBefore)
   const plan = usePlan()
   const forumOn = useDb((s) => s.content.flags.forum)
   const [title, setTitle] = useState('')
@@ -62,7 +63,7 @@ export default function NewGossip() {
         </Banner>
       ) : null}
       <Text variant="caption" muted>
-        A member’s first post is checked before it goes live. Anyone can report a post.
+        {first ? 'Your first post is checked before it goes live. That usually takes a few minutes. ' : ''}Anyone can report a post.
       </Text>
     </Screen>
   )

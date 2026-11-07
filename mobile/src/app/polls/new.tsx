@@ -13,6 +13,7 @@ import { useDb } from '@/store/db'
 
 /** Ask a poll: one question, two to four answers. Names and contact details are stopped before it is sent. It closes after a week. */
 export default function NewPoll() {
+  const first = useDb((s) => !s.account?.hasPostedBefore)
   const plan = usePlan()
   const forumOn = useDb((s) => s.content.flags.forum)
   const [question, setQuestion] = useState('')
@@ -67,7 +68,7 @@ export default function NewPoll() {
       ) : null}
       <View>
         <Text variant="caption" muted>
-          A member’s first post is checked before it goes live. Anyone can report a poll.
+          {first ? 'Your first post is checked before it goes live. That usually takes a few minutes. ' : ''}Anyone can report a poll.
         </Text>
       </View>
     </Screen>
