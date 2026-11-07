@@ -37,6 +37,25 @@ export function parseDob(input: string): Date | null {
   return date
 }
 
+const two = (n: number) => String(n).padStart(2, '0')
+
+/** "14/03/1998" becomes "1998-03-14" (what a browser's date box uses). An unreadable date becomes "". */
+export function dobToIso(input: string): string {
+  const d = parseDob(input)
+  return d ? `${d.getUTCFullYear()}-${two(d.getUTCMonth() + 1)}-${two(d.getUTCDate())}` : ''
+}
+
+/** "1998-03-14" becomes "14/03/1998". */
+export function isoToDob(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : ''
+}
+
+/** A date picked on a phone (its local calendar day) as "14/03/1998". */
+export function dateToDob(d: Date): string {
+  return `${two(d.getDate())}/${two(d.getMonth() + 1)}/${d.getFullYear()}`
+}
+
 export function ageOn(dob: Date, now: Date): number {
   let age = now.getUTCFullYear() - dob.getUTCFullYear()
   const beforeBirthday =

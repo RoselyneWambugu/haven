@@ -24,7 +24,7 @@ await step('register', async () => {
   await tid('reg-email').fill('amina@example.com')
   await tid('reg-password').fill('Fern2026a')
   await tid('reg-password-again').fill('Fern2026a')
-  await tid('reg-dob').fill('14/03/1998')
+  await tid('reg-dob').fill('1998-03-14')
   await tid('register-continue').click()
   const code = (await tid('demo-code').innerText()).match(/(\d{6})/)[1]
   await tid('otp-input').fill(code)

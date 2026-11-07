@@ -24,3 +24,19 @@ describe('masking where a code was sent', () => {
     expect(maskContact('+254712345678')).toBe('+254 712 ••• 678')
   })
 })
+
+import { dateToDob, dobToIso, isoToDob } from '../src/lib/identity'
+describe('the date of birth picker', () => {
+  it('turns a picked date into the form the rest of the app uses, and back', () => {
+    expect(isoToDob('1998-03-14')).toBe('14/03/1998')
+    expect(dobToIso('14/03/1998')).toBe('1998-03-14')
+    expect(dobToIso('1/3/1998')).toBe('1998-03-01')
+    expect(dateToDob(new Date(1998, 2, 14))).toBe('14/03/1998')
+  })
+  it('gives nothing for a date that isn’t one', () => {
+    expect(isoToDob('')).toBe('')
+    expect(isoToDob('14/03/1998')).toBe('')
+    expect(dobToIso('31/02/1998')).toBe('')
+    expect(dobToIso('')).toBe('')
+  })
+})

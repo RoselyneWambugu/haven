@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Pressable } from 'react-native'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
+import { DateField } from '@/components/DateField'
 import { Field } from '@/components/Field'
 import { REMOTE } from '@/backend/client'
 import { setPendingSignup } from '@/backend/pendingSignup'
@@ -94,7 +95,7 @@ export default function Register() {
           <Field testID="reg-password-again" label="Password again" value={again} onChangeText={(v) => { setAgain(v); setErrors({}) }} secureTextEntry autoCapitalize="none" autoComplete="new-password" textContentType="newPassword" error={errors.again} />
         </>
       )}
-      <Field testID="reg-dob" label="Date of birth" placeholder="DD / MM / YYYY" value={dob} onChangeText={setDob} keyboardType="numbers-and-punctuation" hint="Used to check you are 18 or over and to find people in a similar age range. Others see only the range." error={errors.dob} />
+      <DateField testID="reg-dob" label="Date of birth" value={dob} onChange={(v) => { setDob(v); setErrors({}) }} hint="Pick it from the calendar. Used to check you are 18 or over and to find people in a similar age range. Others see only the range." error={errors.dob} />
       {errors.form ? <Banner tone="clay">{errors.form}</Banner> : null}
       <Pressable accessibilityRole="button" accessibilityLabel="Why do we ask for this?" onPress={() => setWhy(true)} style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>

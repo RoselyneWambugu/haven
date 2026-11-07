@@ -42,7 +42,7 @@ await safe('register', async () => {
   await tid(page, 'reg-email').fill('amina@example.com')
   await tid(page, 'reg-password').fill('Fern2026a')
   await tid(page, 'reg-password-again').fill('Fern2026a')
-  await tid(page, 'reg-dob').fill('14/03/1998')
+  await tid(page, 'reg-dob').fill('1998-03-14')
   await page.screenshot({ path: `${out}/m-register.png` })
   await tid(page, 'register-continue').click()
   const code = (await tid(page, 'demo-code').innerText()).match(/(\d{6})/)[1]
