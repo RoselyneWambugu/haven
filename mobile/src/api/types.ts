@@ -780,6 +780,10 @@ export interface HeldPost {
   author: string
   topic: string
   at: number
+  /** Why it was held automatically: a scanner category, or “Reported by members”. Not set for a first post that is only waiting. */
+  reason?: string | null
+  /** How sure the scanner is (0 to 1). The list is worst first. */
+  score?: number | null
 }
 
 // ---------- editable content and configuration (admin: Resources, Configuration) ----------

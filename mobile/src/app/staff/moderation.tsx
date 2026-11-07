@@ -35,10 +35,13 @@ export default function Moderation() {
       </View>
       {REMOTE ? (
         <Panel title="Held posts" testID="held-posts">
-          {(a.held ?? []).length === 0 ? <Text variant="small" muted>Nothing is waiting. Posts that need a look appear here, and go live after a day if nobody gets to them.</Text> : null}
+          {(a.held ?? []).length === 0 ? <Text variant="small" muted>Nothing is waiting. Posts the scanner is sure about, and posts several members report, are held here, worst first, and stay hidden until you decide. A first post that is only being checked goes live by itself after a short wait.</Text> : null}
           {(a.held ?? []).map((h) => (
             <View key={h.id} style={{ gap: 6, paddingVertical: 8 }}>
-              <Text variant="label">{h.title}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <Text variant="label" style={{ flexShrink: 1 }}>{h.title}</Text>
+                {h.reason ? <Badge tone="clay" label={`${h.reason}${typeof h.score === 'number' && h.reason !== 'Reported by members' ? ` · ${Math.round(h.score * 100)}%` : ''}`} /> : <Badge tone="plain" label="First post" />}
+              </View>
               <Text variant="small" muted>{h.author} · {h.topic}</Text>
               <Text variant="small">{h.body}</Text>
               {a.role === 'moderator' || admin ? (
