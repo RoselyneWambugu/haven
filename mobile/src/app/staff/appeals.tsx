@@ -16,7 +16,7 @@ export default function Appeals() {
       <Panel title={`Open (${open.length})`} style={{ gap: 0 }}>
         {open.length ? (
           open.map((a) => (
-            <Pressable key={a.id} testID={`appeal-${a.id}`} accessibilityRole="button" accessibilityLabel={`${a.id}, ${a.penName}`} onPress={() => go(`/admin/appeal/${a.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, minHeight: 52 }}>
+            <Pressable key={a.id} testID={`appeal-${a.id}`} accessibilityRole="button" accessibilityLabel={`${a.id}, ${a.penName}`} onPress={() => go(`/staff/appeal/${a.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, minHeight: 52 }}>
               <Text variant="label" style={{ width: 90 }} numberOfLines={1}>
                 {a.therapistId ? 'Therapist' : a.id.length > 10 ? 'Member' : a.id}
               </Text>

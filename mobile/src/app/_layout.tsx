@@ -45,13 +45,13 @@ function Gate() {
 
   useEffect(() => {
     if (!nav?.key) return
-    // The therapist portal and the admin dashboard each have their own sign-in and guard.
+    // The therapist portal and the staff dashboard each have their own sign-in and guard.
     // On the live website members have no screens: anything that is not for therapists, staff or the public goes to the landing page.
     if (!MEMBERS_ON_WEB && first !== '' && first !== 'index' && !WEB_PAGES.has(first)) {
       router.replace('/landing' as never)
       return
     }
-    if (first === 'portal' || first === 'admin') return
+    if (first === 'portal' || first === 'staff' || first === 'admin') return
     if (first === 'settings' && proIn && !signedIn) return
     if (!signedIn) {
       if (!SIGNED_OUT_OK.has(first)) router.replace(front)
@@ -90,10 +90,10 @@ function useAppLock() {
   }, [])
 }
 
-/** The member app is a phone-width column. The therapist portal and the admin dashboard are desktop web apps, so they get the full width. */
+/** The member app is a phone-width column. The therapist portal and the staff dashboard are desktop web apps, so they get the full width. */
 function Shell({ children }: { children: React.ReactNode }) {
   const first = useSegments()[0] as string | undefined
-  const wide = first === 'portal' || first === 'admin' || first === 'landing'
+  const wide = first === 'portal' || first === 'staff' || first === 'landing'
   const maxWidth = first === 'landing' ? LANDING_WIDTH : PORTAL_WIDTH
   return (
     <View style={styles.backdrop}>

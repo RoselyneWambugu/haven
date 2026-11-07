@@ -18,7 +18,7 @@ const step = async (name, fn) => { try { await fn(); console.log('ok  ', name) }
 const body = async () => page.locator('body').innerText()
 const login = async (name) => {
   await page.waitForTimeout(600)
-  await page.goto('http://localhost:8091/admin/sign-in')
+  await page.goto('http://localhost:8091/staff/sign-in')
   await page.waitForTimeout(1500)
   if (await tid('admin-sign-out').count()) await tid('admin-sign-out').click()
   await tid('admin-sign-in').waitFor()

@@ -32,7 +32,7 @@ export default function SignupEmail() {
     if (!r.ok) return setErrors({ [r.code === 'email' || r.code === 'password' ? r.code : 'form']: r.error })
     if (r.value.next === 'check-email') return setSent(true)
     const n = r.value.next
-    replace(n === 'portal' ? '/portal/today' : n === 'admin' ? '/admin/overview' : n === 'trust-device' ? '/trust-device' : n === 'consent' ? '/consent' : '/register')
+    replace(n === 'portal' ? '/portal/today' : n === 'admin' ? '/staff/overview' : n === 'trust-device' ? '/trust-device' : n === 'consent' ? '/consent' : '/register')
   }
 
   if (sent) {

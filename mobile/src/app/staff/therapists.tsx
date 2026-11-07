@@ -86,7 +86,7 @@ export default function Therapists() {
     <PortalPage testID="admin-therapists" title="Therapists" sub="Clinical checks sit with clinicians.">
       <Panel title="Applications" style={{ gap: 0 }}>
         {apps.map((x) => (
-          <Pressable key={x.id} testID={`applicant-${x.id}`} accessibilityRole="button" accessibilityLabel={`${x.name}, ${STATUS[x.status]}`} onPress={() => go(`/admin/therapist/${x.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, minHeight: 52 }}>
+          <Pressable key={x.id} testID={`applicant-${x.id}`} accessibilityRole="button" accessibilityLabel={`${x.name}, ${STATUS[x.status]}`} onPress={() => go(`/staff/therapist/${x.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, minHeight: 52 }}>
             <Text variant="label" style={{ flex: 1 }}>
               {x.name}
             </Text>

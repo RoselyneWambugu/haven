@@ -1,6 +1,6 @@
 # Launch runbook
 
-The live checklist is in the Admin dashboard (Overview, real backend only). It reads the system and shows what is still to do. This page is the order to do things in, and what to do if something goes wrong.
+The live checklist is in the staff dashboard (Overview, real backend only). It reads the system and shows what is still to do. This page is the order to do things in, and what to do if something goes wrong.
 
 ## 1. Before anyone outside the team uses it
 

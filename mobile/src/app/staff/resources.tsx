@@ -77,7 +77,7 @@ export default function Resources() {
                 const d = c.departments.find((q) => q.id === x.deptId)
                 const over = x.status === 'open' && isOverdue(x.createdAt, d?.slaHours ?? 24, t)
                 return (
-                  <Pressable key={x.id} testID={`ticket-${x.id}`} accessibilityRole="button" accessibilityLabel={`${x.subject}, ${d?.title}, ${STATUS[x.status]}`} onPress={() => go(`/admin/ticket/${x.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, minHeight: 56 }}>
+                  <Pressable key={x.id} testID={`ticket-${x.id}`} accessibilityRole="button" accessibilityLabel={`${x.subject}, ${d?.title}, ${STATUS[x.status]}`} onPress={() => go(`/staff/ticket/${x.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, minHeight: 56 }}>
                     <View style={{ flex: 1 }}>
                       <Text variant="label" numberOfLines={1}>
                         {x.subject}

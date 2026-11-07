@@ -69,7 +69,7 @@ export default function VerifyTherapist() {
               onPress={async () => {
                 const r = await api.admin.verify(t.id, decision, message, checks)
                 if (!r.ok) return setError(r.error)
-                goBack('/admin/therapists')
+                goBack('/staff/therapists')
               }}
             />
           </View>

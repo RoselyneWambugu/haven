@@ -57,7 +57,7 @@ export default function AppealReview() {
             onPress={async () => {
               const r = await api.admin.decideAppeal(ap.id, outcome, text)
               if (!r.ok) return setError(r.error)
-              goBack('/admin/appeals')
+              goBack('/staff/appeals')
             }}
           />
         </Panel>

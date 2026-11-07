@@ -28,11 +28,11 @@ export default function LoginEmail() {
     const r = await api.auth.signInWithEmail(email, password, purpose)
     setBusy(false)
     if (!r.ok) {
-      if (r.code === 'setup') return replace('/admin/sign-in?setup=1')
+      if (r.code === 'setup') return replace('/staff/sign-in?setup=1')
       return setError(r.error)
     }
     const next = r.value.next
-    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/admin/overview' : next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')
+    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/staff/overview' : next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')
   }
 
   return (

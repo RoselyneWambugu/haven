@@ -77,7 +77,7 @@ await safe('portal', async () => {
   await page.waitForTimeout(1500)
   await page.screenshot({ path: `${out}/p-today.png` })
 })
-await page.goto('http://localhost:8097/admin/sign-in')
+await page.goto('http://localhost:8097/staff/sign-in')
 await page.waitForTimeout(1500)
 await safe('admin', async () => {
   await page.getByText('Sign in', { exact: true }).first().click().catch(() => {})

@@ -31,7 +31,7 @@ export default function MobileApp() {
       )}
       <View style={{ gap: 10 }}>
         <Button testID="mobile-therapist" variant="quiet" label="Therapist sign in" onPress={() => go('/portal')} />
-        <Button testID="mobile-staff" variant="quiet" label="Staff sign in" onPress={() => go('/admin/sign-in')} />
+        <Button testID="mobile-staff" variant="quiet" label="Staff sign in" onPress={() => go('/staff/sign-in')} />
         <Button testID="mobile-urgent" variant="urgent" icon="phone" label="Urgent help" onPress={() => go('/urgent')} />
       </View>
     </Screen>

@@ -5,7 +5,7 @@ import { colors } from '@/theme'
 import { Text } from './Text'
 
 // ---------------------------------------------------------------------------
-// Charts for the admin dashboard, drawn with plain views and SVG so they run in Expo Go and on the web.
+// Charts for the staff dashboard, drawn with plain views and SVG so they run in Expo Go and on the web.
 // Rules kept throughout: one hue (Echo green) for magnitude, thin marks, hairline recessive grids, a few direct
 // labels, text in text colours, a table view for every chart, and no second axis. Marks are pressable so the
 // exact value shows on touch and on hover.

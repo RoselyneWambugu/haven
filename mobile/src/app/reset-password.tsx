@@ -29,7 +29,7 @@ export default function ResetPassword() {
     showToast('Your password has been changed.')
     const next = r.value.next
     if (next === 'mobile-app') return replace('/mobile-app?done=password')
-    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/admin/overview' : next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')
+    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/staff/overview' : next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')
   }
 
   if (ready === false) {

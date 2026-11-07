@@ -55,7 +55,7 @@ export default function Cases() {
           rows.map((c) => {
             const sla = slaLabel(minutesLeft(c, t))
             return (
-              <Pressable key={c.id} testID={`case-${c.id}`} accessibilityRole="button" accessibilityLabel={`${c.id}, ${c.severity}, ${c.type}, ${sla.breached ? 'SLA breached' : `${sla.text} left`}`} onPress={() => go(`/admin/case/${c.id}`)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, minHeight: 48 }}>
+              <Pressable key={c.id} testID={`case-${c.id}`} accessibilityRole="button" accessibilityLabel={`${c.id}, ${c.severity}, ${c.type}, ${sla.breached ? 'SLA breached' : `${sla.text} left`}`} onPress={() => go(`/staff/case/${c.id}`)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, minHeight: 48 }}>
                 <Text variant="small" bold style={{ flex: COLS[0] }}>
                   {c.id}
                 </Text>

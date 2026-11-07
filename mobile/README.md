@@ -49,9 +49,9 @@ tests/           Unit tests. e2e/ holds the browser flows.
 
 A desktop-style web app inside the same project, at `/portal`. Open `/portal/sign-in` (or log in on the real backend: the app knows a therapist's number or email) and continue as the demo therapist, or try **Apply to join Echo** (also reached from Get started, then **I'm a therapist**). It has Today, Inbox, Calendar (weekly availability, time off, caps), Sessions, a live session with private notes, wrap-up, raising a concern, Forum, Earnings with payouts, and the public profile editor. Publishing the profile or availability changes what members see in the directory. Open it in a browser window wider than about 900 px to see the left sidebar and the two-column layout. The admin dashboard uses the same left sidebar. On narrower windows both fold the navigation into a row of tabs at the top.
 
-## The admin dashboard
+## The staff dashboard
 
-An internal desktop-style web app at `/admin`, reached at `/admin/sign-in` (staff who log in on the real backend go there automatically). Pick a staff member, then enter the demo second-factor code shown on the page. There are four roles, and each sees only its own modules:
+An internal desktop-style web app at `/staff`, reached at `/staff/sign-in` (`/admin` still redirects there) (staff who log in on the real backend go there automatically). Pick a staff member, then enter the demo second-factor code shown on the page. There are four roles, and each sees only its own modules:
 
 | Role | Modules |
 | --- | --- |

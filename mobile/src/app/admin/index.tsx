@@ -1,7 +1,6 @@
 import { Redirect } from 'expo-router'
-import { useDb } from '@/store/db'
 
-export default function AdminIndex() {
-  const signedIn = useDb((s) => s.admin?.signedIn ?? false)
-  return <Redirect href={(signedIn ? '/admin/overview' : '/admin/sign-in') as never} />
+/** The staff dashboard used to live at /admin. Old links and bookmarks go to /staff. */
+export default function OldAdminAddress() {
+  return <Redirect href={'/staff' as never} />
 }

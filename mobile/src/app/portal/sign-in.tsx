@@ -97,7 +97,7 @@ export default function PortalSignIn() {
         )}
         <Button testID="portal-apply" variant="quiet" label={app === 'none' ? 'Apply to join Echo' : 'See my application'} onPress={() => go('/portal/apply')} />
         <Button testID="portal-home" variant="ghost" label="About Echo" onPress={() => router.replace((Platform.OS === 'web' ? '/landing' : '/welcome') as never)} />
-        <Button testID="portal-staff" variant="ghost" label="Echo staff sign-in" onPress={() => go('/admin/sign-in')} />
+        <Button testID="portal-staff" variant="ghost" label="Echo staff sign-in" onPress={() => go('/staff/sign-in')} />
       </View>
     </View>
   )

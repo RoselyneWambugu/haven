@@ -85,7 +85,7 @@ export default function Landing() {
         {MEMBERS_ON_WEB ? (
           <Button testID="landing-signin" label="Sign in" size="sm" variant="ghost" block={false} onPress={() => go('/login')} />
         ) : (
-          <Button testID="landing-staff" label="Staff sign in" size="sm" variant="ghost" block={false} onPress={() => go('/admin/sign-in')} />
+          <Button testID="landing-staff" label="Staff sign in" size="sm" variant="ghost" block={false} onPress={() => go('/staff/sign-in')} />
         )}
       </View>
 
@@ -257,7 +257,7 @@ export default function Landing() {
                 I’m a therapist
               </Text>
             </Pressable>
-            <Pressable testID="staff-link" accessibilityRole="link" accessibilityLabel="Echo staff sign-in" onPress={() => go('/admin/sign-in')} style={{ minHeight: 40, justifyContent: 'center' }}>
+            <Pressable testID="staff-link" accessibilityRole="link" accessibilityLabel="Echo staff sign-in" onPress={() => go('/staff/sign-in')} style={{ minHeight: 40, justifyContent: 'center' }}>
               <Text variant="small" color={colors.paper}>
                 Echo staff
               </Text>

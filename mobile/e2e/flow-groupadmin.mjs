@@ -17,7 +17,7 @@ const tid = (id) => page.locator(`[data-testid="${id}"]`)
 const step = async (name, fn) => { try { await fn(); console.log('ok  ', name) } catch (e) { console.log('FAIL', name, String(e).split('\n')[0]); await shot(`FAIL-${name}`); console.log(problems.join('\n')); throw e } }
 const login = async (name) => {
   await page.waitForTimeout(600) // let the last change reach storage before reloading
-  await page.goto('http://localhost:8105/admin/sign-in')
+  await page.goto('http://localhost:8105/staff/sign-in')
   await page.waitForTimeout(1500)
   if (await tid('admin-sign-out').count()) await tid('admin-sign-out').click()
   await tid('admin-sign-in').waitFor()

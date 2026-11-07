@@ -89,7 +89,7 @@ Six slices of the real backend are built on the existing Supabase project `haven
 - **Payout.** Changing it needs a code sent to the therapist's phone, checked on the server: the sign-in must be under five minutes old.
 - **Still on the mock:** applying to join Echo and licence checks, appeals against a suspension or review, and the clinical reviewer's decisions.
 
-## The admin dashboard (slice 7)
+## The staff dashboard (slice 7)
 
 Migration `20261021000700_admin.sql`, checks in `supabase/tests/admin.sql`.
 

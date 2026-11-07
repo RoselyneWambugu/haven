@@ -19,7 +19,7 @@ const body = async () => page.locator('body').innerText()
 const BASE = 'http://localhost:8090'
 const login = async (name) => {
   await page.waitForTimeout(700)
-  await page.goto(`${BASE}/admin/sign-in`)
+  await page.goto(`${BASE}/staff/sign-in`)
   await page.waitForTimeout(1500)
   if (await tid('admin-sign-out').count()) await tid('admin-sign-out').click()
   await tid('admin-sign-in').waitFor()

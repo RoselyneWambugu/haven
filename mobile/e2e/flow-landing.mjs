@@ -64,7 +64,12 @@ await step('therapist-and-staff-links', async () => {
   await page.goto(`${BASE}/`)
   await tid('landing').waitFor()
   await tid('staff-link').click()
-  await page.waitForURL('**/admin/sign-in')
+  await page.waitForURL('**/staff/sign-in')
+  // the old address still works
+  await page.goto(`${BASE}/admin/sign-in`)
+  await page.waitForURL('**/staff/sign-in')
+  await page.goto(`${BASE}/admin`)
+  await page.waitForURL('**/staff/sign-in')
 })
 await step('a-narrow-window-keeps-the-welcome-screen', async () => {
   await page.goto(`${BASE}/`)

@@ -17,7 +17,7 @@ const tid = (id) => page.locator(`[data-testid="${id}"]`)
 const step = async (name, fn) => { try { await fn(); console.log('ok  ', name) } catch (e) { console.log('FAIL', name, String(e).split('\n')[0]); await shot(`FAIL-${name}`); console.log(problems.join('\n')); throw e } }
 const login = async (name) => {
   await page.waitForTimeout(600) // let the last change reach storage before reloading
-  await page.goto('http://localhost:8102/admin/sign-in')
+  await page.goto('http://localhost:8102/staff/sign-in')
   await page.waitForTimeout(1500)
   if (await tid('admin-sign-out').count()) await tid('admin-sign-out').click()
   await tid('admin-sign-in').waitFor()
@@ -98,7 +98,7 @@ await step('member-is-told-and-clinical-lifts-it', async () => {
   await page.getByText('An update on your concern').waitFor()
   await login('Dr. K. Mwende')
   const caseId = await page.evaluate(() => JSON.parse(localStorage.getItem('echo.demo.v1')).admin.cases.find((c) => c.queue === 'clinical').id)
-  await page.goto(`http://localhost:8102/admin/case/${caseId}`)
+  await page.goto(`http://localhost:8102/staff/case/${caseId}`)
   await tid('lift-pause').waitFor()
   await tid('lift-reason').fill('Review complete, no further action')
   await tid('lift-submit').click()

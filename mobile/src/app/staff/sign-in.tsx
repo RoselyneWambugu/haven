@@ -19,7 +19,7 @@ import { Text } from '@/components/Text'
 import { ROLE_LABEL } from '@/lib/admin'
 
 /** Staff sign in with a second factor. For the demo, pick a staff member and use the code shown. */
-export default function AdminSignIn() {
+export default function StaffSignIn() {
   const [name, setName] = useState('T. Njeri')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export default function AdminSignIn() {
   function submit() {
     const r = api.admin.signIn(name, code)
     if (!r.ok) return setError(r.error)
-    router.replace('/admin/overview' as never)
+    router.replace('/staff/overview' as never)
   }
 
   async function send() {
@@ -57,7 +57,7 @@ export default function AdminSignIn() {
     setBusy(false)
     if (!r.ok && r.code === 'setup') { setError(null); return setSetup(true) }
     if (!r.ok) return setError(r.error)
-    router.replace('/admin/overview' as never)
+    router.replace('/staff/overview' as never)
   }
 
   async function claim() {
@@ -68,7 +68,7 @@ export default function AdminSignIn() {
       if (r.code === 'closed' || r.code === 'locked') { setSetup(false); setSent(false); setCode('') }
       return setError(r.error)
     }
-    router.replace('/admin/overview' as never)
+    router.replace('/staff/overview' as never)
   }
 
   if (REMOTE && setup) {
@@ -115,7 +115,7 @@ export default function AdminSignIn() {
             )}
           </Panel>
           <Panel title="Or sign in with your email">
-            <GoogleButton testID="admin-google" purpose="admin" label="Sign in with Google" onFail={(code) => { if (code === 'setup') { setError(null); setSetup(true); return true } }} onNext={() => router.replace('/admin/overview' as never)} />
+            <GoogleButton testID="admin-google" purpose="admin" label="Sign in with Google" onFail={(code) => { if (code === 'setup') { setError(null); setSetup(true); return true } }} onNext={() => router.replace('/staff/overview' as never)} />
             <Button testID="admin-email-signin" variant="quiet" label="Sign in with email and password" onPress={() => go('/login-email?for=admin')} />
           </Panel>
           <Banner tone="green" icon="lock">

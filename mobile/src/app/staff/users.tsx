@@ -19,7 +19,7 @@ export default function Users() {
       <Field testID="user-search" label="Search" hideLabel placeholder="Pen name" value={q} onChangeText={setQ} />
       <Panel style={{ padding: 8, gap: 0 }}>
         {users.map((u) => (
-          <Pressable key={u.id} testID={`user-${u.penName}`} accessibilityRole="button" accessibilityLabel={`${u.penName}, ${u.standing}`} onPress={() => go(`/admin/user/${u.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, minHeight: 52 }}>
+          <Pressable key={u.id} testID={`user-${u.penName}`} accessibilityRole="button" accessibilityLabel={`${u.penName}, ${u.standing}`} onPress={() => go(`/staff/user/${u.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, minHeight: 52 }}>
             <Text variant="label" style={{ flex: 2 }}>
               {u.penName}
               {u.isMember ? ' (you)' : ''}

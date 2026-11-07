@@ -17,7 +17,7 @@ export interface NavItem {
 }
 
 /**
- * The frame for the therapist portal and the admin dashboard. On a wide window the navigation is a sidebar on the left,
+ * The frame for the therapist portal and the staff dashboard. On a wide window the navigation is a sidebar on the left,
  * with the person's details at its foot. On a narrow window it folds into a header with a scrolling tab row.
  * Pages without navigation (sign-in, a live session) get the header only.
  */
