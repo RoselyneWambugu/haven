@@ -7,9 +7,8 @@ import { Field } from '@/components/Field'
 import { Panel } from '@/components/Portal'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { applicantRequestOtp, applicantVerifyOtp, openPortalAfterApproval, parseExpiry, refreshApplication, submitApplication } from '@/backend/remoteApplication'
+import { applicantResend, applicantSignIn, applicantSignUp, openPortalAfterApproval, parseExpiry, pendingApplicant, refreshApplication, submitApplication } from '@/backend/remoteApplication'
 import { supabase } from '@/backend/client'
-import { normaliseKenyanPhone } from '@/lib/identity'
 import { ApplyProgress } from '@/components/ApplyProgress'
 import { DocumentUpload } from '@/components/DocumentUpload'
 import { useDb } from '@/store/db'
@@ -18,9 +17,12 @@ import { useDb } from '@/store/db'
 export function RemoteApply() {
   const app = useDb((s) => s.application)
   const [signedIn, setSignedIn] = useState<boolean | null>(null)
-  const [phone, setPhone] = useState('')
-  const [code, setCode] = useState('')
-  const [sent, setSent] = useState(false)
+  // Step 1: an email and a password. Applicants sign up with an email only.
+  const [mode, setMode] = useState<'signup' | 'sent' | 'login'>(() => (pendingApplicant() ? 'sent' : 'signup'))
+  const [email, setEmail] = useState(() => pendingApplicant()?.email ?? '')
+  const [password, setPassword] = useState('')
+  const [again, setAgain] = useState('')
+  const [info, setInfo] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [title, setTitle] = useState('Counsellor')
   const [gender, setGender] = useState<'woman' | 'man' | null>(null)
@@ -40,23 +42,33 @@ export function RemoteApply() {
     })
   }, [])
 
-  async function send() {
-    const n = normaliseKenyanPhone(phone)
-    if (!n) return setError('Enter a Kenyan mobile number, like 0712 345 678.')
+  function entered(r: { therapist: boolean }) {
+    if (r.therapist) return router.replace('/portal/today' as never)
+    setSignedIn(true)
+  }
+  async function signUp() {
+    if (password !== again) return setError('The two passwords don’t match.')
     setBusy(true)
-    const r = await applicantRequestOtp(n)
+    const r = await applicantSignUp(email, password)
     setBusy(false)
     if (!r.ok) return setError(r.error)
     setError(null)
-    setSent(true)
+    if (r.value.next === 'in') return entered({ therapist: r.value.therapist === true })
+    setMode('sent')
   }
-  async function verify() {
+  async function confirmed() {
     setBusy(true)
-    const r = await applicantVerifyOtp(code)
+    const r = await applicantSignIn(mode === 'login' ? email : undefined, mode === 'login' ? password : undefined)
     setBusy(false)
     if (!r.ok) return setError(r.error)
-    if (r.value.therapist) return router.replace('/portal/today' as never)
-    setSignedIn(true)
+    setError(null)
+    entered(r.value)
+  }
+  async function resend() {
+    const r = await applicantResend()
+    if (!r.ok) return setError(r.error)
+    setError(null)
+    setInfo('Sent again. It can take a minute, and it may land in spam.')
   }
   async function submit() {
     const exp = parseExpiry(expiry)
@@ -75,24 +87,40 @@ export function RemoteApply() {
       <View testID="apply-signin" style={{ flex: 1, alignItems: 'center', padding: 24 }}>
         <View style={{ width: '100%', maxWidth: 520, gap: 16 }}>
           <ApplyProgress step={1} />
-          <Text variant="title">Apply to join Echo</Text>
-          <Text variant="body" muted>
-            Echo is for licensed therapists. Start by confirming your phone number. It is the number you will use to sign in to the portal.
-          </Text>
-          <Panel>
-            {sent ? (
-              <>
-                <Field testID="apply-code" label="Code" value={code} onChangeText={(v) => { setCode(v.replace(/\D/g, '').slice(0, 6)); setError(null) }} keyboardType="number-pad" maxLength={6} error={error} />
-                <Button testID="apply-verify" label="Continue" disabled={busy || code.length < 6} onPress={verify} />
-                <Button variant="ghost" label="Use a different number" onPress={() => { setSent(false); setCode(''); setError(null) }} />
-              </>
-            ) : (
-              <>
-                <Field testID="apply-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={(v) => { setPhone(v); setError(null) }} keyboardType="phone-pad" error={error} />
-                <Button testID="apply-send-code" label="Send code" disabled={busy} onPress={send} />
-              </>
-            )}
-          </Panel>
+          <Text variant="title">{mode === 'login' ? 'Log back in to your application' : mode === 'sent' ? 'Confirm your email' : 'Apply to join Echo'}</Text>
+          {mode === 'sent' ? (
+            <>
+              <Text variant="body" muted>
+                {`We sent a link to ${email}. Open it to confirm your address, then come back here.`}
+              </Text>
+              {error ? <Banner tone="clay">{error}</Banner> : null}
+              {info ? <Banner tone="green">{info}</Banner> : null}
+              <Button testID="apply-confirmed" label={busy ? 'Checking…' : 'I’ve confirmed it'} disabled={busy} onPress={confirmed} />
+              <Button testID="apply-resend" variant="quiet" label="Send it again" onPress={resend} />
+              <Button variant="ghost" label="Use a different email" onPress={() => { setMode('signup'); setError(null); setInfo(null) }} />
+            </>
+          ) : (
+            <>
+              <Text variant="body" muted>
+                {mode === 'login'
+                  ? 'Use the email and password you made when you started.'
+                  : 'Echo is for licensed therapists. Start by making a sign-in with your email. It is the email you will use to sign in to the portal.'}
+              </Text>
+              <Panel>
+                <Field testID="apply-email" label="Email" placeholder="you@example.com" value={email} onChangeText={(v) => { setEmail(v); setError(null) }} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+                <Field testID="apply-password" label="Password" hint={mode === 'signup' ? 'At least 8 characters, with a letter and a number.' : undefined} value={password} onChangeText={(v) => { setPassword(v); setError(null) }} secureTextEntry autoCapitalize="none" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
+                {mode === 'signup' ? <Field testID="apply-password-again" label="Password again" value={again} onChangeText={(v) => { setAgain(v); setError(null) }} secureTextEntry autoCapitalize="none" autoComplete="new-password" error={error} /> : null}
+                {mode === 'login' && error ? <Banner tone="clay">{error}</Banner> : null}
+                {mode === 'signup' && error && !/match/.test(error) ? <Banner tone="clay">{error}</Banner> : null}
+                {mode === 'signup' ? (
+                  <Button testID="apply-send-code" label={busy ? 'Creating…' : 'Continue'} disabled={busy} onPress={signUp} />
+                ) : (
+                  <Button testID="apply-login" label={busy ? 'Logging in…' : 'Log in'} disabled={busy} onPress={confirmed} />
+                )}
+              </Panel>
+              <Button variant="quiet" label={mode === 'signup' ? 'I already started. Log in' : 'Start a new application'} onPress={() => { setMode(mode === 'signup' ? 'login' : 'signup'); setError(null) }} />
+            </>
+          )}
           <Button variant="ghost" label="Back" onPress={() => router.replace('/portal/sign-in' as never)} />
         </View>
       </View>

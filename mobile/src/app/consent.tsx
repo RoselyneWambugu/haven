@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { Platform, Pressable, View } from 'react-native'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Check } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
 import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
-import { go } from '@/lib/nav'
+import { go, resetTo } from '@/lib/nav'
 import { colors } from '@/theme'
 
 /** A separate link, so tapping a checkbox label never opens a page by accident. */
@@ -21,8 +21,8 @@ function ReadLink({ label }: { label: string }) {
 }
 
 /**
- * Four separate consents (PRD ACC-5). Message screening has its own box, because
- * people should be able to see and understand it on its own.
+ * Step 5 of 5, the last step: four separate consents (PRD ACC-5). Message screening has its own box, because
+ * people should be able to see and understand it on its own. Saying yes here creates the profile.
  */
 export default function Consent() {
   const [terms, setTerms] = useState(false)
@@ -30,6 +30,8 @@ export default function Consent() {
   const [guidelines, setGuidelines] = useState(false)
   const [screening, setScreening] = useState(false)
   const all = terms && privacy && guidelines && screening
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   return (
     <Screen
       testID="consent"
@@ -37,13 +39,18 @@ export default function Consent() {
       header={<TopBar back />}
       footer={
         <>
+          {error ? <Banner tone="clay">{error}</Banner> : null}
           <Button
-            testID="consent-continue"
-            label="Continue"
-            disabled={!all}
-            onPress={() => {
+            testID="finish"
+            label={busy ? 'Creating your profile…' : 'Finish'}
+            disabled={!all || busy}
+            onPress={async () => {
+              setBusy(true)
               api.auth.acceptConsents()
-              go('/register')
+              const r = await api.auth.completeRegistration(Platform.OS)
+              setBusy(false)
+              if (!r.ok) return setError(r.error)
+              resetTo('/home')
             }}
           />
           <Text variant="caption" muted align="center">
@@ -53,9 +60,9 @@ export default function Consent() {
       }
     >
       <Text variant="caption" muted>
-        Step 1 of 5
+        Step 5 of 5
       </Text>
-      <Text variant="title">Your privacy, your choice</Text>
+      <Text variant="title">Last step: your privacy, your choice</Text>
       <Banner tone="green" icon="lock" title="Others never see your real name.">
         They see only your pen name and avatar. Your details stay in a private profile.
       </Banner>

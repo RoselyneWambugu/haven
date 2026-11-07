@@ -912,4 +912,4 @@ export interface RotaWeek {
 }
 
 /** Where to go after signing in: signed in, or on to the next registration step. 'redirecting' means the browser page is leaving for Google. */
-export type SignInNext = 'trust-device' | 'consent' | 'register' | 'reauth-ok' | 'linked' | 'portal' | 'admin' | 'mobile-app' | 'redirecting'
+export type SignInNext = 'trust-device' | 'consent' | 'register' | 'apply' | 'reauth-ok' | 'linked' | 'portal' | 'admin' | 'mobile-app' | 'redirecting'

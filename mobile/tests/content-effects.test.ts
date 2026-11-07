@@ -7,7 +7,7 @@ import { slotsFor } from '../src/lib/directory'
 import { applyLimits, freshState, getDb, update } from '../src/store/db'
 
 function register(dob = '14/03/1998') {
-  api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob, email: '' })
+  api.auth.submitDetails({ fullName: 'Amina Otieno', dob, email: 'amina@example.com', password: 'Fern2026a' })
   api.auth.acceptConsents()
   const otp = api.auth.requestOtp('register')
   if (!otp.ok) throw new Error('otp')

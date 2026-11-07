@@ -1,7 +1,10 @@
+import { getDb } from '@/store/db'
+import { registrationRoute } from '@/lib/registration'
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { Redirect, useLocalSearchParams } from 'expo-router'
 import { MEMBERS_ON_WEB } from '@/lib/webMembers'
+import { REMOTE } from '@/backend/client'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -11,8 +14,33 @@ import { Text } from '@/components/Text'
 import { go, replace } from '@/lib/nav'
 import { colors } from '@/theme'
 
+/** The demo has no inbox: logging in with an email sends a code that the next screen shows. */
+function DemoEmailLogin() {
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  async function send() {
+    const r = await api.auth.requestOtp('login', email)
+    if (!r.ok) return setError(r.error)
+    go('/otp?purpose=login')
+  }
+  return (
+    <Screen testID="login-email" keyboard header={<TopBar back />} footer={<Button testID="login-email-submit" label="Send code" onPress={send} />}>
+      <Text variant="title">Log in with email</Text>
+      <Text variant="body" muted>
+        We’ll email you a 6-digit code. In this demo the code is shown on the next screen.
+      </Text>
+      <Field testID="login-email-address" label="Email" placeholder="you@example.com" value={email} onChangeText={(v) => { setEmail(v); setError(null) }} keyboardType="email-address" autoCapitalize="none" autoComplete="email" error={error} />
+    </Screen>
+  )
+}
+
 /** Log in with an email and a password. The "Forgot password?" link leads to the page that emails a reset link. */
 export default function LoginEmail() {
+  if (!REMOTE) return <DemoEmailLogin />
+  return <RealEmailLogin />
+}
+
+function RealEmailLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +60,7 @@ export default function LoginEmail() {
       return setError(r.error)
     }
     const next = r.value.next
-    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/staff/overview' : next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')
+    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/staff/overview' : next === 'trust-device' ? '/trust-device' : registrationRoute(getDb().reg))
   }
 
   return (
@@ -53,9 +81,9 @@ export default function LoginEmail() {
         <Text variant="small" muted>
           {purpose === 'login' ? 'New here?' : 'First time with email?'}
         </Text>
-        <Pressable accessibilityRole="button" onPress={() => go(purpose === 'login' ? '/signup-email' : `/signup-email?for=${purpose}`)} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Pressable accessibilityRole="button" onPress={() => go(purpose === 'login' ? '/register' : `/signup-email?for=${purpose}`)} style={{ minHeight: 44, justifyContent: 'center' }}>
           <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
-            {purpose === 'login' ? 'Sign up with email' : 'Create your sign-in'}
+            {purpose === 'login' ? 'Sign up' : 'Create your sign-in'}
           </Text>
         </Pressable>
       </View>

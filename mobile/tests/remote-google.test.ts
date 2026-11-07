@@ -82,16 +82,16 @@ describe('Google on a phone', () => {
     expect((f.oauth[1].options?.queryParams as { prompt: string }).prompt).toBe('login')
   })
 
-  it('takes a new person through consent, then registration with their Google name and email and no phone', async () => {
+  it('takes a new person to registration with their Google name and email, no password and no phone', async () => {
     const f = fake()
     const r = await remoteAuth.signInWithGoogle('register')
-    expect(r).toEqual({ ok: true, value: { next: 'consent' } })
+    expect(r).toEqual({ ok: true, value: { next: 'register' } })
     expect(getDb().reg).toMatchObject({ email: 'wanjiru@example.com', fullName: 'Wanjiru Kamau', phone: '', verified: true })
     expect(getDb().signedIn).toBe(false)
 
-    remoteAuth.acceptConsents()
     expect((await remoteAuth.signInWithGoogle('register')).ok && getDb().reg?.verified).toBe(true)
-    const d = remoteAuth.submitDetails({ fullName: 'Wanjiru Kamau', phone: '', dob: '05/05/1995', email: '' })
+    // Google already proved the email, so there is no password to make.
+    const d = remoteAuth.submitDetails({ fullName: 'Wanjiru Kamau', dob: '05/05/1995', email: 'wanjiru@example.com', password: null })
     expect(d.ok).toBe(true)
     expect(getDb().reg).toMatchObject({ phone: '', verified: true })
     update((s) => ({ reg: { ...s.reg!, penName: 'QuietPine', consentsAcceptedAt: 1 } }))
@@ -103,8 +103,8 @@ describe('Google on a phone', () => {
   it('still checks the age and name on a Google registration', async () => {
     fake()
     await remoteAuth.signInWithGoogle('register')
-    expect(remoteAuth.submitDetails({ fullName: 'W', phone: '', dob: '05/05/1995', email: '' })).toMatchObject({ ok: false, code: 'name' })
-    expect(remoteAuth.submitDetails({ fullName: 'Young Person', phone: '', dob: '05/05/2015', email: '' })).toMatchObject({ ok: false, code: 'under-18' })
+    expect(remoteAuth.submitDetails({ fullName: 'W', dob: '05/05/1995', email: 'wanjiru@example.com', password: null })).toMatchObject({ ok: false, code: 'name' })
+    expect(remoteAuth.submitDetails({ fullName: 'Young Person', dob: '05/05/2015', email: 'wanjiru@example.com', password: null })).toMatchObject({ ok: false, code: 'under-18' })
   })
 
   it('says nothing went wrong when the person closes the Google window', async () => {

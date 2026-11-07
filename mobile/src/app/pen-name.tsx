@@ -60,7 +60,7 @@ export default function PenName() {
       }
     >
       <Text variant="caption" muted>
-        Step 4 of 5
+        Step 3 of 5
       </Text>
       <Text variant="title">Choose a pen name and avatar</Text>
       <Text variant="body" muted>

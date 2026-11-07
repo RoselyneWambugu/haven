@@ -71,16 +71,16 @@ describe('signing up with an email', () => {
     expect(log[0]).toMatchObject({ name: 'signUp', args: { email: 'me@example.com', options: { emailRedirectTo: 'https://echo.test/auth-callback' } } })
   })
 
-  it('carries straight on to consent when no email confirmation is needed', async () => {
+  it('carries straight on to registration when no email confirmation is needed', async () => {
     fake({ confirmOn: false })
-    expect(await remoteAuth.signUpWithEmail('me@example.com', 'quiet-river-42')).toEqual({ ok: true, value: { next: 'consent' } })
+    expect(await remoteAuth.signUpWithEmail('me@example.com', 'quiet-river-42')).toEqual({ ok: true, value: { next: 'register' } })
     expect(getDb().reg).toMatchObject({ email: 'wanjiru@example.com', verified: true, phone: '' })
   })
 
   it('opening the confirmation link carries on to registration', async () => {
     const log = fake()
     const r = await remoteAuth.finishEmailLink('https://echo.test/auth-callback?token_hash=abc&type=signup')
-    expect(r).toEqual({ ok: true, value: { next: 'consent' } })
+    expect(r).toEqual({ ok: true, value: { next: 'register' } })
     expect(log[0]).toMatchObject({ name: 'verifyOtp', args: { token_hash: 'abc', type: 'email' } })
   })
 })

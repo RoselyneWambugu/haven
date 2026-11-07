@@ -47,7 +47,7 @@ describe('events in the app', () => {
     vi.useFakeTimers()
     resetClock()
     update(freshState())
-    api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob: '14/03/1998', email: '' })
+    api.auth.submitDetails({ fullName: 'Amina Otieno', dob: '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })
     api.auth.acceptConsents()
     const otp = api.auth.requestOtp('register')
     if (!otp.ok) throw new Error('otp')
@@ -168,7 +168,7 @@ describe('proposals from therapists', () => {
 describe('reminders for events a member is interested in', () => {
   const MIN = 60_000
   const asMember = () => {
-    api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob: '14/03/1998', email: '' })
+    api.auth.submitDetails({ fullName: 'Amina Otieno', dob: '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })
     api.auth.acceptConsents()
     const otp = api.auth.requestOtp('register')
     if (!otp.ok) throw new Error('otp')

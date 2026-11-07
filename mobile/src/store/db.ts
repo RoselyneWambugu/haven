@@ -44,6 +44,8 @@ export interface DbState {
   locked: boolean
   reauthUntil: number
   reg: RegistrationDraft | null
+  /** Set while someone is signing up to apply as a therapist, so the email link they open takes them back to the application instead of to member sign-up. */
+  signupFor: 'therapist' | null
   otp: OtpState | null
   match: MatchState
   conversations: Conversation[]
@@ -97,6 +99,7 @@ export function freshState(): DbState {
     locked: false,
     reauthUntil: 0,
     reg: null,
+    signupFor: null,
     otp: null,
     match: { state: 'idle' },
     conversations: [],

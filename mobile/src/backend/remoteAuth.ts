@@ -17,6 +17,7 @@ import { exchange, openGoogle, takePurpose, webBase, type GooglePurpose } from '
 import { passwordProblem, validEmail } from '@/lib/password'
 import { MEMBERS_ON_WEB } from '@/lib/webMembers'
 import { enterPortal, isTherapist, restorePortal, stopPortalPolling } from './remotePortal'
+import { enterApplicantSession } from './remoteApplication'
 
 const MIN = 60_000
 
@@ -291,14 +292,6 @@ export const remoteAuth = {
     return { ok: true, value: undefined }
   },
 
-  /** A Google registration has no phone to check, so the details step skips it. Everything else is checked as usual. */
-  submitDetails(input: { fullName: string; phone: string; dob: string; email: string }): Res<{ phone: string }> {
-    if (!getDb().reg?.verified) return auth.submitDetails(input)
-    const r = auth.submitDetails({ ...input, phone: '0700000000' })
-    update((s) => (s.reg ? { reg: { ...s.reg, phone: '', verified: true } } : {}))
-    return r.ok ? { ok: true, value: { phone: '' } } : r
-  },
-
   /** Local rules first (fast, and they know common names), then the server (who has the name). */
   async checkPenName(name: string): Promise<Res> {
     const v = validatePenName(name)
@@ -421,6 +414,11 @@ async function afterSignIn(purpose: GooglePurpose | 'portal' | 'admin'): Promise
     const r = await enterAdmin('email')
     return r.ok ? { ok: true, value: { next: 'admin' } } : r
   }
+  // Someone signing up to apply as a therapist carries on with the application, not with member sign-up.
+  if (getDb().signupFor === 'therapist') {
+    const r = await enterApplicantSession()
+    return r.ok ? { ok: true, value: { next: r.value.therapist ? 'portal' : 'apply' } } : r
+  }
   const hasAccount = await loadAccount()
   // On the live website members have no screens. Whoever this is, they carry on in the mobile app, so no member session is kept here.
   if (!MEMBERS_ON_WEB && !(await isTherapist()) && !(await isStaff())) {
@@ -444,7 +442,8 @@ async function afterSignIn(purpose: GooglePurpose | 'portal' | 'admin'): Promise
   update((s) => ({
     reg: { ...(s.reg ?? emptyRegistration()), email: user.email ?? '', fullName: s.reg?.fullName || String(meta.full_name ?? meta.name ?? ''), phone: '', verified: true },
   }))
-  return { ok: true, value: { next: getDb().reg?.consentsAcceptedAt ? 'register' : 'consent' } }
+  // Carry on with sign-up: the screens work out from what is filled in whether that is the details or the pen name.
+  return { ok: true, value: { next: 'register' } }
 }
 
 /** The server doesn't know which device is this one, so the app remembers it. */

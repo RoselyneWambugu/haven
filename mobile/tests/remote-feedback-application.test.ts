@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setClient } from '../src/backend/client'
 import { remoteFeedback, syncFeedback } from '../src/backend/remoteFeedback'
-import { applicantRequestOtp, applicantVerifyOtp, parseExpiry, refreshApplication, submitApplication } from '../src/backend/remoteApplication'
+import { applicantResend, applicantSignIn, applicantSignUp, parseExpiry, refreshApplication, submitApplication } from '../src/backend/remoteApplication'
 import { remoteAdmin, syncAdmin } from '../src/backend/remoteAdmin'
 import { stopPortalPolling } from '../src/backend/remotePortal'
 import { freshState, getDb, update } from '../src/store/db'
@@ -10,11 +10,12 @@ import { resetClock, now } from '../src/lib/clock'
 
 function fake(replies: Record<string, unknown> = {}) {
   const calls: { name: string; args?: Record<string, unknown> }[] = []
-  const auth = { otps: [] as string[], signedOut: 0 }
+  const auth = { signedOut: 0, signups: [] as string[], resent: [] as string[], logins: [] as string[], session: false, unconfirmed: false }
   setClient({
     auth: {
-      signInWithOtp: async ({ phone }: { phone: string }) => (auth.otps.push(phone), { error: null }),
-      verifyOtp: async () => ({ error: null }),
+      signUp: async ({ email }: { email: string }) => (auth.signups.push(email), { data: { session: auth.session ? {} : null }, error: null }),
+      resend: async ({ email }: { email: string }) => (auth.resent.push(email), { error: null }),
+      signInWithPassword: async ({ email }: { email: string }) => (auth.logins.push(email), { error: auth.unconfirmed ? { message: 'Email not confirmed', status: 400 } : null }),
       signOut: async () => ((auth.signedOut += 1), { error: null }),
       getSession: async () => ({ data: { session: {} } }),
     },
@@ -30,6 +31,7 @@ function fake(replies: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   resetClock()
+  ;(globalThis as unknown as { location: unknown }).location = { origin: 'https://echo.test' }
   update({ ...freshState() } as never)
 })
 afterEach(() => {
@@ -77,21 +79,44 @@ describe('member feedback', () => {
 })
 
 describe('applying to be a therapist', () => {
-  it('signs in with a phone code, signs everyone else out and loads the application', async () => {
+  it('signs up with an email only, asks for it to be confirmed, then signs in, signs everyone else out and loads the application', async () => {
     const f = fake({ my_application: { ok: true, status: 'info', message: 'Send a clearer copy', name: 'Dr Test' } })
-    expect((await applicantRequestOtp('+254712000164')).ok).toBe(true)
-    expect(f.auth.otps).toEqual(['+254712000164'])
+    expect(await applicantSignUp('Grace@Example.com', 'Fern2026a')).toEqual({ ok: true, value: { next: 'check-email' } })
+    expect(f.auth.signups).toEqual(['Grace@Example.com'])
+    expect(getDb().signupFor).toBe('therapist')
     update({ signedIn: true } as never)
-    const r = await applicantVerifyOtp('123456')
+    await applicantResend()
+    expect(f.auth.resent).toEqual(['Grace@Example.com'])
+    const r = await applicantSignIn()
     expect(r).toEqual({ ok: true, value: { therapist: false } })
     expect(getDb().signedIn).toBe(false)
+    expect(getDb().signupFor).toBeNull()
     expect(getDb().application).toEqual({ status: 'info', message: 'Send a clearer copy', name: 'Dr Test' })
   })
 
-  it('goes straight to the portal when the number already belongs to a therapist', async () => {
-    fake({ my_portal: { ok: true, therapist_id: 't-1', paused: false, caps: { perDay: 5, bufferMin: 15, newPerWeek: 3 }, profile: { bio: '', specialisations: [], languages: [], modes: [], priceKes: null }, availability: [], time_off: [], payout: { method: '', schedule: 'weekly' }, licence_valid_to: now(), sessions: [], threads: [], concerns: [] } })
-    await applicantRequestOtp('+254712000164')
-    expect(await applicantVerifyOtp('123456')).toEqual({ ok: true, value: { therapist: true } })
+  it('refuses a bad email or a weak password before asking Supabase', async () => {
+    const f = fake()
+    expect(await applicantSignUp('not an email', 'Fern2026a')).toMatchObject({ ok: false, code: 'email' })
+    expect(await applicantSignUp('grace@example.com', 'short')).toMatchObject({ ok: false, code: 'password' })
+    expect(f.auth.signups).toEqual([])
+  })
+
+  it('says so when the email is not confirmed yet', async () => {
+    const f = fake()
+    f.auth.unconfirmed = true
+    await applicantSignUp('grace@example.com', 'Fern2026a')
+    expect(await applicantSignIn()).toMatchObject({ ok: false, code: 'unconfirmed' })
+  })
+
+  it('goes straight on when email confirmation is off', async () => {
+    const f = fake({ my_application: { ok: true, status: 'none', message: '', name: '' } })
+    f.auth.session = true
+    expect(await applicantSignUp('grace@example.com', 'Fern2026a')).toEqual({ ok: true, value: { next: 'in', therapist: false } })
+  })
+
+  it('goes straight to the portal when the email already belongs to a therapist', async () => {
+    fake({ my_portal: { ok: true, therapist_id: 't-1', paused: false, caps: { perDay: 5, bufferMin: 15, newPerWeek: 3 }, profile: { bio: '', specialisations: [], languages: [], modes: [], priceKes: 1500 }, availability: [], time_off: [], payout: { method: 'M-Pesa', schedule: 'weekly' }, licence_valid_to: 0, sessions: [], threads: [], concerns: [] } })
+    expect(await applicantSignIn('grace@example.com', 'Fern2026a')).toEqual({ ok: true, value: { therapist: true } })
     expect(getDb().portal?.signedIn).toBe(true)
   })
 

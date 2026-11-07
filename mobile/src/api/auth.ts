@@ -2,6 +2,7 @@ import { CONFIG, LIVE } from '@/data/config'
 import { PEERS, THERAPISTS } from '@/data/seed'
 import { now } from '@/lib/clock'
 import { MIN_AGE, ageBand, ageOn, normaliseKenyanPhone, parseDob } from '@/lib/identity'
+import { passwordProblem, validEmail } from '@/lib/password'
 import { uid } from '@/lib/id'
 import { validatePenName } from '@/lib/safety'
 import { emptyRegistration, getDb, update, updateAccount, type RegistrationDraft } from '@/store/db'
@@ -57,13 +58,26 @@ function unavailable(): { ok: false; error: string; code: string } {
   return { ok: false, error: 'This is only available on the live service.', code: 'unavailable' }
 }
 
+/** Whether a phone number or an email address (as the demo keeps it for a code) belongs to this account. */
+function ownsContact(a: Account, contact: string): boolean {
+  return (a.private.phone !== '' && a.private.phone === contact) || (a.private.email !== '' && a.private.email.toLowerCase() === contact.toLowerCase())
+}
+
 export const auth = {
   /** Step 1 of registration: details. Under-18s are stopped and nothing is kept (ACC-9). */
-  submitDetails(input: { fullName: string; phone: string; dob: string; email: string }): Res<{ phone: string }> {
+  /**
+   * Step 1 of sign-up. Everyone signs up with an email address. `password` is asked for unless the person has already proved who they are
+   * (Google, or an email link they opened), in which case it is null.
+   */
+  submitDetails(input: { fullName: string; dob: string; email: string; password: string | null }): Res<{ email: string }> {
     const fullName = input.fullName.trim()
     if (fullName.length < 2) return { ok: false, error: 'Enter your full name.', code: 'name' }
-    const phone = normaliseKenyanPhone(input.phone)
-    if (!phone) return { ok: false, error: 'Enter a Kenyan mobile number, like 0712 345 678.', code: 'phone' }
+    const email = input.email.trim()
+    if (!validEmail(email)) return { ok: false, error: 'Enter your email address, like name@example.com.', code: 'email' }
+    if (input.password !== null) {
+      const problem = passwordProblem(input.password, email)
+      if (problem) return { ok: false, error: problem, code: 'password' }
+    }
     const dob = parseDob(input.dob)
     if (!dob) return { ok: false, error: 'Enter your date of birth as day / month / year.', code: 'dob' }
     const age = ageOn(dob, new Date(now()))
@@ -71,13 +85,12 @@ export const auth = {
       update({ reg: null, otp: null })
       return { ok: false, error: 'Echo is for people 18 and over.', code: 'under-18' }
     }
-    const email = input.email.trim()
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'That email doesn’t look right. You can leave it blank.', code: 'email' }
     const prev = getDb().reg
+    // Someone who is already verified (Google, or a confirmed email link) stays verified; anyone else confirms their email next.
     update({
-      reg: { ...(prev ?? emptyRegistration()), fullName, phone, dob: dob.toISOString(), email, verified: false },
+      reg: { ...(prev ?? emptyRegistration()), fullName, phone: '', dob: dob.toISOString(), email, verified: prev?.verified === true && prev.email.toLowerCase() === email.toLowerCase() },
     })
-    return { ok: true, value: { phone } }
+    return { ok: true, value: { email } }
   },
 
   /** Google sign-in needs the real service. The demo has no Google. */
@@ -135,11 +148,14 @@ export const auth = {
   /** Sends a one-time code. In this demo the code is returned so the screen can show it. */
   requestOtp(purpose: 'register' | 'login' | 'reauth', phoneInput?: string): Res<{ demoCode: string; phone: string }> {
     const db = getDb()
+    // The code goes to an email address (sign-up, and logging in with an email) or to a phone number (logging in on an account made with one).
+    // The demo keeps whichever it is in the `phone` field of the code record.
     let phone: string | null = null
-    if (purpose === 'register') phone = db.reg?.phone ?? null
-    else if (purpose === 'reauth') phone = db.account?.private.phone ?? null
+    if (purpose === 'register') phone = db.reg?.email ? db.reg.email.toLowerCase() : null
+    else if (purpose === 'reauth') phone = db.account?.private.phone || db.account?.private.email || null
+    else if ((phoneInput ?? '').includes('@')) phone = validEmail(phoneInput!.trim()) ? phoneInput!.trim().toLowerCase() : null
     else phone = normaliseKenyanPhone(phoneInput ?? '')
-    if (!phone) return { ok: false, error: 'Enter a Kenyan mobile number, like 0712 345 678.', code: 'phone' }
+    if (!phone) return { ok: false, error: purpose === 'login' ? 'Enter a Kenyan mobile number, like 0712 345 678, or your email address.' : 'Enter your email address, like name@example.com.', code: 'phone' }
     const prev = db.otp
     const lockedUntil = prev && prev.phone === phone && prev.lockedUntil && prev.lockedUntil > now() ? prev.lockedUntil : null
     if (lockedUntil) {
@@ -174,12 +190,12 @@ export const auth = {
       return { ok: true, value: { next: 'reauth-ok' } }
     }
     if (otp.purpose === 'register') {
-      if (db.account && db.account.private.phone === otp.phone) return { ok: true, value: { next: 'already-registered' } }
+      if (db.account && ownsContact(db.account, otp.phone)) return { ok: true, value: { next: 'already-registered' } }
       update((s) => ({ reg: { ...(s.reg ?? emptyRegistration()), verified: true } }))
       return { ok: true, value: { next: 'create-profile' } }
     }
     // login
-    if (!db.account || db.account.private.phone !== otp.phone) return { ok: true, value: { next: 'no-account' } }
+    if (!db.account || !ownsContact(db.account, otp.phone)) return { ok: true, value: { next: 'no-account' } }
     update({ signedIn: true, locked: false })
     if (db.account.deletionRequestedAt) {
       updateAccount((a) => ({ ...a, deletionRequestedAt: null }))
@@ -217,7 +233,7 @@ export const auth = {
     const account: Account = {
       id: uid('acc'),
       public: { penName: reg.penName, avatar: reg.avatar, languages: reg.languages, ageBand: band, topics: reg.topics, openToChats: true, penNameChangedAt: null },
-      private: { fullName: reg.fullName, phone: reg.phone, email: reg.email, dob: reg.dob, idVerified: false },
+      private: { fullName: reg.fullName, phone: reg.phone ?? '', email: reg.email, dob: reg.dob, idVerified: false },
       consents: { terms: true, privacy: true, guidelines: true, moderation: true, version: '2026-10', at: reg.consentsAcceptedAt },
       createdAt: now(),
       settings: { ...DEFAULT_SETTINGS },

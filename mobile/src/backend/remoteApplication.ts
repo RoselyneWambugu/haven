@@ -1,6 +1,8 @@
 import type { Applicant, Res } from '@/api/types'
 import { getDb, update } from '@/store/db'
+import { passwordProblem, validEmail } from '@/lib/password'
 import { supabase } from './client'
+import { webBase } from './remoteGoogle'
 import { stopAdminPolling } from './remoteAdmin'
 import { stopPolling } from './remoteChat'
 import { startPortalPolling, stopPortalPolling, syncPortal } from './remotePortal'
@@ -15,25 +17,16 @@ async function call<T extends Reply = Reply>(fn: string, args?: Record<string, u
   return data as T
 }
 
-let phone: string | null = null
+let pending: { email: string; password: string } | null = null
+export const pendingApplicant = (): { email: string } | null => (pending ? { email: pending.email } : null)
 
-/** Step one: a code goes to the applicant's phone. They don't need an Echo account to apply. */
-export async function applicantRequestOtp(number: string): Promise<Res> {
-  const { error } = await supabase().auth.signInWithOtp({ phone: number, options: { shouldCreateUser: true } })
-  if (error) return { ok: false, error: 'We couldn’t send a code. Check the number and try again.', code: 'send' }
-  phone = number
-  return { ok: true, value: undefined }
-}
-
-/** Step two: the code signs them in, and the screen shows where their application stands. Anyone else signed in on this device is signed out. */
-export async function applicantVerifyOtp(code: string): Promise<Res<{ therapist: boolean }>> {
-  if (!phone) return { ok: false, error: 'Ask for a new code.', code: 'none' }
-  const { error } = await supabase().auth.verifyOtp({ phone, token: code.trim(), type: 'sms' })
-  if (error) return { ok: false, error: 'That code doesn’t match, or it has expired.', code: 'wrong' }
+/** Applicants are signed in as nobody else: whatever else was signed in on this device is cleared, then a therapist goes to the portal. */
+export async function enterApplicantSession(): Promise<Res<{ therapist: boolean }>> {
   stopPolling()
   stopAdminPolling()
   stopPortalPolling()
-  update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [], admin: null })
+  update({ signedIn: false, account: null, conversations: [], match: { state: 'idle' }, posts: [], spaces: [], subscription: null, checkout: null, sessions: [], admin: null, signupFor: null })
+  pending = null
   // Someone who is already a therapist goes straight to the portal.
   if (await syncPortal()) {
     startPortalPolling()
@@ -41,6 +34,52 @@ export async function applicantVerifyOtp(code: string): Promise<Res<{ therapist:
   }
   await refreshApplication()
   return { ok: true, value: { therapist: false } }
+}
+
+/**
+ * Step 1 of 4: make a sign-in with an email and a password. Supabase emails a link to confirm the address. Applicants sign up with an email only;
+ * they don't need an Echo account to apply. With email confirmation switched off there is a session at once.
+ */
+export async function applicantSignUp(email: string, password: string): Promise<Res<{ next: 'check-email' | 'in'; therapist?: boolean }>> {
+  const e = email.trim()
+  if (!validEmail(e)) return { ok: false, error: 'Enter your email address, like name@example.com.', code: 'email' }
+  const problem = passwordProblem(password, e)
+  if (problem) return { ok: false, error: problem, code: 'password' }
+  update({ signupFor: 'therapist' })
+  const { data, error } = await supabase().auth.signUp({ email: e, password, options: { emailRedirectTo: `${webBase()}/auth-callback` } })
+  if (error) {
+    const limited = error.status === 429 || /rate|too many|seconds/i.test(error.message)
+    return { ok: false, error: limited ? 'Too many emails asked for. Wait a few minutes and try again.' : 'We couldn’t create that sign-in. Check the details and try again.', code: limited ? 'rate' : 'send' }
+  }
+  if (data.session) {
+    const r = await enterApplicantSession()
+    return r.ok ? { ok: true, value: { next: 'in', therapist: r.value.therapist } } : r
+  }
+  pending = { email: e, password }
+  return { ok: true, value: { next: 'check-email' } }
+}
+
+/** Sends the confirmation email again. */
+export async function applicantResend(): Promise<Res> {
+  if (!pending) return { ok: false, error: 'Start again from the beginning.', code: 'none' }
+  const { error } = await supabase().auth.resend({ type: 'signup', email: pending.email, options: { emailRedirectTo: `${webBase()}/auth-callback` } })
+  if (error) return { ok: false, error: 'We couldn’t send it again. Wait a minute and try again.', code: 'send' }
+  return { ok: true, value: undefined }
+}
+
+/** "I've confirmed it", or logging back in to an application already started: signs in with the email and password. */
+export async function applicantSignIn(email?: string, password?: string): Promise<Res<{ therapist: boolean }>> {
+  const e = (email ?? pending?.email ?? '').trim()
+  const pw = password ?? pending?.password ?? ''
+  if (!validEmail(e) || !pw) return { ok: false, error: 'Enter your email and password.', code: 'form' }
+  const { error } = await supabase().auth.signInWithPassword({ email: e, password: pw })
+  if (error) {
+    if (/confirm/i.test(error.message)) return { ok: false, error: 'We can’t see it confirmed yet. Open the link in the email, then try again.', code: 'unconfirmed' }
+    if (error.status === 429 || /rate|too many/i.test(error.message)) return { ok: false, error: 'Too many tries. Wait a few minutes and try again.', code: 'rate' }
+    return { ok: false, error: 'That email and password don’t match.', code: 'wrong' }
+  }
+  update({ signupFor: 'therapist' })
+  return enterApplicantSession()
 }
 
 export async function refreshApplication(): Promise<void> {

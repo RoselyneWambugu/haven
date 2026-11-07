@@ -38,3 +38,8 @@ They can use an email and password too: **Sign in with email and password** on t
 
 ## Not built yet
 - Changing the password while logged in (Forgot password covers it for now).
+
+
+## Sign-up is email-only (v1.00)
+
+Members and therapists sign up with an email and a password (or Google). In Supabase, **Authentication, Providers, Email** should have **Confirm email** on, and **Authentication, URL Configuration** should list your site address and the app's `auth-callback` link as allowed redirect URLs. The confirmation link opens `/auth-callback`; the app then carries on with sign-up (members) or the application (therapists). With Confirm email off, there is no link step and sign-up goes straight to the next screen.

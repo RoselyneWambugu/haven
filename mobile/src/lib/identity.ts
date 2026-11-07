@@ -13,6 +13,14 @@ export function maskPhone(e164: string): string {
   return m ? `+254 ${m[1]} ••• ${m[3]}` : e164
 }
 
+/** "amina.otieno@gmail.com" becomes "am•••••@gmail.com". A phone number is masked as a phone number. */
+export function maskContact(v: string): string {
+  const at = v.indexOf('@')
+  if (at < 1) return maskPhone(v)
+  const name = v.slice(0, at)
+  return `${name.slice(0, 2)}${'•'.repeat(Math.max(3, Math.min(6, name.length - 2)))}${v.slice(at)}`
+}
+
 export function formatPhone(e164: string): string {
   const m = /^\+254(\d{3})(\d{3})(\d{3})$/.exec(e164)
   return m ? `+254 ${m[1]} ${m[2]} ${m[3]}` : e164

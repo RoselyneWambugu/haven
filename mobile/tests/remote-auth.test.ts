@@ -49,11 +49,11 @@ function fake(opts: { hasAccount?: boolean; goodCode?: string; session?: boolean
   return { calls, state }
 }
 
-const start = (purpose: 'register' | 'login') => {
-  if (purpose === 'register') {
-    remoteAuth.submitDetails({ fullName: 'Wanjiru Kamau', phone: '0712 345 678', dob: '05/05/1995', email: '' })
-    remoteAuth.acceptConsents()
-  }
+/** Sign-up on the real service: the details are filled in, the email is confirmed, and the terms are accepted on the last step. */
+const start = () => {
+  remoteAuth.submitDetails({ fullName: 'Wanjiru Kamau', dob: '05/05/1995', email: 'wanjiru@example.com', password: 'Fern2026a' })
+  update((st) => ({ reg: { ...st.reg!, verified: true } }))
+  remoteAuth.acceptConsents()
 }
 
 beforeEach(() => {
@@ -76,8 +76,7 @@ describe('mapping the server account', () => {
 describe('codes', () => {
   it('asks the server for a code and keeps no code on the device', async () => {
     const f = fake()
-    start('register')
-    const r = await remoteAuth.requestOtp('register')
+    const r = await remoteAuth.requestOtp('login', '0712 345 678')
     expect(r.ok).toBe(true)
     expect(f.state.sent).toBe(1)
     expect(getDb().otp?.code).toBe('')
@@ -85,33 +84,22 @@ describe('codes', () => {
 
   it('locks after too many wrong codes', async () => {
     fake()
-    start('register')
-    await remoteAuth.requestOtp('register')
+    await remoteAuth.requestOtp('login', '0712 345 678')
     let last
     for (let i = 0; i < 5; i++) last = await remoteAuth.verifyOtp('000000')
     expect(last).toMatchObject({ ok: false, code: 'locked' })
-    expect(await remoteAuth.requestOtp('register')).toMatchObject({ ok: false, code: 'locked' })
+    expect(await remoteAuth.requestOtp('login', '0712 345 678')).toMatchObject({ ok: false, code: 'locked' })
   })
 })
 
 describe('signing up and signing in', () => {
-  it('a new number is sent on to create a profile', async () => {
-    fake()
-    start('register')
-    await remoteAuth.requestOtp('register')
-    expect(await remoteAuth.verifyOtp('123456')).toEqual({ ok: true, value: { next: 'create-profile' } })
-    expect(getDb().reg?.verified).toBe(true)
-  })
-
   it('registering sends the details to the server and signs the member in', async () => {
     const f = fake()
-    start('register')
-    await remoteAuth.requestOtp('register')
-    await remoteAuth.verifyOtp('123456')
+    start()
     remoteAuth.saveProfileDraft({ penName: 'QuietPine', avatar: 'moon', languages: ['English'] })
     expect((await remoteAuth.completeRegistration('web')).ok).toBe(true)
     const reg = f.calls.find((c) => c.name === 'register_member')!.args as Record<string, unknown>
-    expect(reg).toMatchObject({ p_full_name: 'Wanjiru Kamau', p_date_of_birth: '1995-05-05', p_pen_name: 'QuietPine' })
+    expect(reg).toMatchObject({ p_full_name: 'Wanjiru Kamau', p_date_of_birth: '1995-05-05', p_pen_name: 'QuietPine', p_email: 'wanjiru@example.com' })
     expect(getDb().signedIn).toBe(true)
     expect(getDb().account?.public.penName).toBe('QuietPine')
     expect(getDb().account?.devices.find((d) => d.current)?.id).toBe('d1')
@@ -120,9 +108,7 @@ describe('signing up and signing in', () => {
 
   it('shows the server’s reason when it refuses the pen name', async () => {
     fake({ rpcs: { register_member: { ok: false, code: 'taken', error: 'Someone already has that name. Try another.' } } })
-    start('register')
-    await remoteAuth.requestOtp('register')
-    await remoteAuth.verifyOtp('123456')
+    start()
     remoteAuth.saveProfileDraft({ penName: 'QuietPine', languages: ['English'] })
     expect(await remoteAuth.completeRegistration('web')).toMatchObject({ ok: false, code: 'taken' })
     expect(getDb().signedIn).toBe(false)
@@ -149,15 +135,6 @@ describe('signing up and signing in', () => {
     await remoteAuth.requestOtp('login', '0712 345 678')
     expect(await remoteAuth.verifyOtp('123456')).toEqual({ ok: true, value: { next: 'portal' } })
     expect(f.state.signedOut).toBe(0)
-  })
-
-  it('registering with a number that already has an account does not sign in', async () => {
-    fake({ hasAccount: true })
-    start('register')
-    await remoteAuth.requestOtp('register')
-    expect(await remoteAuth.verifyOtp('123456')).toEqual({ ok: true, value: { next: 'already-registered' } })
-    expect(getDb().signedIn).toBe(false)
-    expect(getDb().account).toBeNull()
   })
 
   it('logging in cancels a deletion that was waiting', async () => {

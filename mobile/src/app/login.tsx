@@ -1,3 +1,5 @@
+import { getDb } from '@/store/db'
+import { registrationRoute } from '@/lib/registration'
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { api } from '@/api'
@@ -39,9 +41,9 @@ export default function Login() {
       <GoogleButton
         purpose="login"
         label="Log in with Google"
-        onNext={(next) => replace(next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')}
+        onNext={(next) => replace(next === 'trust-device' ? '/trust-device' : registrationRoute(getDb().reg))}
       />
-      {REMOTE ? <Button testID="login-with-email" variant="quiet" label="Log in with email and password" onPress={() => go('/login-email')} /> : null}
+      <Button testID="login-with-email" variant="quiet" label={REMOTE ? 'Log in with email and password' : 'Log in with email'} onPress={() => go('/login-email')} />
       <Pressable accessibilityRole="button" onPress={() => go('/recovery')} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'center' }}>
         <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
           I can’t get codes on this number
@@ -52,7 +54,7 @@ export default function Login() {
         <Text variant="small" muted>
           New here?
         </Text>
-        <Pressable accessibilityRole="button" onPress={() => go('/consent')} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Pressable accessibilityRole="button" onPress={() => go('/register')} style={{ minHeight: 44, justifyContent: 'center' }}>
           <Text variant="small" color={colors.mossDeep} style={{ textDecorationLine: 'underline' }}>
             Create an account
           </Text>

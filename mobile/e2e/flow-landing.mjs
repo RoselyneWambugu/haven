@@ -42,7 +42,7 @@ await step('check-in-answers-kindly', async () => {
 })
 await step('get-started-goes-to-registration', async () => {
   await tid('landing-start').click()
-  await tid('consent').waitFor()
+  await tid('register').waitFor()
 })
 await step('sign-in-goes-to-login', async () => {
   await page.goto(`${BASE}/`)

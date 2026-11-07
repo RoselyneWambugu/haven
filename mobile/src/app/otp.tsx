@@ -8,7 +8,7 @@ import { Banner } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { CONFIG } from '@/data/config'
 import { goBack, replace } from '@/lib/nav'
-import { maskPhone } from '@/lib/identity'
+import { maskContact } from '@/lib/identity'
 import { useDb } from '@/store/db'
 import { colors, font } from '@/theme'
 
@@ -42,8 +42,8 @@ export default function Otp() {
       case 'portal': return replace('/portal/today')
       case 'admin': return replace('/staff/overview')
       case 'reauth-ok': return goBack('/me/profiles')
-      case 'already-registered': return setInfo('This number already has an account. Log in instead.')
-      case 'no-account': return setInfo('There is no account for this number. You can create one.')
+      case 'already-registered': return setInfo(byEmail ? 'This email already has an account. Log in instead.' : 'This number already has an account. Log in instead.')
+      case 'no-account': return setInfo(byEmail ? 'There is no account for this email. You can create one.' : 'There is no account for this number. You can create one.')
     }
   }
 
@@ -55,7 +55,8 @@ export default function Otp() {
     setLeft(30)
   }
 
-  const phone = otp?.phone ? maskPhone(otp.phone) : ''
+  const byEmail = !!otp?.phone && otp.phone.includes('@')
+  const where = otp?.phone ? maskContact(otp.phone) : ''
 
   return (
     <Screen
@@ -65,11 +66,11 @@ export default function Otp() {
       footer={<Button testID="otp-verify" label="Verify" disabled={code.length < LEN} onPress={() => verify(code)} />}
     >
       <Text variant="caption" muted>
-        {purpose === 'register' ? 'Step 3 of 5' : purpose === 'reauth' ? 'Check it’s you' : 'Log in'}
+        {purpose === 'register' ? 'Step 2 of 5' : purpose === 'reauth' ? 'Check it’s you' : 'Log in'}
       </Text>
-      <Text variant="title">Enter the {LEN}-digit code</Text>
+      <Text variant="title">{purpose === 'register' ? 'Confirm your email' : `Enter the ${LEN}-digit code`}</Text>
       <Text variant="body" muted>
-        We sent a text message to {phone || 'your phone'}.
+        {byEmail ? `We sent an email with a ${LEN}-digit code to ${where}.` : `We sent a text message to ${where || 'your phone'}.`}
       </Text>
 
       {otp?.code ? (
@@ -138,7 +139,7 @@ export default function Otp() {
             variant="quiet"
             size="sm"
             block={false}
-            onPress={() => replace(info.startsWith('There is no') ? '/consent' : '/login')}
+            onPress={() => replace(info.startsWith('There is no') ? '/register' : '/login')}
           />
         ) : null}
       </View>

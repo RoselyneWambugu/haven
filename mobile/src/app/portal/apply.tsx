@@ -11,7 +11,7 @@ import { Text } from '@/components/Text'
 import { REMOTE } from '@/backend/client'
 import { ApplyProgress } from '@/components/ApplyProgress'
 import { RemoteApply } from '@/components/RemoteApply'
-import { normaliseKenyanPhone } from '@/lib/identity'
+import { passwordProblem, validEmail } from '@/lib/password'
 import { useDb } from '@/store/db'
 
 /** The code the demo shows on screen, since no text is really sent. */
@@ -32,7 +32,9 @@ function MockApply() {
   const [licence, setLicence] = useState('')
   const [error, setError] = useState<string | null>(null)
   // Step 1: the phone number the therapist will sign in with. The demo sends no real text; it shows the code.
-  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [again, setAgain] = useState('')
   const [code, setCode] = useState('')
   const [sent, setSent] = useState(false)
   const [verified, setVerified] = useState(false)
@@ -70,7 +72,10 @@ function MockApply() {
   }
 
   function sendCode() {
-    if (!normaliseKenyanPhone(phone)) return setError('Enter a Kenyan mobile number, like 0712 345 678.')
+    if (!validEmail(email.trim())) return setError('Enter your email address, like name@example.com.')
+    const problem = passwordProblem(password, email)
+    if (problem) return setError(problem)
+    if (password !== again) return setError('The two passwords don’t match.')
     setError(null)
     setSent(true)
   }
@@ -87,22 +92,27 @@ function MockApply() {
           <ApplyProgress step={1} />
           <Text variant="title">Apply to join Echo</Text>
           <Text variant="body" muted>
-            Echo is for licensed therapists. Start by confirming your phone number. It is the number you will use to sign in to the portal.
+            Echo is for licensed therapists. Start by making a sign-in with your email. It is the email you will use to sign in to the portal.
           </Text>
           <Panel>
             {sent ? (
               <>
+                <Text variant="small" muted>
+                  {`We emailed a 6-digit code to ${email.trim()}.`}
+                </Text>
                 <Banner tone="sun" icon="lock" title="Demo code">
                   {DEMO_CODE}
                 </Banner>
                 <Field testID="apply-code" label="Code" value={code} onChangeText={(v) => { setCode(v.replace(/\D/g, '').slice(0, 6)); setError(null) }} keyboardType="number-pad" maxLength={6} error={error} />
                 <Button testID="apply-verify" label="Continue" disabled={code.length < 6} onPress={verifyCode} />
-                <Button variant="ghost" label="Use a different number" onPress={() => { setSent(false); setCode(''); setError(null) }} />
+                <Button variant="ghost" label="Use a different email" onPress={() => { setSent(false); setCode(''); setError(null) }} />
               </>
             ) : (
               <>
-                <Field testID="apply-phone" label="Phone number" prefix="+254" placeholder="712 345 678" value={phone} onChangeText={(v) => { setPhone(v); setError(null) }} keyboardType="phone-pad" error={error} />
-                <Button testID="apply-send-code" label="Send code" onPress={sendCode} />
+                <Field testID="apply-email" label="Email" placeholder="you@example.com" value={email} onChangeText={(v) => { setEmail(v); setError(null) }} keyboardType="email-address" autoCapitalize="none" />
+                <Field testID="apply-password" label="Password" hint="At least 8 characters, with a letter and a number." value={password} onChangeText={(v) => { setPassword(v); setError(null) }} secureTextEntry autoCapitalize="none" />
+                <Field testID="apply-password-again" label="Password again" value={again} onChangeText={(v) => { setAgain(v); setError(null) }} secureTextEntry autoCapitalize="none" error={error} />
+                <Button testID="apply-send-code" label="Continue" onPress={sendCode} />
               </>
             )}
           </Panel>

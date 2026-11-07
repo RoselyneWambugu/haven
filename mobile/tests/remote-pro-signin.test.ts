@@ -116,7 +116,7 @@ describe('signing in from the member screens', () => {
 
   it('still carries a stranger on to registration', async () => {
     const calls = fake()
-    expect(await remoteAuth.signInWithGoogle('login')).toEqual({ ok: true, value: { next: 'consent' } })
+    expect(await remoteAuth.signInWithGoogle('login')).toEqual({ ok: true, value: { next: 'register' } })
     expect(calls).not.toContain('signOut')
   })
 })

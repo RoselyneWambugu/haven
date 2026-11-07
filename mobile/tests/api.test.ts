@@ -12,7 +12,7 @@ const reset = () => {
 
 /** Registers the demo member through the same steps a person would take. */
 function register(opts: { dob?: string } = {}) {
-  const d = api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob: opts.dob ?? '14/03/1998', email: '' })
+  const d = api.auth.submitDetails({ fullName: 'Amina Otieno', dob: opts.dob ?? '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })
   expect(d.ok).toBe(true)
   api.auth.acceptConsents()
   const otp = api.auth.requestOtp('register')
@@ -35,24 +35,26 @@ afterEach(() => vi.useRealTimers())
 
 describe('registration', () => {
   it('stops under-18s and keeps nothing', () => {
-    const r = api.auth.submitDetails({ fullName: 'Young Person', phone: '0712345678', dob: '01/01/2012', email: '' })
+    const r = api.auth.submitDetails({ fullName: 'Young Person', dob: '01/01/2012', email: 'amina@example.com', password: 'Fern2026a' })
     expect(r).toMatchObject({ ok: false, code: 'under-18' })
     expect(getDb().reg).toBeNull()
   })
   it('validates each field with a clear message', () => {
-    expect(api.auth.submitDetails({ fullName: '', phone: '0712345678', dob: '14/03/1998', email: '' })).toMatchObject({ code: 'name' })
-    expect(api.auth.submitDetails({ fullName: 'Amina', phone: '12345', dob: '14/03/1998', email: '' })).toMatchObject({ code: 'phone' })
-    expect(api.auth.submitDetails({ fullName: 'Amina', phone: '0712345678', dob: '31/02/1998', email: '' })).toMatchObject({ code: 'dob' })
-    expect(api.auth.submitDetails({ fullName: 'Amina', phone: '0712345678', dob: '14/03/1998', email: 'nope' })).toMatchObject({ code: 'email' })
+    expect(api.auth.submitDetails({ fullName: '', dob: '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })).toMatchObject({ code: 'name' })
+    expect(api.auth.submitDetails({ fullName: 'Amina', dob: '14/03/1998', email: '', password: 'Fern2026a' })).toMatchObject({ code: 'email' })
+    expect(api.auth.submitDetails({ fullName: 'Amina', dob: '14/03/1998', email: 'amina@example.com', password: 'short' })).toMatchObject({ code: 'password' })
+    expect(api.auth.submitDetails({ fullName: 'Amina', dob: '31/02/1998', email: 'amina@example.com', password: 'Fern2026a' })).toMatchObject({ code: 'dob' })
+    expect(api.auth.submitDetails({ fullName: 'Amina', dob: '14/03/1998', email: 'nope', password: 'Fern2026a' })).toMatchObject({ code: 'email' })
   })
   it('creates an account with a public and a private profile', () => {
     register()
     const a = getDb().account!
     expect(a.public.penName).toBe('QuietHeron')
     expect(a.public.ageBand).toBe('25-34')
-    expect(a.private.phone).toBe('+254712345678')
+    expect(a.private.email).toBe('amina@example.com')
+    expect(a.private.phone).toBe('')
     expect(a.private.fullName).toBe('Amina Otieno')
-    expect(JSON.stringify(a.public)).not.toMatch(/Amina|Otieno|254/)
+    expect(JSON.stringify(a.public)).not.toMatch(/Amina|Otieno|254|example/)
     expect(getDb().signedIn).toBe(true)
   })
   it('refuses a pen name that looks like a real name, or is taken', () => {
@@ -64,7 +66,7 @@ describe('registration', () => {
 
 describe('one-time codes', () => {
   it('counts wrong tries then locks, and the lock survives asking again', () => {
-    api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712345678', dob: '14/03/1998', email: '' })
+    api.auth.submitDetails({ fullName: 'Amina Otieno', dob: '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })
     const otp = api.auth.requestOtp('register')
     if (!otp.ok) throw new Error('otp')
     const wrong = otp.value.demoCode === '000000' ? '111111' : '000000'
@@ -77,8 +79,14 @@ describe('one-time codes', () => {
     advanceClock(16)
     expect(api.auth.requestOtp('register').ok).toBe(true)
   })
+  it('sends the sign-up code to the email, and an account can be found by its email', () => {
+    api.auth.submitDetails({ fullName: 'Amina Otieno', dob: '14/03/1998', email: 'Amina@Example.com', password: 'Fern2026a' })
+    const otp = api.auth.requestOtp('register')
+    expect(otp).toMatchObject({ ok: true, value: { phone: 'amina@example.com' } })
+    expect(api.auth.requestOtp('login', 'not an email')).toMatchObject({ ok: false, code: 'phone' })
+  })
   it('expires old codes', () => {
-    api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712345678', dob: '14/03/1998', email: '' })
+    api.auth.submitDetails({ fullName: 'Amina Otieno', dob: '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })
     const otp = api.auth.requestOtp('register')
     if (!otp.ok) throw new Error('otp')
     advanceClock(11)
@@ -94,7 +102,7 @@ describe('one-time codes', () => {
     register()
     api.auth.signOut()
     expect(getDb().signedIn).toBe(false)
-    const otp = api.auth.requestOtp('login', '+254712345678')
+    const otp = api.auth.requestOtp('login', 'Amina@Example.com')
     if (!otp.ok) throw new Error('otp')
     expect(api.auth.verifyOtp(otp.value.demoCode)).toEqual({ ok: true, value: { next: 'trust-device' } })
     expect(getDb().signedIn).toBe(true)
@@ -104,7 +112,7 @@ describe('one-time codes', () => {
     api.account.requestDeletion(true)
     expect(getDb().signedIn).toBe(false)
     expect(api.account.deletionDaysLeft()).toBe(14)
-    const otp = api.auth.requestOtp('login', '0712345678')
+    const otp = api.auth.requestOtp('login', 'amina@example.com')
     if (!otp.ok) throw new Error('otp')
     api.auth.verifyOtp(otp.value.demoCode)
     expect(getDb().account!.deletionRequestedAt).toBeNull()

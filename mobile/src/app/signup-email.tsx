@@ -1,3 +1,5 @@
+import { registrationRoute } from '@/lib/registration'
+import { getDb } from '@/store/db'
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { Redirect, useLocalSearchParams } from 'expo-router'
@@ -21,8 +23,8 @@ export default function SignupEmail() {
   const [busy, setBusy] = useState(false)
   const { for: who } = useLocalSearchParams<{ for?: string }>()
   const staffOrTherapist = who === 'portal' || who === 'admin'
-  // Members use the mobile app, so on the live website these pages are only for therapists and staff.
-  if (!MEMBERS_ON_WEB && who !== 'portal' && who !== 'admin') return <Redirect href="/mobile-app" />
+  // Members sign up from the first sign-up screen. This page is only for therapists and staff who are linked by email.
+  if (who !== 'portal' && who !== 'admin') return <Redirect href={MEMBERS_ON_WEB ? '/register' : '/mobile-app'} />
 
   async function submit() {
     if (password !== again) return setErrors({ again: 'The two passwords don’t match.' })
@@ -32,7 +34,7 @@ export default function SignupEmail() {
     if (!r.ok) return setErrors({ [r.code === 'email' || r.code === 'password' ? r.code : 'form']: r.error })
     if (r.value.next === 'check-email') return setSent(true)
     const n = r.value.next
-    replace(n === 'portal' ? '/portal/today' : n === 'admin' ? '/staff/overview' : n === 'trust-device' ? '/trust-device' : n === 'consent' ? '/consent' : '/register')
+    replace(n === 'portal' ? '/portal/today' : n === 'admin' ? '/staff/overview' : n === 'trust-device' ? '/trust-device' : registrationRoute(getDb().reg))
   }
 
   if (sent) {

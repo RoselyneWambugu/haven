@@ -3,7 +3,7 @@ import { Text } from './Text'
 import { colors } from '@/theme'
 
 /** The four steps of applying to join Echo as a therapist. */
-export const APPLY_STEPS = ['Your phone', 'Details and documents', 'Review', 'Decision'] as const
+export const APPLY_STEPS = ['Your email', 'Details and documents', 'Review', 'Decision'] as const
 
 /** Where the person is in the application: a bar for each step and a line saying which. `step` runs from 1 to 4. */
 export function ApplyProgress({ step }: { step: 1 | 2 | 3 | 4 }) {

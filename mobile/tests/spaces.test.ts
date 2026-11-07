@@ -8,7 +8,7 @@ import { canRead, generalPosts, needsCheck, spaceFeed } from '../src/lib/spaces'
 import { freshState, getDb, update } from '../src/store/db'
 
 const register = () => {
-  api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob: '14/03/1998', email: '' })
+  api.auth.submitDetails({ fullName: 'Amina Otieno', dob: '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })
   api.auth.acceptConsents()
   const otp = api.auth.requestOtp('register')
   if (!otp.ok) throw new Error('otp')

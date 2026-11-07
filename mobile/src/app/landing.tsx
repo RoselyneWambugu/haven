@@ -104,7 +104,7 @@ export default function Landing() {
           </Text>
           {MEMBERS_ON_WEB ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
-              <Button testID="landing-start" label="Get started" block={false} onPress={() => go('/consent')} />
+              <Button testID="landing-start" label="Get started" block={false} onPress={() => go('/register')} />
               <Button testID="landing-have-account" label="I already have an account" variant="ghost" block={false} onPress={() => go('/login')} />
             </View>
           ) : (
@@ -203,7 +203,7 @@ export default function Landing() {
               <View testID="checkin-reply" style={{ gap: 10 }}>
                 <Text variant="small">{MOOD_LINE[mood]}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  <Button label="Talk to someone" size="sm" block={false} onPress={() => go(MEMBERS_ON_WEB ? '/consent' : '/mobile-app')} />
+                  <Button label="Talk to someone" size="sm" block={false} onPress={() => go(MEMBERS_ON_WEB ? '/register' : '/mobile-app')} />
                 </View>
               </View>
             ) : null}

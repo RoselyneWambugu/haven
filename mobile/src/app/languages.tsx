@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Platform, View } from 'react-native'
+import { View } from 'react-native'
 import { api } from '@/api'
 import { Avatar } from '@/components/Art'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
-import { Banner, Card } from '@/components/Surfaces'
+import { Card } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
 import { ageBand, ageBandLabel, ageOn } from '@/lib/identity'
 import { now } from '@/lib/clock'
-import { resetTo } from '@/lib/nav'
+import { go } from '@/lib/nav'
 import { getDb, useDb } from '@/store/db'
 import { colors } from '@/theme'
 
@@ -20,22 +20,19 @@ export default function Languages() {
   const languages = useDb((s) => s.content.languages)
   const [langs, setLangs] = useState<string[]>(reg?.languages ?? ['English'])
   const [topics, setTopics] = useState<string[]>(reg?.topics ?? [])
-  const [error, setError] = useState<string | null>(null)
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
   const band = reg?.dob ? ageBand(ageOn(new Date(reg.dob), new Date(now()))) : null
 
-  async function finish() {
+  function next() {
     api.auth.saveProfileDraft({ languages: langs, topics })
-    const r = await api.auth.completeRegistration(Platform.OS)
-    if (!r.ok) return setError(r.error)
-    resetTo('/home')
+    go('/consent')
   }
 
   return (
-    <Screen testID="languages" header={<TopBar back />} footer={<Button testID="finish" label="Finish" disabled={!langs.length} onPress={finish} />}>
+    <Screen testID="languages" header={<TopBar back />} footer={<Button testID="languages-continue" label="Continue" disabled={!langs.length} onPress={next} />}>
       <Text variant="caption" muted>
-        Step 5 of 5
+        Step 4 of 5
       </Text>
       <Text variant="title">Languages and interests</Text>
       <Text variant="small" muted>
@@ -72,7 +69,6 @@ export default function Languages() {
       <Text variant="caption" muted>
         Your real name, phone and ID are never shown. You can change your pen name later, with limits.
       </Text>
-      {error ? <Banner tone="clay">{error}</Banner> : null}
     </Screen>
   )
 }

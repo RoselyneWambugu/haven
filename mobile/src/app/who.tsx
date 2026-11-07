@@ -13,7 +13,7 @@ export default function Who() {
       <Text variant="body" color={colors.lichen}>
         Choose the one that fits. You can’t be both on the same account.
       </Text>
-      <Choice testID="who-member" icon="heart" title="I’m looking for support" body="Talk anonymously with people who understand, join group chats, or book a therapist." onPress={() => go('/consent')} />
+      <Choice testID="who-member" icon="heart" title="I’m looking for support" body="Talk anonymously with people who understand, join group chats, or book a therapist." onPress={() => go('/register')} />
       <Choice testID="who-therapist" icon="person" title="I’m a therapist" body="Apply to join Echo as a licensed therapist. We check your licence before you meet anyone." onPress={() => go('/portal/apply')} />
     </Screen>
   )

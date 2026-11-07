@@ -1,3 +1,5 @@
+import { getDb } from '@/store/db'
+import { registrationRoute } from '@/lib/registration'
 import { useEffect, useState } from 'react'
 import { api } from '@/api'
 import { Button } from '@/components/Button'
@@ -29,7 +31,7 @@ export default function ResetPassword() {
     showToast('Your password has been changed.')
     const next = r.value.next
     if (next === 'mobile-app') return replace('/mobile-app?done=password')
-    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/staff/overview' : next === 'trust-device' ? '/trust-device' : next === 'consent' ? '/consent' : '/register')
+    replace(next === 'portal' ? '/portal/today' : next === 'admin' ? '/staff/overview' : next === 'trust-device' ? '/trust-device' : registrationRoute(getDb().reg))
   }
 
   if (ready === false) {

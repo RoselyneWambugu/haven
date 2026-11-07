@@ -14,7 +14,7 @@ describe('therapist suspension', () => {
     resetClock()
     update(freshState())
     for (const t of THERAPISTS) { t.suspended = false; t.acceptingNew = true }
-    api.auth.submitDetails({ fullName: 'Amina Otieno', phone: '0712 345 678', dob: '14/03/1998', email: '' })
+    api.auth.submitDetails({ fullName: 'Amina Otieno', dob: '14/03/1998', email: 'amina@example.com', password: 'Fern2026a' })
     api.auth.acceptConsents()
     const otp = api.auth.requestOtp('register')
     if (!otp.ok) throw new Error('otp')
