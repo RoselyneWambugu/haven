@@ -70,6 +70,8 @@ await step('directory-and-profile', async () => {
   await tid('tab-therapists').click()
   await tid('therapists').waitFor()
   await shot('35-directory')
+  if (!(await tid('my-sessions').count())) throw new Error('My sessions should be above the list')
+  if (await tid('next-session').count()) throw new Error('no next-session card before anything is booked')
   await tid('dir-now').click()
   await tid('dir-hour').click()
   await tid('dir-hour').click()
@@ -97,6 +99,16 @@ await step('book-and-pay', async () => {
   await tid('session-detail').waitFor()
   sessionId = page.url().split('/').pop().split('?')[0]
   await shot('38-session')
+})
+await step('next-session-card', async () => {
+  await page.goto('http://localhost:8096/therapists')
+  await tid('therapists').waitFor()
+  await tid('next-session').waitFor()
+  await shot('37b-next-session')
+  const t = await tid('next-session').innerText()
+  if (!/Your next session/.test(t) || !/Open session/.test(t)) throw new Error('the card should name the session and offer to open it: ' + t)
+  await tid('open-next-session').click()
+  await page.waitForTimeout(500)
 })
 await step('session-alarm-in-the-app', async () => {
   await page.evaluate(() => window.__echo.demo.jumpToBeforeNextSession(8))

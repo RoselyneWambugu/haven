@@ -10,6 +10,9 @@ import { Sheet } from '@/components/Sheet'
 import { Button } from '@/components/Button'
 import { Banner, Card, EmptyState } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
+import { Pressable } from 'react-native'
+import { nextSession } from '@/lib/nextSession'
+import { dayAndClock } from '@/lib/time'
 import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
 import { activeFilterCount, filterTherapists, NO_FILTERS, type DirectoryFilters, type DirectorySort } from '@/lib/directory'
@@ -43,6 +46,8 @@ export default function Therapists() {
   const [sort, setSort] = useState<DirectorySort>('next')
   const [open, setOpen] = useState(false)
   const clockNow = useNow(30_000)
+  const nextUp = nextSession(sessions, clockNow)
+  const nextTherapist = nextUp.next ? THERAPISTS.find((t) => t.id === nextUp.next!.therapistId) : null
   const plan = usePlan()
   const rows = filterTherapists(THERAPISTS, sessions, filters, clockNow, sort, langs)
   const count = activeFilterCount(filters)
@@ -50,13 +55,38 @@ export default function Therapists() {
 
   return (
     <Screen tab testID="therapists" header={<TopBar avatar />}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text variant="title">Therapists</Text>
-        <Button testID="my-sessions" label="My sessions" size="sm" icon="cal" variant="quiet" onPress={() => go('/sessions')} />
-      </View>
+      <Text variant="title">Therapists</Text>
       <Text variant="small" muted>
         Every therapist is licensed and checked by our team. Sessions are 45 minutes, by chat, voice or video.
       </Text>
+      {nextUp.next ? (
+        <View testID="next-session" style={{ backgroundColor: colors.fern, borderRadius: 22, padding: 16, gap: 4 }}>
+          <Text variant="caption" color={colors.lichenDeep}>Your next session</Text>
+          <Text variant="h3" color={colors.paper}>{nextTherapist?.name ?? 'Your therapist'}</Text>
+          <Text variant="small" color={colors.lichenDeep}>
+            {dayAndClock(nextUp.next.start)} · {nextUp.next.mode === 'chat' ? 'Chat' : nextUp.next.mode === 'voice' ? 'Voice' : 'Video'}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <Pressable testID="my-sessions" accessibilityRole="link" accessibilityLabel={`All my sessions, ${nextUp.upcoming} booked`} onPress={() => go('/sessions')} style={{ minHeight: 44, justifyContent: 'center' }}>
+              <Text variant="small" color={colors.lichenDeep} style={{ textDecorationLine: 'underline' }}>
+                {nextUp.upcoming > 1 ? `All my sessions (${nextUp.upcoming})` : 'All my sessions'}
+              </Text>
+            </Pressable>
+            <Pressable testID="open-next-session" accessibilityRole="button" onPress={() => go(`/sessions/${nextUp.next!.id}`)} style={{ backgroundColor: colors.paper, borderRadius: 22, paddingHorizontal: 18, minHeight: 44, justifyContent: 'center' }}>
+              <Text variant="label" color={colors.fern}>Open session</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <Pressable testID="my-sessions" accessibilityRole="button" accessibilityLabel="My sessions" onPress={() => go('/sessions')} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.latte, borderRadius: 20, paddingHorizontal: 14, minHeight: 52 }}>
+          <Icon name="cal" size={20} color={colors.ink} />
+          <View style={{ flex: 1 }}>
+            <Text variant="label">My sessions</Text>
+            <Text variant="caption" muted>No upcoming sessions</Text>
+          </View>
+          <View style={{ transform: [{ rotate: '180deg' }] }}><Icon name="back" size={18} color={colors.muted} /></View>
+        </Pressable>
+      )}
       {!plan ? (
         <Banner testID="book-needs-plan" tone="sun" icon="lock" title="Booking needs a plan">
           You can look at every therapist. A plan lets you book.
