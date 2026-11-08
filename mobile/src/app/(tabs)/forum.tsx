@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Controls'
 import { Screen, TopBar } from '@/components/Layout'
@@ -16,6 +16,7 @@ import { pollFeed } from '@/lib/polls'
 import { isSearching, resultCount, searchCommunity, SEARCH, trendingPosts } from '@/lib/trending'
 import { TrendingStrip } from '@/components/TrendingStrip'
 import { Field } from '@/components/Field'
+import { SearchFilter } from '@/components/SearchFilter'
 import { Icon } from '@/components/Icon'
 import { PollCard } from '@/components/PollCard'
 import { now } from '@/lib/clock'
@@ -151,16 +152,17 @@ export default function Forum() {
         Posts use pen names. Therapists join in with general information, not treatment.
       </Text>
       {!topic ? <TrendingStrip posts={trending} /> : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
-        <Chip label="All" selected={!topic} onPress={() => setTopic(null)} />
-        {TOPICS.map((t) => (
-          <Chip key={t} testID={`topic-${t}`} label={t} selected={topic === t} onPress={() => setTopic(topic === t ? null : t)} />
-        ))}
-      </ScrollView>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Chip label="Newest" selected={sort === 'new'} onPress={() => setSort('new')} />
-        <Chip label="Most supported" selected={sort === 'support'} onPress={() => setSort('support')} />
-        <View style={{ flex: 1 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <SearchFilter
+            testID="feed"
+            resultLabel={`Show ${visible.length} post${visible.length === 1 ? '' : 's'}`}
+            groups={[
+              { key: 'sort', title: 'Sort by', options: [{ value: 'new', label: 'Newest' }, { value: 'support', label: 'Most supported' }], value: sort, defaultValue: 'new', onChange: (v) => setSort((v ?? 'new') as 'new' | 'support') },
+              { key: 'topic', title: 'Topic', options: TOPICS.map((x) => ({ value: x, label: x })), value: topic, defaultValue: null, onChange: (v) => setTopic(v as string | null) },
+            ]}
+          />
+        </View>
         <Chip label="My posts" icon="person" onPress={() => go('/forum/mine')} />
       </View>
       {visible.length ? (

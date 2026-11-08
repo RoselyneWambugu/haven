@@ -96,7 +96,7 @@ export default function GroupChatScreen() {
             {g.registered ? (
               <>
                 <Banner tone="green" icon="check" title="You’re signed up">
-                  The room opens {st === 'lobby' ? 'in a few minutes' : whenLabel(g.startsAt, t)}. We’ll remind you an hour and ten minutes before.
+                  The room opens {st === 'lobby' ? 'in a few minutes' : whenLabel(g.startsAt, t)}. We’ll remind you an hour and ten minutes before. You can also ask for an alert the moment it begins, under Your group chats in Chats.
                 </Banner>
                 <Button testID="group-unregister" variant="ghost" label="Give up my place" onPress={() => { void api.groups.unregister(g.id) }} />
               </>

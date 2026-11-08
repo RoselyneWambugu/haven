@@ -3,13 +3,14 @@ import { Platform, Pressable, Vibration, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSegments } from 'expo-router'
 import * as Haptics from 'expo-haptics'
-import { alarmItems, dueAlarm, planAlarms, startsIn, withoutMuted } from '@/lib/alarms'
+import { alarmItems, dueAlarm, planAlarms, planStartAlarms, startsIn, withoutMuted } from '@/lib/alarms'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { alarmAccess, askForAlarms, onAlarmTapped, syncLocalAlarms } from '@/lib/localAlarms'
 import { go } from '@/lib/nav'
 import { THERAPISTS } from '@/data/seed'
 import { useDb } from '@/store/db'
 import { useMuted } from '@/store/mutedAlarms'
+import { useStartAlerts } from '@/store/startAlerts'
 import { useNow } from '@/store/useNow'
 import { colors, MAX_WIDTH, radius } from '@/theme'
 import { Button } from './Button'
@@ -46,9 +47,10 @@ export function SessionAlarmHost() {
 
   // What is booked. Only the person who is signed in on this device gets alarms for it.
   const muted = useMuted()
-  const items = useMemo(
+  const startAlerts = useStartAlerts()
+  const everything = useMemo(
     () =>
-      withoutMuted(alarmItems(
+      alarmItems(
         {
           sessions: memberIn && remind ? sessions : [],
           groupChats: memberIn && remind ? groupChats : [],
@@ -57,17 +59,21 @@ export function SessionAlarmHost() {
           therapistName: (id) => THERAPISTS.find((x) => x.id === id)?.name,
         },
         t,
-      ), muted),
+      ),
     // `t` only matters for dropping what has ended, so a coarse minute is enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sessions, groupChats, portalSessions, events, memberIn, therapistIn, remind, remindEvents, muted, Math.floor(t / 60_000)],
+    [sessions, groupChats, portalSessions, events, memberIn, therapistIn, remind, remindEvents, Math.floor(t / 60_000)],
   )
+  const items = useMemo(() => withoutMuted(everything, muted), [everything, muted])
+  // The group chats the member asked to be alerted about the moment they begin (independent of the bell).
+  const startItems = useMemo(() => everything.filter((i) => i.kind === 'group' && startAlerts.includes(i.id)), [everything, startAlerts])
   const on = memberIn || therapistIn
 
   // Out of the app: give the phone the plan. A change in what is booked, or in the settings, replaces the old plan.
-  const planKey = useMemo(() => JSON.stringify(on ? planAlarms(items, t, { hideTextOnLockScreen: hide, neutralNotifications: neutral, quietHours: quiet }).map((a) => [a.id, a.at, a.body]) : []), [on, items, hide, neutral, quiet, t])
+  const fullPlan = () => [...planAlarms(items, t, { hideTextOnLockScreen: hide, neutralNotifications: neutral, quietHours: quiet }), ...planStartAlarms(startItems, t, { hideTextOnLockScreen: hide, neutralNotifications: neutral })]
+  const planKey = useMemo(() => JSON.stringify(on ? fullPlan().map((a) => [a.id, a.at, a.body]) : []), [on, items, startItems, hide, neutral, quiet, t])
   useEffect(() => {
-    const plan = on ? planAlarms(items, t, { hideTextOnLockScreen: hide, neutralNotifications: neutral, quietHours: quiet }) : []
+    const plan = on ? fullPlan() : []
     void (async () => {
       // The first time there is something to be alarmed about, ask the phone once. After that the person decides in Settings.
       if (plan.length > 0 && Platform.OS !== 'web' && !asked) {
@@ -86,7 +92,7 @@ export function SessionAlarmHost() {
 
   // In the app: the card.
   const busy = segments[0] === 'call' || (segments[0] === 'portal' && segments[1] === 'session')
-  const due = on && !busy ? dueAlarm(items, t, dismissed) : null
+  const due = on && !busy ? (dueAlarm(items, t, dismissed) ?? dueAlarm(startItems, t, dismissed)) : null
   useEffect(() => {
     if (!due || shown.current === due.id) return
     shown.current = due.id

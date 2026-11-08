@@ -4,6 +4,7 @@ import { api, type ArticleCfg, type SupportOrgCfg } from '@/api'
 import { Button } from '@/components/Button'
 import { Badge, Chip, ToggleRow } from '@/components/Controls'
 import { Field } from '@/components/Field'
+import { SearchFilter } from '@/components/SearchFilter'
 import { Panel, PortalPage, Stepper } from '@/components/Portal'
 import { Sheet } from '@/components/Sheet'
 import { Banner } from '@/components/Surfaces'
@@ -66,11 +67,11 @@ export default function Resources() {
 
       {tab === 'tickets' ? (
         <>
-          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            {(['open', 'replied', 'resolved', 'all'] as const).map((f) => (
-              <Chip key={f} testID={`tf-${f}`} label={f === 'all' ? 'All' : STATUS[f]} selected={filter === f} onPress={() => setFilter(f)} />
-            ))}
-          </View>
+          <SearchFilter
+            testID="tf"
+            resultLabel={`Show ${visibleTickets.length} ticket${visibleTickets.length === 1 ? '' : 's'}`}
+            groups={[{ key: 'status', title: 'Show', options: (['open', 'replied', 'resolved', 'all'] as const).map((f) => ({ value: f, label: f === 'all' ? 'All' : STATUS[f] })), value: filter, defaultValue: 'open', onChange: (v) => setFilter((v ?? 'open') as 'open' | 'replied' | 'resolved' | 'all') }]}
+          />
           <Panel style={{ padding: 8, gap: 0 }}>
             {visibleTickets.length ? (
               visibleTickets.map((x) => {

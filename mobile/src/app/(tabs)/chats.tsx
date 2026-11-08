@@ -17,6 +17,7 @@ import { Badge } from '@/components/Controls'
 import { useNow } from '@/store/useNow'
 import { leftLabel, timeLeft } from '@/lib/chatLife'
 import { go } from '@/lib/nav'
+import { MyGroupChats, signedUpUpcoming } from '@/components/MyGroupChats'
 import { MAX_PEER_CHATS, openPeerChats } from '@/lib/limits'
 import { planState, canChat } from '@/lib/plan'
 import { relative } from '@/lib/time'
@@ -156,6 +157,12 @@ export default function Chats() {
         <View testID="groups-now">
           <SectionLabel>Happening now</SectionLabel>
           {happening.map(groupCard)}
+        </View>
+      ) : null}
+      {signedUpUpcoming(groupChats, clockNow).length ? (
+        <View>
+          <SectionLabel>Your group chats</SectionLabel>
+          <MyGroupChats groups={groupChats} now={clockNow} />
         </View>
       ) : null}
       {therapists.length ? (

@@ -53,6 +53,22 @@ await step('sign-up-for-the-grief-chat', async () => {
   await tid('group-unregister').waitFor()
   await shot('181-group-detail')
 })
+await step('your-group-chats-and-the-start-alert', async () => {
+  await page.getByRole('button', { name: 'Back' }).click()
+  await tid('chats').waitFor()
+  await tid('my-groups').waitFor()
+  const t = await tid('my-groups').innerText()
+  if (!/Surviving grief/.test(t) || !/Led by/.test(t) || !/places taken/.test(t)) throw new Error('your group chats should show the details: ' + t)
+  const sw = page.locator('[data-testid^="remind-start-"]').first()
+  const isOn = async () => (await sw.evaluate((e) => getComputedStyle(e).backgroundColor)) === 'rgb(24, 88, 68)'
+  if (await isOn()) throw new Error('the start alert should be off until the member asks')
+  await sw.click()
+  await page.waitForTimeout(200)
+  if (!(await isOn())) throw new Error('the start alert should switch on')
+  await shot('181b-your-group-chats')
+  await page.locator('[data-testid^="my-group-open-"]').first().click()
+  await tid('group-detail').waitFor()
+})
 await step('the-room-opens-and-the-facilitator-welcomes-everyone', async () => {
   await page.evaluate(() => window.__echo.demo.startNextGroupChat())
   await tid('group-room').waitFor()

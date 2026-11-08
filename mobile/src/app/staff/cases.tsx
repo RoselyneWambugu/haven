@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
-import { Chip } from '@/components/Controls'
-import { Field } from '@/components/Field'
+import { SearchFilter } from '@/components/SearchFilter'
 import { Panel, PortalPage } from '@/components/Portal'
 import { Text } from '@/components/Text'
 import { filterCases, minutesLeft, slaLabel, sortCases, visibleCases, type CaseFilter } from '@/lib/admin'
@@ -37,12 +36,14 @@ export default function Cases() {
 
   return (
     <PortalPage testID="admin-cases" title="Cases" sub="Sorted by severity, then time left on the SLA clock.">
-      <Field testID="case-search" label="Search" hideLabel placeholder="Case ID or pen name" value={query} onChangeText={setQuery} />
-      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-        {FILTERS.map((f) => (
-          <Chip key={f.key} testID={`cf-${f.key}`} label={f.label} selected={filter === f.key} onPress={() => setFilter(f.key)} />
-        ))}
-      </View>
+      <SearchFilter
+        testID="case"
+        placeholder="Case ID or pen name"
+        query={query}
+        onQuery={setQuery}
+        resultLabel={`Show ${rows.length} case${rows.length === 1 ? '' : 's'}`}
+        groups={[{ key: 'show', title: 'Show', options: FILTERS.map((f) => ({ value: f.key, label: f.label })), value: filter, defaultValue: 'all', onChange: (v) => setFilter((v ?? 'all') as CaseFilter) }]}
+      />
       <Panel style={{ padding: 8, gap: 0 }}>
         <View style={{ flexDirection: 'row', paddingHorizontal: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.line }}>
           {['Case', 'Sev', 'Source', 'Type', 'SLA', 'Owner', 'Status'].map((h, i) => (

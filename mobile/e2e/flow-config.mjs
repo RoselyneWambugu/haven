@@ -82,7 +82,9 @@ await step('moderator-cannot-see-billing-tickets', async () => {
   await login('T. Njeri')
   await tid('anav-resources').click()
   await tid('admin-resources').waitFor()
-  await tid('tf-all').click()
+  await tid('tf-filters').click()
+  await tid('tf-status-all').click()
+  await tid('tf-apply').click()
   await page.waitForTimeout(200)
   if (/Charged twice/.test(await body())) throw new Error('moderator should not see billing tickets')
   if (await tid('rs-departments').count()) throw new Error('moderator should not see Departments')
@@ -216,7 +218,8 @@ await step('topics-flags-reach-members', async () => {
   await tid('forum').waitFor()
   if (!/Posting is paused/.test(await body())) throw new Error('forum should say posting is paused')
   if (await tid('forum-new').count()) throw new Error('write a post should be hidden')
-  if (!(await tid('topic-Money').count())) throw new Error('new topic should show for members')
+  await tid('feed-filters').click()
+  if (!(await tid('feed-topic-Money').count())) throw new Error('new topic should show for members')
 })
 
 await step('plan-price-needs-two-admins', async () => {

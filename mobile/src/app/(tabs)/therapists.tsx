@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { Portrait } from '@/components/Art'
-import { Badge, Chip } from '@/components/Controls'
-import { Field } from '@/components/Field'
+import { Badge } from '@/components/Controls'
 import { Icon } from '@/components/Icon'
 import { usePlan } from '@/components/PlanGate'
 import { Screen, TopBar } from '@/components/Layout'
-import { Sheet } from '@/components/Sheet'
+import { SearchFilter } from '@/components/SearchFilter'
 import { Button } from '@/components/Button'
 import { Banner, Card, EmptyState } from '@/components/Surfaces'
 import { Text } from '@/components/Text'
@@ -15,7 +14,7 @@ import { nextSession } from '@/lib/nextSession'
 import { dayAndClock } from '@/lib/time'
 import { THERAPISTS } from '@/data/seed'
 import { nextAvailableLabel } from '@/lib/booking'
-import { activeFilterCount, filterTherapists, NO_FILTERS, type DirectoryFilters, type DirectorySort } from '@/lib/directory'
+import { filterTherapists, NO_FILTERS, type DirectoryFilters, type DirectorySort } from '@/lib/directory'
 import { modesFor } from '@/lib/content'
 import { go } from '@/lib/nav'
 import { liveStars, ratingLabel, summarise } from '@/lib/ratings'
@@ -44,15 +43,11 @@ export default function Therapists() {
   const flags = useDb((s) => s.content.flags)
   const [filters, setFilters] = useState<DirectoryFilters>(NO_FILTERS)
   const [sort, setSort] = useState<DirectorySort>('next')
-  const [open, setOpen] = useState(false)
   const clockNow = useNow(30_000)
   const nextUp = nextSession(sessions, clockNow)
   const nextTherapist = nextUp.next ? THERAPISTS.find((t) => t.id === nextUp.next!.therapistId) : null
   const plan = usePlan()
   const rows = filterTherapists(THERAPISTS, sessions, filters, clockNow, sort, langs)
-  const count = activeFilterCount(filters)
-  const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
-
   return (
     <Screen tab testID="therapists" header={<TopBar avatar />}>
       <Text variant="title">Therapists</Text>
@@ -92,17 +87,21 @@ export default function Therapists() {
           You can look at every therapist. A plan lets you book.
         </Banner>
       ) : null}
-      <Field testID="dir-search" label="Search" hideLabel placeholder="Search by name or topic" value={filters.query} onChangeText={(query) => setFilters({ ...filters, query })} />
-      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-        <Chip testID="dir-now" label="Available now" icon="clock" selected={filters.when === 'now'} onPress={() => setFilters({ ...filters, when: filters.when === 'now' ? 'any' : 'now' })} />
-        <Chip testID="dir-hour" label="Within the hour" selected={filters.when === 'hour'} onPress={() => setFilters({ ...filters, when: filters.when === 'hour' ? 'any' : 'hour' })} />
-      </View>
-      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-        <Chip testID="dir-filters" label={count ? `Filters (${count})` : 'Filters'} icon="tool" selected={count > 0} onPress={() => setOpen(true)} />
-        {SORTS.map((s) => (
-          <Chip key={s.value} label={s.label} selected={sort === s.value} onPress={() => setSort(s.value)} />
-        ))}
-      </View>
+      <SearchFilter
+        testID="dir"
+        placeholder="Search by name or topic"
+        query={filters.query}
+        onQuery={(query) => setFilters({ ...filters, query })}
+        resultLabel={`Show ${rows.length} therapist${rows.length === 1 ? '' : 's'}`}
+        groups={[
+          { key: 'sort', title: 'Sort by', options: SORTS, value: sort, defaultValue: 'next', onChange: (v) => setSort((v ?? 'next') as DirectorySort) },
+          { key: 'when', title: 'Available', options: [{ value: 'any', label: 'Any time' }, { value: 'now', label: 'Available now' }, { value: 'hour', label: 'Within the hour' }, { value: 'today', label: 'Today' }, { value: 'week', label: 'This week' }], value: filters.when, defaultValue: 'any', onChange: (v) => setFilters({ ...filters, when: (v ?? 'any') as DirectoryFilters['when'] }) },
+          { key: 'topic', title: 'Topic', options: SPECIALISATIONS.map((x) => ({ value: x, label: x })), value: filters.specialisation, defaultValue: null, onChange: (v) => setFilters({ ...filters, specialisation: v as string | null }) },
+          { key: 'language', title: 'Language', multi: true, options: languages.map((x) => ({ value: x, label: x })), value: filters.languages, onChange: (v) => setFilters({ ...filters, languages: (v as string[]) ?? [] }) },
+          { key: 'mode', title: 'Session type', multi: true, options: modesFor(['chat', 'voice', 'video'] as const, flags).map((m) => ({ value: m, label: m[0].toUpperCase() + m.slice(1) })), value: filters.modes, onChange: (v) => setFilters({ ...filters, modes: (v as string[]) as DirectoryFilters['modes'] }) },
+          { key: 'gender', title: 'Therapist', options: [{ value: 'any', label: 'Any' }, { value: 'woman', label: 'Woman' }, { value: 'man', label: 'Man' }], value: filters.gender, defaultValue: 'any', onChange: (v) => setFilters({ ...filters, gender: (v ?? 'any') as DirectoryFilters['gender'] }) },
+        ]}
+      />
       {rows.length ? (
         rows.map(({ therapist: t, slots }) => (
           <Card key={t.id} testID={`therapist-${t.id}`} onPress={() => go(`/therapists/${t.id}`)} accessibilityLabel={`${t.name}, ${t.title}`}>
@@ -140,50 +139,6 @@ export default function Therapists() {
         </EmptyState>
       )}
 
-      <Sheet visible={open} onClose={() => setOpen(false)} title="Filters">
-        <Text variant="small" muted>
-          Topic
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {SPECIALISATIONS.map((s) => (
-            <Chip key={s} label={s} selected={filters.specialisation === s} onPress={() => setFilters({ ...filters, specialisation: filters.specialisation === s ? null : s })} />
-          ))}
-        </View>
-        <Text variant="small" muted>
-          Language
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {languages.map((l) => (
-            <Chip key={l} label={l} selected={filters.languages.includes(l)} onPress={() => setFilters({ ...filters, languages: toggle(filters.languages, l) })} />
-          ))}
-        </View>
-        <Text variant="small" muted>
-          Session type
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {modesFor(['chat', 'voice', 'video'] as const, flags).map((m) => (
-            <Chip key={m} label={m[0].toUpperCase() + m.slice(1)} selected={filters.modes.includes(m)} onPress={() => setFilters({ ...filters, modes: toggle(filters.modes, m) })} />
-          ))}
-        </View>
-        <Text variant="small" muted>
-          Available
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {([['any', 'Any time'], ['now', 'Now'], ['hour', 'Within the hour'], ['today', 'Today'], ['week', 'This week']] as const).map(([v, l]) => (
-            <Chip key={v} label={l} selected={filters.when === v} onPress={() => setFilters({ ...filters, when: v })} />
-          ))}
-        </View>
-        <Text variant="small" muted>
-          Therapist
-        </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {([['any', 'Any'], ['woman', 'Woman'], ['man', 'Man']] as const).map(([v, l]) => (
-            <Chip key={v} label={l} selected={filters.gender === v} onPress={() => setFilters({ ...filters, gender: v })} />
-          ))}
-        </View>
-        <Button testID="dir-apply" label={`Show ${rows.length} therapist${rows.length === 1 ? '' : 's'}`} onPress={() => setOpen(false)} />
-        <Button variant="ghost" label="Clear all" onPress={() => setFilters({ ...NO_FILTERS, query: filters.query })} />
-      </Sheet>
     </Screen>
   )
 }

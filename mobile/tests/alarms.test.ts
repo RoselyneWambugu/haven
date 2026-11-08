@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { Platform } from 'react-native'
 import { phone } from './stubs/expo-notifications'
-import { ALARM_GRACE, alarmItems, dueAlarm, planAlarms, startsIn, type AlarmItem } from '../src/lib/alarms'
+import { ALARM_GRACE, alarmItems, dueAlarm, planAlarms, planStartAlarms, startsIn, type AlarmItem } from '../src/lib/alarms'
 import { alarmAccess, askForAlarms, syncLocalAlarms } from '../src/lib/localAlarms'
 import { advanceClock, now, resetClock } from '../src/lib/clock'
 import type { GroupChat, PortalSession, Session } from '../src/api/types'
@@ -183,5 +183,30 @@ describe('the notification settings on alarms', () => {
       const plan = planAlarms([s], before, { hideTextOnLockScreen: false, quietHours: true })
       expect(plan.map((a) => a.at)).toEqual([start - 3600_000, start - 600_000])
     })
+  })
+})
+
+describe('the alert when a group chat begins', () => {
+  const g = { id: 'g1', topic: 'Grief and loss', startsAt: T + 90 * MIN, durationMin: 60, registered: true } as GroupChat
+  const list = alarmItems({ sessions: [], groupChats: [g], therapistName: names }, T)
+
+  it('is one alarm, at the start time, naming the room', () => {
+    const plan = planStartAlarms(list, T, { hideTextOnLockScreen: false })
+    expect(plan).toHaveLength(1)
+    expect(plan[0]).toMatchObject({ id: 'alarm:g:g1:0', at: T + 90 * MIN, route: '/group-chats/g1' })
+    expect(plan[0].body).toContain('Grief and loss')
+    expect(plan[0].body).toContain('starting now')
+  })
+  it('hides the name when the lock screen should not show text, and is neutral on request', () => {
+    expect(planStartAlarms(list, T, { hideTextOnLockScreen: true })[0].body).not.toContain('Grief')
+    const neutral = planStartAlarms(list, T, { hideTextOnLockScreen: false, neutralNotifications: true })[0]
+    expect(neutral.title).toBe('You have a new update')
+    expect(neutral.body).not.toContain('Grief')
+  })
+  it('is nothing once the start has passed', () => {
+    expect(planStartAlarms(list, T + 91 * MIN, { hideTextOnLockScreen: false })).toEqual([])
+  })
+  it('does not replace the earlier reminders: those stay separate', () => {
+    expect(planAlarms(list, T, { hideTextOnLockScreen: false }).map((a) => a.id)).toEqual(['alarm:g:g1:60', 'alarm:g:g1:10'])
   })
 })

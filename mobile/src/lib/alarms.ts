@@ -89,6 +89,27 @@ export function planAlarms(items: AlarmItem[], t: number, settings: Pick<Setting
   return out.sort((a, b) => a.at - b.at)
 }
 
+/**
+ * The extra alert for the items a member asked to be alerted about at the moment they begin. It is one alarm, at the start time, and it is
+ * separate from the hour-before and ten-minutes-before reminders, so it can be on while those are off.
+ */
+export function planStartAlarms(items: AlarmItem[], t: number, settings: Pick<Settings, 'hideTextOnLockScreen'> & Partial<Pick<Settings, 'neutralNotifications'>>, horizonMs = 14 * 24 * 60 * MIN): PlannedAlarm[] {
+  const out: PlannedAlarm[] = []
+  for (const it of items) {
+    if (it.start <= t || it.start > t + horizonMs) continue
+    const title = settings.neutralNotifications ? 'You have a new update' : it.kind === 'group' ? 'Your group chat is starting' : 'Starting now'
+    const body = settings.neutralNotifications
+      ? 'Open the app to see it.'
+      : settings.hideTextOnLockScreen
+        ? 'Something is starting now. Open Echo.'
+        : it.kind === 'group'
+          ? `Your group chat, ${it.who}, is starting now. Tap to go in.`
+          : `${it.who} is starting now.`
+    out.push({ id: `alarm:${it.id}:0`, at: it.start, title, body, route: it.route })
+  }
+  return out
+}
+
 /** The item whose loud alarm should be showing right now, if any: it starts within ten minutes, or began less than ten minutes ago. */
 export function dueAlarm(items: AlarmItem[], t: number, dismissed: ReadonlySet<string>): AlarmItem | null {
   for (const it of items) {
