@@ -92,6 +92,13 @@ await step('send-feedback', async () => {
   await tid('fb-send').click()
   await tid('settings').waitFor()
 })
+await step('home-says-who-the-chat-is-with', async () => {
+  await page.goto('http://localhost:8098/home')
+  await tid('home-chats-card').waitFor()
+  const card = await tid('home-chats-card').innerText()
+  if (!/Match/.test(card)) throw new Error('an ongoing chat with a match should say Match on Home')
+  await shot('15-home-chat-kind')
+})
 await step('chat-list', async () => {
   await page.goto('http://localhost:8098/chats')
   await tid('tab-chats').click()

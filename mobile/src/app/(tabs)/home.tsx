@@ -129,10 +129,14 @@ export default function Home() {
                   <Text variant="body" style={{ flex: 1 }} numberOfLines={1}>
                     {c.peer?.penName ?? th?.name ?? 'Therapist'}
                   </Text>
+                  <View testID={`chat-kind-${c.id}`}>
+                    <Badge icon={c.kind === 'therapist' ? 'check' : undefined} tone={c.kind === 'therapist' ? 'sun' : 'plain'} label={c.kind === 'therapist' ? 'Therapist' : 'Match'} />
+                  </View>
                   {c.unread > 0 ? <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: colors.sun }} /> : null}
                 </Pressable>
               )
             })}
+            {live.length > 2 ? <Text variant="caption" muted>{`+ ${live.length - 2} more in Chats`}</Text> : null}
           </View>
         ) : (
           <Text variant="small" muted style={{ marginTop: 4 }}>
