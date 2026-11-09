@@ -8,6 +8,7 @@ import { useDb } from '@/store/db'
 /** Whether the member has an active plan. The whole platform needs one, except urgent help, the help centre, settings and billing. */
 export function usePlan(): boolean {
   const sub = useDb((s) => s.subscription)
+  useDb((s) => s.content.openPlans) // re-check when the testing switch changes
   return canChat(planState(sub, now()))
 }
 

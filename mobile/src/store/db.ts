@@ -7,6 +7,7 @@ import { seedEvents } from '@/data/events'
 import { seedPosts } from '@/data/seed'
 import { now } from '@/lib/clock'
 import { applySessionMoney } from '@/lib/sessionMoney'
+import { setOpenPlans } from '@/lib/plan'
 import type { AppNote } from '@/lib/notifications'
 import { secure } from './secure'
 
@@ -88,6 +89,7 @@ export interface DbState {
 export function applyLimits(): void {
   Object.assign(LIVE, state.content.limits)
   applySessionMoney(state.content.sessionMoney)
+  setOpenPlans(state.content.openPlans === true)
 }
 
 export function emptyRegistration(): RegistrationDraft {

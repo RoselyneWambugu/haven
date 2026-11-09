@@ -867,6 +867,8 @@ export interface LimitsCfg {
 }
 
 export interface ContentState {
+  /** Testing only: the server has opened everything that needs a plan. */
+  openPlans?: boolean
   departments: DepartmentCfg[]
   articles: ArticleCfg[]
   popular: string[]

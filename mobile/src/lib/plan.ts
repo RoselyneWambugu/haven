@@ -11,8 +11,14 @@ export function planState(sub: Subscription | null, t: number): PlanState {
   return sub.cancelledAt || !sub.autoRenew ? 'ending' : 'active'
 }
 
+/** Testing only: while the server's testing switch is on, everything that needs a plan is open. Set from the app's configuration. */
+let openPlans = false
+export const setOpenPlans = (v: boolean): void => {
+  openPlans = v
+}
+
 /** Peer chat needs a paid plan (PRD BIL-2). */
-export const canChat = (s: PlanState): boolean => s === 'active' || s === 'ending'
+export const canChat = (s: PlanState): boolean => openPlans || s === 'active' || s === 'ending'
 
 export function graceEndsAt(sub: Subscription): number {
   return sub.endsAt + LIVE.graceDays * 24 * 3600_000

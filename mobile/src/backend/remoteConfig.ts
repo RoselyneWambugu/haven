@@ -1,5 +1,6 @@
 import { config as mockConfig } from '@/api/content'
 import type { FlagsCfg, LimitsCfg, MatchingCfg, PlanCfg, Res, SessionMoneyCfg } from '@/api/types'
+import { setOpenPlans } from '@/lib/plan'
 import { applyLimits, getDb, update } from '@/store/db'
 import { supabase } from './client'
 
@@ -15,6 +16,7 @@ interface ConfigReply extends Reply {
   topics?: string[]
   languages?: string[]
   plans?: ServerPlan[]
+  openPlans?: boolean
   pendingPlans?: { id: string; plans: Partial<ServerPlan>[]; requestedBy: string; mine: boolean } | null
 }
 
@@ -40,9 +42,10 @@ export async function syncConfig(): Promise<void> {
   const d = await call<ConfigReply>('app_config')
   if (!d.ok || !d.flags || !d.limits) return
   update((s) => ({
-    content: { ...s.content, flags: d.flags!, limits: d.limits!, sessionMoney: d.sessionMoney ?? s.content.sessionMoney, topics: d.topics?.length ? d.topics : s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans: d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans },
+    content: { ...s.content, openPlans: d.openPlans === true, flags: d.flags!, limits: d.limits!, sessionMoney: d.sessionMoney ?? s.content.sessionMoney, topics: d.topics?.length ? d.topics : s.content.topics, languages: d.languages?.length ? d.languages : s.content.languages, plans: d.plans ? mergePlans(s.content.plans, d.plans) : s.content.plans },
   }))
   applyLimits()
+  setOpenPlans(d.openPlans === true)
 }
 
 /** What an Admin edits, including matching and a plan change that is waiting for a second Admin. */
