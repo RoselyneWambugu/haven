@@ -13,7 +13,7 @@ import { Icon } from './Icon'
 import { Text } from './Text'
 
 // ---------------------------------------------------------------------------
-// TopBar: back or avatar on the left. The Urgent help pill on the right is off by default and shown on Settings only (decision v0.73);
+// TopBar: back or the Echo logo on the left; the member's avatar (their profile) sits beside the bell on the right. The Urgent help pill on the right is off by default and shown on Settings only (decision v0.73);
 // urgent help is otherwise reached from the Help tab, the welcome screen's link, and the /urgent page, none of which needs a login.
 // ---------------------------------------------------------------------------
 
@@ -67,9 +67,9 @@ export function TopBar({
             <Icon name="back" size={24} color={fg} />
           </Pressable>
         ) : null}
-        {avatar && kind ? (
-          <Pressable testID="open-me" accessibilityRole="button" accessibilityLabel="Me, your profile and settings" onPress={() => go('/me')} hitSlop={8}>
-            <Avatar kind={kind} size={38} />
+        {avatar ? (
+          <Pressable testID="echo-logo" accessibilityRole="button" accessibilityLabel="Echo, go to Home" onPress={() => go('/home')} hitSlop={8}>
+            <LogoMark size={40} />
           </Pressable>
         ) : null}
         {logo ? (
@@ -88,6 +88,11 @@ export function TopBar({
       </View>
       <View style={styles.topRight}>
         {right}
+        {avatar && kind ? (
+          <Pressable testID="open-me" accessibilityRole="button" accessibilityLabel="Me, your profile and settings" onPress={() => go('/me')} hitSlop={8} style={styles.iconBtn}>
+            <Avatar kind={kind} size={30} />
+          </Pressable>
+        ) : null}
         {avatar ? <Bell /> : null}
         {urgent ? <Pill label={t('Urgent help')} onPress={() => go('/urgent')} /> : null}
       </View>
