@@ -9,6 +9,7 @@ import { Button } from '@/components/Button'
 import { Check } from '@/components/Controls'
 import { Field } from '@/components/Field'
 import { Icon } from '@/components/Icon'
+import { LoadingBar } from '@/components/LoadingBar'
 import { Screen, TopBar } from '@/components/Layout'
 import { PersonTap } from '@/components/PersonCard'
 import { PlanGate, usePlan } from '@/components/PlanGate'
@@ -183,7 +184,10 @@ export default function EpisodeScreen() {
           <Button testID="episode-comment-send" label="Post comment" disabled={!text.trim()} onPress={send} />
         </>
       ) : error ? null : (
-        <Text variant="small" muted>Opening the episode…</Text>
+        <View style={{ alignItems: 'center', gap: 10, paddingVertical: 40 }}>
+          <LoadingBar />
+          <Text variant="small" muted>Opening the episode…</Text>
+        </View>
       )}
 
       <Sheet visible={!!reporting} onClose={() => setReporting(null)} title="Report this comment">

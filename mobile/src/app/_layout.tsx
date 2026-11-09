@@ -12,6 +12,7 @@ import { AtkinsonHyperlegibleNext_400Regular_Italic } from '@expo-google-fonts/a
 import { AtkinsonHyperlegibleNext_600SemiBold } from '@expo-google-fonts/atkinson-hyperlegible-next/600SemiBold'
 import { AtkinsonHyperlegibleNext_700Bold } from '@expo-google-fonts/atkinson-hyperlegible-next/700Bold'
 import { api, resumeBackground } from '@/api'
+import { LoadingScreen } from '@/components/LoadingScreen'
 import { SecurityAlert } from '@/components/SecurityAlert'
 import { HelpFab } from '@/components/HelpFab'
 import { ToastHost } from '@/components/ToastHost'
@@ -144,11 +145,10 @@ export default function RootLayout() {
   }, [])
 
   const show = (fontsLoaded || !!fontError) && ready
-  useEffect(() => {
-    if (show) void SplashScreen.hideAsync().catch(() => undefined)
-  }, [show])
+  // The phone's start-up image can't move, so as soon as our own loading screen is on screen the start-up image goes away.
+  const hideSplash = () => void SplashScreen.hideAsync().catch(() => undefined)
 
-  if (!show) return null
+  if (!show) return <LoadingScreen onShown={hideSplash} />
 
   return (
     <SafeAreaProvider>

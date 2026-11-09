@@ -4,6 +4,7 @@ import { api } from '@/api'
 import type { Episode } from '@/api/types'
 import { Button } from '@/components/Button'
 import { Icon } from '@/components/Icon'
+import { LoadingBar } from '@/components/LoadingBar'
 import { Screen, TopBar } from '@/components/Layout'
 import { PlanGate, usePlan } from '@/components/PlanGate'
 import { Banner, EmptyState } from '@/components/Surfaces'
@@ -56,6 +57,7 @@ export default function Watch() {
         </Banner>
       ) : null}
       {plan && error ? <Button variant="quiet" label="Try again" onPress={load} /> : null}
+      {plan && !list && !error ? <View style={{ alignItems: 'center', paddingVertical: 40 }}><LoadingBar /></View> : null}
       {plan && list && list.length === 0 ? <EmptyState icon="video" title="No episodes yet" body="The first episode is on its way. Check back soon." /> : null}
       {plan && latest ? (
         <Pressable testID={`episode-${latest.id}`} accessibilityRole="button" accessibilityLabel={`Play ${latest.title}`} onPress={() => go(`/watch/${latest.id}`)} style={{ gap: 8 }}>
