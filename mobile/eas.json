@@ -1,15 +1,20 @@
 {
-  "cli": { "version": ">= 12.0.0", "appVersionSource": "remote" },
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
   "build": {
     "demo": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
-      "channel": "demo"
+      "android": {
+        "buildType": "apk"
+      }
     },
     "live": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
-      "channel": "live",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_BACKEND": "supabase",
         "EXPO_PUBLIC_SUPABASE_URL": "https://htsfkotheyrfyhqzeiny.supabase.co",
@@ -19,8 +24,9 @@
     "store": {
       "distribution": "store",
       "autoIncrement": true,
-      "android": { "buildType": "app-bundle" },
-      "channel": "production",
+      "android": {
+        "buildType": "app-bundle"
+      },
       "env": {
         "EXPO_PUBLIC_BACKEND": "supabase",
         "EXPO_PUBLIC_SUPABASE_URL": "https://htsfkotheyrfyhqzeiny.supabase.co",
@@ -28,5 +34,7 @@
       }
     }
   },
-  "submit": { "store": {} }
+  "submit": {
+    "store": {}
+  }
 }
